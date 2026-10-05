@@ -1,6 +1,6 @@
 # Research: Story Structure in Literature and Screenwriting
 
-> Research input for [02-creative-director.md](../subsystems/02-creative-director.md). Collected 2026-10-04 by a research agent.
+> Research input for [02-creative-director.md](../docs/subsystems/02-creative-director.md). Collected 2026-10-04 by a research agent.
 > Labels: **[V]** = confirmed by a fetched or searched source. **[unverified]** = craft knowledge, not confirmed in this research. Examples are illustrative unless a source is named.
 
 ## Frameworks

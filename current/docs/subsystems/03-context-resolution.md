@@ -24,7 +24,7 @@
 - What signal invokes the missing-context tool (talk to the user)?
 - When does resolution run: before solving, during solving, or at the very end?
 
-**Observed in tests** ([test-research/](../test-research/README.md)):
+**Observed in tests** ([tests/creative-director/](../../tests/creative-director/README.md)):
 - Missing context surfaces in the creative director's output. Example: the birthday chunks are blocked until a photo of the father is uploaded.
 - A vague request ("make something cool for my insta") gets an invented concept, not a question.
 

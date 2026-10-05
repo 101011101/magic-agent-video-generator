@@ -1,6 +1,6 @@
 // Runs every request through every variant on an OpenAI model (Responses API).
-// Usage: node docs/PRD/test-research/run-gpt.mjs [--only p1-grandma] [--force]
-// Key: OPENAI_API_KEY env var, or OPENAI_API_KEY=... in docs/PRD/test-research/.env (gitignored).
+// Usage: node current/tests/creative-director/run-gpt.mjs [--only p1-grandma] [--force]
+// Key: OPENAI_API_KEY env var, or OPENAI_API_KEY=... in current/tests/creative-director/.env (gitignored).
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,7 +19,7 @@ function apiKey() {
     const m = readFileSync(envFile, "utf8").match(/^OPENAI_API_KEY=(.+)$/m);
     if (m) return m[1].trim().replace(/^["']|["']$/g, "");
   }
-  throw new Error("OPENAI_API_KEY not set (env or docs/PRD/test-research/.env)");
+  throw new Error("OPENAI_API_KEY not set (env or current/tests/creative-director/.env)");
 }
 const KEY = apiKey();
 

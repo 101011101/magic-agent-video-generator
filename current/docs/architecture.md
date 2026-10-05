@@ -86,6 +86,6 @@ Video
 
 **Supporting material:**
 - [vision.md](vision.md): the type-proof model in full, with open gaps.
-- [research/](research/): story structure (literature) and copywriting structures.
-- [test-set/](test-set/): 51 test prompts in 17 groups, with a local viewer.
-- [test-research/](test-research/README.md): creative director samples (GPT-6.1 Sol and Claude Opus 5.5) and comparison pages.
+- [research/](../research/): story structure (literature) and copywriting structures.
+- [tests/prompt-set/](../tests/prompt-set/): 51 test prompts in 17 groups, with a local viewer.
+- [tests/creative-director/](../tests/creative-director/README.md): creative director samples (GPT-6.1 Sol and Claude Opus 5.5) and comparison pages.

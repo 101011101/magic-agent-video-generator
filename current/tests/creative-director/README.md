@@ -1,6 +1,6 @@
 # Test Research: Creative Director Samples
 
-> Samples to choose the creative director's output format. See [02-creative-director.md](../subsystems/02-creative-director.md).
+> Samples to choose the creative director's output format. See [02-creative-director.md](../../docs/subsystems/02-creative-director.md).
 
 **Test basis (decided in chat):**
 - Tests use operational chunks of stories.
@@ -12,7 +12,7 @@
 
 **Earlier exploration (complete):**
 - Questions: one-shot script vs. structured prompt → script; story → chunks vs. a director's shooting script; GPT-6.1 Sol vs. Claude Opus 5.5.
-- Result: story → operational chunks chosen. Findings are in [02-creative-director.md](../subsystems/02-creative-director.md).
+- Result: story → operational chunks chosen. Findings are in [02-creative-director.md](../../docs/subsystems/02-creative-director.md).
 
 **Variants (prompt templates in `templates/`):**
 1. `v1` one-shot script.
@@ -29,9 +29,9 @@
 - [results.html](results.html): all variants, both models.
 
 **Run:**
-- GPT: put `OPENAI_API_KEY=...` in `docs/PRD/test-research/.env` (gitignored), then `node docs/PRD/test-research/run-gpt.mjs`. Optional: `GPT_MODEL`, `GPT_EFFORT` (default `gpt-6.1-sol`, `high`), `--only <id>`, `--force`. Cached steps are skipped.
+- GPT: put `OPENAI_API_KEY=...` in `current/tests/creative-director/.env` (gitignored), then `node current/tests/creative-director/run-gpt.mjs`. Optional: `GPT_MODEL`, `GPT_EFFORT` (default `gpt-6.1-sol`, `high`), `--only <id>`, `--force`. Cached steps are skipped.
 - Claude: written by Claude Code subagents (Opus 5.5) from the same templates. Not raw API calls.
-- Pages: `node docs/PRD/test-research/build-html.mjs [--focus | --compare-gpt]`.
+- Pages: `node current/tests/creative-director/build-html.mjs [--focus | --compare-gpt]`.
 
 **Outputs:** `outputs/<gpt|claude>/<request id>/<step>.md`. GPT token usage in `meta.json`.
 

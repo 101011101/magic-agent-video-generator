@@ -2,8 +2,8 @@
 
 > Status: direction chosen, output format under test. Parent: [vision.md](../vision.md), [architecture.md](../architecture.md)
 > Depends on: [01-types.md](01-types.md). Hands off to operations: [04-operations-splitter.md](04-operations-splitter.md), [05-solver.md](05-solver.md).
-> Research: [story-structure-literature.md](../research/story-structure-literature.md), [copywriting-structures.md](../research/copywriting-structures.md)
-> Tests: [test-research/](../test-research/README.md)
+> Research: [story-structure-literature.md](../../research/story-structure-literature.md), [copywriting-structures.md](../../research/copywriting-structures.md)
+> Tests: [tests/creative-director/](../../tests/creative-director/README.md)
 
 **Problem:**
 - A request arrives in natural language. Operations needs a description of the goal.
@@ -54,7 +54,7 @@
 - Tests use operational chunks of stories.
 - Model: GPT-6.1 Sol (OpenAI API, effort high).
 - Both formats (A and B) run on the same story, so only the chunking prompt differs.
-- Comparison page: [gpt-chunk-compare.html](../test-research/gpt-chunk-compare.html).
+- Comparison page: [gpt-chunk-compare.html](../../tests/creative-director/gpt-chunk-compare.html).
 
 **Findings from the first tests:**
 - Exact wording survived in every sample. Example: the bakery end card.

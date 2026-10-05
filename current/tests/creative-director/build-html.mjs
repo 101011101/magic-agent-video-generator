@@ -1,5 +1,5 @@
 // Builds comparison pages from outputs/<model>/<request>/<step>.md
-// Usage: node docs/PRD/test-research/build-html.mjs [--focus | --compare-gpt]
+// Usage: node current/tests/creative-director/build-html.mjs [--focus | --compare-gpt]
 //   (none)         results.html           all approaches, both models
 //   --focus        story-to-changes.html  story + change-based chunks, both models
 //   --compare-gpt  gpt-chunk-compare.html GPT story, then original vs change-based chunks

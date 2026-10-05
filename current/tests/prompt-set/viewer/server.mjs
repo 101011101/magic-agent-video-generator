@@ -1,5 +1,5 @@
 // Local viewer for the video-prompt test set. Built-in modules only.
-// Run: node docs/PRD/test-set/viewer/server.mjs   (PORT env var overrides 4321)
+// Run: node current/tests/prompt-set/viewer/server.mjs   (PORT env var overrides 4321)
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';

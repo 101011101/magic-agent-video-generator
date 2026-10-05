@@ -1,6 +1,6 @@
 # Research: Copywriting and Short-Form Video Story Structures
 
-> Research input for [02-creative-director.md](../subsystems/02-creative-director.md). Collected 2026-10-04 by a research agent.
+> Research input for [02-creative-director.md](../docs/subsystems/02-creative-director.md). Collected 2026-10-04 by a research agent.
 > Labels: **unverified** = no checked source supports it. **illustrative** = example written by the agent.
 
 ## Foundations
