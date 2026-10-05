@@ -48,7 +48,9 @@
 **Questions to answer:**
 - What states does a scene state machine have? Examples: start state, end state, key states.
 - How do scenes connect? Examples: a continuous handoff (end frame to start frame), a cut that shares entities, an unrelated cut.
-- What is the exact boundary between the creative director and operations? Which elements must exist before the video moves to operations?
+- What is the exact boundary between the creative director and operations? Direction: the story and its operational chunks exist before the video moves to operations (see [02-creative-director.md](02-creative-director.md)).
+- If change-based chunks (format B) win: what is the type of the baseline state, and what is the type of a change (`property: from → to`, continuous or cut)?
+- Are camera and framing moves part of the state, or a separate kind of parameter? The tests show them as changes.
 - Is the script itself a type with fields (idea, scenes, spoken parts, auxiliary elements, dynamic specs), or free text?
 - Who produces a dynamic-spec state? Example: who analyzes the music and makes the tempo state?
 - Where do ballpark timings become exact timestamps?
