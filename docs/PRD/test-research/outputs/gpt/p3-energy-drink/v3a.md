@@ -1,0 +1,11 @@
+A matte black 355 ml can stands alone on a plain white surface against a plain white background. It looks exactly like the supplied product photo: the neon green lightning-bolt logo and the word VOLT in white capital letters are fully visible. The space is immaculate and silent, with the can’s dark finish giving it a bold, unmistakable presence.
+
+A thin line of green light appears on the surface beside the can. It advances like a spark finding its path, tracing an angular route around the base. The can remains unchanged, its neon green lightning-bolt logo and white VOLT lettering clearly visible. The stillness begins to feel charged.
+
+The white surroundings darken to charcoal, revealing the surface as a smooth platform in a vast, empty room. Green light spreads outward through narrow grooves in the floor. At the center stands the same matte black 355 ml can, exactly matching the reference, with its lightning-bolt logo and VOLT lettering unobstructed. A low vibration builds through the room.
+
+The illuminated grooves flare into branching patterns, racing toward the walls. Brief green sparks leap between distant metal structures, filling the space with restless movement. The can remains steady amid the activity, its original matte black finish, neon green lightning-bolt logo, and white VOLT lettering intact and fully visible.
+
+A bright green pulse sweeps through the room. The floor’s scattered lines light up together, forming one enormous lightning-bolt pattern beneath the platform. Everything that was dormant now feels alive. The unchanged can stands at the heart of it, its own neon green lightning-bolt logo and white VOLT lettering plainly visible.
+
+The pulse fades, and the room returns to pure white. The same matte black 355 ml can remains alone on the plain white surface, looking exactly like the supplied photo, with the neon green lightning-bolt logo and white VOLT lettering fully visible. The last green glimmer disappears beside its base, leaving a clean, confident stillness.
