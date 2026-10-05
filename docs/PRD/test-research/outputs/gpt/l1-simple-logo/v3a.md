@@ -1,0 +1,3 @@
+On a transparent background, a flat orange circle softly fades into view. A white paper plane glides a short distance into place inside it, suggesting a message setting off on its journey. The plane settles gently, and the word SENDLY fades in to the right of the circle in dark navy sans-serif letters.
+
+The animation is simple and restrained, with a clean, friendly mood. Once every element is in place, the complete logo remains still, preserving the uploaded design’s shapes, colors, lettering, and arrangement.

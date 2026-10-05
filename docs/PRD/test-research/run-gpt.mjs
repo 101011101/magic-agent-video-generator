@@ -82,7 +82,7 @@ async function runRequest(r) {
   writeFileSync(metaFile, JSON.stringify({ model: MODEL, effort: EFFORT, steps: { ...prev.steps, ...usageLog } }, null, 2));
 }
 
-const requests = JSON.parse(readFileSync(join(DIR, "requests.json"), "utf8")).filter((r) => !only || r.id === only);
+const requests = JSON.parse(readFileSync(join(DIR, args.includes("--requests") ? args[args.indexOf("--requests") + 1] : "requests.json"), "utf8")).filter((r) => !only || r.id === only);
 console.log(`Model ${MODEL}, effort ${EFFORT}, ${requests.length} requests`);
 for (const r of requests) {
   console.log(r.id);

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Original vs Change-Based Chunks</title>
+<style>
+:root { --bg:#f6f0e4; --ink:#3b2a1e; --soft:#7a5c44; --line:#d9cbb4; --card:#fbf7ef; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 Georgia, "Times New Roman", serif; }
+main { max-width:1280px; margin:0 auto; padding:48px 16px 96px; }
+h1 { font-weight:normal; font-size:34px; margin:0 0 8px; }
+.lede { color:var(--soft); margin:0 0 8px; }
+nav { margin:16px 0 40px; color:var(--soft); }
+nav a { color:var(--soft); margin-right:16px; }
+section { border-top:1px solid var(--line); padding-top:32px; margin-top:48px; }
+h2 { font-weight:normal; font-size:26px; margin:0; }
+.req { font-style:italic; margin:6px 0; }
+.up { color:var(--soft); font-size:14px; margin:0 0 8px; }
+h3 { font-weight:normal; font-size:19px; margin:36px 0 12px; color:var(--soft); }
+.cols { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.col { min-width:0; }
+.out + .cols { margin-top:24px; }
+.who { font-variant:small-caps; letter-spacing:.06em; color:var(--soft); margin:0 0 6px; border-bottom:1px solid var(--line); }
+.step { font-size:14px; color:var(--soft); margin:16px 0 4px; }
+.out { background:var(--card); border:1px solid var(--line); padding:16px 20px; font-size:15px; overflow-wrap:anywhere; }
+.out h4, .out h5, .out h6 { font-size:16px; margin:16px 0 4px; }
+.out p { margin:8px 0; }
+.out ul, .out ol { padding-left:20px; margin:6px 0; }
+.out li.sub { margin-left:18px; }
+.out code { font-size:13px; }
+.out pre { white-space:pre-wrap; font-size:13px; }
+.out hr { border:0; border-top:1px solid var(--line); }
+.out blockquote { margin:8px 0; padding-left:12px; border-left:2px solid var(--line); color:var(--soft); }
+.tw { overflow-x:auto; }
+table { border-collapse:collapse; font-size:13px; margin:8px 0; }
+th, td { border:1px solid var(--line); padding:4px 6px; vertical-align:top; text-align:left; }
+.pending { color:var(--soft); font-style:italic; }
+@media (max-width: 820px) { .cols { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Original vs Change-Based Chunks</h1>
+<p class="lede">GPT-6.1 Sol (OpenAI API, effort high). The same story, chunked by the original operational prompt and by the change-based prompt.</p>
+<nav><a href="#l1-simple-logo">Simple logo animation</a><a href="#l2-podcast-sting">Podcast intro logo sting</a><a href="#l3-ad-endcard">Logo end card for ads</a></nav>
+
+<section id="l1-simple-logo">
+  <h2>Simple logo animation</h2>
+  <p class="req">“make a simple animation of my logo”</p>
+  <p class="up">Upload: One logo file: a flat orange circle with a white paper plane inside it, and the word SENDLY in dark navy sans-serif letters to the right of the circle, on a transparent background.</p>
+  
+  <p class="who">Story</p>
+  <div class="out"><p>On a transparent background, a flat orange circle softly fades into view. A white paper plane glides a short distance into place inside it, suggesting a message setting off on its journey. The plane settles gently, and the word SENDLY fades in to the right of the circle in dark navy sans-serif letters.</p>
+<p>The animation is simple and restrained, with a clean, friendly mood. Once every element is in place, the complete logo remains still, preserving the uploaded design’s shapes, colors, lettering, and arrangement.</p></div>
+  <div class="cols">
+    <div class="col"><p class="who">Original operational chunks</p><div class="out"><h5>Chunk 1: Circle Fade-In</h5>
+<ul>
+<li><strong>Duration:</strong> 1 second</li>
+<li><strong>Visual:</strong> Begin with a fully transparent frame. The uploaded logo’s flat orange circle softly fades to full opacity at its original position. The plane and lettering are not yet visible.</li>
+<li><strong>On-screen text:</strong> None.</li>
+<li><strong>Audio:</strong> No narration, dialogue, music, or sound effects.</li>
+<li><strong>Entities:</strong> Orange circle extracted from the uploaded logo; preserve its exact orange color, circular shape, size, and final placement.</li>
+<li><strong>Environment:</strong> Transparent background; flat 2D graphic space. No time of day, environmental lighting, shadows, or additional colors.</li>
+<li><strong>Depends on:</strong> None.</li>
+<li><strong>Source:</strong> “On a transparent background, a flat orange circle softly fades into view.”</li>
+</ul>
+<h5>Chunk 2: Plane Glide</h5>
+<ul>
+<li><strong>Duration:</strong> 1 second</li>
+<li><strong>Visual:</strong> Keep the orange circle stationary and fully visible. The white paper plane glides a short distance toward its original position inside the circle. Use a restrained movement that slows as it approaches its destination; no rotation, trail, or extra graphic elements.</li>
+<li><strong>On-screen text:</strong> None.</li>
+<li><strong>Audio:</strong> No narration, dialogue, music, or sound effects.</li>
+<li><strong>Entities:</strong> The same orange circle. White paper plane extracted from the uploaded logo; preserve its exact shape, white color, size, and orientation. Its destination must match the uploaded arrangement.</li>
+<li><strong>Environment:</strong> Transparent background; flat orange-and-white graphics with no added lighting or texture.</li>
+<li><strong>Depends on:</strong> Chunk 1’s end frame, including the circle’s position, scale, color, and opacity.</li>
+<li><strong>Source:</strong> “A white paper plane glides a short distance into place inside it, suggesting a message setting off on its journey.”</li>
+</ul>
+<h5>Chunk 3: Settle and Reveal SENDLY</h5>
+<ul>
+<li><strong>Duration:</strong> 1 second</li>
+<li><strong>Visual:</strong> During approximately the first 0.3 seconds, the plane completes its gentle slowdown and settles exactly into its uploaded position, without bouncing or overshooting. Then the original SENDLY lettering softly fades in to the right of the circle over the remaining time. The circle and settled plane remain stationary.</li>
+<li><strong>On-screen text:</strong> “SENDLY”</li>
+<li><strong>Audio:</strong> No narration, dialogue, music, or sound effects.</li>
+<li><strong>Entities:</strong> The same orange circle and white paper plane. Original dark navy SENDLY lettering from the upload; preserve its exact letterforms, capitalization, spacing, size, color, and alignment. Do not recreate it using a substitute font.</li>
+<li><strong>Environment:</strong> Transparent background; flat orange, white, and dark navy palette matching the upload exactly.</li>
+<li><strong>Depends on:</strong> Chunk 2’s end frame and motion continuity. Final positions and proportions must match the uploaded complete logo.</li>
+<li><strong>Source:</strong> “The plane settles gently, and the word SENDLY fades in to the right of the circle in dark navy sans-serif letters.”</li>
+</ul>
+<h5>Chunk 4: Complete Logo Hold</h5>
+<ul>
+<li><strong>Duration:</strong> 2 seconds</li>
+<li><strong>Visual:</strong> Hold the complete logo completely still at full opacity. Its shapes, colors, lettering, proportions, spacing, and arrangement match the uploaded design. End on this still logo; do not fade out.</li>
+<li><strong>On-screen text:</strong> “SENDLY”</li>
+<li><strong>Audio:</strong> No narration, dialogue, music, or sound effects.</li>
+<li><strong>Entities:</strong> The complete uploaded logo: flat orange circle, white paper plane inside it, and dark navy sans-serif SENDLY lettering to its right. All identity traits remain unchanged.</li>
+<li><strong>Environment:</strong> Transparent background; flat graphic presentation with no added setting, lighting, or decoration.</li>
+<li><strong>Depends on:</strong> Chunk 3’s final frame, held unchanged throughout.</li>
+<li><strong>Source:</strong> “The animation is simple and restrained, with a clean, friendly mood. Once every element is in place, the complete logo remains still, preserving the uploaded design’s shapes, colors, lettering, and arrangement.”</li>
+</ul>
+<h5>Global Requirements</h5>
+<ul>
+<li><strong>Total duration:</strong> Approximately 5 seconds, with chunks assembled sequentially and no transition overlays.</li>
+<li><strong>Aspect ratio:</strong> Preserve the uploaded file’s canvas aspect ratio; no new ratio was specified. Avoid cropping the logo.</li>
+<li><strong>Identity:</strong> Use the uploaded logo as the authoritative source. Extract its components without redesigning them. Preserve exact colors, shapes, letterforms, proportions, and final arrangement.</li>
+<li><strong>Background and export:</strong> Maintain genuine transparency throughout and export in a format that supports alpha. Do not render a checkerboard or solid background into the animation.</li>
+<li><strong>Music and voice:</strong> None. No narration, dialogue, or sound effects.</li>
+<li><strong>Style:</strong> Simple, restrained, clean, and friendly. Only soft opacity fades and a short, gently easing plane glide.</li>
+<li><strong>Camera and editing:</strong> Fixed framing; no camera movement, zoom, cuts, or added visual effects. Maintain continuous positioning across chunk boundaries.</li>
+<li><strong>Additional content:</strong> No captions, slogans, decorative elements, or text beyond the original “SENDLY” lettering.</li>
+</ul></div></div>
+    <div class="col"><p class="who">Change-based operational chunks</p><div class="out"><h5>Baseline — first frame</h5>
+<ul>
+<li><strong>Source:</strong> Use the uploaded logo artwork. Preserve its exact shapes, colors, lettering, proportions, and final arrangement; do not redraw or substitute fonts.</li>
+<li><strong>Characters:</strong> None.</li>
+<li><strong>Objects:</strong></li>
+<li class="sub"><strong>Orange circle:</strong> Original flat orange fill, size, and position; opacity <strong>0%</strong>.</li>
+<li class="sub"><strong>White paper plane:</strong> Original white shape and size; hidden, positioned <strong>0.1 circle diameters left</strong> of its final uploaded position.</li>
+<li class="sub"><strong>SENDLY:</strong> Original dark navy sans-serif lettering, size, spacing, and position to the circle’s right; opacity <strong>0%</strong>.</li>
+<li><strong>Environment:</strong> Transparent background with alpha preserved. No scenery, props, or visible checkerboard.</li>
+<li><strong>Time of day:</strong> Not applicable.</li>
+<li><strong>Lighting:</strong> Flat graphic rendering; no shadows, reflections, or lighting effects.</li>
+<li><strong>Palette:</strong> Exact uploaded orange, white, and dark navy.</li>
+<li><strong>Style:</strong> Simple, restrained 2D animation with a clean, friendly mood. No distortion, rotation, bounce, or added decoration.</li>
+<li><strong>Camera:</strong> Fixed; no pan, zoom, or reframing.</li>
+<li><strong>Audio:</strong> Silent throughout.</li>
+<li><strong>On-screen text:</strong> Nothing visible initially; only the source lettering “SENDLY” will appear.</li>
+<li><strong>Aspect ratio:</strong> Match the uploaded file’s native width-to-height ratio and canvas.</li>
+<li><strong>Total duration:</strong> <strong>5 seconds</strong>, estimated.</li>
+</ul>
+<h5>Chunk 1 — Circle fade-in</h5>
+<ul>
+<li><strong>Quote:</strong> “On a transparent background, a flat orange circle softly fades into view.”</li>
+<li><strong>Signpost:</strong> implicit</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Circle opacity: <strong>0% → 100%</strong>, with a soft fade.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> <strong>1 second</strong></li>
+<li><strong>Depends on:</strong> none</li>
+</ul>
+<h5>Chunk 2 — Plane glide, settle, and lettering reveal</h5>
+<ul>
+<li><strong>Quote:</strong> “A white paper plane glides a short distance into place inside it, suggesting a message setting off on its journey. The plane settles gently, and the word SENDLY fades in to the right of the circle in dark navy sans-serif letters.”</li>
+<li><strong>Signpost:</strong> implicit for the plane’s entrance; “and” for the lettering reveal</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Plane visibility: <strong>hidden → visible</strong> as its glide begins.</li>
+<li class="sub">Plane position: <strong>0.1 circle diameters left of its final position → exact uploaded position inside the circle</strong>, during the first second, easing gently to a stop.</li>
+<li class="sub">SENDLY opacity: <strong>0% → 100%</strong>, during the second second, after the plane settles.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> <strong>2 seconds</strong></li>
+<li><strong>On-screen text:</strong> “SENDLY” fades in using the uploaded lettering.</li>
+<li><strong>Depends on:</strong> Chunk 1</li>
+</ul>
+<h5>Chunk 3 — Complete logo hold</h5>
+<ul>
+<li><strong>Quote:</strong> “The animation is simple and restrained, with a clean, friendly mood. Once every element is in place, the complete logo remains still, preserving the uploaded design’s shapes, colors, lettering, and arrangement.”</li>
+<li><strong>Signpost:</strong> “Once every element is in place”</li>
+<li><strong>Changes:</strong> None; hold the complete logo exactly as established at the end of Chunk 2.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> <strong>2 seconds</strong></li>
+<li><strong>Depends on:</strong> Chunk 2</li>
+</ul></div></div>
+  </div>
+</section>
+<section id="l2-podcast-sting">
+  <h2>Podcast intro logo sting</h2>
+  <p class="req">“5 second logo reveal for my podcast intro, kinda techy”</p>
+  <p class="up">Upload: One logo file: a white microphone icon inside a purple rounded square, with the words SIGNAL HOUR underneath in white.</p>
+  
+  <p class="who">Story</p>
+  <div class="out"><p>Against a deep charcoal background, faint violet signal lines flicker to life, accompanied by a soft electronic pulse. They ripple inward, gathering into a crisp purple glow as a brief shimmer of digital static clears.</p>
+<p>The supplied logo emerges intact: a white microphone icon inside a purple rounded square, with <strong>SIGNAL HOUR</strong> underneath in white. A subtle pulse travels through the surrounding glow, suggesting a signal locking into place.</p>
+<p>The stray lines fade away. The logo remains bright, steady and clearly readable as a clean electronic chime closes the five-second reveal. The mood is techy, polished and quietly energetic.</p></div>
+  <div class="cols">
+    <div class="col"><p class="who">Original operational chunks</p><div class="out"><h5>Chunk 1: Signal Activation</h5>
+<ul>
+<li><strong>Duration:</strong> 1.5 seconds — 0:00–0:01.5</li>
+<li><strong>Visual:</strong> Deep charcoal background. Faint violet signal lines flicker on and ripple inward toward the center. They gather into a crisp purple glow. A brief shimmer of digital static clears by the end of the chunk.</li>
+<li><strong>On-screen text:</strong> None.</li>
+<li><strong>Audio:</strong> No narration or dialogue. A soft electronic pulse accompanies the lines. Add a brief, restrained digital-static sound as the shimmer clears.</li>
+<li><strong>Entities:</strong> Thin violet signal lines and a purple glow. Keep their color and center position consistent with subsequent chunks. The supplied logo is not yet visible.</li>
+<li><strong>Environment:</strong> Abstract digital space; no literal time of day. Deep charcoal palette with low-intensity violet illumination.</li>
+<li><strong>Depends on:</strong> None.</li>
+<li><strong>Source:</strong> “Against a deep charcoal background, faint violet signal lines flicker to life, accompanied by a soft electronic pulse. They ripple inward, gathering into a crisp purple glow as a brief shimmer of digital static clears.”</li>
+</ul>
+<h5>Chunk 2: Logo Lock-In</h5>
+<ul>
+<li><strong>Duration:</strong> 2 seconds — 0:01.5–0:03.5</li>
+<li><strong>Visual:</strong> Continue directly from the cleared purple glow. Reveal the complete supplied logo using a smooth opacity fade, centered and intact. Once visible, a subtle pulse travels through the surrounding glow, suggesting signal lock-in. Keep the logo itself stable, sharp and undistorted.</li>
+<li><strong>On-screen text:</strong> “SIGNAL HOUR” — as contained in the supplied logo; no additional text.</li>
+<li><strong>Audio:</strong> No narration or dialogue. Continue the soft electronic pulse, with a subtle electronic accent synchronized to the glow pulse.</li>
+<li><strong>Entities:</strong> Use the uploaded logo file unchanged: white microphone icon inside a purple rounded square, with “SIGNAL HOUR” underneath in white. Preserve the exact icon, lettering, colors, proportions and internal spacing. Violet signal lines and the surrounding purple glow continue from Chunk 1.</li>
+<li><strong>Environment:</strong> Same abstract digital space and deep charcoal background. Purple illumination remains behind and around the logo, without reducing its readability.</li>
+<li><strong>Depends on:</strong> Chunk 1’s end frame: match the background, glow position, line placement and cleared-static state.</li>
+<li><strong>Source:</strong> “The supplied logo emerges intact: a white microphone icon inside a purple rounded square, with <strong>SIGNAL HOUR</strong> underneath in white. A subtle pulse travels through the surrounding glow, suggesting a signal locking into place.”</li>
+</ul>
+<h5>Chunk 3: Clean Final Hold</h5>
+<ul>
+<li><strong>Duration:</strong> 1.5 seconds — 0:03.5–0:05</li>
+<li><strong>Visual:</strong> Fade the remaining stray signal lines away. Hold the complete logo bright, steady and clearly readable through the final frame. Keep a restrained surrounding glow; no final fade to black.</li>
+<li><strong>On-screen text:</strong> “SIGNAL HOUR” — as contained in the supplied logo; no additional text.</li>
+<li><strong>Audio:</strong> No narration or dialogue. Let the electronic pulse settle. Play a clean electronic chime near the end, with its decay finishing within the five-second runtime.</li>
+<li><strong>Entities:</strong> The same unchanged uploaded logo, at the same size and position as Chunk 2. Remaining violet lines disappear; the purple glow becomes steady.</li>
+<li><strong>Environment:</strong> Same deep charcoal digital background and purple-white palette. Stable lighting with clear separation between the logo and background.</li>
+<li><strong>Depends on:</strong> Chunk 2’s end frame: match the logo’s placement, scale, opacity and surrounding glow. Animate only the remaining lines and the settling glow.</li>
+<li><strong>Source:</strong> “The stray lines fade away. The logo remains bright, steady and clearly readable as a clean electronic chime closes the five-second reveal. The mood is techy, polished and quietly energetic.”</li>
+</ul>
+<h5>Global Requirements</h5>
+<ul>
+<li><strong>Total duration:</strong> Exactly <strong>5 seconds</strong>, including the final logo hold and all audio decay.</li>
+<li><strong>Purpose:</strong> A logo reveal for a podcast intro.</li>
+<li><strong>Aspect ratio:</strong> Not specified in the request. Use the production project’s configured aspect ratio; preserve the logo’s proportions and keep the complete asset within frame.</li>
+<li><strong>Identity:</strong> Use the supplied logo file, not a generated approximation. Do not redraw, retype, recolor, crop, stretch or rearrange its components.</li>
+<li><strong>Text:</strong> Only the supplied “SIGNAL HOUR” lettering. No captions, slogans or additional titles.</li>
+<li><strong>Music and sound:</strong> Restrained electronic pulse and texture, brief digital static, and a clean closing chime. No vocals, narration or dialogue.</li>
+<li><strong>Style:</strong> Techy, polished and quietly energetic. Minimal effects, controlled purple glow and smooth transitions.</li>
+<li><strong>Continuity:</strong> Maintain one centered composition and consistent background across all chunks. Composite effects around the logo rather than distorting or obscuring it.</li>
+<li><strong>Final frame:</strong> Full logo remains bright, stable and clearly readable.</li>
+</ul></div></div>
+    <div class="col"><p class="who">Change-based operational chunks</p><div class="out"><h5>Baseline — first frame</h5>
+<ul>
+<li><strong>Deliverable:</strong> A five-second, techy podcast logo reveal.</li>
+<li><strong>Aspect ratio:</strong> 16:9, assumed because none was specified.</li>
+<li><strong>Environment:</strong> A flat, deep charcoal background filling the frame. No physical location, scenery or additional objects.</li>
+<li><strong>Characters:</strong> None.</li>
+<li><strong>Logo asset:</strong> Use the supplied file intact: a white microphone icon inside a purple rounded square, with <strong>SIGNAL HOUR</strong> underneath in white. Preserve its exact lettering, proportions, colors and layout; do not redraw or separate its elements.</li>
+<li><strong>Logo placement:</strong> Centered, large enough for the words to be clearly readable, with comfortable surrounding space. Initially fully transparent.</li>
+<li><strong>Effects:</strong> Signal lines, surrounding glow and digital static are initially absent.</li>
+<li><strong>Camera:</strong> Fixed, straight-on view; no camera movement.</li>
+<li><strong>Time of day:</strong> Not applicable to this abstract graphic environment.</li>
+<li><strong>Lighting:</strong> Self-illuminated graphic effects only; no simulated daylight or physical light sources.</li>
+<li><strong>Palette:</strong> Deep charcoal, violet, purple and white.</li>
+<li><strong>Style and mood:</strong> Techy, polished and quietly energetic; crisp graphics and restrained effects.</li>
+<li><strong>On-screen text:</strong> None visible initially. The supplied logo contains the only text.</li>
+<li><strong>Audio:</strong> Silence initially; no speech.</li>
+<li><strong>Total duration:</strong> Exactly 5.0 seconds.</li>
+</ul>
+<p>Unchanged properties carry forward. All chunks below remain in the same shot.</p>
+<hr>
+<h6>Chunk 1 — Signal activation</h6>
+<ul>
+<li><strong>Quote:</strong> “Against a deep charcoal background, faint violet signal lines flicker to life, accompanied by a soft electronic pulse.”</li>
+<li><strong>Signpost:</strong> implicit</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Signal lines: absent → faint violet lines flickering around the central reveal area.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 0.7 seconds — 0.0–0.7</li>
+<li><strong>On-screen text and audio:</strong></li>
+<li class="sub">Audio: silence → soft electronic pulse.</li>
+<li><strong>Depends on:</strong> none — starts from the baseline.</li>
+</ul>
+<h6>Chunk 2 — Inward convergence</h6>
+<ul>
+<li><strong>Quote:</strong> “They ripple inward, gathering into a crisp purple glow as a brief shimmer of digital static clears.”</li>
+<li><strong>Signpost:</strong> “as a brief shimmer of digital static clears”</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Signal-line motion: flickering in place → rippling inward and gathering, leaving a few stray peripheral lines.</li>
+<li class="sub">Surrounding glow: absent → crisp purple glow around the logo’s position.</li>
+<li class="sub">Digital static: absent → brief shimmer → cleared within this chunk.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 1.1 seconds — 0.7–1.8</li>
+<li><strong>Depends on:</strong> Chunk 1.</li>
+</ul>
+<h6>Chunk 3 — Intact logo reveal</h6>
+<ul>
+<li><strong>Quote:</strong> “The supplied logo emerges intact: a white microphone icon inside a purple rounded square, with <strong>SIGNAL HOUR</strong> underneath in white.”</li>
+<li><strong>Signpost:</strong> implicit</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Entire supplied logo opacity: fully transparent → fully visible, bright and clearly readable.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 1.0 second — 1.8–2.8</li>
+<li><strong>On-screen text and audio:</strong></li>
+<li class="sub">On-screen text: not visible → <strong>SIGNAL HOUR</strong>, appearing with the intact supplied logo; no additional text layer.</li>
+<li><strong>Depends on:</strong> Chunk 2.</li>
+</ul>
+<h6>Chunk 4 — Signal lock</h6>
+<ul>
+<li><strong>Quote:</strong> “A subtle pulse travels through the surrounding glow, suggesting a signal locking into place.”</li>
+<li><strong>Signpost:</strong> implicit</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Surrounding glow modulation: steady → one subtle traveling brightness pulse → settled, steady glow.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 0.8 seconds — 2.8–3.6</li>
+<li><strong>Depends on:</strong> Chunk 3.</li>
+</ul>
+<h6>Chunk 5 — Clear the remnants</h6>
+<ul>
+<li><strong>Quote:</strong> “The stray lines fade away.”</li>
+<li><strong>Signpost:</strong> implicit</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Remaining signal-line visibility: faint stray lines → fully faded out.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 0.6 seconds — 3.6–4.2</li>
+<li><strong>Depends on:</strong> Chunk 4.</li>
+</ul>
+<h6>Chunk 6 — Readable final hold</h6>
+<ul>
+<li><strong>Quote:</strong> “The logo remains bright, steady and clearly readable as a clean electronic chime closes the five-second reveal. The mood is techy, polished and quietly energetic.”</li>
+<li><strong>Signpost:</strong> “as a clean electronic chime closes the five-second reveal”</li>
+<li><strong>Changes:</strong> No visual changes; hold the established logo and glow without fading out.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 0.8 seconds — 4.2–5.0</li>
+<li><strong>On-screen text and audio:</strong></li>
+<li class="sub">Audio: soft electronic pulse → clean electronic closing chime → silence by 5.0 seconds.</li>
+<li><strong>Depends on:</strong> Chunk 5.</li>
+</ul>
+<p><strong>Duration check:</strong> 0.7 + 1.1 + 1.0 + 0.8 + 0.6 + 0.8 = <strong>5.0 seconds</strong>.</p></div></div>
+  </div>
+</section>
+<section id="l3-ad-endcard">
+  <h2>Logo end card for ads</h2>
+  <p class="req">“animate our logo for the end of our ads, keep it clean and on brand, 3 sec”</p>
+  <p class="up">Upload: One logo file: the word FERN in a thin green serif font with a small leaf replacing the dot-less space above the letter E. Brand colors: forest green and cream.</p>
+  
+  <p class="who">Story</p>
+  <div class="out"><p>For the final three seconds of the ad, a clean cream background holds the FERN logo. The word FERN fades gently into view in its original thin, forest-green serif lettering. The small leaf above the E appears a moment later, completing the supplied design without changing its shape or placement. The finished logo rests still for the closing beat—quiet, fresh, and polished, with no additional text or embellishment.</p></div>
+  <div class="cols">
+    <div class="col"><p class="who">Original operational chunks</p><div class="out"><h5>Operational chunks</h5>
+<h6>Chunk 1: Wordmark fade-in</h6>
+<ul>
+<li><strong>Duration:</strong> 1.2 seconds — timeline 0.0–1.2</li>
+<li><strong>Visual:</strong> A clean cream background. The supplied FERN lettering gently fades from transparent to fully visible. Keep the logo centered and stationary, with space reserved for the leaf in its original position. The leaf remains invisible.</li>
+<li><strong>On-screen text:</strong> “FERN” — only the lettering from the supplied logo.</li>
+<li><strong>Audio:</strong> No narration, dialogue, added music, or sound effects.</li>
+<li><strong>Entities:</strong> FERN wordmark from the uploaded logo: original thin, forest-green serif lettering. Preserve its exact letterforms, spacing, proportions, and color. Use the supplied artwork rather than recreating it with a font.</li>
+<li><strong>Environment:</strong> Flat graphic end card; cream background with uniform color. No physical setting, time of day, shadows, or lighting effects. Forest-green and cream palette.</li>
+<li><strong>Depends on:</strong> None.</li>
+<li><strong>Source:</strong> “For the final three seconds of the ad, a clean cream background holds the FERN logo. The word FERN fades gently into view in its original thin, forest-green serif lettering.”</li>
+</ul>
+<h6>Chunk 2: Leaf completion</h6>
+<ul>
+<li><strong>Duration:</strong> 0.6 seconds — timeline 1.2–1.8</li>
+<li><strong>Visual:</strong> The wordmark remains fully visible and still. The small supplied leaf above the E gently fades into view, completing the original logo. Do not move, rotate, resize, or reshape the leaf.</li>
+<li><strong>On-screen text:</strong> “FERN” — only the lettering from the supplied logo.</li>
+<li><strong>Audio:</strong> No narration, dialogue, added music, or sound effects.</li>
+<li><strong>Entities:</strong> The same FERN wordmark, unchanged from Chunk 1. The leaf must retain its exact uploaded shape, size, color, orientation, and placement relative to the E.</li>
+<li><strong>Environment:</strong> The same uniform cream background and forest-green palette as Chunk 1; no additional visual effects.</li>
+<li><strong>Depends on:</strong> Chunk 1’s end frame. Match the canvas, background, logo position, scale, and fully visible lettering exactly.</li>
+<li><strong>Source:</strong> “The small leaf above the E appears a moment later, completing the supplied design without changing its shape or placement.”</li>
+</ul>
+<h6>Chunk 3: Closing hold</h6>
+<ul>
+<li><strong>Duration:</strong> 1.2 seconds — timeline 1.8–3.0</li>
+<li><strong>Visual:</strong> Hold the complete supplied FERN logo perfectly still on the cream background through the final frame. No fade-out, camera movement, additional text, or embellishment.</li>
+<li><strong>On-screen text:</strong> “FERN” — only the lettering from the supplied logo.</li>
+<li><strong>Audio:</strong> No narration, dialogue, added music, or sound effects.</li>
+<li><strong>Entities:</strong> The complete FERN logo: original thin, forest-green serif wordmark and small leaf above the E. All shapes, spacing, proportions, colors, and placement remain unchanged.</li>
+<li><strong>Environment:</strong> The same flat cream end card as the earlier chunks. Quiet, fresh, polished presentation.</li>
+<li><strong>Depends on:</strong> Chunk 2’s end frame. Hold that completed logo composition without any change.</li>
+<li><strong>Source:</strong> “The finished logo rests still for the closing beat—quiet, fresh, and polished, with no additional text or embellishment.”</li>
+</ul>
+<h5>Global requirements</h5>
+<ul>
+<li><strong>Purpose and total duration:</strong> A logo animation for the end of ads, exactly <strong>3.0 seconds</strong>.</li>
+<li><strong>Aspect ratio:</strong> Match the parent ad’s aspect ratio, resolution, and frame rate; no new aspect ratio is specified.</li>
+<li><strong>Identity:</strong> Use the uploaded FERN logo as the authoritative artwork. Do not substitute a font, redraw the leaf, or alter the supplied design. Separate or mask the lettering and leaf only to animate their opacity.</li>
+<li><strong>Brand colors:</strong> Forest green and cream. Use supplied brand values where available; preserve the logo’s original forest green.</li>
+<li><strong>Continuity:</strong> Keep background color, logo scale, and placement identical across all chunks. Maintain the leaf’s original placement above the E.</li>
+<li><strong>Music and voice:</strong> Add no music, narration, dialogue, or sound effects. Any existing ad audio remains governed by the parent ad edit.</li>
+<li><strong>Style:</strong> Clean, minimal, and on brand. Gentle opacity fades only, followed by a still closing beat. No additional text, embellishments, shadows, textures, particles, or decorative animation.</li>
+</ul></div></div>
+    <div class="col"><p class="who">Change-based operational chunks</p><div class="out"><h5>Baseline — first frame</h5>
+<ul>
+<li><strong>Purpose and duration:</strong> Clean, on-brand logo animation occupying the final <strong>3.00 seconds</strong> of the ad.</li>
+<li><strong>Environment:</strong> Full-frame, solid cream background using the brand’s cream color. No scenery or other objects.</li>
+<li><strong>Characters:</strong> None.</li>
+<li><strong>Logo asset:</strong> Use the supplied FERN logo without redrawing or altering it. Preserve its original thin, forest-green serif lettering and the small leaf’s exact shape, size, and placement above the E.</li>
+<li><strong>Placement:</strong> Center the complete logo composition in the frame. Its position, scale, spacing, and proportions remain fixed throughout.</li>
+<li><strong>Initial visibility:</strong> Both the word FERN and the leaf start at 0% opacity. The cream background is fully visible.</li>
+<li><strong>Products and other objects:</strong> None.</li>
+<li><strong>Time of day:</strong> Not applicable; graphic end card.</li>
+<li><strong>Lighting:</strong> Flat and even; no shadows, highlights, or lighting effects.</li>
+<li><strong>Palette:</strong> Brand cream and the supplied logo’s forest green only.</li>
+<li><strong>Style:</strong> Minimal, quiet, fresh, and polished. No additional text, embellishment, camera movement, or logo deformation.</li>
+<li><strong>Audio:</strong> Preserve any existing ad audio; add no music, voiceover, or sound effects.</li>
+<li><strong>Aspect ratio:</strong> Match the parent ad; no aspect ratio was specified.</li>
+</ul>
+<h5>Chunk 1 — Word fades in</h5>
+<ul>
+<li><strong>Quote:</strong> “For the final three seconds of the ad, a clean cream background holds the FERN logo. The word FERN fades gently into view in its original thin, forest-green serif lettering.”</li>
+<li><strong>Signpost:</strong> “For the final three seconds of the ad”</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Word FERN opacity: 0% → 100%, with a gentle fade.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 1.20 seconds — 0.00–1.20</li>
+<li><strong>On-screen text and audio:</strong> The supplied logo word “FERN” becomes visible.</li>
+<li><strong>Depends on:</strong> none; starts from the baseline.</li>
+</ul>
+<h5>Chunk 2 — Leaf completes the logo</h5>
+<ul>
+<li><strong>Quote:</strong> “The small leaf above the E appears a moment later, completing the supplied design without changing its shape or placement.”</li>
+<li><strong>Signpost:</strong> “a moment later”</li>
+<li><strong>Changes:</strong></li>
+<li class="sub">Leaf opacity: 0% → 100%. Hold it invisible for the first 0.15 seconds of this chunk, then fade it in over 0.35 seconds.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 0.50 seconds — 1.20–1.70</li>
+<li><strong>Depends on:</strong> Chunk 1</li>
+</ul>
+<h5>Chunk 3 — Closing hold</h5>
+<ul>
+<li><strong>Quote:</strong> “The finished logo rests still for the closing beat—quiet, fresh, and polished, with no additional text or embellishment.”</li>
+<li><strong>Signpost:</strong> “for the closing beat”</li>
+<li><strong>Changes:</strong> None; hold the completed logo’s end state.</li>
+<li><strong>Type:</strong> continuous</li>
+<li><strong>Duration:</strong> 1.30 seconds — 1.70–3.00</li>
+<li><strong>Depends on:</strong> Chunk 2</li>
+</ul></div></div>
+  </div>
+</section>
+</main>
+</body>
+</html>

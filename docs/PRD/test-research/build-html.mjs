@@ -3,12 +3,15 @@
 //   (none)         results.html           all approaches, both models
 //   --focus        story-to-changes.html  story + change-based chunks, both models
 //   --compare-gpt  gpt-chunk-compare.html GPT story, then original vs change-based chunks
+//   --requests <file.json>  use another request set; the page name gets the set's suffix
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
-const requests = JSON.parse(readFileSync(join(DIR, "requests.json"), "utf8"));
+const argv = process.argv.slice(2);
+const REQ_FILE = argv.includes("--requests") ? argv[argv.indexOf("--requests") + 1] : "requests.json";
+const requests = JSON.parse(readFileSync(join(DIR, REQ_FILE), "utf8"));
 
 const MODELS = [
   { dir: "gpt", label: "GPT-6.1 Sol", note: "OpenAI API, effort high" },
@@ -180,5 +183,6 @@ ${sections}
 </body>
 </html>
 `;
-writeFileSync(join(DIR, PAGE.out), html);
-console.log(`Wrote ${PAGE.out}`);
+const outFile = REQ_FILE === "requests.json" ? PAGE.out : PAGE.out.replace(".html", `-${REQ_FILE.replace(/^requests-|\.json$/g, "")}.html`);
+writeFileSync(join(DIR, outFile), html);
+console.log(`Wrote ${outFile}`);
