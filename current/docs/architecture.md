@@ -54,10 +54,10 @@ Video
 - New tools add to operations only. The creative side does not change.
 
 **How it works (from [vision.md](vision.md); subsystem designs are not started):**
-1. **Types:** everything is a type. A goal is a type. A type is a record of typed parameters. Context that fits no parameter stays free context for the tool models.
+1. **Types and conditions:** a goal is an AND of true/false conditions. Each element that changes gets an atom. A tool type shows what it changes, what it maintains, and from which input each output property comes. Context that fits no atom stays free context for the tool models.
 2. **Tools are proofs:** a tool spec states its input types, its output type and the properties it maintains. A split tool and a join tool together prove equivalence.
 3. **Split:** the operations splitter breaks the operational chunks into pieces with context and dependencies. It splits as little as possible. With change-based chunks, each piece changes only the listed properties; everything else stays the same (ceteris paribus).
-4. **Solve:** try the highest level first. If a tool or a saved theorem accepts the full piece, apply it. If not, split the piece again (scoped) and recurse.
+4. **Solve:** find a tool that makes the most open conditions true, assuming perfect inputs. Then solve its inputs as sub-goals, and recurse. A piece is solved by a tool, broken down (default), or sent to get more information.
 5. **Resolve context:** for an absent value, an LLM answers "do you know X?" with a value or "no". A "no" means missing context; the system asks the user.
 6. **Ordering:** the solver returns a checkable tool-call ordering: which tools, which inputs, how outputs connect. It is a recommendation. It can connect to a studio.
 7. **Execute:** tool calls start only after the ordering is complete.
@@ -86,6 +86,8 @@ Video
 
 **Supporting material:**
 - [vision.md](vision.md): the type-proof model in full, with open gaps.
+- [post-mvp.md](post-mvp.md): deferred items (order, clobbering, confidence, verification).
+- [magic-hour-tools.html](../research/magic-hour-tools.html): the Magic Hour tool offering with input and output types.
 - [research/](../research/): story structure (literature) and copywriting structures.
 - [tests/prompt-set/](../tests/prompt-set/): 51 test prompts in 17 groups, with a local viewer.
 - [tests/creative-director/](../tests/creative-director/README.md): creative director samples (GPT-6.1 Sol and Claude Opus 5.5) and comparison pages.

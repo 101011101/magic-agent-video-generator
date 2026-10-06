@@ -18,6 +18,12 @@
   - **B. Change-based chunks:** a baseline state, then per chunk only the changes (`property: from → to`), continuous or cut, and depends on.
 - With format B, the held state is the state set by the first operational frame. In the state transformation, only the listed changes happen. Everything else stays the same (ceteris paribus).
 
+**Atomization (decided in chat):**
+- The splitter turns an operational chunk into an AND of true/false conditions (see [01-types.md](01-types.md)).
+- Each element that changes gets an atom. Elements that do not change get no atom. A few universal atoms (example: background, filtering) can be added.
+- Atomization is a simple inference. A cheap model can do it.
+- Long videos: the splitter recurses on the long operational PRD until each piece can be satisfied by a tool with perfect inputs (see [05-solver.md](05-solver.md)).
+
 **Questions to answer:**
 - How does the operations splitter break the chunks into pieces?
 - How much splitting does it do?

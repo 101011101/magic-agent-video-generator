@@ -35,6 +35,30 @@
   - A tool layers subtitles.
   - A tool layers logos.
 
+**State model: conditions and atoms (decided in chat):**
+- A state is a set of conditions. Each condition is true or false: does it match the desired state?
+- The goal is an AND of conditions. Truth values distribute onto sub-components. Example:
+  - `Operational PRD?` → false.
+  - The splitter gives an equivalent: `Video? ∧ Grandma[grandma context matrix]? ∧ Cookie? ∧ Background[matrix]? ∧ Sound[matrix]? ∧ Text[matrix]?`.
+  - The text matrix includes text alignment and similar details.
+  - Each part is true or false. Each matrix breaks into its own conditions.
+- **Atoms for an operational PRD are the elements that change.** Each element that changes gets an atom.
+- Elements that do not change need no atom. A tool does not change an element unless asked.
+- A small set of universal atoms can be added. Examples: background, filtering.
+- A tool changes one thing at a time, in most cases. The solver checks that those changes align with what is asked.
+- Atomization is a simple inference. A cheap model can decide, from a tool's spec, whether the tool maintains a given context condition.
+
+**Tool types (decided in chat):**
+- A tool type shows what it changes and what it maintains, and from which input each output property comes.
+- Example of a hypothetical video tool:
+  - Inputs:
+    - start frame: individual 1 face + individual 1 body + background 1 + text 1
+    - end frame: individual 1 face + individual 1 body + background 1 + text 1
+    - face swap: individual 2 face + individual 2 body + background 2
+  - Output: video with individual 2 face + individual 1 body + background 1.
+  - Text 1 is not in the output. The tool is not specified for text, so text is not expected.
+- A tool spec states which elements it changes and how confident it is. See [../post-mvp.md](../post-mvp.md).
+
 **Draft for discussion (proposal, not confirmed):**
 - Video layers that scene states can carry:
   - **Entities:** characters, products, objects. Identity lives here.
