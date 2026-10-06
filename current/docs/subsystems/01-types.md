@@ -58,6 +58,20 @@
   - Output: video with individual 2 face + individual 1 body + background 1.
   - Text 1 is not in the output. The tool is not specified for text, so text is not expected.
 - A tool spec states which elements it changes and how confident it is. See [../post-mvp.md](../post-mvp.md).
+- **Nature field (approved for the tool signature, to be evaluated):** each signature has a `nature` text: what the tool fundamentally does, what its prompt and settings can steer, and what it cannot do. It covers capabilities that are in the tool's nature but not listed in its signature. Example: a video generator that accepts a prompt can likely do a fade. See [05-solver.md](05-solver.md) for how the solver uses it.
+- Current fixture: [tool-signatures.json](../../tests/fixtures/tool-signatures.json) (40 signatures over a 22-atom draft vocabulary).
+
+**Bindings: consistency of entities and matrices (decided in chat):**
+- An entity is a binding, like a variable. Examples: `grandma := upload`, `keeper := Image Generator output` (generated once).
+- Every condition on that entity must trace back to the same binding through pass-through links.
+- Once an entity is bound, no tool may make its identity true again. A new identity is a new type (`grandma′ ≠ grandma`), so the condition fails.
+- Matrices are bindings too. Examples: the kitchen (background matrix), the painterly style, the green cardigan. A new kitchen is a new type.
+- All bound types are held constant to each other. If a previous type is not the same as a new type, they are not the same.
+- Real entities (the user's grandmother) bind to an original input. Fictional entities (the lighthouse keeper) bind to a tool output, generated once and reused.
+
+**Open (vocabulary gaps from the solver traces, see [../solver-traces.md](../solver-traces.md)):**
+- No atom for visibility (opacity over time). The `fade` tool makes nothing true.
+- No atom for the position of one layer or element. `camera` covers the whole frame only.
 
 **Draft for discussion (proposal, not confirmed):**
 - Video layers that scene states can carry:

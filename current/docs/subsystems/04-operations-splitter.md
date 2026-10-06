@@ -21,13 +21,16 @@
 **Atomization (decided in chat):**
 - The splitter turns an operational chunk into an AND of true/false conditions (see [01-types.md](01-types.md)).
 - Each element that changes gets an atom. Elements that do not change get no atom. A few universal atoms (example: background, filtering) can be added.
-- Atomization is a simple inference. A cheap model can do it.
+- Atomization is a simple inference. A cheap model can do it. It maps each free-text change onto the atom vocabulary in [tool-signatures.json](../../tests/fixtures/tool-signatures.json).
+- The baseline counts as changes from nothing, so baseline elements that matter (identity, background) get atoms.
 - Long videos: the splitter recurses on the long operational PRD until each piece can be satisfied by a tool with perfect inputs (see [05-solver.md](05-solver.md)).
 
+**Splitting is a join tool (decided in chat):**
+- The splitter breaks a goal by picking a join tool (stitch, mux, overlay or composite) as the last tool of an epoch, when no other tool covers every condition. See the core loop in [05-solver.md](05-solver.md).
+- The join's signature passes its inputs through, so the pieces add up to the goal by construction.
+- Splitting happens only when needed. Chunk boundaries are not tool boundaries.
+
 **Questions to answer:**
-- How does the operations splitter break the chunks into pieces?
-- How much splitting does it do?
-- How does the system prove that the pieces add up to the story (the matching join)?
 - How is the splitter scoped, so it re-splits only one piece, not the full story?
 - What does it do when it finds missing context? (See [03-context-resolution.md](03-context-resolution.md).)
 - With format A, how does the splitter find the changes between chunks?
