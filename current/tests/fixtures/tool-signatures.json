@@ -1,0 +1,3287 @@
+{
+  "note": "Typed tool signatures for the state solver. Atoms: see atoms[]; entity atoms apply per entity. from_inputs: output atom <- source input slot (pass-through). makes_true: the tool sets the atom from its prompt, settings or model. not_specified: no guarantee; no solver credit. dropped: input atoms whose output atom is not_specified (PRD rule; atoms replaced from another slot are not listed). For video and image outputs, from_inputs + makes_true + not_specified cover every atom in scope. inputs[] lists media and prompt slots; numeric and enum params are in settings_that_set_atoms. basis: documented/inferred per magic-hour-tools.json maintains/mutates; mixed = both. Added tools carry a provider field; their specs are by design, not from docs.",
+  "accessed": "2026-10-05",
+  "atoms": [
+    {
+      "atom": "identity",
+      "scope": "entity",
+      "definition": "Who the entity is: face and recognizable likeness (for a product or logo: its brand identity)."
+    },
+    {
+      "atom": "head_hair",
+      "scope": "entity",
+      "definition": "Hair and head shape outside the face."
+    },
+    {
+      "atom": "body",
+      "scope": "entity",
+      "definition": "Body build, skin and proportions."
+    },
+    {
+      "atom": "wardrobe",
+      "scope": "entity",
+      "definition": "Clothing and accessories the entity wears."
+    },
+    {
+      "atom": "expression",
+      "scope": "entity",
+      "definition": "Facial expression and eye gaze."
+    },
+    {
+      "atom": "pose_action",
+      "scope": "entity",
+      "definition": "Body and head pose, and the motion or action over time."
+    },
+    {
+      "atom": "speech_sync",
+      "scope": "entity",
+      "definition": "Mouth motion matches the speech_audio track."
+    },
+    {
+      "atom": "voice",
+      "scope": "entity",
+      "definition": "Voice timbre and speaking manner of the entity."
+    },
+    {
+      "atom": "background",
+      "scope": "scene",
+      "definition": "Setting and environment behind the entities."
+    },
+    {
+      "atom": "lighting",
+      "scope": "scene",
+      "definition": "Light direction, quality and colour on the scene."
+    },
+    {
+      "atom": "props",
+      "scope": "scene",
+      "definition": "Objects in the scene that are not entities or wardrobe."
+    },
+    {
+      "atom": "camera",
+      "scope": "scene",
+      "definition": "Framing, shot size, angle and camera motion."
+    },
+    {
+      "atom": "style",
+      "scope": "scene",
+      "definition": "Visual rendering: art style, palette, colour grade."
+    },
+    {
+      "atom": "text",
+      "scope": "layer",
+      "definition": "On-screen text and graphic overlays: captions, titles, logos."
+    },
+    {
+      "atom": "speech_audio",
+      "scope": "layer",
+      "definition": "Spoken-word audio: words, language, timing."
+    },
+    {
+      "atom": "music",
+      "scope": "layer",
+      "definition": "Music track."
+    },
+    {
+      "atom": "sfx",
+      "scope": "layer",
+      "definition": "Sound effects and ambient sound."
+    },
+    {
+      "atom": "media_type",
+      "scope": "format",
+      "definition": "Output media: image, video, audio or data."
+    },
+    {
+      "atom": "duration",
+      "scope": "format",
+      "definition": "Length in seconds."
+    },
+    {
+      "atom": "aspect",
+      "scope": "format",
+      "definition": "Aspect ratio."
+    },
+    {
+      "atom": "resolution",
+      "scope": "format",
+      "definition": "Pixel dimensions."
+    },
+    {
+      "atom": "frame_rate",
+      "scope": "format",
+      "definition": "Frames per second."
+    }
+  ],
+  "signatures": [
+    {
+      "tool": "Image-to-Video",
+      "endpoint": "POST /v1/image-to-video",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.end_image_file_path",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "pose_action",
+            "expression",
+            "camera"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "head_hair": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "body": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "wardrobe": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "background": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "lighting": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "props": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "style": "assets.image_file_path (t=0; assets.end_image_file_path at t=end when given)",
+          "aspect": "assets.image_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "pose_action",
+          "expression",
+          "camera",
+          "duration",
+          "resolution"
+        ],
+        "dropped": [
+          "assets.image_file_path.text",
+          "assets.end_image_file_path.text"
+        ],
+        "not_specified": [
+          "text",
+          "speech_sync",
+          "voice",
+          "speech_audio",
+          "music",
+          "sfx",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "end_seconds": [
+          "duration"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "style.prompt": [
+          "pose_action",
+          "expression",
+          "camera"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "First frame = input image [inferred]; end frame [documented]; motion and camera from prompt [documented]. Identity can drift in later frames [inferred]. aspect follows input image [inferred]. audio=true adds model audio with no content control, so no layer atom gets credit."
+    },
+    {
+      "tool": "Text-to-Video",
+      "endpoint": "POST /v1/text-to-video",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text"
+          ]
+        },
+        {
+          "slot": "references",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "references (inferred; field undocumented; when given)"
+        },
+        "makes_true": [
+          "media_type",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style",
+          "duration",
+          "aspect",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "text",
+          "speech_sync",
+          "voice",
+          "speech_audio",
+          "music",
+          "sfx",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "end_seconds": [
+          "duration"
+        ],
+        "aspect_ratio": [
+          "aspect"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "style.prompt": [
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style",
+          "text"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Maintains nothing. Without references, the prompt sets identity only for a described generic entity; a real person needs a reference image. references semantics undocumented. Cross-call consistency not guaranteed. audio=true gives uncontrolled audio."
+    },
+    {
+      "tool": "AI Talking Photo",
+      "endpoint": "POST /v1/ai-talking-photo",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.audio_file_path",
+          "media": "audio",
+          "required": true,
+          "provides": [
+            "voice",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "background",
+            "camera",
+            "pose_action"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.image_file_path",
+          "head_hair": "assets.image_file_path",
+          "body": "assets.image_file_path",
+          "wardrobe": "assets.image_file_path",
+          "background": "assets.image_file_path",
+          "lighting": "assets.image_file_path",
+          "props": "assets.image_file_path",
+          "camera": "assets.image_file_path",
+          "style": "assets.image_file_path",
+          "aspect": "assets.image_file_path",
+          "voice": "assets.audio_file_path",
+          "speech_audio": "assets.audio_file_path",
+          "music": "assets.audio_file_path",
+          "sfx": "assets.audio_file_path",
+          "duration": "assets.audio_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "speech_sync",
+          "expression",
+          "pose_action"
+        ],
+        "dropped": [
+          "assets.image_file_path.text",
+          "assets.image_file_path.resolution"
+        ],
+        "not_specified": [
+          "text",
+          "resolution",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ],
+        "max_resolution": [
+          "resolution"
+        ],
+        "style.generation_mode": [
+          "background",
+          "camera"
+        ],
+        "style.prompt": [
+          "background",
+          "camera",
+          "pose_action"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Likeness kept in realistic mode [documented]; prompted mode lowers likeness and lets the prompt change background and camera [documented]. Background, framing and audio pass-through [inferred]. Needs a clear frontal face. No text input: make speech with AI Voice Generator first."
+    },
+    {
+      "tool": "Lip Sync",
+      "endpoint": "POST /v1/lip-sync",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "assets.audio_file_path",
+          "media": "audio",
+          "required": true,
+          "provides": [
+            "voice",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.video_file_path",
+          "head_hair": "assets.video_file_path",
+          "body": "assets.video_file_path",
+          "wardrobe": "assets.video_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "background": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "props": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "style": "assets.video_file_path",
+          "text": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "resolution": "assets.video_file_path",
+          "frame_rate": "assets.video_file_path",
+          "voice": "assets.audio_file_path",
+          "speech_audio": "assets.audio_file_path",
+          "music": "assets.audio_file_path",
+          "sfx": "assets.audio_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "speech_sync"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ],
+        "max_fps_limit": [
+          "frame_rate"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "assets.youtube_url can replace the video file. Lip motion [documented]. Video content kept and audio replaced [inferred]. The input voice comes with the audio and can mismatch the person's identity. Best with one frontal speaker; audio and video of similar length."
+    },
+    {
+      "tool": "Face Swap Video",
+      "endpoint": "POST /v1/face-swap",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity"
+          ]
+        },
+        {
+          "slot": "assets.face_mappings[].new_face",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.image_file_path (all-faces) | assets.face_mappings[].new_face (individual-faces, per entity)",
+          "head_hair": "assets.video_file_path",
+          "body": "assets.video_file_path",
+          "wardrobe": "assets.video_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "speech_sync": "assets.video_file_path",
+          "voice": "assets.video_file_path",
+          "background": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "props": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "style": "assets.video_file_path",
+          "text": "assets.video_file_path",
+          "speech_audio": "assets.video_file_path",
+          "music": "assets.video_file_path",
+          "sfx": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "resolution": "assets.video_file_path",
+          "frame_rate": "assets.video_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "assets.face_swap_mode": [
+          "identity"
+        ],
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ],
+        "style.version": [
+          "identity"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "assets.youtube_url can replace the video file. Face identity, expression, head motion, lighting [documented]. Body, pose, background, camera, audio [inferred]. head_hair stays from the video, so a full likeness may need Character Replace. voice stays from the video. individual-faces needs Face Detection first. v2 keeps identity better."
+    },
+    {
+      "tool": "Video-to-Video",
+      "endpoint": "POST /v1/video-to-video",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "style"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.video_file_path",
+          "head_hair": "assets.video_file_path",
+          "body": "assets.video_file_path",
+          "wardrobe": "assets.video_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "speech_sync": "assets.video_file_path",
+          "background": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "props": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "style",
+          "frame_rate"
+        ],
+        "dropped": [
+          "assets.video_file_path.voice",
+          "assets.video_file_path.text",
+          "assets.video_file_path.speech_audio",
+          "assets.video_file_path.music",
+          "assets.video_file_path.sfx",
+          "assets.video_file_path.resolution"
+        ],
+        "not_specified": [
+          "text",
+          "voice",
+          "speech_audio",
+          "music",
+          "sfx",
+          "resolution"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.art_style": [
+          "style"
+        ],
+        "style.model": [
+          "style"
+        ],
+        "style.prompt": [
+          "style"
+        ],
+        "fps_resolution": [
+          "frame_rate"
+        ],
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "assets.youtube_url can replace the video file. Motion and structure [documented]; framing and camera [inferred]. Repaints every frame: text may break, identity detail may drift [inferred]. Audio pass-through undocumented: mux the source audio back. Not for content changes."
+    },
+    {
+      "tool": "AI Video Editor",
+      "endpoint": "POST /v1/ai-video-editor",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "props",
+            "background",
+            "style",
+            "wardrobe",
+            "lighting"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.video_file_path",
+          "head_hair": "assets.video_file_path",
+          "body": "assets.video_file_path",
+          "wardrobe": "assets.video_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "speech_sync": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "props",
+          "background",
+          "style",
+          "resolution"
+        ],
+        "dropped": [
+          "assets.video_file_path.voice",
+          "assets.video_file_path.text",
+          "assets.video_file_path.speech_audio",
+          "assets.video_file_path.music",
+          "assets.video_file_path.sfx",
+          "assets.video_file_path.frame_rate"
+        ],
+        "not_specified": [
+          "text",
+          "voice",
+          "speech_audio",
+          "music",
+          "sfx",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "props",
+          "background",
+          "style"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Changes objects, colours, scene details, style named in the prompt [documented]. Credit only for the atoms the prompt names; atoms the prompt does not name carry from the video [inferred]. One edit per call. Generative re-render: text and audio pass-through not guaranteed."
+    },
+    {
+      "tool": "AI Video Translator",
+      "endpoint": "POST /v1/ai-video-translator",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.video_file_path",
+          "head_hair": "assets.video_file_path",
+          "body": "assets.video_file_path",
+          "wardrobe": "assets.video_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "voice": "assets.video_file_path",
+          "background": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "props": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "style": "assets.video_file_path",
+          "text": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "speech_audio",
+          "speech_sync",
+          "resolution"
+        ],
+        "dropped": [
+          "assets.video_file_path.music",
+          "assets.video_file_path.sfx",
+          "assets.video_file_path.frame_rate"
+        ],
+        "not_specified": [
+          "music",
+          "sfx",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "target_language": [
+          "speech_audio"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Only spoken language is documented. Visuals, identity, voice timbre and lip re-sync are inferred and unverified (no tool guide page). On-screen text is kept but not translated. 1-30 s clips."
+    },
+    {
+      "tool": "Animation",
+      "endpoint": "POST /v1/animation",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "background",
+            "props",
+            "pose_action",
+            "lighting"
+          ]
+        },
+        {
+          "slot": "style.art_style_custom",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "style"
+          ]
+        },
+        {
+          "slot": "assets.audio_file_path",
+          "media": "audio",
+          "required": false,
+          "provides": [
+            "voice",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration"
+          ]
+        },
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "voice": "assets.audio_file_path",
+          "speech_audio": "assets.audio_file_path",
+          "music": "assets.audio_file_path",
+          "sfx": "assets.audio_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "background",
+          "props",
+          "pose_action",
+          "lighting",
+          "style",
+          "camera",
+          "duration",
+          "aspect",
+          "resolution",
+          "frame_rate"
+        ],
+        "dropped": [
+          "assets.image_file_path.identity",
+          "assets.image_file_path.head_hair",
+          "assets.image_file_path.body",
+          "assets.image_file_path.wardrobe",
+          "assets.image_file_path.expression",
+          "assets.image_file_path.text"
+        ],
+        "not_specified": [
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "speech_sync",
+          "text"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.art_style": [
+          "style"
+        ],
+        "style.art_style_custom": [
+          "style"
+        ],
+        "style.camera_effect": [
+          "camera"
+        ],
+        "style.prompt_type": [
+          "background",
+          "props",
+          "pose_action"
+        ],
+        "style.transition_speed": [
+          "pose_action"
+        ],
+        "width": [
+          "aspect",
+          "resolution"
+        ],
+        "height": [
+          "aspect",
+          "resolution"
+        ],
+        "fps": [
+          "frame_rate"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "assets.youtube_url can replace the audio file. Start image = first frame only [documented]; content morphs over time, so image atoms get no credit across the clip. Style and camera from presets [documented]. Audio kept as the track [inferred]; audio must cover end_seconds. Morphing look, not photoreal motion."
+    },
+    {
+      "tool": "Audio-to-Video",
+      "endpoint": "POST /v1/audio-to-video",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.audio_file_path",
+          "media": "audio",
+          "required": true,
+          "provides": [
+            "voice",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration"
+          ]
+        },
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "background",
+            "props",
+            "style",
+            "pose_action",
+            "camera"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.image_file_path (initial frame; when given)",
+          "head_hair": "assets.image_file_path (initial frame; when given)",
+          "body": "assets.image_file_path (initial frame; when given)",
+          "wardrobe": "assets.image_file_path (initial frame; when given)",
+          "lighting": "assets.image_file_path (initial frame; when given)",
+          "aspect": "assets.image_file_path (initial frame; when given)",
+          "voice": "assets.audio_file_path",
+          "speech_audio": "assets.audio_file_path",
+          "music": "assets.audio_file_path",
+          "sfx": "assets.audio_file_path",
+          "duration": "assets.audio_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "background",
+          "props",
+          "style",
+          "pose_action",
+          "camera",
+          "expression",
+          "resolution"
+        ],
+        "dropped": [
+          "assets.image_file_path.text"
+        ],
+        "not_specified": [
+          "speech_sync",
+          "text",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "background",
+          "props",
+          "style",
+          "pose_action",
+          "camera"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Timing follows audio [documented]; reference image = initial frame [documented]. Audio kept in output [inferred, unverified]. Lip sync to speech is not documented. Without an image, entity atoms come from the prompt with no identity guarantee. Prompt conflicting with the image degrades output."
+    },
+    {
+      "tool": "Character Replace",
+      "endpoint": "POST /v1/character-replace",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.image_file_path",
+          "head_hair": "assets.image_file_path",
+          "body": "assets.image_file_path",
+          "wardrobe": "assets.image_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "speech_sync": "assets.video_file_path",
+          "background": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "props": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "style": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "resolution"
+        ],
+        "dropped": [
+          "assets.video_file_path.voice",
+          "assets.video_file_path.text",
+          "assets.video_file_path.speech_audio",
+          "assets.video_file_path.music",
+          "assets.video_file_path.sfx",
+          "assets.video_file_path.frame_rate",
+          "assets.image_file_path.text"
+        ],
+        "not_specified": [
+          "voice",
+          "text",
+          "speech_audio",
+          "music",
+          "sfx",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.mode": [
+          "identity",
+          "background"
+        ],
+        "model": [
+          "resolution"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "style.selection_mode": [
+          "identity"
+        ],
+        "style.points": [
+          "identity"
+        ],
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Signature is for style.mode=replace. Scene, background, motion kept [documented]; character appearance from image [documented]. speech_sync from video [inferred]. Audio pass-through undocumented. Pick the person with point selection when many people.",
+      "mode_variants": {
+        "animate": {
+          "from_inputs": {
+            "identity": "assets.image_file_path",
+            "head_hair": "assets.image_file_path",
+            "body": "assets.image_file_path",
+            "wardrobe": "assets.image_file_path",
+            "background": "assets.image_file_path",
+            "lighting": "assets.image_file_path",
+            "props": "assets.image_file_path",
+            "camera": "assets.image_file_path",
+            "style": "assets.image_file_path",
+            "aspect": "assets.image_file_path",
+            "expression": "assets.video_file_path",
+            "pose_action": "assets.video_file_path",
+            "duration": "assets.video_file_path [start_seconds, end_seconds]"
+          },
+          "basis": "documented",
+          "notes": "Motion from the video moves the character image."
+        }
+      }
+    },
+    {
+      "tool": "Auto Subtitle Generator",
+      "endpoint": "POST /v1/auto-subtitle-generator",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.video_file_path",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "assets.video_file_path",
+          "head_hair": "assets.video_file_path",
+          "body": "assets.video_file_path",
+          "wardrobe": "assets.video_file_path",
+          "expression": "assets.video_file_path",
+          "pose_action": "assets.video_file_path",
+          "speech_sync": "assets.video_file_path",
+          "voice": "assets.video_file_path",
+          "background": "assets.video_file_path",
+          "lighting": "assets.video_file_path",
+          "props": "assets.video_file_path",
+          "camera": "assets.video_file_path",
+          "style": "assets.video_file_path",
+          "speech_audio": "assets.video_file_path",
+          "music": "assets.video_file_path",
+          "sfx": "assets.video_file_path",
+          "aspect": "assets.video_file_path",
+          "resolution": "assets.video_file_path",
+          "frame_rate": "assets.video_file_path",
+          "duration": "assets.video_file_path [start_seconds, end_seconds]"
+        },
+        "makes_true": [
+          "media_type",
+          "text"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "style.template": [
+          "text"
+        ],
+        "style.custom_config": [
+          "text"
+        ],
+        "start_seconds": [
+          "duration"
+        ],
+        "end_seconds": [
+          "duration"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Adds burned-in captions from a transcript of the video's speech_audio [documented]. Existing text and all other atoms kept [inferred]. No language parameter; no SRT export; noise and music reduce accuracy."
+    },
+    {
+      "tool": "AI Image Generator",
+      "endpoint": "POST /v1/ai-image-generator",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style",
+          "aspect",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "text"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style"
+        ],
+        "style.tool": [
+          "style",
+          "camera",
+          "text"
+        ],
+        "aspect_ratio": [
+          "aspect"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "model": [
+          "style"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Maintains nothing. Identity only for a described generic entity; not consistent across calls [inferred]. Some style.tool presets (logo, poster, thumbnail) render text, but text is not in the spec, so no text credit."
+    },
+    {
+      "tool": "AI Image Editor",
+      "endpoint": "POST /v1/ai-image-editor",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_paths[0]",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.image_file_paths[1..]",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity",
+            "wardrobe",
+            "props",
+            "background",
+            "style"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.image_file_paths[0] (or image_file_paths[n] when the prompt says so)",
+          "head_hair": "assets.image_file_paths[0] (or image_file_paths[n] when the prompt says so)",
+          "body": "assets.image_file_paths[0] (or image_file_paths[n] when the prompt says so)",
+          "text": "assets.image_file_paths[0]"
+        },
+        "makes_true": [
+          "media_type",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style",
+          "aspect",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style"
+        ],
+        "aspect_ratio": [
+          "aspect"
+        ],
+        "resolution": [
+          "resolution"
+        ],
+        "model": [
+          "style"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "General editor. Credit only for the atoms the prompt names; atoms the prompt does not name carry from image_file_paths[0] [inferred]. Can compose atoms from extra reference images [documented]. Identity can drift [inferred]. aspect_ratio=auto follows input. Text is not in the spec, so text carries and gets no credit. One edit per call."
+    },
+    {
+      "tool": "Face Swap Photo",
+      "endpoint": "POST /v1/face-swap-photo",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.target_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.source_file_path",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity"
+          ]
+        },
+        {
+          "slot": "assets.face_mappings[].new_face",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "identity"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.source_file_path (all-faces) | assets.face_mappings[].new_face (per entity)",
+          "head_hair": "assets.target_file_path",
+          "body": "assets.target_file_path",
+          "wardrobe": "assets.target_file_path",
+          "expression": "assets.target_file_path",
+          "pose_action": "assets.target_file_path",
+          "background": "assets.target_file_path",
+          "lighting": "assets.target_file_path",
+          "props": "assets.target_file_path",
+          "camera": "assets.target_file_path",
+          "style": "assets.target_file_path",
+          "text": "assets.target_file_path",
+          "aspect": "assets.target_file_path"
+        },
+        "makes_true": [
+          "media_type"
+        ],
+        "dropped": [
+          "assets.target_file_path.resolution"
+        ],
+        "not_specified": [
+          "resolution"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "assets.face_swap_mode": [
+          "identity"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Face identity, expression, lighting [documented]. Pose, body, hair, background [inferred]. Output resolution is plan-capped. head_hair stays from the target: use Head Swap for hair."
+    },
+    {
+      "tool": "Head Swap",
+      "endpoint": "POST /v1/head-swap",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.body_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.head_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "expression"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.head_file_path",
+          "head_hair": "assets.head_file_path",
+          "expression": "assets.head_file_path",
+          "body": "assets.body_file_path",
+          "wardrobe": "assets.body_file_path",
+          "pose_action": "assets.body_file_path",
+          "background": "assets.body_file_path",
+          "lighting": "assets.body_file_path",
+          "props": "assets.body_file_path",
+          "camera": "assets.body_file_path",
+          "style": "assets.body_file_path",
+          "text": "assets.body_file_path",
+          "aspect": "assets.body_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "max_resolution": [
+          "resolution"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Body, pose, scene kept [documented]. Whole head with face and hair from head image [documented]. expression from head image and text from body image [inferred]."
+    },
+    {
+      "tool": "Body Swap",
+      "endpoint": "POST /v1/body-swap",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.person_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action"
+          ]
+        },
+        {
+          "slot": "assets.scene_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.person_file_path",
+          "head_hair": "assets.person_file_path",
+          "body": "assets.person_file_path",
+          "wardrobe": "assets.person_file_path",
+          "expression": "assets.person_file_path",
+          "background": "assets.scene_file_path",
+          "lighting": "assets.scene_file_path",
+          "props": "assets.scene_file_path",
+          "camera": "assets.scene_file_path",
+          "style": "assets.scene_file_path",
+          "text": "assets.scene_file_path",
+          "aspect": "assets.scene_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "pose_action",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "resolution": [
+          "resolution"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Scene and person appearance kept [documented]. Pose can adapt to the scene [inferred], so pose_action is the tool's own. Lighting from scene [inferred]."
+    },
+    {
+      "tool": "AI Clothes Changer",
+      "endpoint": "POST /v1/ai-clothes-changer",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.person_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.garment_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "wardrobe"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "wardrobe": "assets.garment_file_path (region per garment_type; other regions from person)",
+          "identity": "assets.person_file_path",
+          "head_hair": "assets.person_file_path",
+          "body": "assets.person_file_path",
+          "expression": "assets.person_file_path",
+          "pose_action": "assets.person_file_path",
+          "background": "assets.person_file_path",
+          "lighting": "assets.person_file_path",
+          "props": "assets.person_file_path",
+          "camera": "assets.person_file_path",
+          "style": "assets.person_file_path",
+          "text": "assets.person_file_path",
+          "aspect": "assets.person_file_path"
+        },
+        "makes_true": [
+          "media_type"
+        ],
+        "dropped": [
+          "assets.person_file_path.resolution"
+        ],
+        "not_specified": [
+          "resolution"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "assets.garment_type": [
+          "wardrobe"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Pose, lighting, background [documented]; face identity [inferred]. Crossed arms and busy backgrounds degrade."
+    },
+    {
+      "tool": "AI Headshot Generator",
+      "endpoint": "POST /v1/ai-headshot-generator",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "background",
+            "wardrobe",
+            "lighting",
+            "camera",
+            "style"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.image_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "background",
+          "wardrobe",
+          "lighting",
+          "camera",
+          "style"
+        ],
+        "dropped": [
+          "assets.image_file_path.head_hair",
+          "assets.image_file_path.body",
+          "assets.image_file_path.expression",
+          "assets.image_file_path.pose_action",
+          "assets.image_file_path.props",
+          "assets.image_file_path.text",
+          "assets.image_file_path.aspect",
+          "assets.image_file_path.resolution"
+        ],
+        "not_specified": [
+          "head_hair",
+          "body",
+          "expression",
+          "pose_action",
+          "props",
+          "text",
+          "aspect",
+          "resolution"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "background",
+          "wardrobe",
+          "lighting",
+          "camera",
+          "style"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Keeps facial identity only [documented]. Sets background, attire, lighting, framing [documented]. Needs exactly one face. Hair and expression not specified."
+    },
+    {
+      "tool": "AI Face Editor",
+      "endpoint": "POST /v1/ai-face-editor",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.image_file_path",
+          "head_hair": "assets.image_file_path",
+          "body": "assets.image_file_path",
+          "wardrobe": "assets.image_file_path",
+          "background": "assets.image_file_path",
+          "lighting": "assets.image_file_path",
+          "props": "assets.image_file_path",
+          "camera": "assets.image_file_path",
+          "style": "assets.image_file_path",
+          "text": "assets.image_file_path",
+          "aspect": "assets.image_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "expression",
+          "pose_action"
+        ],
+        "dropped": [
+          "assets.image_file_path.resolution"
+        ],
+        "not_specified": [
+          "resolution"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.eyebrow_direction|eye_gaze_*|eye_open_ratio|lip_open_ratio|mouth_*": [
+          "expression"
+        ],
+        "style.head_roll|head_pitch|head_yaw": [
+          "pose_action"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Expression, gaze, head pose by sliders [documented]. Identity, lighting [documented]; background, clothing [inferred]. pose_action here = head pose only. Large slider values look unnatural."
+    },
+    {
+      "tool": "AI Image Upscaler",
+      "endpoint": "POST /v1/ai-image-upscaler",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": false,
+          "provides": [
+            "style"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.image_file_path",
+          "head_hair": "assets.image_file_path",
+          "body": "assets.image_file_path",
+          "wardrobe": "assets.image_file_path",
+          "expression": "assets.image_file_path",
+          "pose_action": "assets.image_file_path",
+          "background": "assets.image_file_path",
+          "lighting": "assets.image_file_path",
+          "props": "assets.image_file_path",
+          "camera": "assets.image_file_path",
+          "style": "assets.image_file_path",
+          "text": "assets.image_file_path",
+          "aspect": "assets.image_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "scale_factor": [
+          "resolution"
+        ],
+        "style.mode": [
+          "style"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Content and composition kept [documented]; aspect [inferred]. creative mode can reinterpret detail and style. Weak on text-heavy images."
+    },
+    {
+      "tool": "Image Background Remover",
+      "endpoint": "POST /v1/image-background-remover",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        },
+        {
+          "slot": "assets.background_image_file_path",
+          "media": "image",
+          "required": false,
+          "provides": [
+            "background"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.image_file_path",
+          "head_hair": "assets.image_file_path",
+          "body": "assets.image_file_path",
+          "wardrobe": "assets.image_file_path",
+          "expression": "assets.image_file_path",
+          "pose_action": "assets.image_file_path",
+          "lighting": "assets.image_file_path",
+          "camera": "assets.image_file_path",
+          "style": "assets.image_file_path",
+          "aspect": "assets.image_file_path",
+          "resolution": "assets.image_file_path",
+          "background": "assets.background_image_file_path (when given; else transparent alpha)"
+        },
+        "makes_true": [
+          "media_type"
+        ],
+        "dropped": [
+          "assets.image_file_path.props",
+          "assets.image_file_path.text"
+        ],
+        "not_specified": [
+          "props",
+          "text"
+        ]
+      },
+      "settings_that_set_atoms": {},
+      "basis": "mixed",
+      "notes": "Subject cutout [documented]; dimensions kept [inferred]. No relight: subject lighting can mismatch the new background. props and text in the old background are lost; a held prop counts as subject only when the cutout keeps it. Fine hair and low contrast degrade."
+    },
+    {
+      "tool": "Photo Colorizer",
+      "endpoint": "POST /v1/photo-colorizer",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.image_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {
+          "identity": "assets.image_file_path",
+          "head_hair": "assets.image_file_path",
+          "body": "assets.image_file_path",
+          "wardrobe": "assets.image_file_path",
+          "expression": "assets.image_file_path",
+          "pose_action": "assets.image_file_path",
+          "background": "assets.image_file_path",
+          "lighting": "assets.image_file_path",
+          "props": "assets.image_file_path",
+          "camera": "assets.image_file_path",
+          "text": "assets.image_file_path",
+          "aspect": "assets.image_file_path",
+          "resolution": "assets.image_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "style"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {},
+      "basis": "mixed",
+      "notes": "Adds colour (style: palette) [documented]. Content and structure kept [inferred]."
+    },
+    {
+      "tool": "AI GIF Generator",
+      "endpoint": "POST /v1/ai-gif-generator",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "text",
+          "speech_sync",
+          "voice",
+          "speech_audio",
+          "music",
+          "sfx",
+          "duration",
+          "aspect",
+          "resolution",
+          "frame_rate"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style"
+        ],
+        "output_format": [
+          "media_type"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "No image input; no duration control [documented]. Output is gif, mp4 or webm (an image project). No audio."
+    },
+    {
+      "tool": "AI Meme Generator",
+      "endpoint": "POST /v1/ai-meme-generator",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "style.topic",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "text"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "text",
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style",
+          "aspect",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "style.topic": [
+          "text"
+        ],
+        "style.template": [
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "background",
+          "lighting",
+          "props",
+          "camera",
+          "style",
+          "aspect",
+          "resolution"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "Template image is fixed by preset [documented]; the tool writes panel text for the topic [documented]. Visual atoms come from the template preset, not the user's assets."
+    },
+    {
+      "tool": "AI QR Code Generator",
+      "endpoint": "POST /v1/ai-qr-code-generator",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "content",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "text"
+          ]
+        },
+        {
+          "slot": "style.art_style",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "style",
+            "background"
+          ]
+        }
+      ],
+      "output": {
+        "media": "image",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "text",
+          "style",
+          "background"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "identity",
+          "head_hair",
+          "body",
+          "wardrobe",
+          "expression",
+          "pose_action",
+          "lighting",
+          "props",
+          "camera",
+          "aspect",
+          "resolution"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "content": [
+          "text"
+        ],
+        "style.art_style": [
+          "style",
+          "background"
+        ]
+      },
+      "basis": "mixed",
+      "notes": "text here = encoded payload, not readable glyphs. Scannability is a goal; test it. Busy styles can break scanning."
+    },
+    {
+      "tool": "AI Voice Generator",
+      "endpoint": "POST /v1/ai-voice-generator",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "speech_audio"
+          ]
+        }
+      ],
+      "output": {
+        "media": "audio",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "speech_audio",
+          "voice"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "music",
+          "sfx",
+          "duration"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "speech_audio"
+        ],
+        "style.voice_name": [
+          "voice"
+        ]
+      },
+      "basis": "documented",
+      "notes": "Script text kept as the words [documented]. voice from a preset only; a real person's voice needs AI Voice Cloner. No language parameter; duration follows text length. Not in hosted MCP."
+    },
+    {
+      "tool": "AI Voice Cloner",
+      "endpoint": "POST /v1/ai-voice-cloner",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "assets.audio_file_path",
+          "media": "audio",
+          "required": true,
+          "provides": [
+            "voice",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration"
+          ]
+        },
+        {
+          "slot": "style.prompt",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "speech_audio"
+          ]
+        }
+      ],
+      "output": {
+        "media": "audio",
+        "from_inputs": {
+          "voice": "assets.audio_file_path"
+        },
+        "makes_true": [
+          "media_type",
+          "speech_audio"
+        ],
+        "dropped": [
+          "assets.audio_file_path.music",
+          "assets.audio_file_path.sfx",
+          "assets.audio_file_path.duration"
+        ],
+        "not_specified": [
+          "music",
+          "sfx",
+          "duration"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "style.prompt": [
+          "speech_audio"
+        ]
+      },
+      "basis": "documented",
+      "notes": "Timbre, intonation, speaking patterns from the sample [documented]; new words from the prompt [documented]. Sample: one clean speaker, >= 3 s. Not in hosted MCP."
+    },
+    {
+      "tool": "Face Detection",
+      "endpoint": "POST /v1/face-detection (+ GET /v1/face-detection/{id})",
+      "kind": "analysis",
+      "inputs": [
+        {
+          "slot": "assets.target_file_path",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "aspect",
+            "resolution"
+          ]
+        }
+      ],
+      "output": {
+        "media": "data",
+        "from_inputs": {
+          "identity": "assets.target_file_path (one face crop per detected entity)"
+        },
+        "makes_true": [],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "confidence_score": []
+      },
+      "basis": "inferred",
+      "notes": "Analysis only; the input media does not change. Output faces[] feed face_mappings[].original_face in Face Swap Video and Face Swap Photo. Accepts image or video."
+    },
+    {
+      "tool": "Generate Asset Upload URLs",
+      "endpoint": "POST /v1/files/upload-urls",
+      "kind": "utility",
+      "inputs": [],
+      "output": {
+        "media": "data",
+        "from_inputs": {},
+        "makes_true": [],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "items[].type": [],
+        "items[].extension": []
+      },
+      "basis": "inferred",
+      "notes": "No atom changes. Gives file_path values; the uploaded file keeps all its atoms. Uploads kept 7 days."
+    },
+    {
+      "tool": "music_score",
+      "provider": "unbound",
+      "endpoint": "(unbound)",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "brief",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "music"
+          ]
+        }
+      ],
+      "output": {
+        "media": "audio",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "music",
+          "duration"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "voice",
+          "speech_audio",
+          "sfx"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "mood": [
+          "music"
+        ],
+        "tempo": [
+          "music"
+        ],
+        "duration": [
+          "duration"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Type music_score: (mood, duration) -> AudioTrack, from 05-solver.md. Binding decided at execution."
+    },
+    {
+      "tool": "sound_effects",
+      "provider": "unbound",
+      "endpoint": "(unbound)",
+      "kind": "from_scratch",
+      "inputs": [
+        {
+          "slot": "brief",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "sfx"
+          ]
+        }
+      ],
+      "output": {
+        "media": "audio",
+        "from_inputs": {},
+        "makes_true": [
+          "media_type",
+          "sfx",
+          "duration"
+        ],
+        "dropped": [],
+        "not_specified": [
+          "voice",
+          "speech_audio",
+          "music"
+        ]
+      },
+      "settings_that_set_atoms": {
+        "cue_times": [
+          "sfx"
+        ],
+        "duration": [
+          "duration"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Binding decided at execution."
+    },
+    {
+      "tool": "text_overlay",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "base",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "text",
+          "media": "text",
+          "required": true,
+          "provides": [
+            "text"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video|image",
+        "from_inputs": {
+          "identity": "base",
+          "head_hair": "base",
+          "body": "base",
+          "wardrobe": "base",
+          "expression": "base",
+          "pose_action": "base",
+          "speech_sync": "base",
+          "voice": "base",
+          "background": "base",
+          "lighting": "base",
+          "props": "base",
+          "camera": "base",
+          "style": "base",
+          "speech_audio": "base",
+          "music": "base",
+          "sfx": "base",
+          "duration": "base",
+          "aspect": "base",
+          "resolution": "base",
+          "frame_rate": "base",
+          "media_type": "base",
+          "text": "base (existing) + text slot (added)"
+        },
+        "makes_true": [],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "font|size|colour|position|start|end": [
+          "text"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "base can be image or video. Adds the text to the existing text layer; all other atoms pass through. ffmpeg drawtext."
+    },
+    {
+      "tool": "logo_overlay",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "base",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "logo",
+          "media": "image",
+          "required": true,
+          "provides": [
+            "text"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video|image",
+        "from_inputs": {
+          "identity": "base",
+          "head_hair": "base",
+          "body": "base",
+          "wardrobe": "base",
+          "expression": "base",
+          "pose_action": "base",
+          "speech_sync": "base",
+          "voice": "base",
+          "background": "base",
+          "lighting": "base",
+          "props": "base",
+          "camera": "base",
+          "style": "base",
+          "speech_audio": "base",
+          "music": "base",
+          "sfx": "base",
+          "duration": "base",
+          "aspect": "base",
+          "resolution": "base",
+          "frame_rate": "base",
+          "media_type": "base",
+          "text": "base (existing) + logo (added)"
+        },
+        "makes_true": [],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "position|scale|start|end": [
+          "text"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "The logo joins the text/overlay layer; all other atoms pass through. ffmpeg overlay."
+    },
+    {
+      "tool": "fade",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "base",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video|image",
+        "from_inputs": {
+          "identity": "base",
+          "head_hair": "base",
+          "body": "base",
+          "wardrobe": "base",
+          "expression": "base",
+          "pose_action": "base",
+          "speech_sync": "base",
+          "voice": "base",
+          "background": "base",
+          "lighting": "base",
+          "props": "base",
+          "camera": "base",
+          "style": "base",
+          "text": "base",
+          "speech_audio": "base",
+          "music": "base",
+          "sfx": "base",
+          "duration": "base",
+          "aspect": "base",
+          "resolution": "base",
+          "frame_rate": "base",
+          "media_type": "base"
+        },
+        "makes_true": [],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "target_layer|curve|start|end": []
+      },
+      "basis": "inferred",
+      "notes": "Changes opacity of a layer or the whole frame over time. No atom covers opacity or visibility timing: open gap in the vocabulary."
+    },
+    {
+      "tool": "transform",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "base",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video|image",
+        "from_inputs": {
+          "identity": "base",
+          "head_hair": "base",
+          "body": "base",
+          "wardrobe": "base",
+          "expression": "base",
+          "pose_action": "base",
+          "speech_sync": "base",
+          "voice": "base",
+          "background": "base",
+          "lighting": "base",
+          "props": "base",
+          "style": "base",
+          "text": "base",
+          "speech_audio": "base",
+          "music": "base",
+          "sfx": "base",
+          "duration": "base",
+          "aspect": "base",
+          "resolution": "base",
+          "frame_rate": "base",
+          "media_type": "base"
+        },
+        "makes_true": [
+          "camera"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "translate|scale|rotate": [
+          "camera",
+          "text"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "On the whole frame it sets framing (camera). On an overlay layer it sets text placement. Pixels otherwise pass through."
+    },
+    {
+      "tool": "crop_reformat",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "base",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video|image",
+        "from_inputs": {
+          "identity": "base",
+          "head_hair": "base",
+          "body": "base",
+          "wardrobe": "base",
+          "expression": "base",
+          "pose_action": "base",
+          "speech_sync": "base",
+          "voice": "base",
+          "background": "base",
+          "lighting": "base",
+          "props": "base",
+          "style": "base",
+          "text": "base",
+          "speech_audio": "base",
+          "music": "base",
+          "sfx": "base",
+          "duration": "base",
+          "frame_rate": "base",
+          "media_type": "base"
+        },
+        "makes_true": [
+          "camera",
+          "aspect",
+          "resolution"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "crop_box|target_aspect|target_resolution|pad": [
+          "camera",
+          "aspect",
+          "resolution"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Crop or pad to a target aspect. Can cut off text or entities at the edges."
+    },
+    {
+      "tool": "trim",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "edit",
+      "inputs": [
+        {
+          "slot": "base",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video|image",
+        "from_inputs": {
+          "identity": "base",
+          "head_hair": "base",
+          "body": "base",
+          "wardrobe": "base",
+          "expression": "base",
+          "pose_action": "base",
+          "speech_sync": "base",
+          "voice": "base",
+          "background": "base",
+          "lighting": "base",
+          "props": "base",
+          "camera": "base",
+          "style": "base",
+          "text": "base",
+          "speech_audio": "base",
+          "music": "base",
+          "sfx": "base",
+          "aspect": "base",
+          "resolution": "base",
+          "frame_rate": "base",
+          "media_type": "base"
+        },
+        "makes_true": [
+          "duration"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "start|end": [
+          "duration"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Keeps the atoms of the kept time range."
+    },
+    {
+      "tool": "stitch",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "utility",
+      "inputs": [
+        {
+          "slot": "segments[i]",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "voice",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "speech_audio",
+            "music",
+            "sfx",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "head_hair": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "body": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "wardrobe": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "expression": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "pose_action": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "speech_sync": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "voice": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "background": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "lighting": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "props": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "camera": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "style": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "text": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "speech_audio": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "music": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "sfx": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "aspect": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "resolution": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "frame_rate": "segments[i] over its time range [t_i, t_i + duration_i]",
+          "media_type": "segments[*]"
+        },
+        "makes_true": [
+          "duration"
+        ],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "order": [
+          "duration"
+        ],
+        "transition": [
+          "style"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Join in time. duration = sum of segment durations (minus transition overlap). Each segment keeps all its atoms in its own time range; the solver splits a goal into per-scene sub-goals and joins them here. Segments must share aspect, resolution, frame_rate, or a crop_reformat runs first."
+    },
+    {
+      "tool": "audio_mix_mux",
+      "provider": "ours (deterministic, e.g. ffmpeg)",
+      "endpoint": "(ours)",
+      "kind": "utility",
+      "inputs": [
+        {
+          "slot": "video",
+          "media": "video",
+          "required": true,
+          "provides": [
+            "identity",
+            "head_hair",
+            "body",
+            "wardrobe",
+            "expression",
+            "pose_action",
+            "speech_sync",
+            "background",
+            "lighting",
+            "props",
+            "camera",
+            "style",
+            "text",
+            "media_type",
+            "duration",
+            "aspect",
+            "resolution",
+            "frame_rate"
+          ]
+        },
+        {
+          "slot": "speech",
+          "media": "audio",
+          "required": false,
+          "provides": [
+            "voice",
+            "speech_audio"
+          ]
+        },
+        {
+          "slot": "music",
+          "media": "audio",
+          "required": false,
+          "provides": [
+            "music"
+          ]
+        },
+        {
+          "slot": "sfx",
+          "media": "audio",
+          "required": false,
+          "provides": [
+            "sfx"
+          ]
+        }
+      ],
+      "output": {
+        "media": "video",
+        "from_inputs": {
+          "identity": "video",
+          "head_hair": "video",
+          "body": "video",
+          "wardrobe": "video",
+          "expression": "video",
+          "pose_action": "video",
+          "speech_sync": "video",
+          "background": "video",
+          "lighting": "video",
+          "props": "video",
+          "camera": "video",
+          "style": "video",
+          "text": "video",
+          "media_type": "video",
+          "duration": "video",
+          "aspect": "video",
+          "resolution": "video",
+          "frame_rate": "video",
+          "voice": "speech",
+          "speech_audio": "speech",
+          "music": "music",
+          "sfx": "sfx"
+        },
+        "makes_true": [],
+        "dropped": [],
+        "not_specified": []
+      },
+      "settings_that_set_atoms": {
+        "gain|ducking|offset": [
+          "music",
+          "sfx",
+          "speech_audio"
+        ]
+      },
+      "basis": "inferred",
+      "notes": "Join in layers. Each layer keeps the atoms of its own input; the solver splits a goal into visual, speech, music and sfx sub-goals and joins them here. speech_sync holds only when the speech slot is the same audio the video was lip-synced to. Mix only (no video) gives an audio output."
+    }
+  ]
+}
