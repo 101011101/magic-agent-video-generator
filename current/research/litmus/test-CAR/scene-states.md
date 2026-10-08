@@ -2,23 +2,23 @@
 
 **Request:** Car ad, 10 seconds, 2 scenes: a car in the desert, then the same car in a Tokyo drift scene at night.
 
-**Style:** Photorealistic automotive cinematography, warm sand and cool neon palette, crisp polished textures, sculpted directional light.
+**Style:** Photorealistic automotive cinematography with warm sand and cool neon palettes, crisp metallic textures, and sculpted natural or reflected light.
 
 **Assets:**
-- @car (prop): Sports coupe, 4.5 meters long and 1.9 meters wide, with metallic silver bodywork, black alloy wheels, dark tinted windows and a low aerodynamic silhouette.
-- @desert (location): Desert basin, approximately 2 kilometers across, with a flat hard-packed central expanse, surrounding sand dunes and a distant rocky ridgeline.
-- @tokyo (location): Closed Tokyo street course, approximately 120 meters long and 12 meters wide, with asphalt paving, dense Japanese commercial architecture and integrated neon facade accents.
+- @car (prop): Sports coupe, 4.6 meters long, with metallic silver bodywork, a low aerodynamic silhouette, black alloy wheels, tinted windows, and narrow LED headlights.
+- @desert (location): Desert basin, approximately 2 kilometers across, with a flat sandy driving track, ochre dunes, distant rocky ridges, and no vegetation.
+- @tokyo (location): Tokyo street intersection, approximately 60 meters across, with asphalt lanes, white crossing markings, dense commercial facades, and Japanese neon signage.
 
 ## Scene 1 · cut · @desert
-- Start (@desert, @car): A low, wide side view frames @desert beneath a clear late-afternoon sky. @car occupies the left third of the frame, oriented directly toward screen right. The horizon sits in the upper third; warm sunlight illuminates @car from camera-left, with its shadow extending toward the lower right. The weather is dry and still.
-- Action: @car travels straight across @desert from the left third to the right third. Static camera.
-- Changes: @car screen position: Left third of the frame → Right third of the frame
-- End (@desert, @car): A low, wide side view frames @desert beneath a clear late-afternoon sky. @car occupies the right third of the frame, oriented directly toward screen right. The horizon sits in the upper third; warm sunlight illuminates @car from camera-left, with its shadow extending toward the lower right. The weather is dry and still.
-- Same as: @desert ← scene new, @car ← scene new
+- Start (@car, @desert): A wide, low roadside frame places @car in the left third of @desert, traveling toward frame right with a low dust trail behind it. Late-afternoon sunlight falls from the upper left under a clear sky; the weather is dry and still.
+- Action: For five seconds, @car speeds across @desert from the left third to the right third, trailing dust. Static camera.
+- Changes: @car position: Left third of frame, on the driving track → Right third of frame, on the driving track
+- End (@car, @desert): The same wide, low roadside frame places @car in the right third of @desert, still traveling toward frame right with a low dust trail stretching behind it. Late-afternoon sunlight continues from the upper left under the clear sky; the weather remains dry and still.
+- Same as: @car ← scene new, @desert ← scene new
 
 ## Scene 2 · cut · @tokyo
-- Start (@tokyo, @car): A low, wide three-quarter view frames @tokyo at night, with the course spanning the foreground and architecture filling the background. @car occupies the left third, its nose pointing screen right and angled 15 degrees toward the camera. Cyan and magenta illumination falls across @car and the dry course. The weather is clear and still; no other traffic is visible.
-- Action: @car drifts sideways through @tokyo toward the right third, rotating its nose farther toward the camera. Static camera.
-- Changes: @car screen position: Left third of the frame → Right third of the frame; @car orientation: Nose pointing screen right, angled 15 degrees toward the camera → Nose pointing screen right, angled 45 degrees toward the camera
-- End (@tokyo, @car): A low, wide three-quarter view frames @tokyo at night, with the course spanning the foreground and architecture filling the background. @car occupies the right third, its nose pointing screen right and angled 45 degrees toward the camera. Cyan and magenta illumination falls across @car and the dry course. The weather is clear and still; no other traffic is visible.
-- Same as: @tokyo ← scene new, @car ← scene 1
+- Start (@car, @tokyo): A wide, low curbside frame places @car in the right third of @tokyo, entering a leftward drift with its nose angled slightly toward the camera. It is night after rain, with no precipitation falling. Cyan and magenta light reflects across the damp ground and @car; the intersection is otherwise empty.
+- Action: For five seconds, @car drifts leftward across @tokyo, rotating toward the camera and throwing a widening fan of water. Static camera.
+- Changes: @car pose_action: Entering a leftward drift, nose angled 20 degrees toward camera → Holding a leftward drift, nose angled 60 degrees toward camera; @car position: Right third of frame, inside the intersection → Left third of frame, inside the intersection; @car condition: Rain-speckled, headlights on, light spray behind tires → Rain-speckled, headlights on, broad water spray behind tires
+- End (@car, @tokyo): The same wide, low curbside frame places @car in the left third of @tokyo, sliding leftward with its nose turned farther toward the camera. A broad fan of water trails behind it. The night remains rain-free, with cyan and magenta reflections across the damp ground and @car; the intersection is otherwise empty.
+- Same as: @car ← scene 1, @tokyo ← scene new

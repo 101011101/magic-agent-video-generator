@@ -10,6 +10,10 @@
 //   A frame enters the history only with the labels a vision check confirms in it ("last known stable" asset).
 // --chain generated (test F): the next scene starts from the previous GENERATED end frame, not the video's last frame.
 //   The image chain runs first; then all clips run in parallel; clips are not trimmed.
+// --typed: typed scene-state doc (v8: atoms per asset, part_of) + the state store (prod/pipeline-v2/src/state.js): every
+//   frame is recorded with observed typed attributes, a pairwise same-asset check against the last stable instance, and
+//   source pointers. Cuts pick their base with store.rank; an unstable frame is retried once with its differences.
+//   Writes state.json and state.html (asset lineage).
 // --test X · --request "…" (story = request) · --seconds N --count K · --doc-from test-E (reuse that doc)
 // Usage: node current/research/litmus/run-litmus-states.mjs [--context] [--chain generated] [--test F] [--doc-only]
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
@@ -21,9 +25,12 @@ import { jsonCall } from "../../prod/state-manager/src/llm.js";
 import { runJob, download, uploadFile } from "../../prod/state-manager/src/magichour.js";
 import { firstFrame, lastFrame, ssim } from "../../prod/state-manager/src/continuity.js";
 import { checkFrame } from "../../prod/pipeline-v2/src/vision.js";
+import { StateStore, ATOMS } from "../../prod/pipeline-v2/src/state.js";
+import { renderState } from "../../prod/pipeline-v2/src/state-page.js";
+import { copyFileSync, rmSync } from "node:fs";
 
 const argv = process.argv.slice(2), opt = (k, d) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : d);
-const CONTEXT = argv.includes("--context"), GENERATED = opt("--chain", "real") === "generated";
+const TYPED = argv.includes("--typed"), CONTEXT = TYPED || argv.includes("--context"), GENERATED = opt("--chain", "real") === "generated";
 const TEST = opt("--test", CONTEXT ? "E" : "D"), REQUEST = opt("--request", null), DOC_FROM = opt("--doc-from", null);
 const SECONDS = opt("--seconds", "45"), COUNT = opt("--count", "9");
 const DIR = dirname(fileURLToPath(import.meta.url)), out = join(DIR, `test-${TEST}`);
@@ -39,21 +46,26 @@ const save = () => writeFileSync(logPath, JSON.stringify(log, null, 2));
 
 // 1. Scene-state document (1 LLM call).
 const str = { type: "string" }, labels = { type: "array", items: str };
-const state = { type: "object", additionalProperties: false, required: ["visible", "description"], properties: { visible: labels, description: str } };
+const typedAssets = { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "attrs"], properties: { label: str,
+  attrs: { type: "array", items: { type: "object", additionalProperties: false, required: ["atom", "value"], properties: { atom: { type: "string", enum: ATOMS }, value: str } } } } } };
+const state = TYPED ? { type: "object", additionalProperties: false, required: ["visible", "description", "assets"], properties: { visible: labels, description: str, assets: typedAssets } }
+  : { type: "object", additionalProperties: false, required: ["visible", "description"], properties: { visible: labels, description: str } };
 const schema = { type: "object", additionalProperties: false, required: ["style", "assets", "scenes"], properties: {
   style: str,
-  assets: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "kind", "look"], properties: { label: str, kind: { type: "string", enum: ["character", "prop", "location"] }, look: str } } },
+  assets: { type: "array", items: TYPED
+    ? { type: "object", additionalProperties: false, required: ["label", "kind", "look", "part_of"], properties: { label: str, kind: { type: "string", enum: ["character", "prop", "location"] }, look: str, part_of: { type: ["string", "null"] } } }
+    : { type: "object", additionalProperties: false, required: ["label", "kind", "look"], properties: { label: str, kind: { type: "string", enum: ["character", "prop", "location"] }, look: str } } },
   scenes: { type: "array", items: { type: "object", additionalProperties: false, required: ["n", "link", "location", "start", "action", "camera", "end", "same_as"], properties: {
     n: { type: "integer" }, link: { type: "string", enum: ["cut", "continuous"] }, location: str, start: state, action: str, camera: str,
-    end: { type: "object", additionalProperties: false, required: ["visible", "changes", "description"], properties: { visible: labels, description: str,
+    end: { type: "object", additionalProperties: false, required: TYPED ? ["visible", "changes", "description", "assets"] : ["visible", "changes", "description"], properties: { visible: labels, description: str, ...(TYPED ? { assets: typedAssets } : {}),
       changes: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "property", "from", "to"], properties: { label: str, property: str, from: str, to: str } } } } },
     same_as: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "scene"], properties: { label: str, scene: { type: "integer" } } } },
   } } },
 } };
-const TEMPLATE = "current/tests/creative-director/templates/v7-scene-states.md";
+const TEMPLATE = TYPED ? "current/tests/creative-director/templates/v8-scene-states-typed.md" : "current/tests/creative-director/templates/v7-scene-states.md";
 const prompt = readFileSync(join(REPO, TEMPLATE), "utf8").replace("{{seconds}}", SECONDS).replace("{{count}}", COUNT)
   .replace("{{request}}", () => request).replace("{{story}}", () => story);
-const doc = DOC_FROM ? JSON.parse(readFileSync(join(DIR, DOC_FROM, "result.json"), "utf8")).doc : await jsonCall({ name: "scenestates", schema, prompt, effort: "medium" });
+const doc = DOC_FROM ? JSON.parse(readFileSync(join(DIR, DOC_FROM, "result.json"), "utf8")).doc : await jsonCall({ name: TYPED ? "scenestatestyped" : "scenestates", schema, prompt, effort: "medium" });
 log.request = request; log.mode = { context: CONTEXT, chain: GENERATED ? "generated end frames" : "real last frames", doc_from: DOC_FROM };
 doc.scenes[0].link = "cut";
 Object.assign(log, { template: TEMPLATE, doc }); save();
@@ -71,6 +83,25 @@ async function job(key, file, fn) {
 }
 const up = (f) => uploadFile(join(out, f), "image");
 const asset = Object.fromEntries(doc.assets.map((a) => [a.label, a]));
+if (TYPED) rmSync(join(out, "state.json"), { force: true }); // rebuilt each run (vision calls are cached)
+const store = TYPED ? new StateStore(out, asset) : null;
+const typedOf = (st) => Object.fromEntries(st.visible.filter((l) => asset[l]).map((l) => [l, Object.fromEntries((st.assets || []).find((x) => x.label === l)?.attrs?.map((a) => [a.atom, a.value]) || [])]));
+const wantText = (st) => (st.assets || []).filter((x) => x.attrs.length).map((x) => `${x.label}: ${x.attrs.map((a) => `${a.atom} = ${a.value}`).join("; ")}`).join("\n");
+// Typed mode: record a generated frame; if a wanted asset is not stable, retry once with the differences spelled out.
+async function recordFrame({ key, file, scene, role, st, source, regenerate }) {
+  let rec = await store.add({ file, scene: scene.n, role, location: scene.location, expected: typedOf(st), source });
+  const bad = (r) => Object.entries(r.assets).filter(([, a]) => !a.stable);
+  if (bad(rec).length && regenerate) {
+    rec.rejected = true; for (const a of Object.values(rec.assets)) a.stable = false;
+    const kept = file.replace(".png", "-a1.png"); copyFileSync(join(out, file), join(out, kept)); rec.file = kept; store.save();
+    const fix = bad(rec).map(([l, a]) => `${l}: ${!a.present ? "missing" : [...a.diffs, ...Object.entries(a.matches).filter(([, m]) => !m).map(([k]) => `${k} should be ${a.expected?.[k] || "as in its look"} (is: ${a.observed[k]})`)].join("; ")}`).join("\n");
+    console.log(`  ${key}: unstable → retry\n${fix}`);
+    await regenerate(`\nFix these problems from the previous attempt:\n${fix}`);
+    rec = await store.add({ file, scene: scene.n, role, location: scene.location, expected: typedOf(st), source });
+  }
+  writeFileSync(join(out, "state.html"), renderState(store, `Litmus ${TEST}`));
+  return rec;
+}
 
 // 2. References: every label seen in 2+ scenes.
 const count = {};
@@ -102,13 +133,24 @@ async function edit(key, file, text, inputs) {
   });
 }
 async function runChain(chain) {
-  let start;
+  let start, startRec = null;
   for (const s of chain) {
     const id = `s${s.n}`;
     if (s.link === "cut") {
       const ls = [...new Set([...s.start.visible, s.location])].filter((l) => refs.includes(l));
       const text = `${doc.style}. 16:9 film frame. ${SINGLE} ${s.start.description}` + (ls.length ? `\nReference images: ${refList(ls, 1)}. ${keepRule}` : "");
-      if (CONTEXT) start = await contextStart(s, id);
+      if (TYPED) {
+        const c = await contextStartTyped(s, id);
+        const gen = (extra = "", retry = false) => c.inputs.length ? edit(`start:${id}${retry ? ":retry" : ""}`, `${id}-start.png`, c.prompt + extra, c.inputs)
+          : job(`start:${id}${retry ? ":retry" : ""}`, `${id}-start.png`, async () => {
+            const body = { name: `litmus ${TEST} start ${id}`, image_count: 1, ...IMAGE, style: { prompt: c.prompt + extra } };
+            const r = await runJob("/v1/ai-image-generator", body, "image");
+            await download(r.downloads[0], join(out, `${id}-start.png`));
+            return { request: body, credits: r.credits };
+          });
+        start = await gen();
+        startRec = await recordFrame({ key: `start:${id}`, file: start, scene: s, role: "start", st: s.start, source: c.source, regenerate: (fix) => gen(fix, true) });
+      } else if (CONTEXT) start = await contextStart(s, id);
       else start = ls.length ? await edit(`start:${id}`, `${id}-start.png`, text, ls.map(fname))
         : await job(`start:${id}`, `${id}-start.png`, async () => {
           const body = { name: `litmus D start ${id}`, image_count: 1, ...IMAGE, style: { prompt: text } };
@@ -119,12 +161,18 @@ async function runChain(chain) {
     }
     // End frame: an edit of the start frame that applies the listed changes.
     const ls = s.end.visible.filter((l) => refs.includes(l));
-    const extra = CONTEXT ? [...new Set(s.end.visible.filter((l) => !s.start.visible.includes(l) && lastStable(l)).map((l) => lastStable(l).file))] : [];
+    const entering = s.end.visible.filter((l) => !s.start.visible.includes(l) && asset[l]);
+    const extra = TYPED ? [...new Set(entering.map((l) => store.lastStable(l)?.file).filter(Boolean))]
+      : CONTEXT ? [...new Set(s.end.visible.filter((l) => !s.start.visible.includes(l) && lastStable(l)).map((l) => lastStable(l).file))] : [];
     const changes = s.end.changes.map((x) => `${x.label} ${x.property}: ${x.from} → ${x.to}`).join("; ");
     const endText = `${doc.style}. ${SINGLE} Image 1 is the first frame of a 5-second shot. Make its last frame: the same place, camera, framing and light, with only these changes: ${changes}. Last frame: ${s.end.description}` +
       (ls.length ? `\nReference images: ${refList(ls, 2)}. ${keepRule}` : "") +
       (extra.length ? `\nImages ${ls.length + 2}–${ls.length + 1 + extra.length} are earlier frames that show the assets entering this shot; take their look and real size from there.` : "");
-    const end = await edit(`end:${id}`, `${id}-end.png`, endText, [start, ...ls.map(fname), ...extra]);
+    const endFull = endText + (TYPED && wantText(s.end) ? `\nWanted state of each asset in the last frame:\n${wantText(s.end)}` : "");
+    const end = await edit(`end:${id}`, `${id}-end.png`, endFull, [start, ...ls.map(fname), ...extra]);
+    const endRec = TYPED ? await recordFrame({ key: `end:${id}`, file: end, scene: s, role: "end", st: s.end,
+      source: Object.fromEntries(s.end.visible.filter((l) => asset[l]).map((l) => [l, entering.includes(l) ? store.lastStable(l)?.id || null : startRec?.id || null])),
+      regenerate: (fix) => edit(`end:${id}:retry`, `${id}-end.png`, endFull + fix, [start, ...ls.map(fname), ...extra]) }) : null;
     const clipStart = start;
     const makeClip = () => job(`clip:${id}`, `${id}.mp4`, async () => {
       const body = { name: `litmus ${TEST} ${id}`, ...VIDEO, style: { prompt: `${s.action} ${s.camera}` }, assets: { image_file_path: await up(clipStart), end_image_file_path: await up(end) } };
@@ -135,15 +183,16 @@ async function runChain(chain) {
     if (GENERATED) {
       // F: the next scene starts from this generated end frame; the clip is made later, in parallel.
       pendingClips.push(makeClip().then((clip) => finishClip(id, clip, 0)));
-      start = end;
-      await remember(s, end);
+      start = end; startRec = endRec;
+      if (!TYPED) await remember(s, end);
       continue;
     }
     const clip = await makeClip();
     // Trim the end snap; the next continuous scene starts from the real last kept frame.
     finishClip(id, clip, TRIM);
     start = `${id}-last.png`;
-    if (CONTEXT) await remember(s, start);
+    if (TYPED) startRec = await store.add({ file: start, scene: s.n, role: "last", location: s.location, expected: typedOf(s.end), source: Object.fromEntries(s.end.visible.filter((l) => asset[l]).map((l) => [l, endRec.id])) });
+    else if (CONTEXT) await remember(s, start);
   }
 }
 const pendingClips = [];
@@ -196,6 +245,37 @@ async function contextStart(s, id) {
     return { request: body, credits: r.credits };
   });
 }
+// Typed context: base = store.rank (same location, stable wanted labels, matched typed attributes, recency). Labels the
+// base lacks come from their last stable instance; a label with no instance but a stable parent (part_of) gets the parent's frame.
+async function contextStartTyped(s, id) {
+  const want = { location: s.location, assets: typedOf(s.start) };
+  const wanted = Object.keys(want.assets).filter((l) => l !== s.location);
+  const { base, scored } = await store.rank(want);
+  const missing = wanted.filter((l) => !base?.assets[l]?.stable);
+  const merge = [], parentOf = {};
+  for (const l of missing) {
+    let r = store.lastStable(l);
+    if (!r && asset[l].part_of && store.lastStable(asset[l].part_of)) { r = store.lastStable(asset[l].part_of); parentOf[l] = asset[l].part_of; }
+    if (r && r !== base) (merge.find((m) => m.r === r) || merge[merge.push({ r, labels: [] }) - 1]).labels.push(l);
+  }
+  const used = merge.slice(0, 3), fresh = missing.filter((l) => !used.some((m) => m.labels.includes(l)));
+  const sheets = s.start.visible.filter((l) => refs.includes(l));
+  const inputs = [...(base ? [base.file] : []), ...used.map((m) => m.r.file), ...sheets.map(fname)];
+  const keep = base ? wanted.filter((l) => base.assets[l]?.stable) : [];
+  const lines = [];
+  let k = base ? 2 : 1;
+  if (base && base.location === s.location) lines.push(`Image 1 is an earlier frame of this same place (${s.location}, scene ${base.scene}). Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.`);
+  else if (base) lines.push(`Image 1 is an earlier frame (scene ${base.scene}) that shows ${keep.join(", ")}. Transform it into the new shot in a different place, ${s.location}: ${asset[s.location]?.look || ""} Keep ${keep.join(", ")} exactly: same shape, design, colours, details and real size. Replace everything else (place, light, weather, time) as described.`);
+  for (const m of used) lines.push(`Image ${k++} is an earlier frame (scene ${m.r.scene}) showing ${m.labels.map((l) => parentOf[l] ? `${parentOf[l]}; ${l} is part of ${parentOf[l]}, so match its design, colours and materials` : l).join(", ")}: take their exact look and real size from it and merge them into the new shot; do not copy its framing.`);
+  for (const l of sheets) lines.push(`Image ${k++} is the character sheet of ${l}: identity only (face, hair, clothing).`);
+  for (const l of fresh) lines.push(`New in this shot: ${l}: ${asset[l].look}`);
+  const source = {};
+  for (const l of keep) source[l] = base.id;
+  for (const m of used) for (const l of m.labels) source[l] = m.r.id;
+  (log.context ??= {})[id] = { base: base?.id || null, scored, merge: used.map((m) => ({ record: m.r.id, labels: m.labels })), fresh, sheets }; save();
+  const prompt = `${doc.style}. 16:9 film frame. ${SINGLE} New shot: ${s.start.description}\n${lines.join("\n")}${wantText(s.start) ? `\nWanted state of each asset:\n${wantText(s.start)}` : ""}`;
+  return { prompt, inputs, source };
+}
 function frames(f) { return Number(execFileSync("ffprobe", ["-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", f]).toString().trim()); }
 function jumps(f) { return [...spawnSync("ffmpeg", ["-i", f, "-vf", "scale=320:180,format=gray,tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG", "-f", "null", "-"], { encoding: "utf8" }).stderr.matchAll(/YAVG=([\d.]+)/g)].map((m) => Number(m[1])); }
 const res = [];
@@ -221,4 +301,5 @@ for (const [i, id] of ids.entries()) {
   if (i < ids.length - 1) { const nx = doc.scenes.find((x) => `s${x.n}` === ids[i + 1]); log.measures.seams.push({ from: id, to: ids[i + 1], link: nx.link, jump: +(all[at - 1] ?? 0).toFixed(1) }); }
 }
 log.total_credits = Object.values(log.jobs).reduce((n, j) => n + (j.credits || 0), 0); save();
+if (TYPED) writeFileSync(join(out, "state.html"), renderState(store, `Litmus ${TEST}`));
 console.log(JSON.stringify({ credits: log.total_credits, errors: log.errors, measures: log.measures }, null, 1));

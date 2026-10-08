@@ -18,14 +18,20 @@ function key() {
   throw new Error("OPENAI_API_KEY not set");
 }
 
-async function visionCall(name, schema, text, image) {
-  const jpg = execFileSync("ffmpeg", ["-loglevel", "error", "-i", image, "-vf", "scale=1024:-2", "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "4", "-"]);
-  const h = createHash("sha256").update(JSON.stringify({ MODEL, name, schema, text })).update(jpg).digest("hex").slice(0, 24);
+const toJpg = (image) => execFileSync("ffmpeg", ["-loglevel", "error", "-i", image, "-vf", "scale=1024:-2", "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "4", "-"]);
+async function visionCall(name, schema, text, image) { return visionCallImages(name, schema, text, [image]); }
+
+// One call with several images, in order (image 1, image 2, …).
+export async function visionCallImages(name, schema, text, images) {
+  const jpgs = images.map(toJpg);
+  const hash = createHash("sha256").update(JSON.stringify({ MODEL, name, schema, text }));
+  for (const j of jpgs) hash.update(j);
+  const h = hash.digest("hex").slice(0, 24);
   mkdirSync(CACHE, { recursive: true });
   const file = join(CACHE, `${name}-${h}.json`);
   if (existsSync(file)) { usage.cached++; return JSON.parse(readFileSync(file, "utf8")); }
   const body = { model: MODEL, reasoning: { effort: "low" }, text: { format: { type: "json_schema", name, schema, strict: true } },
-    input: [{ role: "user", content: [{ type: "input_text", text }, { type: "input_image", image_url: `data:image/jpeg;base64,${jpg.toString("base64")}` }] }] };
+    input: [{ role: "user", content: [{ type: "input_text", text }, ...jpgs.map((j) => ({ type: "input_image", image_url: `data:image/jpeg;base64,${j.toString("base64")}` }))] }] };
   for (let attempt = 1; attempt <= 3; attempt++) {
     const res = await fetch("https://api.openai.com/v1/responses", { method: "POST", headers: { authorization: `Bearer ${key()}`, "content-type": "application/json" }, body: JSON.stringify(body) });
     const data = await res.json().catch(() => ({}));
