@@ -61,6 +61,23 @@
 - A deterministic editing tool is exact.
 - Rigid conditions use the tool that maintains them (deterministic for exact logos and text). Loose conditions can use the generator.
 
+**Editing layer implementation: potential solutions (not decided, to look into later):**
+- ffmpeg for joins, reformat, audio mix and mux.
+- Remotion or HyperFrames for keyframed layers, exact text and logo animations. Model calls run in the solver before any render.
+- Hosted render APIs (Shotstack, Creatomate) as a fallback.
+- OTIO export for human finishing.
+- No option covers generation, editing and project state together. Details: [editing-layer.md](../../research/editing-layer.md).
+
+**Prototype (built 2026-10-06):** [prod/state-manager/](../../prod/state-manager/README.md). Report: [state-manager.html](../../tests/state-manager/state-manager.html). It runs the full pipeline on 9 test cases with tools assumed perfect. Rules found while building it (not yet reviewed):
+- Continuous chunks merge into one segment group; cuts split groups.
+- Each entity gets its own reference input when a tool accepts several.
+- Progress rule: a non-join tool must make at least one condition true.
+- An input slot may not carry only format atoms.
+- Tool choice by cost search over full subtrees, cached per goal.
+- `visibility` and `layer_position` are for graphic overlays only.
+- Landmark-first: text-to-image makes the first landmark frame with as many conditions as possible; it binds the fictional entities in it. Later frames reference it; the image editor sets the rest. Image-to-video animates between landmark frames.
+- End frame = start frame + changes (an edit of the shared start frame).
+
 **Worked examples:** [solver-traces.md](../solver-traces.md) (grandma, logo fade, lighthouse).
 
 **Three cases for a piece:**
