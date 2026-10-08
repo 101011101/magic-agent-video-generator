@@ -1,0 +1,75 @@
+{
+  "id": "A",
+  "title": "Lighthouse keeper (painterly)",
+  "image": "Painterly melancholy oil-painting style, 16:9 wide shot. A woman lighthouse keeper in her sixties with grey hair tied in a bun and a long dark wool coat stands on a rocky dawn shore, facing the camera from the middle distance. A white lighthouse on a headland behind her, tide pools reflecting a pale lavender sky, kelp on wet sand. Soft diffuse dawn light, muted palette.",
+  "clip1": "She walks slowly toward the camera along the waterline, coat moving in the wind. Static camera. Gentle waves in the background.",
+  "clip2": "She stops, kneels down on the wet sand, and picks up a small glowing amber spiral shell, holding it in both hands. Static camera.",
+  "video": {
+    "model": "wan-3.0",
+    "resolution": "720p",
+    "end_seconds": 5,
+    "audio": false
+  },
+  "steps": [
+    {
+      "name": "start frame",
+      "endpoint": "/v1/ai-image-generator",
+      "request": {
+        "name": "litmus A start",
+        "image_count": 1,
+        "model": "nano-banana-pro",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "style": {
+          "prompt": "Painterly melancholy oil-painting style, 16:9 wide shot. A woman lighthouse keeper in her sixties with grey hair tied in a bun and a long dark wool coat stands on a rocky dawn shore, facing the camera from the middle distance. A white lighthouse on a headland behind her, tide pools reflecting a pale lavender sky, kelp on wet sand. Soft diffuse dawn light, muted palette."
+        }
+      },
+      "credits": 200,
+      "seconds": 33,
+      "output": "start.png"
+    },
+    {
+      "name": "clip 1",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus A clip1",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "She walks slowly toward the camera along the waterline, coat moving in the wind. Static camera. Gentle waves in the background."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/5458400c-856d-4e7d-9db5-3672843b9ffe-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 141,
+      "output": "clip1.mp4",
+      "ssim_first_vs_start": 0.989
+    },
+    {
+      "name": "clip 2 (from clip 1's last frame)",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus A clip2",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "She stops, kneels down on the wet sand, and picks up a small glowing amber spiral shell, holding it in both hands. Static camera."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/416e313f-ab18-4819-9903-259badd88dcd-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 116,
+      "output": "clip2.mp4",
+      "ssim_first_vs_clip1_last": 0.992
+    }
+  ],
+  "total_credits": 1160
+}

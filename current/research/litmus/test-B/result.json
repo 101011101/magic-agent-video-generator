@@ -1,0 +1,75 @@
+{
+  "id": "B",
+  "title": "City street (photoreal)",
+  "image": "Photorealistic 35mm film still, 16:9. A man in his thirties wearing a red jacket and dark jeans walks on a busy city sidewalk on an overcast afternoon, seen from the front at medium-wide distance. Shop windows, parked cars, pedestrians in soft focus behind him.",
+  "clip1": "He walks steadily toward the camera along the sidewalk. Pedestrians pass behind him. Static camera.",
+  "clip2": "He slows to a stop, takes a phone out of his jacket pocket, and looks at the screen. Static camera.",
+  "video": {
+    "model": "wan-3.0",
+    "resolution": "720p",
+    "end_seconds": 5,
+    "audio": false
+  },
+  "steps": [
+    {
+      "name": "start frame",
+      "endpoint": "/v1/ai-image-generator",
+      "request": {
+        "name": "litmus B start",
+        "image_count": 1,
+        "model": "nano-banana-pro",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "style": {
+          "prompt": "Photorealistic 35mm film still, 16:9. A man in his thirties wearing a red jacket and dark jeans walks on a busy city sidewalk on an overcast afternoon, seen from the front at medium-wide distance. Shop windows, parked cars, pedestrians in soft focus behind him."
+        }
+      },
+      "credits": 200,
+      "seconds": 33,
+      "output": "start.png"
+    },
+    {
+      "name": "clip 1",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus B clip1",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "He walks steadily toward the camera along the sidewalk. Pedestrians pass behind him. Static camera."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/8ffccb9a-4eb9-44c6-8b59-aa14a543514b-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 113,
+      "output": "clip1.mp4",
+      "ssim_first_vs_start": 0.983
+    },
+    {
+      "name": "clip 2 (from clip 1's last frame)",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus B clip2",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "He slows to a stop, takes a phone out of his jacket pocket, and looks at the screen. Static camera."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/14c2b253-c8c7-4b9b-9719-c967dba735a4-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 101,
+      "output": "clip2.mp4",
+      "ssim_first_vs_clip1_last": 0.99
+    }
+  ],
+  "total_credits": 1160
+}
