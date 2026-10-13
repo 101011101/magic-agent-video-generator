@@ -1,0 +1,152 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Animate grandma · state-graph</title><style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--ok:#4f7a3a;--bad:#a0402d;--warn:#c27a1e;--card:#fbf7ef}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1100px;margin:0 auto;padding:40px 16px 80px}h1{font-weight:normal;font-size:30px}
+h2{font-weight:normal;font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}h3{font-weight:normal;color:var(--soft);font-size:16px;margin:22px 0 6px}
+.soft{color:var(--soft)}.small{font-size:13px}.lab{font-variant:small-caps;color:var(--soft);margin:6px 0 0}.red{color:var(--bad)}.green{color:var(--ok)}.orange{color:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}img,video{width:100%;display:block;border:1px solid var(--line)}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}.card{flex:0 0 200px;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--ok);padding:8px;font-size:13px}
+.card.bad{border-top-color:var(--bad)}.card.forced{border-top-color:var(--warn)}.card img{margin-bottom:6px}.thumb{max-width:220px}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;font-weight:normal;vertical-align:top}tr.cont td{background:#eef0dc}
+.wrap{overflow-x:auto}pre{white-space:pre-wrap;font-size:12px;margin:4px 0}details{margin-top:4px}summary{cursor:pointer;color:var(--soft)}
+.ver{border-left:3px solid var(--line);padding-left:10px;margin:10px 0}.tl{position:relative;border:1px solid var(--line);background:var(--card);margin:10px 0}
+.lane{position:relative;height:30px;border-bottom:1px dashed var(--line)}.lane>span.n{position:absolute;left:4px;top:6px;font-size:11px;color:var(--soft);z-index:1}
+.bar{position:absolute;top:4px;height:22px;background:#d9cbb4;border:1px solid var(--soft);font-size:11px;overflow:hidden;white-space:nowrap;padding:2px 4px}.bar.m{background:#e3d4ef}
+.flag{position:absolute;top:2px;font-size:10px;white-space:nowrap;border-left:2px solid var(--bad);padding-left:2px}.flag.sfx{border-left-color:var(--ok)}
+@media(max-width:760px){.two{grid-template-columns:1fr}}</style></head><body><main><h1>Animate grandma · pipeline state-graph</h1><p class="soft">animate this photo of my grandma so she smiles and waves, like 5 seconds</p>
+<p class="soft">models: IMAGE {&quot;model&quot;:&quot;nano-banana-pro&quot;,&quot;resolution&quot;:&quot;2k&quot;,&quot;aspect_ratio&quot;:&quot;16:9&quot;} · VIDEO {&quot;model&quot;:&quot;wan-3.0&quot;,&quot;resolution&quot;:&quot;720p&quot;,&quot;audio&quot;:true}<br>
+480 credits · wall 2:38 · beats 1/1 run · LLM 3 calls (1 cached), 5886 in / 2360 out tokens</p>
+<video src="final.mp4" controls playsinline></video><h2>Measures</h2><div class="wrap"><table><tr><th>Join</th><th>Link</th><th>Seam SSIM</th><th>Jump (median 0.617)</th><th>S</th><th>V (before)</th><th>L (before)</th><th>Dropped</th><th>Seam</th></tr></table></div>
+<div class="wrap"><table class="small"><tr><th>Clip</th><th>First vs start</th><th>Frames</th><th>Ramp frames</th><th>Head speed</th><th>Tail speed</th><th>End snap</th><th>Frame 0 luma</th><th>Dropped</th><th>Luma offsets</th></tr><tr><td>b1</td><td>0.97</td><td>149</td><td>0</td><td>0.757</td><td>0.789</td><td>1.083</td><td>-3.663</td><td>1</td><td></td></tr></table></div>
+<p class="soft small">seam SSIM: similarity of the last frame before the join and the first frame after it (1 = same image). jump: raw pixel change across the join in the final cut; large at a cut by design.<br>
+S: brightness-compensated step across the join / median step of both clips (clean 0.7–1.3; below 0.5 = a stall frame). V: speed of the first 10 frames after the join / speed of the last 10 before it (clean 0.8–1.25; below = motion reset). L: |luma step at the join| + |luma ramp over the next 5 frames| (clean below 1.0). Values in brackets are before the seam fix (raw clips).<br>
+ramp frames: frames until the clip reaches 0.7× its median speed. head / tail speed: first / last 10 frames vs the clip median. end snap: largest of the last 2 steps vs median (freeze-then-snap shows as a large value). frame 0 luma: how much darker the clip's first frame is than its own level. dropped: head frames removed at a continuous join; luma offsets: added to the first kept frames.</p><h2>Failed checks</h2><p class="soft">No failed checks.</p><h2>Beats</h2><h3>Beat 1 · cut · room · Daytime, As photographed</h3><p>grandma gradually smiles, lifts one hand for a small wave, then returns it to its photographed resting position, still smiling. <span class="soft">Static camera.</span></p><div class="two">
+<div><img src="b1-start.png" loading="lazy"><p class="soft small">seeded from f2 (beat 1, upload) — seed f2 (beat 1 upload): same location, shows grandma, glasses, armchair</p><details><summary>wanted state</summary><p class="small"><b>grandma</b>: Green cardigan and all other visible clothing and accessories exactly as photographed. / Seated comfortably, looking at the camera with a neutral expression; posture and both hands in their photographed resting positions. / At her exact photographed frame position, seated directly against armchair. / with armchair, glasses / Unchanged identity and natural skin texture. / Source photograph’s soft daylight, shadows, and highlights.<br><b>glasses</b>:  / Resting on grandma’s nose and ears. / On grandma’s face, lenses approximately 1 cm in front of her eyes. / with grandma / Intact, clear lenses. / Source photograph’s soft daylight and lens reflections.<br><b>armchair</b>:  / Stationary, supporting grandma. / At its exact photographed frame position, directly beneath and behind grandma. / with grandma / Unchanged from the photograph. / Source photograph’s soft daylight, shadows, and highlights.<br><b>room</b>:  / Fixed architecture and background furnishings. / Surrounding grandma and armchair, with all photographed spatial relationships unchanged. / with none / Unchanged layout and visible background objects; nothing added. / Source photograph’s soft daylight, shadows, and highlights.</p></details></div>
+<div><video src="b1.mp4" controls playsinline></video><p class="soft small">grandma gradually smiles, lifts one hand for a small wave, then returns it to its photographed resting position, still smiling. Static camera. Real sizes stay as in the first frame: grandma Approximately 1.6 m tall standing; adult human scale.; glasses Approximately 13 cm wide; fitted to grandma’s face.; armchair Approximately 1 m tall and 80 cm wide; seats one adult.. The same people and objects throughout; nobody else enters. Sound: Quiet indoor room tone, muted for silent output. No music.</p></div></div>
+<div class="row"><div class="card "><img src="b1-start.png" loading="lazy">attempt 1 · seed f2 · f3<br><span class="green">accepted</span>
+<details><summary>prompt</summary>(upload used directly)<br><span class="soft">inputs: uploads/u1.png</span></details></div></div><img src="b1-strip.jpg" loading="lazy">
+<div class="two"><div><img src="b1-last.png" loading="lazy" class="thumb"></div><p class="small">last frame f4<br>grandma: <span class="green">ok</span> · glasses: <span class="green">ok</span> · armchair: <span class="green">ok</span></p></div>
+<h2>State graph and lineage</h2><h3><b>grandma</b> <span class="soft">character · Approximately 1.6 m tall standing; adult human scale.</span></h3><p class="soft small">An elderly woman with short white hair, preserving the uploaded photograph’s exact facial features, age, skin texture, and build.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance<br><span class="soft">Green cardigan and all other visible clothing and accessories exactly as photographed. · Unchanged identity and natural skin texture.</span></p>
+<div class="row"><div class="card "><img src="uploads/u1.png" loading="lazy"><b>f1</b> · beat 1 upload<br><span class="green">ok</span>
+</div><div class="card "><img src="uploads/u1.png" loading="lazy"><b>f2</b> · beat 1 upload<br><span class="green">ok</span>
+</div><div class="card "><img src="b1-start.png" loading="lazy"><b>f3</b> · beat 1 start<br><span class="green">ok</span>
+<br>seed ← f2</div><div class="card "><img src="b1-last.png" loading="lazy"><b>f4</b> · beat 1 last<br><span class="green">ok</span>
+<br>seed ← f3</div></div></div><h3><b>glasses</b> <span class="soft">prop · Approximately 13 cm wide; fitted to grandma’s face.</span></h3><p class="soft small">A pair of round eyeglasses with clear lenses and the exact frames shown in the uploaded photograph.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance<br><span class="soft"> · Intact, clear lenses.</span></p>
+<div class="row"><div class="card "><img src="uploads/u1.png" loading="lazy"><b>f1</b> · beat 1 upload<br><span class="green">ok</span>
+</div><div class="card "><img src="uploads/u1.png" loading="lazy"><b>f2</b> · beat 1 upload<br><span class="green">ok</span>
+</div><div class="card "><img src="b1-start.png" loading="lazy"><b>f3</b> · beat 1 start<br><span class="green">ok</span>
+<br>seed ← f2</div><div class="card "><img src="b1-last.png" loading="lazy"><b>f4</b> · beat 1 last<br><span class="green">ok</span>
+<br>seed ← f3</div></div></div><h3><b>armchair</b> <span class="soft">prop · Approximately 1 m tall and 80 cm wide; seats one adult.</span></h3><p class="soft small">An armchair with the exact shape, materials, colors, and upholstery shown in the uploaded photograph.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance<br><span class="soft"> · Unchanged from the photograph.</span></p>
+<div class="row"><div class="card "><img src="uploads/u1.png" loading="lazy"><b>f1</b> · beat 1 upload<br><span class="green">ok</span>
+</div><div class="card "><img src="uploads/u1.png" loading="lazy"><b>f2</b> · beat 1 upload<br><span class="green">ok</span>
+</div><div class="card "><img src="b1-start.png" loading="lazy"><b>f3</b> · beat 1 start<br><span class="green">ok</span>
+<br>seed ← f2</div><div class="card "><img src="b1-last.png" loading="lazy"><b>f4</b> · beat 1 last<br><span class="green">ok</span>
+<br>seed ← f3</div></div></div><h3><b>room</b> <span class="soft">location · Domestic room scale, several metres across; exact dimensions unspecified.</span></h3><p class="soft small">A living room retaining the uploaded photograph’s exact architecture, layout, background furnishings, materials, and colors.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance<br><span class="soft"> · Unchanged layout and visible background objects; nothing added.</span></p>
+<div class="row"></div></div><h3>Frame graph</h3><pre>f1 (beat 1 upload) ← no seed · upload · accepted
+f2 (beat 1 upload) ← no seed · upload · accepted
+f3 (beat 1 start) ← seed f2 · upload-direct · accepted
+f4 (beat 1 last) ← seed f3 · clip-last · accepted</pre><h2>Cue sheet</h2><div class="tl"><div class="lane"><span class="n">beds</span><div class="bar " style="left:0.00%;width:100.00%" title="room Quiet indoor room tone, muted for silent output.">room Quiet indoor room tone, muted for silent output.</div></div>
+<div class="lane"><span class="n">music</span></div>
+<div class="lane"><span class="n">events</span></div>
+<div class="lane"><span class="n">sfx</span></div></div><p class="soft small">0 s — 4.967 s</p><div class="wrap"><table class="small"><tr><th>Bed</th><th>Location</th><th>Time, weather</th><th>Ambience</th><th>s</th><th>Beats</th></tr><tr><td>bed1</td><td>room</td><td>Daytime, As photographed</td><td>Quiet indoor room tone, muted for silent output.</td><td>0–4.967</td><td>1</td></tr></table>
+<table class="small"><tr><th>Music cue</th><th>s</th><th>Beats</th><th>Events</th></tr></table>
+<table class="small"><tr><th>SFX beat</th><th>At</th><th>Entity</th><th>Change</th><th>Sound</th></tr></table>
+<table class="small"><tr><th>Clip</th><th>Clip sound</th></tr><tr><td>beat 1</td><td>Sound: Quiet indoor room tone, muted for silent output.. No music.</td></tr></table></div>
+<ul class="small"><li>Times are absolute seconds in the final cut, from the trimmed clips' exact lengths. Edit them and re-run the mix.</li><li>Ambience and sfx are generated inside each clip by the video model (wan-3.0 audio). They come from clip_sound in the video prompt; their exact timing is not controllable.</li><li>sfx.at_s is the intended position (60% into the clip). No sfx endpoint exists, so no separate sfx file is placed there.</li><li>Each bed is the first clip's own audio, looped under the whole location run at about -14 dB, so the background does not jump at every clip.</li><li>Music is a PLACEHOLDER: a quiet synthetic chord pad (ffmpeg aevalsrc) per cue at about -26 LUFS. No music endpoint exists. Replace it with a real score; the cue text says what each cue should feel like.</li><li>music=false in mixAudio skips the placeholder score.</li></ul><details><summary>audio mix</summary><pre>{
+ &quot;file&quot;: &quot;/Users/ray/Coding/Side Projects/magic-agent-video-generator/current/tests/pipeline-state-graph/runs/p1-grandma-v1/final.mp4&quot;,
+ &quot;layers&quot;: [
+  {
+   &quot;name&quot;: &quot;clips&quot;,
+   &quot;count&quot;: 1,
+   &quot;silent&quot;: 0,
+   &quot;duration_s&quot;: 4.967
+  },
+  {
+   &quot;name&quot;: &quot;beds&quot;,
+   &quot;count&quot;: 1,
+   &quot;gain_db&quot;: -14
+  },
+  {
+   &quot;name&quot;: &quot;music (placeholder pad)&quot;,
+   &quot;count&quot;: 0,
+   &quot;target_lufs&quot;: -26
+  }
+ ],
+ &quot;filter_summary&quot;: &quot;1 clip tracks (loudnorm -16, 50ms cut / 400ms in-bed fades) + 1 looped beds (-14 dB, 1s fades) + 0 pad cues (-26 LUFS) → amix → loudnorm -16 → trim 5s&quot;
+}</pre></details>
+<h2>Decisions (5)</h2><div class="wrap"><table class="small"><tr><th>Time</th><th>Beat</th><th>Kind</th><th>Details</th></tr><tr><td>01:14:38</td><td>1</td><td>upload</td><td><details><summary>{&quot;frame&quot;:&quot;f1&quot;,&quot;entity&quot;:&quot;grandma&quot;}</summary><pre>{
+ &quot;frame&quot;: &quot;f1&quot;,
+ &quot;entity&quot;: &quot;grandma&quot;
+}</pre></details></td></tr><tr><td>01:14:39</td><td>1</td><td>upload</td><td><details><summary>{&quot;frame&quot;:&quot;f2&quot;,&quot;entity&quot;:&quot;room&quot;}</summary><pre>{
+ &quot;frame&quot;: &quot;f2&quot;,
+ &quot;entity&quot;: &quot;room&quot;
+}</pre></details></td></tr><tr><td>01:14:39</td><td>1</td><td>seed</td><td><details><summary>{&quot;seed&quot;:&quot;f2&quot;,&quot;kept&quot;:[&quot;grandma&quot;,&quot;glasses&quot;,&quot;armchair&quot;],&quot;merges&quot;:[],&quot;fresh&quot;:[],&quot;ran</summary><pre>{
+ &quot;seed&quot;: &quot;f2&quot;,
+ &quot;kept&quot;: [
+  &quot;grandma&quot;,
+  &quot;glasses&quot;,
+  &quot;armchair&quot;
+ ],
+ &quot;merges&quot;: [],
+ &quot;fresh&quot;: [],
+ &quot;ranked&quot;: [
+  {
+   &quot;id&quot;: &quot;f2&quot;,
+   &quot;beat&quot;: 1,
+   &quot;role&quot;: &quot;upload&quot;,
+   &quot;score&quot;: 136.001,
+   &quot;loc&quot;: 100,
+   &quot;ents&quot;: 36,
+   &quot;shows&quot;: [
+    &quot;grandma&quot;,
+    &quot;glasses&quot;,
+    &quot;armchair&quot;
+   ]
+  },
+  {
+   &quot;id&quot;: &quot;f1&quot;,
+   &quot;beat&quot;: 1,
+   &quot;role&quot;: &quot;upload&quot;,
+   &quot;score&quot;: 136,
+   &quot;loc&quot;: 100,
+   &quot;ents&quot;: 36,
+   &quot;shows&quot;: [
+    &quot;grandma&quot;,
+    &quot;glasses&quot;,
+    &quot;armchair&quot;
+   ]
+  }
+ ],
+ &quot;why&quot;: &quot;seed f2 (beat 1 upload): same location, shows grandma, glasses, armchair&quot;
+}</pre></details></td></tr><tr><td>01:16:40</td><td>1</td><td>clip-last-check</td><td><details><summary>{&quot;take&quot;:1,&quot;ok&quot;:{&quot;grandma&quot;:true,&quot;glasses&quot;:true,&quot;armchair&quot;:true},&quot;faults&quot;:[],&quot;iden</summary><pre>{
+ &quot;take&quot;: 1,
+ &quot;ok&quot;: {
+  &quot;grandma&quot;: true,
+  &quot;glasses&quot;: true,
+  &quot;armchair&quot;: true
+ },
+ &quot;faults&quot;: [],
+ &quot;identity&quot;: []
+}</pre></details></td></tr><tr><td>01:16:40</td><td>1</td><td>clip-last</td><td><details><summary>{&quot;frame&quot;:&quot;f4&quot;,&quot;take&quot;:1,&quot;ok&quot;:{&quot;grandma&quot;:true,&quot;glasses&quot;:true,&quot;armchair&quot;:true},&quot;fau</summary><pre>{
+ &quot;frame&quot;: &quot;f4&quot;,
+ &quot;take&quot;: 1,
+ &quot;ok&quot;: {
+  &quot;grandma&quot;: true,
+  &quot;glasses&quot;: true,
+  &quot;armchair&quot;: true
+ },
+ &quot;faults&quot;: []
+}</pre></details></td></tr></table></div><h2>API calls (1)</h2><div class="wrap"><table class="small"><tr><th>Key</th><th>Endpoint</th><th>Credits</th><th>s</th><th>At</th></tr><tr><td>clip:b1</td><td>/v1/image-to-video</td><td>480</td><td>113</td><td>2026-10-11T01:16:33.182Z</td></tr>
+<tr><th>total</th><th>/v1/image-to-video</th><th>480</th><th></th><th></th></tr></table></div>
+<details><summary>clip:b1 · /v1/image-to-video · 480 credits · 114 s</summary><p class="small">inputs: null · output: &quot;b1-t1.mp4&quot; · at 2026-10-11T01:16:33.182Z</p><pre>{
+ &quot;name&quot;: &quot;p1-grandma-v1 b1 t1&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;grandma gradually smiles, lifts one hand for a small wave, then returns it to its photographed resting position, still smiling. Static camera. Real sizes stay as in the first frame: grandma Approximately 1.6 m tall standing; adult human scale.; glasses Approximately 13 cm wide; fitted to grandma’s face.; armchair Approximately 1 m tall and 80 cm wide; seats one adult.. The same people and objects throughout; nobody else enters. Sound: Quiet indoor room tone, muted for silent output. No music.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/ca8b8469-c2a6-4afa-8212-febcd99f7000-image-0.png&quot;
+ }
+}</pre></details>
+</main></body></html>
