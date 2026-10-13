@@ -6,3 +6,4 @@
 - [magic-hour-tools.md](magic-hour-tools.md) and [magic-hour-tools.html](magic-hour-tools.html): the Magic Hour tool catalog with input and output types.
 - [tool-signatures.md](tool-signatures.md): typed tool signatures and nature text over the atom vocabulary.
 - [editing-layer.md](editing-layer.md): options for the deterministic editing layer (ffmpeg, Remotion, HyperFrames, hosted APIs).
+- [playground/](playground/README.md): local site to run Magic Hour tools by hand, chain outputs, and trace which calls reach the final video.
