@@ -14,10 +14,12 @@ function apiKey() {
 
 async function request(method, path, body) {
   for (let attempt = 1; attempt <= 3; attempt++) {
+    // A network error on a GET (polling) is retried; a POST is not, since it may have created a paid job.
     const res = await fetch(`${BASE}${path}`, {
       method, headers: { authorization: `Bearer ${apiKey()}`, "content-type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
-    });
+    }).catch((e) => { if (method !== "GET" || attempt === 3) throw e; return null; });
+    if (!res) { await new Promise((r) => setTimeout(r, 10000 * attempt)); continue; }
     const data = await res.json().catch(() => ({}));
     if (res.ok) return data;
     if (!(res.status === 429 || res.status >= 500) || attempt === 3) throw new Error(`Magic Hour ${method} ${path} → HTTP ${res.status}: ${JSON.stringify(data).slice(0, 500)}`);
@@ -41,7 +43,7 @@ export async function runJob(endpoint, body, kind, { timeoutS = 1200 } = {}) {
 }
 
 export async function download(url, file) {
-  const res = await fetch(url);
+  let res; for (let a = 1; ; a++) { try { res = await fetch(url); break; } catch (e) { if (a === 3) throw e; await new Promise((r) => setTimeout(r, 10000 * a)); } }
   if (!res.ok) throw new Error(`download ${res.status} ${url}`);
   writeFileSync(file, Buffer.from(await res.arrayBuffer()));
   return file;
