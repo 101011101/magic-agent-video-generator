@@ -8,6 +8,7 @@
 //   --context             a cut frame transforms the earlier frame with the most wanted elements (same place first) and merges
 //                         the missing ones from the frames where they last appeared; only characters get a clean sheet
 //   --estimate            print the jobs that would run and their credits; spend nothing
+//   --audio               clips come with generated audio (free on wan-3.0); the stitch keeps it
 import { readFileSync, writeFileSync, mkdirSync, existsSync, cpSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -27,7 +28,8 @@ const args = process.argv.slice(2);
 const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const caseId = opt("--case", "p4-lighthouse"), maxScenes = Number(opt("--scenes", 0)), label = opt("--label", "v1");
 const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9" };
-const VIDEO = { model: "wan-3.0", resolution: "720p", audio: false };
+const AUDIO = args.includes("--audio");
+const VIDEO = { model: "wan-3.0", resolution: "720p", audio: AUDIO };
 
 const c = JSON.parse(readFileSync(join(REPO, "current/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
 const read = (p) => readFileSync(join(REPO, p), "utf8");
@@ -261,9 +263,18 @@ save();
 
 // 4. Stitch: native 30 fps, exact 1280×720, hard joins, no trims.
 const ids = scenes.flat().map((s) => s.id).filter((id) => existsSync(join(runDir, `${id}.mp4`)));
+// Audio: each clip's track is levelled to -16 LUFS (generated clips differ by up to 12 dB), padded or cut to its picture length,
+// and faded for 50 ms at each end so joins do not click; a clip without a track gets silence.
+const probe = (id, q) => execFileSync("ffprobe", ["-v", "error", ...q, "-of", "csv=p=0", join(runDir, `${id}.mp4`)]).toString().trim();
+const audioOf = (id, i) => {
+  const d = Number(probe(id, ["-select_streams", "v:0", "-show_entries", "stream=duration"]));
+  const src = probe(id, ["-select_streams", "a", "-show_entries", "stream=index"]) ? `[${i}:a]aresample=48000,aformat=channel_layouts=stereo,apad` : "anullsrc=r=48000:cl=stereo";
+  return `${src},atrim=duration=${d},loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,afade=t=in:d=0.05,afade=t=out:st=${d - 0.05}:d=0.05[a${i}]`;
+};
+const streams = ids.map((id, i) => AUDIO ? `[v${i}][a${i}]` : `[v${i}]`).join("");
 execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...ids.flatMap((id) => ["-i", join(runDir, `${id}.mp4`)]), "-filter_complex",
-  ids.map((_, i) => `[${i}:v]scale=1280:720:flags=lanczos,setsar=1,fps=30,format=yuv420p[v${i}]`).join(";") + ";" + ids.map((_, i) => `[v${i}]`).join("") + `concat=n=${ids.length}:v=1:a=0[v]`,
-  "-map", "[v]", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", join(runDir, plan.layers?.length ? "picture.mp4" : "final.mp4")]);
+  [...ids.map((_, i) => `[${i}:v]scale=1280:720:flags=lanczos,setsar=1,fps=30,format=yuv420p[v${i}]`), ...(AUDIO ? ids.map(audioOf) : [])].join(";") + ";" + streams + `concat=n=${ids.length}:v=1:a=${AUDIO ? 1 : 0}[v]${AUDIO ? "[a]" : ""}`,
+  "-map", "[v]", ...(AUDIO ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", join(runDir, plan.layers?.length ? "picture.mp4" : "final.mp4")]);
 // Text layers: exact text rendered to transparent PNGs, overlaid with a short fade.
 if (plan.layers?.length) {
   // Text colour follows the background: mean brightness of the picture under the layer, at its midpoint.
@@ -271,7 +282,7 @@ if (plan.layers?.length) {
   const pngs = plan.layers.map((l, k) => renderText(l, join(runDir, `text-${k + 1}.html`), join(runDir, `text-${k + 1}.png`), { dark: luma((l.start_s + l.end_s) / 2) > 150 }));
   const chain = plan.layers.map((l, k) => `[${k + 1}:v]format=rgba,fade=t=in:st=${l.start_s}:d=0.4:alpha=1,fade=t=out:st=${Math.max(l.start_s, l.end_s - 0.4)}:d=0.4:alpha=1[t${k}];[${k === 0 ? "0:v" : `o${k - 1}`}][t${k}]overlay=0:0:shortest=1:enable='between(t,${l.start_s},${l.end_s})'${k === plan.layers.length - 1 ? "[v]" : `[o${k}]`}`).join(";");
   execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", join(runDir, "picture.mp4"), ...pngs.flatMap((p) => ["-loop", "1", "-i", p]), "-filter_complex", chain,
-    "-map", "[v]", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", join(runDir, "final.mp4")]);
+    "-map", "[v]", "-map", "0:a?", "-c:a", "copy", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", join(runDir, "final.mp4")]);
 }
 for (const id of ids) execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", join(runDir, `${id}.mp4`), "-vf", "fps=2,scale=320:-2,tile=5x2", "-frames:v", "1", join(runDir, `${id}-strip.jpg`)]);
 
