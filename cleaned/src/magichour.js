@@ -17,13 +17,13 @@ async function request(method, path, body) {
   }
 }
 
-// Returns { id, credits, url, seconds }.
-export async function imageJob(endpoint, body, { timeoutS = 900 } = {}) {
+// Returns { id, credits, url, seconds }. kind picks the status path: image-projects or video-projects.
+export async function runJob(endpoint, body, { kind = "image", timeoutS = kind === "video" ? 2700 : 900 } = {}) {
   const t0 = Date.now();
   const { id, credits_charged } = await request("POST", endpoint, body);
   for (;;) {
-    await new Promise((r) => setTimeout(r, 3000));
-    const p = await request("GET", `/v1/image-projects/${id}`);
+    await new Promise((r) => setTimeout(r, kind === "video" ? 6000 : 3000));
+    const p = await request("GET", `/v1/${kind}-projects/${id}`);
     if (p.status === "complete") return { id, credits: p.credits_charged ?? credits_charged, url: p.downloads?.[0]?.url, seconds: Math.round((Date.now() - t0) / 1000) };
     if (p.status === "error" || p.status === "canceled") throw new Error(`Magic Hour job ${id} ${p.status}: ${JSON.stringify(p.error).slice(0, 300)}`);
     if ((Date.now() - t0) / 1000 > timeoutS) throw new Error(`Magic Hour job ${id} timed out (${p.status})`);

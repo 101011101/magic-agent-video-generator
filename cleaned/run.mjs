@@ -1,6 +1,8 @@
 // Stage 1 pipeline: prompt → plan (S1) → roots (S2) → per slide: base (S3) → edit (S4) → verify (S5) → slideshow (S6).
-// Usage: node cleaned/run.mjs --case goldilocks [--label v1] [--slides N] [--estimate]
+// Stage 2 (--video): one clip per slide (V1–V5, src/film.js) → final.mp4.
+// Usage: node cleaned/run.mjs --case goldilocks [--label v1] [--slides N] [--video] [--clips 2,8] [--estimate]
 //   --prompt "…"  use a prompt instead of a case;  --slides N  build only the first N slides;  --estimate  spend nothing
+//   --video  also make the clips;  --clips 2,8  only these slides' clips (probe; no stitch until every clip exists)
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, RUNS } from "./src/env.js";
@@ -11,9 +13,11 @@ import { makeRoots } from "./src/roots.js";
 import { Tracker } from "./src/tracker.js";
 import { buildSlide } from "./src/builder.js";
 import { renderPage } from "./src/page.js";
+import { film } from "./src/film.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
-const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0));
+const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0)), VIDEO_ON = args.includes("--video");
+const clipsOnly = opt("--clips", null)?.split(",").map(Number) || null;
 const caseId = opt("--case", "custom"), label = opt("--label", "v1");
 const prompt = opt("--prompt", null) ?? JSON.parse(readFileSync(join(ROOT, "cases/cases.json"), "utf8")).find((c) => c.id === caseId)?.prompt;
 if (!prompt) throw new Error(`no case ${caseId} in cleaned/cases/cases.json and no --prompt`);
@@ -42,6 +46,7 @@ try {
     await buildSlide(s, { plan, tracker, jobs, run });
     page();
   }
+  if (VIDEO_ON) { console.log("film…"); await film({ plan, tracker, jobs, run, only: clipsOnly }); page(); }
 } catch (e) { run.log.errors.push(String(e.stack || e)); console.error(`stopped: ${e.message}`); }
 
 const frames = tracker.frames.filter((f) => f.op === "edit");
@@ -49,5 +54,5 @@ run.log.summary = { slides: frames.length, passed: frames.filter((f) => !f.force
   forced: frames.filter((f) => f.forced).map((f) => f.slide), attempts: frames.reduce((n, f) => n + f.attempts.length, 0), max_hops: Math.max(0, ...frames.map((f) => f.hops)),
   credits: jobs.spent(), llm: usage, wall_s: Math.round((Date.now() - t0) / 1000) };
 run.save(); page();
-if (estimate) console.log(`estimate: ${jobs.estimated.length} image jobs, ${jobs.estimated.reduce((n, j) => n + j.cost, 0)} credits (first tries only; retries add 200 each)`);
+if (estimate) console.log(`estimate: ${jobs.estimated.length} paid jobs, ${jobs.estimated.reduce((n, j) => n + j.cost, 0)} credits (first tries only; an image retry adds 200)`);
 else console.log(`done: ${JSON.stringify(run.log.summary)}\n  ${join(dir, "index.html")}`);
