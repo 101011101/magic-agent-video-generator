@@ -12,31 +12,37 @@ function apiKey() {
   throw new Error("MAGIC_HOUR_API_KEY not set (env or current/tests/state-manager/.env)");
 }
 
+// Only a GET is ever retried. A POST is not retried on a network error (it may have created a paid job) and — the part that
+// was missing — it is not retried on 429/5xx either: the server received that request and may already have started and
+// charged the job, so a second identical POST can buy the same image or clip twice. A failed POST surfaces; the run resumes.
 async function request(method, path, body) {
+  const retriable = method === "GET";
   for (let attempt = 1; attempt <= 3; attempt++) {
-    // A network error on a GET (polling) is retried; a POST is not, since it may have created a paid job.
     const res = await fetch(`${BASE}${path}`, {
       method, headers: { authorization: `Bearer ${apiKey()}`, "content-type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
-    }).catch((e) => { if (method !== "GET" || attempt === 3) throw e; return null; });
+    }).catch((e) => { if (!retriable || attempt === 3) throw e; return null; });
     if (!res) { await new Promise((r) => setTimeout(r, 10000 * attempt)); continue; }
     const data = await res.json().catch(() => ({}));
     if (res.ok) return data;
-    if (!(res.status === 429 || res.status >= 500) || attempt === 3) throw new Error(`Magic Hour ${method} ${path} → HTTP ${res.status}: ${JSON.stringify(data).slice(0, 500)}`);
+    if (!retriable || !(res.status === 429 || res.status >= 500) || attempt === 3) throw new Error(`Magic Hour ${method} ${path} → HTTP ${res.status}: ${JSON.stringify(data).slice(0, 500)}`);
     await new Promise((r) => setTimeout(r, 5000 * attempt));
   }
 }
 
-// kind: "image" | "video". Returns { id, credits, downloads: [url], seconds }.
+// kind: "image" | "video" | "faces". Returns { id, credits, downloads: [url], seconds }.
+// "faces" is /v1/face-detection: it polls its own path and reports face crops, which arrive as faces[] rather than
+// downloads[] — they are mapped onto downloads so every caller reads one shape.
+const STATUS_PATH = { image: "/v1/image-projects/", video: "/v1/video-projects/", faces: "/v1/face-detection/" };
 export async function runJob(endpoint, body, kind, { timeoutS = 1200 } = {}) {
   const t0 = Date.now();
   const created = await request("POST", endpoint, body);
   const id = created.id;
-  const statusPath = kind === "image" ? `/v1/image-projects/${id}` : `/v1/video-projects/${id}`;
+  const statusPath = `${STATUS_PATH[kind] || STATUS_PATH.video}${id}`;
   for (;;) {
-    await new Promise((r) => setTimeout(r, kind === "image" ? 3000 : 6000));
+    await new Promise((r) => setTimeout(r, kind === "video" ? 6000 : 3000));
     const p = await request("GET", statusPath);
-    if (p.status === "complete") return { id, credits: p.credits_charged ?? created.credits_charged, downloads: (p.downloads || []).map((d) => d.url), seconds: Math.round((Date.now() - t0) / 1000) };
+    if (p.status === "complete") return { id, credits: p.credits_charged ?? created.credits_charged, downloads: (p.downloads || p.faces || []).map((d) => d.url), seconds: Math.round((Date.now() - t0) / 1000) };
     if (p.status === "error" || p.status === "canceled") throw new Error(`Magic Hour job ${id} ${p.status}: ${JSON.stringify(p.error).slice(0, 400)}`);
     if ((Date.now() - t0) / 1000 > timeoutS) throw new Error(`Magic Hour job ${id} timed out (last status ${p.status})`);
   }
