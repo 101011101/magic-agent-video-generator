@@ -1,0 +1,156 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The Litmus Ledger</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--card:#fbf7ef;--ok:#4f7a3a;--bad:#a0402d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1813;--ink:#efe4d2;--soft:#b39b80;--line:#4a3d30;--card:#28211a;--ok:#8fbf6f;--bad:#e07a62}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1240px;margin:0 auto;padding:28px 16px 90px}
+h1,h2,h3{font-weight:normal}h1{font-size:30px;margin-bottom:2px}h2{font-size:23px;border-top:1px solid var(--line);padding-top:18px;margin-top:38px}h3{font-size:18px;margin:0 0 6px}
+.soft{color:var(--soft)}.ok{color:var(--ok)}.bad{color:var(--bad)}a{color:var(--ink)}code{font:13px ui-monospace,Menlo,monospace;background:var(--card);border:1px solid var(--line);padding:1px 4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:12px 0}
+figure{margin:0;background:var(--card);border:1px solid var(--line);padding:8px}
+figure img{width:100%;display:block;background:#000;aspect-ratio:16/9;object-fit:cover}
+figcaption{font-size:13px;margin-top:6px;line-height:1.4}
+video{width:100%;display:block;background:#000;border:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:820px){.two{grid-template-columns:1fr}}
+.finding{background:var(--card);border:1px solid var(--line);padding:14px;margin:14px 0}
+.ask{font-style:italic}
+.rule{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.rule button{font:14px Georgia,serif;padding:5px 13px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.rule button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.rule input{flex:1;min-width:190px;font:14px Georgia,serif;padding:5px 8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+#prog{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 0;margin-bottom:6px;z-index:5}</style></head><body><main>
+<h1>The Litmus Ledger</h1>
+<p class="soft">Real outputs, not descriptions. Rule each finding TRUE / FALSE / NOT SURE — saved to <code>verdicts.json</code> as you click, no save button.</p>
+<div id="prog" class="soft">0 of 7 ruled on</div>
+
+<h2>The film we just made — 20s, 4 shots</h2>
+<p class="soft">4,920 credits. Stopped at the cap before beats 5–6, so it is 20s of a planned 30s.</p>
+<video controls preload="metadata" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/final.mp4"></video>
+
+<h2>F6 · the repeated shot, side by side</h2>
+<div class="two">
+<div><video controls preload="metadata" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b3.mp4"></video><p class="soft">b3 — tower. Ends with the keeper holding the beacon door open.</p></div>
+<div><video controls preload="metadata" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b4.mp4"></video><p class="soft">b4 — tower, labelled <code>cut</code>. Starts from a description identical to b3's end.</p></div>
+</div>
+<div class="grid">
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b3-last.png"><figcaption>b3 last frame</figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b4-first.png"><figcaption>b4 first frame <span class="bad">SSIM 0.787 — "cut did not cut"</span></figcaption></figure>
+</div>
+
+<h2>F7 · identity across the film</h2>
+<div class="grid">
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b1-last.png"><figcaption>b1 beach</figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b2-last.png"><figcaption>b2 cottage</figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b3-last.png"><figcaption>b3 tower — <span class="bad">"beacon identity differs: lacks optical lens"</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/b4-last.png"><figcaption>b4 tower — <span class="bad">"beacon identity differs: missing lens"</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/anchor-shell-a1.png"><figcaption>the shell anchor — the reference every frame was given</figcaption></figure>
+</div>
+
+<h2>F2 · prop scale — same prompt, model varied</h2>
+<p class="soft">Held constant: prompt, aspect 16:9, resolution 1k, one image. Changed: model only.</p>
+<div class="grid">
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/scale-z-image-turbo.png" alt="scale z-image-turbo"><figcaption><b>z-image-turbo</b> · 5 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/scale-flux-2-klein.png" alt="scale flux-2-klein"><figcaption><b>flux-2-klein</b> · 5 cr<br><span class="bad">FAIL</span><br><span class=soft>shell much too small</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/scale-krea-2.png" alt="scale krea-2"><figcaption><b>krea-2</b> · 10 cr<br><span class="bad">FAIL</span><br><span class=soft>shell too small</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/scale-seedream-v4.png" alt="scale seedream-v4"><figcaption><b>seedream-v4</b> · 40 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/scale-gpt-image-2.png" alt="scale gpt-image-2"><figcaption><b>gpt-image-2</b> · 100 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/scale-nano-banana-pro.png" alt="scale nano-banana-pro"><figcaption><b>nano-banana-pro</b> · 150 cr<br><span class="ok">PASS</span></figcaption></figure>
+</div>
+
+<h2>F3 · text suppression — same prompt, model varied</h2>
+<p class="soft">Prompt explicitly forbids all text, signage, lettering, numbers, logos.</p>
+<div class="grid">
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/text-z-image-turbo.png" alt="text z-image-turbo"><figcaption><b>z-image-turbo</b> · 5 cr<br><span class="bad">FAIL</span><br><span class=soft>lettering, digits, logo</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/text-flux-2-klein.png" alt="text flux-2-klein"><figcaption><b>flux-2-klein</b> · 5 cr<br><span class="bad">FAIL</span><br><span class=soft>readable vending-machine text</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/text-krea-2.png" alt="text krea-2"><figcaption><b>krea-2</b> · 10 cr<br><span class="bad">FAIL</span><br><span class=soft>lettering + logos</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/text-seedream-v4.png" alt="text seedream-v4"><figcaption><b>seedream-v4</b> · 40 cr<br><span class="bad">FAIL</span><br><span class=soft>brand lettering</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/text-gpt-image-2.png" alt="text gpt-image-2"><figcaption><b>gpt-image-2</b> · 100 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/text-nano-banana-pro.png" alt="text nano-banana-pro"><figcaption><b>nano-banana-pro</b> · 150 cr<br><span class="bad">FAIL</span><br><span class=soft>readable number on sign</span></figcaption></figure>
+</div>
+
+<h2>F4 · count — "exactly three boats"</h2>
+<div class="grid">
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/count-z-image-turbo.png" alt="count z-image-turbo"><figcaption><b>z-image-turbo</b> · 5 cr<br><span class="ok">PASS</span><br><span class=soft>but 2/3 on repeat — drew four</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/count-flux-2-klein.png" alt="count flux-2-klein"><figcaption><b>flux-2-klein</b> · 5 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/count-krea-2.png" alt="count krea-2"><figcaption><b>krea-2</b> · 10 cr<br><span class="bad">FAIL</span><br><span class=soft>extra boat at left edge</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/count-seedream-v4.png" alt="count seedream-v4"><figcaption><b>seedream-v4</b> · 40 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/count-gpt-image-2.png" alt="count gpt-image-2"><figcaption><b>gpt-image-2</b> · 100 cr<br><span class="ok">PASS</span></figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/count-nano-banana-pro.png" alt="count nano-banana-pro"><figcaption><b>nano-banana-pro</b> · 150 cr<br><span class="ok">PASS</span></figcaption></figure>
+</div>
+
+<h2>F5 · identity-preserving edit — same source, model varied</h2>
+<p class="soft">Instruction: change only the time of day to dusk; keep the person, building and landscape exactly.</p>
+<div class="grid">
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/source.png"><figcaption><b>SOURCE</b> · the fixed input</figcaption></figure>
+<figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/edit-flux-2-klein.png"><figcaption><b>flux-2-klein</b> · 5 cr<br><span class="ok">PASS</span></figcaption></figure><figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/edit-qwen-edit.png"><figcaption><b>qwen-edit</b> · 10 cr<br><span class="ok">PASS</span></figcaption></figure><figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/edit-seedream-v4.5.png"><figcaption><b>seedream-v4.5</b> · 50 cr<br><span class="ok">PASS</span></figcaption></figure><figure><img loading="lazy" src="/media/current/tests/sweeps/run-001/edit-nano-banana-pro.png"><figcaption><b>nano-banana-pro</b> · 150 cr<br><span class="ok">PASS</span></figcaption></figure>
+</div>
+
+<h2>Rule on them</h2>
+<section class="finding" id="F1">
+<h3>F1 · Litmus frames no longer exist</h3><p>Every litmus claim (CAR 6/6, G 12/12, F 8/24, E 0/22) rests on <b>text records in state.json</b>. The images are gitignored and deleted — 0 files across all 8 test directories. We have been reasoning about picture quality from written descriptions of pictures nobody can look at.</p><p class="ask soft">Is it acceptable to keep treating those numbers as evidence?</p>
+<div class="rule" data-id="F1">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+<section class="finding" id="F2">
+<h3>F2 · 5 credits matches 150 on prop scale</h3><p>z-image-turbo (5cr) and nano-banana-pro (150cr) both pass; flux-2-klein and krea-2 both draw the shell too small. Confirmed 3/3 on repeats for z-image-turbo. Look at the frames below and judge for yourself.</p><p class="ask soft">Does the 5-credit frame look as usable to you as the 150-credit one?</p>
+<div class="rule" data-id="F2">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+<section class="finding" id="F3">
+<h3>F3 · Our production model cannot suppress text</h3><p>nano-banana-pro FAILS the no-text prompt. Only gpt-image-2 passes, at 100cr. This explains why text-hallucination retries were 0-for-3 — no prompt fixes it, a different model does.</p><p class="ask soft">Is the text in the nano-banana-pro frame disqualifying for your use?</p>
+<div class="rule" data-id="F3">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+<section class="finding" id="F4">
+<h3>F4 · Count discipline is not reliable at 5 credits</h3><p>z-image-turbo passed count twice and failed once (drew four boats for three). krea-2 failed outright. Single samples were misleading; repeats caught it.</p><p class="ask soft">Do you need exact counts often enough for this to matter?</p>
+<div class="rule" data-id="F4">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+<section class="finding" id="F5">
+<h3>F5 · The 5-credit editor holds identity</h3><p>All four editor models pass the identity-preserving edit. flux-2-klein at 5cr vs nano-banana-pro at 150cr. Editing is 43 of 58 image calls and 8,600 of 11,600 credits — this is where the money is.</p><p class="ask soft">Compare the four edits against the source. Is the 5-credit one acceptable?</p>
+<div class="rule" data-id="F5">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+<section class="finding" id="F6">
+<h3>F6 · The repeated shot: a cut that was not a cut</h3><p>b3's end description is byte-identical to b4's start description, same location, labelled <code>cut</code>. The pipeline paid 200 credits to regenerate the same picture, then the clip had nothing to do. Seam SSIM 0.787 — the new gate caught it, but only after the spend.</p><p class="ask soft">Watch b3 and b4 back to back. Is this the repeat you saw?</p>
+<div class="rule" data-id="F6">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+<section class="finding" id="F7">
+<h3>F7 · Identity still drifts with references attached</h3><p>31 generations that previously carried no root reference now carry one. Identity faults persisted anyway: shell, beacon and trawler all flagged as 'identity differs'. 4 of 5 frame beats were force-accepted.</p><p class="ask soft">Looking at the beacon across b3 and b4 — does it read as the same object to you?</p>
+<div class="rule" data-id="F7">
+ <button data-v="true">TRUE</button><button data-v="false">FALSE</button><button data-v="unsure">NOT SURE</button>
+ <input type="text" placeholder="note (saved as you type)" data-note>
+ <span class="state soft"></span></div></section>
+</main>
+<script>
+const prog=document.getElementById("prog"), total=7;
+let store={};
+const paint=()=>{
+  let n=0;
+  document.querySelectorAll(".rule").forEach(r=>{
+    const s=store[r.dataset.id]||{};
+    r.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(s.verdict===b.dataset.v)));
+    const i=r.querySelector("[data-note]"); if(document.activeElement!==i) i.value=s.note||"";
+    r.querySelector(".state").textContent = s.verdict? "saved" : "";
+    if(s.verdict) n++;
+  });
+  prog.textContent = n+" of "+total+" ruled on"+(n===total?" — done, tell Claude":"");
+};
+const save=async(id,patch)=>{
+  store[id]={...(store[id]||{}),...patch};
+  paint();
+  try{ await fetch("/api/verdicts",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,...patch})}); }
+  catch(e){ const r=document.querySelector('.rule[data-id="'+id+'"] .state'); if(r) r.textContent="NOT SAVED"; }
+};
+document.querySelectorAll(".rule").forEach(r=>{
+  const id=r.dataset.id;
+  r.querySelectorAll("button").forEach(b=>b.onclick=()=>save(id,{verdict:b.dataset.v}));
+  let t; r.querySelector("[data-note]").oninput=e=>{ clearTimeout(t); const v=e.target.value; t=setTimeout(()=>save(id,{note:v}),400); };
+});
+fetch("/api/verdicts").then(r=>r.json()).then(d=>{ store=d.verdicts||{}; paint(); }).catch(paint);
+</script></body></html>

@@ -1,0 +1,131 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The Orphaned Solver</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--card:#fbf7ef;--ok:#4f7a3a;--bad:#a0402d;--warn:#9a7320}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1813;--ink:#efe4d2;--soft:#b39b80;--line:#4a3d30;--card:#28211a;--ok:#8fbf6f;--bad:#e07a62;--warn:#d6a73f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1180px;margin:0 auto;padding:32px 16px 80px}
+h1,h2,h3{font-weight:normal}h1{font-size:30px;margin-bottom:4px}h2{font-size:23px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}h3{font-size:18px;margin-bottom:6px}
+.soft{color:var(--soft)}a{color:var(--ink)}ul{margin:6px 0;padding-left:18px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0}td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{font-weight:normal;color:var(--soft)}
+code{font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--card);border:1px solid var(--line);padding:1px 4px}
+.wrap{overflow-x:auto}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:820px){.two{grid-template-columns:1fr}}
+.col{background:var(--card);border:1px solid var(--line);padding:14px}
+.lede{font-size:17px;border-left:3px solid var(--bad);padding:4px 0 4px 14px;margin:18px 0}
+.good{border-left:3px solid var(--ok);padding:4px 0 4px 14px;margin:16px 0}
+.note{border-left:3px solid var(--warn);padding:4px 0 4px 14px;margin:16px 0}
+.pill{display:inline-block;font-size:12px;padding:1px 7px;border:1px solid var(--line);border-radius:10px;color:var(--soft)}
+.big{font-size:27px;font-variant-numeric:tabular-nums}</style></head><body><main>
+
+<h1>The Orphaned Solver</h1>
+<p class="soft">State manager audit — is it properly built, what is missing, and were the defects structural or just bugs. Evidence is cited to file:line or to a recorded run. 2026-10-14.</p>
+
+<div class="lede"><b>The short answer.</b> The state manager's <i>data structure</i> is built and correct. Its <i>behaviour</i> was never wired. The full designed engine — 22 atoms, 40 tool signatures, a backward-search solver — exists in the repo and <b>no live pipeline imports a line of it</b>. And the defects that make the videos bad are <b>structural, not bugs</b>: we fixed six real bugs today and the output quality would be unchanged.</p></div>
+
+<h2>Were the defects structural, or bugs?</h2>
+<p>This is the question that decides what to do next, so it is worth separating carefully. Of the fifteen defects found today, the split is clean — and it is not the split you would hope for.</p>
+
+<div class="two">
+<div class="col"><h3 class="bad">Structural — design, not code</h3>
+<p class="soft">Cannot be fixed by debugging. Each is a decision, or a decision never made.</p>
+<table>
+<tr><th>id</th><th>what</th></tr>
+<tr><td><code>PRD-010</code></td><td>The PRD has <b>no model for motion, action or temporal logic</b>. Every atom is a property of a single still state. The product is video; the type system describes frames.</td></tr>
+<tr><td><code>SM-100</code></td><td>Tool selection is <b>not derived from state</b>. Models are module-level literals; the endpoint is a one-line ternary.</td></tr>
+<tr><td><code>SM-101</code></td><td>The designed selection subsystem is <b>dead code</b>. Nothing imports <code>signatures.js</code>, <code>atomize.js</code> or <code>solver.js</code>.</td></tr>
+<tr><td><code>SM-102</code></td><td>State is pointer-correct but <b>transformation-absent</b>. The original is consulted, never carried.</td></tr>
+<tr><td><code>SM-002</code></td><td>The <b>re-anchor rule is violated</b> — generated chains onto generated for identity.</td></tr>
+<tr><td><code>SM-005</code></td><td>Transitions are planned and recorded but <b>never verified</b>.</td></tr>
+<tr><td><code>SM-103/104</code></td><td>26 of 30 endpoints never called, including <code>face-detection</code> — a <i>consequence</i> of SM-100.</td></tr>
+<tr><td><code>SM-105</code></td><td>The pass-through path exists but is guarded so narrowly it almost never fires.</td></tr>
+</table></div>
+
+<div class="col"><h3 class="ok">Ordinary bugs — now fixed</h3>
+<p class="soft">Real, worth fixing, and none of them was why the videos are bad.</p>
+<table>
+<tr><th>what</th><th>cost of the bug</th></tr>
+<tr><td>POST retried on 429/5xx</td><td>duplicate <i>paid</i> jobs</td></tr>
+<tr><td>Concurrent anchors, non-atomic cap</td><td>budget overshoot</td></tr>
+<tr><td>Judge <code>Promise.all</code> all-or-nothing</td><td>discarded paid judgements</td></tr>
+<tr><td><code>seamFix</code> inverted on frozen head</td><td>worst case got smallest fix</td></tr>
+<tr><td><code>retried_classes</code> leaked across runs</td><td>permanent false block</td></tr>
+<tr><td><code>L &lt; 1.0</code> threshold unsatisfiable</td><td>gate always failed</td></tr>
+<tr><td><code>audio.js</code> null deref</td><td>lost the mix</td></tr>
+<tr><td>Missing <code>IMAGE</code> in cache key</td><td>stale frame reuse</td></tr>
+<tr><td>Voiceover never requested</td><td>0 voice jobs of 81</td></tr>
+</table></div>
+</div>
+
+<div class="note"><b>Read the two columns together.</b> The bug column is about <b>money and robustness</b>. The structural column is about <b>whether the output is any good</b>. Identity drift, oversized props and wrong actions — the three things that actually make the videos fail — are all in the left column. None of them is a bug. They are the architecture doing exactly what it was built to do.</div>
+
+<h2>Is the state manager properly built?</h2>
+<p>Four principles define it. Here is each against the code.</p>
+<div class="wrap"><table>
+<tr><th>principle</th><th>PRD</th><th>built</th><th>evidence</th></tr>
+<tr><td><b>State is a pointer, not a copy</b></td><td>states it</td><td class="ok">YES — correct in both</td><td>A's frames carry <code>seed</code>/<code>merged[]</code>/<code>op</code> lineage (<code>graph.js</code> <code>addFrame</code>); B's versions carry <code>anchor</code> paths</td></tr>
+<tr><td><b>Original passed and transformed, never regenerated</b></td><td class="soft">states it as a <b>hard rule</b> — <code>05-solver.md:57</code></td><td class="bad">NO — violated</td><td><b>37 paid regenerations</b> vs 24 deterministic passes across four runs. Every cut start frame is a paid redraw even when the seed already contains the entity.</td></tr>
+<tr><td><b>Deterministic extraction preferred</b></td><td class="warn">partial — the split is still an "unconfirmed proposal"</td><td class="warn">PARTIAL</td><td>Two pass-through paths exist and both work (<code>clip-last</code>, <code>upload-direct</code>). Neither covers cuts. No crop/fit step exists in either live pipeline.</td></tr>
+<tr><td><b>Selection from preservation guarantees</b></td><td class="bad">PRD is wrong here — selects by "accuracy and cost", never by what the state needs preserved</td><td class="bad">NO — does not exist</td><td><code>run.mjs:27-28</code>, <code>common.js:14-15</code> — hardcoded literals</td></tr>
+</table></div>
+
+<p><b>So: roughly a quarter built.</b> The structure is right, the behaviour is missing, and the one place the PRD itself needed correcting is the tool-selection rule — now written in.</p>
+
+<h2>What is missing</h2>
+<table>
+<tr><th>missing</th><th>consequence, measured</th></tr>
+<tr><td><b>Any logic or motion check</b></td><td><b>117 recorded faults in pipeline A, zero about motion.</b> Not because motion was right — because no check could fail. <code>end_state_ok</code> is false in <b>15 of 16</b> lighthouse shots while both pipelines called those frames acceptable.</td></tr>
+<tr><td><b>A tool selector</b></td><td>Only 4 of 30 endpoints used. The unused set is disproportionately the <i>cheap transformation</i> tools: <code>image-background-remover</code> (5cr, enables paste-back), <code>face-swap-photo</code> (10cr, addresses the 11 identity faults), <code>character-replace</code>/<code>video-to-video</code> (act on an existing clip — nothing acts post-clip today; a bad clip is re-rolled, never repaired).</td></tr>
+<tr><td><b>Transformation instead of regeneration</b></td><td>The pointer is handed to an instruction editor, which regenerates every pixel. Measured elsewhere and recorded in <code>multishot-video-practice.md</code>: "chained edits compound drift". The recommended fix — mask inpainting plus paste-back — is in neither pipeline.</td></tr>
+<tr><td><b>Validation of uploaded references</b></td><td>An upload is copied verbatim as the identity anchor. No face check, no crop, no resolution gate. A full-body photo with a 40-pixel face becomes the reference for the whole film. <code>/v1/face-detection</code> exists and is never called.</td></tr>
+</table>
+
+<h2>The evidence that your model is right</h2>
+<div class="good"><p><code>p1-grandma-v1</code> is the <b>only</b> recorded run that follows the intended model end to end — <code>upload</code> → <code>upload-direct</code> → <code>clip-last</code>, <b>zero generated frames</b>.</p>
+<table>
+<tr><th>run</th><th>path</th><th class="num">credits</th><th class="num">score</th></tr>
+<tr><td><b>p1-grandma-v1</b></td><td class="ok"><b>pass-through, 0 generated frames</b></td><td><b>480</b></td><td class="ok"><b>94.4</b></td></tr>
+<tr><td>p4-lighthouse-v1</td><td>generated</td><td>9,200</td><td>72.3</td></tr>
+<tr><td>p4-lighthouse-v2-30s</td><td>generated</td><td>6,480</td><td>67.4</td></tr>
+<tr><td>d1-desert-tokyo-v1-30s</td><td>generated</td><td>6,280</td><td>62.5</td></tr>
+</table>
+<p>Cheapest <i>and</i> best, by a wide margin, on the only path that carries the original forward.</p>
+<p class="soft"><b>Caveat, stated plainly:</b> one 5-second clip, one entity, no cut. It is the easiest case in the set, not proof at scale. It points the direction; it does not settle it.</p></div>
+
+<h2>Cost, since it is the same story</h2>
+<p>A 45-second video is not inherently expensive. The video floor is real — 96 credits/second, 4,320 for 45s. The waste is images.</p>
+<div class="wrap"><table>
+<tr><th>p4-lighthouse-v1 (9 clips, 9,200 credits)</th><th class="num">credits</th><th class="num">share</th></tr>
+<tr><td>video clips</td><td>4,800</td><td>52%</td></tr>
+<tr><td>anchors</td><td>1,800</td><td>20%</td></tr>
+<tr><td>keyframes</td><td>1,400</td><td>15%</td></tr>
+<tr><td>retries <span class="soft">(two of which produced <i>worse</i> frames)</span></td><td>1,200</td><td>13%</td></tr>
+</table></div>
+<p>All 22 image calls used <code>nano-banana-pro</code>. Rates now <b>measured</b>, not quoted, by RUN-001 today:</p>
+<div class="wrap"><table>
+<tr><th>model</th><th class="num">spec said</th><th class="num">actually billed</th></tr>
+<tr><td>z-image-turbo</td><td>5</td><td class="ok">5</td></tr>
+<tr><td>flux-2-klein</td><td>5</td><td class="ok">5</td></tr>
+<tr><td>krea-2</td><td>10</td><td>10</td></tr>
+<tr><td>seedream-v4</td><td>40</td><td>40</td></tr>
+<tr><td>gpt-image-2</td><td>50</td><td class="bad">100 — 2× the spec floor</td></tr>
+<tr><td><b>nano-banana-pro</b> <span class="pill">what we use</span></td><td>150–200</td><td><b>150</b></td></tr>
+</table></div>
+<p><b>We pay 30× the cheapest rate for every iteration.</b> Whether that 30× buys anything is exactly what RUN-001's scoring will answer — 23 frames are generated and on disk, waiting on ffmpeg.</p>
+
+<h2>What follows from this</h2>
+<ol>
+<li><b>Stop fixing bugs to improve quality.</b> It will not work. The bug backlog is a money-and-robustness backlog.</li>
+<li><b>PRD-010 is the root.</b> No motion model in the type system means no motion check can be specified, which means action adherence can never be verified. Everything else in the logic taxonomy sits downstream of it.</li>
+<li><b>SM-105 is the cheapest real win.</b> Widen the pass-through guard. The best-scoring, cheapest run in the repo already uses it; it fires almost never.</li>
+<li><b>SM-100 unlocks the tool catalogue.</b> 26 unused endpoints, several of them cheap transformation tools that directly address recorded faults. None can be reached until something selects tools from state.</li>
+</ol>
+
+<h2>What I am not claiming</h2>
+<ul>
+<li>The grandma result is one easy clip. Direction, not proof.</li>
+<li><code>SM-102</code> rests partly on a secondary source for "instruction editors regenerate every pixel". <code>HUNT-100</code> exists to measure it on our own stack. Not yet done.</li>
+<li>RUN-001 is <b>one sample per cell</b> and runs at 1k, while production runs at 2k. A narrow result means repeat the arm, not that we have an answer. <code>krea-2</code> cannot reach 2k at all.</li>
+<li>Only <b>41%</b> of recorded issues are logic-mode. Fixing logic addresses a real but minority slice of what goes wrong; the rest is appearance — wheel design, branding, lighting.</li>
+<li>Four of my earlier numbers were wrong and are marked <code>CORRECTED</code> on <a href="../litmus-review/index.html">The Litmus Ledger</a>. Two larger claims were also wrong: chain-length is refuted, and "litmus solved prop scale" was a hardcoded string literal, not a measurement.</li>
+</ul>
+
+<p class="soft"><a href="../compare/index.html">Pipeline A vs B</a> · <a href="../fixes/index.html">The two fixes</a> · <a href="../litmus-review/index.html">The Litmus Ledger</a> · <a href="../subcases/MATRIX.md">Test matrix</a> · <a href="../subcases/RESULTS.md">Zero-cost results</a></p>
+</main></body></html>
