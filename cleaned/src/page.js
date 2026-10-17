@@ -1,13 +1,26 @@
 // S6 Slideshow page: slides in order (arrow keys), lineage per slide, presence matrix, roots. Relative paths only.
+import { links } from "./links.js";
+
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 export function renderPage({ name, prompt, plan, tracker, log, credits }) {
   const slides = plan.slides.map((s) => ({ s, f: tracker.bySlide(s.n) })).filter((x) => x.f);
-  const ent = Object.fromEntries(plan.entities.map((e) => [e.id, e]));
   const img = (file, cls = "") => `<img class="${cls}" src="${esc(file)}" loading="lazy" alt="">`;
+  const L = Object.fromEntries(links(plan, tracker).map((l) => [l.n, l]));
+  const badge = (n) => { const l = L[n]; if (!l || !l.next) return '<span class="lk end">end</span>'; return l.type === "connected" ? `<span class="lk con" title="${esc(l.why)}">⟶ connected to ${l.next}</span>` : `<span class="lk cut" title="${esc(l.why)}">✂ cut to ${l.next}</span>`; };
+  const film = log.film;
+  const filmHtml = !film ? "" : `<h2>Film</h2>
+    ${film.final ? `<video class="film" src="${esc(film.final)}" controls></video>` : `<p class="meta">final.mp4 is stitched once every slide has its clip (${film.clips.length}/${Object.keys(L).length} made).</p>`}
+    <p class="meta">${esc(film.model.model)} ${esc(film.model.resolution)}, ${film.seconds} s per clip · connected clips end on the next slide's frame; cut clips have a start frame only</p>
+    ${film.clips.map((c) => `<div class="lin"><h3>Clip ${c.n} ${badge(c.n)} <small>${esc(c.why)}</small></h3>
+      <div class="row"><figure>${img(c.start, "th")}<figcaption>start = slide ${c.n}</figcaption></figure>${c.end ? `<figure>${img(c.end, "th")}<figcaption>end = slide ${c.next}</figcaption></figure>` : ""}<span class="arrow">→</span>
+      <video class="mid" src="${esc(c.file)}" controls muted loop></video></div>
+      <p class="meta">${esc(c.prompt)}${c.motion?.risk ? ` · risk: ${esc(c.motion.risk)}` : ""}</p>
+      <p class="meta">${c.qa ? `first frame ≈ start: SSIM ${c.qa.first_vs_start}${c.end ? ` · last frame ≈ end: SSIM ${c.qa.last_vs_end}` : ""} · ${c.qa.seconds} s` : "not made yet"}</p></div>`).join("")}`;
+  const ent = Object.fromEntries(plan.entities.map((e) => [e.id, e]));
   const lineage = slides.map(({ s, f }) => `
   <section class="lin" id="lin-${s.n}">
-    <h3>Slide ${s.n} · ${esc(plan.locations.find((l) => l.id === s.location)?.name)} ${f.forced ? '<span class="bad">forced</span>' : '<span class="ok">pass</span>'} <small>hops ${f.hops} · ${esc(f.base_why)}</small></h3>
+    <h3>Slide ${s.n} · ${esc(plan.locations.find((l) => l.id === s.location)?.name)} ${badge(s.n)} ${f.forced ? '<span class="bad">forced</span>' : '<span class="ok">pass</span>'} <small>hops ${f.hops} · ${esc(f.base_why)}</small></h3>
     <p class="cap">${esc(s.caption)}</p>
     <p class="meta">present: ${s.present.map((id) => esc(ent[id].name)).join(", ") || "—"}${s.change ? ` · change: ${esc(s.change)}` : ""}${s.continues ? " · continues" : ""}</p>
     ${f.attempts.map((a) => `
@@ -41,6 +54,8 @@ h1{font-size:22px;margin:8px 0} h2{font-size:17px;margin:32px 0 8px;border-top:1
 .lin{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin:12px 0}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap} figure{margin:0} .th{width:120px;border-radius:4px} .mid{width:260px;max-width:100%;border-radius:4px} .arrow{font-size:22px;color:var(--mut)}
 .grid{display:flex;gap:12px;flex-wrap:wrap} pre{white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:4px;overflow-x:auto}
+.lk{font-size:12px;font-weight:500;padding:1px 6px;border-radius:4px;border:1px solid var(--line)} .lk.con{color:var(--ok)} .lk.cut{color:var(--bad)} .lk.end{color:var(--mut)}
+.dots{align-items:center} .j{font-style:normal;color:var(--mut);font-size:12px;margin:0 -2px} video.film{width:100%;border-radius:8px;background:#000}
 table{border-collapse:collapse;font-size:13px;display:block;overflow-x:auto} td,th{border:1px solid var(--line);padding:3px 8px;text-align:center}
 </style></head><body><main>
 <h1>${esc(plan.title)}</h1>
@@ -48,15 +63,16 @@ table{border-collapse:collapse;font-size:13px;display:block;overflow-x:auto} td,
 <div class="stage"><img id="cur" alt=""></div>
 <div class="bar"><button id="prev">←</button><button id="next">→</button><span id="num" class="meta"></span><div class="dots" id="dots"></div></div>
 <p class="capbig" id="cap"></p><p class="meta" id="sub"></p>
+${filmHtml}
 <h2>Lineage</h2>${lineage}
 <h2>Presence (observed)</h2>${matrix}
 <h2>Roots</h2><div class="grid">${roots}</div>
 <p class="meta">style: ${esc(plan.style)}</p>
 </main><script>
-const S=${JSON.stringify(slides.map(({ s, f }) => ({ n: s.n, file: f.file, cap: s.caption, sub: `${s.location}${f.forced ? " · forced" : ""}` })))};
+const S=${JSON.stringify(slides.map(({ s, f }) => ({ n: s.n, file: f.file, cap: s.caption, sub: `${s.location}${f.forced ? " · forced" : ""}`, link: L[s.n] })))};
 let i=0;const $=(x)=>document.getElementById(x);
-$("dots").innerHTML=S.map((_,k)=>'<span data-k="'+k+'"></span>').join("");
-function show(k){i=(k+S.length)%S.length;const s=S[i];$("cur").src=s.file;$("cap").textContent=s.cap;$("sub").textContent=s.sub;$("num").textContent="slide "+s.n+" / "+S.length;[...$("dots").children].forEach((d,j)=>d.className=j===i?"on":"");}
+$("dots").innerHTML=S.map((x,k)=>'<span data-k="'+k+'" title="'+(x.link&&x.link.type==="connected"?"connected to next":"cut after")+'"></span>'+(x.link&&x.link.next?(x.link.type==="connected"?'<i class="j">—</i>':'<i class="j">|</i>'):"")).join("");
+function show(k){i=(k+S.length)%S.length;const s=S[i];$("cur").src=s.file;$("cap").textContent=s.cap;$("sub").textContent=s.sub+(s.link&&s.link.next?(s.link.type==="connected"?"  ·  ⟶ connected to "+s.link.next:"  ·  ✂ cut to "+s.link.next):"  ·  end");$("num").textContent="slide "+s.n+" / "+S.length;[...$("dots").querySelectorAll("span")].forEach((d,j)=>d.className=j===i?"on":"");}
 $("prev").onclick=()=>show(i-1);$("next").onclick=()=>show(i+1);$("dots").onclick=(e)=>e.target.dataset.k&&show(+e.target.dataset.k);
 addEventListener("keydown",(e)=>{if(e.key==="ArrowRight")show(i+1);if(e.key==="ArrowLeft")show(i-1);});
 if(S.length)show(0);
