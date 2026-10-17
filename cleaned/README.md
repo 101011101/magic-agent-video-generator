@@ -1,13 +1,14 @@
 # Cleaned — presence-tracked keyframe pipeline
 
 > Prompt → plan → roots → keyframes made by editing the latest frame of each place → slideshow. The frame is the state; the
-> tracker only knows which entities each frame shows. Design: [docs/PRD.md](docs/PRD.md). Work: [tickets/](tickets/README.md).
+> tracker only knows which entities each frame shows. Design: [docs/PRD.md](docs/PRD.md) (stage 1), [docs/PRD-video.md](docs/PRD-video.md) (stage 2, clips), [docs/PRD-seed.md](docs/PRD-seed.md) (stage 0, asset bank and seeds; not built). Work: [tickets/](tickets/README.md).
 
 **Run:**
 ```
 node cleaned/run.mjs --case goldilocks --label v1 --estimate   # plan + job list, no image credits
 node cleaned/run.mjs --case goldilocks --label v1              # paid run
 node cleaned/run.mjs --prompt "a fox steals a pie" --label t1  # any prompt (case id "custom")
+node cleaned/run.mjs --case goldilocks --label v1 --video [--clips 2,8]  # stage 2: clips (+ final.mp4 when all exist)
 ```
 - Keys: `OPENAI_API_KEY`, `MAGIC_HOUR_API_KEY` from the env or the repository root `.env`.
 - Output: `cleaned/runs/<case>-<label>/index.html` (slideshow + lineage + presence matrix), `run.json`, `tracker.json`, `roots/`, `frames/`.

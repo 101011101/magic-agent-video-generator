@@ -1,5 +1,5 @@
 # G-003 — Stage 2: clips between keyframes
-**Status:** open
+**Status:** done
 **Cost:** ≈ 96 per second of video (wan-3.0 720p)
 **Blocked by:** R-001
 
@@ -8,3 +8,6 @@ The slideshow is stage 1. Clips must be made from keyframes, with an end frame o
 
 ## Done when
 A clip stage takes each slide as a start frame, uses the next `continues` slide as its end frame, and stitches the result.
+
+## Resolution
+Split into V-001 … V-005 and R-003 (docs/PRD-video.md).
