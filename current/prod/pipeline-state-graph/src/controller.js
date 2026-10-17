@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { firstFrame, lastFrame } from "../../state-manager/src/continuity.js";
 import { framePrompt, fixText, videoPrompt, safeVideoPrompt, anchorPrompt, cm } from "./prompts.js";
 import { verifyFrame } from "./verify.js";
+import { preservedAtoms } from "../../state-manager/src/select.js";
 import { COST } from "./jobs.js";
 
 export const RETRIES = { same_seed: 1, fallback_seeds: 1 };
@@ -58,14 +59,14 @@ export class Controller {
       const file = `b${n}-t${take}.mp4`, key = `clip:b${n}${take > 1 ? `:t${take}` : ""}`;
       try {
         await jobs.run(key, file, { prompt, seconds: beat.seconds, video: this.VIDEO, take }, [start], COST.video_per_s * beat.seconds,
-          () => jobs.video(`${log.run} b${n} t${take}`, prompt, start, beat.seconds, file, this.VIDEO));
+          () => jobs.video(`${log.run} b${n} t${take}`, prompt, start, beat.seconds, file, this.VIDEO, this.videoNeed(beat)));
       } catch (e) {
         if (!/nsfw|content policy/i.test(String(e))) throw e;
         const safe = safeVideoPrompt(beat); L.video_prompt_rejected = prompt; L.video_prompt = safe;
         graph.decide({ beat: n, kind: "prompt-rejected", key, error: String(e.message).slice(0, 200), fallback: safe });
         console.log(`  ${key}: prompt rejected by the content filter → bare action prompt`);
         await jobs.run(`${key}:safe`, file, { prompt: safe, seconds: beat.seconds, video: this.VIDEO, take }, [start], COST.video_per_s * beat.seconds,
-          () => jobs.video(`${log.run} b${n} t${take} safe`, safe, start, beat.seconds, file, this.VIDEO));
+          () => jobs.video(`${log.run} b${n} t${take} safe`, safe, start, beat.seconds, file, this.VIDEO, this.videoNeed(beat)));
       }
       if (this.estimate) break;
       firstFrame(join(this.runDir, file), join(this.runDir, `b${n}-t${take}-first.png`));
@@ -133,7 +134,9 @@ export class Controller {
     const attempts = [];
     for (let k = 1; k <= 2; k++) {
       const file = `anchor-${id}-a${k}.png`, prompt = prompt0 + (k > 1 ? fixText(attempts[0].v.hard.concat(attempts[0].v.soft)) : "");
-      await jobs.run(`anchor:${id}:a${k}`, file, { prompt, image: this.IMAGE }, [pf.file], COST.image, () => jobs.image(`${log.run} anchor ${id} a${k}`, prompt, [pf.file], file, this.IMAGE));
+      // The anchor is drawn from the partner frame: the partner must be carried, the prop is what this frame makes.
+      const need = { preserve: preservedAtoms([{ id: partner, kind: "character" }]), make: ["pose_action", "props"], carried: [partner] };
+      await jobs.run(`anchor:${id}:a${k}`, file, { prompt, image: this.IMAGE }, [pf.file], COST.image, () => jobs.image(`${log.run} anchor ${id} a${k}`, prompt, [pf.file], file, this.IMAGE, need));
       const v = await verifyFrame(this.runDir, file, w, this.ents, [{ file: pf.file, ids: [partner] }]);
       attempts.push({ k, file, prompt, v });
       graph.decide({ beat: n, kind: "anchor-verify", entity: id, attempt: k, hard: v.hard, soft: v.soft });
@@ -152,17 +155,62 @@ export class Controller {
     return f;
   }
 
+  // Every seed choice is re-anchored before it is used, so a retry or a fallback cannot quietly drop the root references.
+  seedPlan(want, opts = {}) { return this.graph.reAnchor(want, this.graph.pickSeed(want, opts)); }
+
+  // What this step must carry rather than remake (SM-100). An entity contributes its reference-only atoms ONLY when an
+  // input actually shows it — kept from the seed, merged in, or attached as a root. An entity with no such input is being
+  // made, not preserved: asking the selector to preserve it is a contradiction (nothing can carry what nothing shows) and
+  // rejects every tool. `make` carries the scene atoms the editor is allowed to set, which is what distinguishes an edit
+  // from a redraw. Verified against the signatures: the editor hard-passes identity/head_hair/body/text and makes the rest.
+  needOf(want, plan) {
+    const shown = new Set([...(plan.kept || []), ...(plan.merges || []).flatMap((m) => m.ids), ...(plan.roots || []).flatMap((r) => r.ids)]);
+    const carried = want.entities.filter((e) => shown.has(e.id));
+    return { preserve: preservedAtoms(carried), make: carried.length ? ["pose_action", "background", "lighting"] : [], carried: carried.map((e) => e.id) };
+  }
+
+  // A clip's model follows the beat: the sound cue decides audio, the beat decides length. No end frame (wan freezes then snaps).
+  videoNeed(beat) { return { audio: !!this.VIDEO.audio, endFrame: false, seconds: beat.seconds, resolution: this.VIDEO.resolution || null }; }
+
+  // Pass-through (SM-105): a seed that ALREADY satisfies the wanted state is used as the frame — copied, not redrawn.
+  // No credits, and no fresh roll of the dice on identity and scale. The old guard accepted only `op === "upload"`, which is
+  // an arbitrary restriction: a real last frame or any earlier accepted frame is just as usable when the state matches.
+  // The state must match in full, not just in which entities are present — otherwise the character never moves.
+  // Measured on the four recorded runs: this fires for the grandma upload and for nothing else, because at a narrative cut
+  // pose differs in 20 of 20 blocked frames and position in 19 of 20. See the note in the SM-105 ticket.
+  passThrough(want, plan, seedF) {
+    if (!seedF || !seedF.accepted) return { ok: false, why: "no seed" };
+    if (plan.merges.length || plan.fresh.length) return { ok: false, why: `needs ${plan.merges.length ? "merges" : ""}${plan.merges.length && plan.fresh.length ? " and " : ""}${plan.fresh.length ? `new entities (${plan.fresh.join(", ")})` : ""}` };
+    if (!want.entities.length) return { ok: false, why: "no entities wanted" };
+    // An upload has no verified place (location null), so it is exempt from the location test; anything else must match.
+    if (seedF.op !== "upload" && (seedF.location !== want.location.id || seedF.loc_version !== want.location.version)) return { ok: false, why: "different place or place version" };
+    const diff = [];
+    for (const e of want.entities) {
+      const s = seedF.shows[e.id];
+      if (!s?.ok) { diff.push(`${e.id} absent`); continue; }
+      if (s.version !== e.version) diff.push(`${e.id} version`);
+      for (const a of ["pose", "position", "condition", "wardrobe"]) if ((s[a] || "") !== (e[a] || "")) diff.push(`${e.id} ${a}`);
+      if ([...(s.interacting_with || [])].sort().join() !== [...(e.interacting_with || [])].sort().join()) diff.push(`${e.id} interaction`);
+    }
+    const extra = Object.keys(seedF.shows).filter((id) => seedF.shows[id].ok && !want.entities.some((e) => e.id === id) && this.ents[id]?.kind !== "location");
+    if (extra.length) diff.push(`shows ${extra.join(", ")} which this frame does not want`);
+    return diff.length ? { ok: false, why: diff.slice(0, 6).join("; ") } : { ok: true, why: `seed ${seedF.id} already satisfies the wanted state` };
+  }
+
   async cutStart(beat, want, { tag = "", role = "start" } = {}) {
     const { graph, jobs, log } = this, n = beat.n, L = log.beats[n];
     for (const e of want.entities) if (this.isSmall(e.id) && !this.hasOk(e.id) && !this.anchorOf(e.id)) await this.anchor(beat, want, e);
-    let plan = graph.pickSeed(want), seedF = plan.seed ? graph.get(plan.seed) : null;
+    let plan = this.seedPlan(want), seedF = plan.seed ? graph.get(plan.seed) : null;
     if (!tag) L.plan = plan;
     graph.decide({ beat: n, kind: "seed", tag, ...plan });
-    // The upload itself is the frame when it already shows the wanted state (animate this photo): no edit, no credits.
-    if (!tag && seedF?.op === "upload" && !plan.merges.length && !plan.fresh.length && want.entities.length && want.entities.every((e) => seedF.shows[e.id]?.ok && seedF.shows[e.id].version === e.version) && Object.keys(seedF.shows).every((id) => want.entities.some((e) => e.id === id))) {
+    const pt = this.passThrough(want, plan, seedF);
+    L.pass_through = { fired: pt.ok && !tag, why: pt.why };
+    graph.decide({ beat: n, kind: pt.ok && !tag ? "pass-through" : "pass-through-declined", tag, seed: plan.seed, why: pt.why });
+    if (!tag && pt.ok) {
       const file = `b${n}-start.png`; copyFileSync(join(this.runDir, seedF.file), join(this.runDir, file)); jobs.forget(file);
-      const f = graph.addFrame({ file, beat: n, role: "start", location: beat.location, loc_version: want.location.version, shows: seedF.shows, seed: seedF.id, merged: [], op: "upload-direct", why: "the upload is the start frame", accepted: true, forced: false, attempt: 1, checks: { hard: [], soft: [] } });
-      L.attempts.push({ k: 1, file, inputs: [seedF.file], prompt: "(upload used directly)", checks: { hard: [], soft: [] }, accepted: true, forced: false, frame: f.id, seed: seedF.id, fallback: false });
+      const op = seedF.op === "upload" ? "upload-direct" : "pass-through"; // the upload case keeps its old op name for the record
+      const f = graph.addFrame({ file, beat: n, role: "start", location: beat.location, loc_version: want.location.version, shows: seedF.shows, seed: seedF.id, merged: [], op, why: pt.why, accepted: true, forced: false, attempt: 1, checks: { hard: [], soft: [] } });
+      L.attempts.push({ k: 1, file, inputs: [seedF.file], prompt: `(${seedF.id} used directly: ${pt.why})`, checks: { hard: [], soft: [] }, accepted: true, forced: false, frame: f.id, seed: seedF.id, fallback: false });
       L.start_frame = f.id; return { start: file, startFrame: f };
     }
     const attempts = [];
@@ -170,11 +218,13 @@ export class Controller {
     for (let k = 1; k <= 1 + RETRIES.same_seed + RETRIES.fallback_seeds; k++) {
       const seed = plan.seed ? graph.get(plan.seed) : null;
       const prompt = framePrompt({ style: this.style, want, plan: { ...plan, seed }, ents: this.ents, frames: (id) => graph.get(id) }) + extra;
-      const inputs = [...(seed ? [seed.file] : []), ...plan.merges.map((m) => graph.get(m.frame).file)];
+      // Input order must match the order framePrompt numbers the images: seed, merges, then root references.
+      const inputs = [...(seed ? [seed.file] : []), ...plan.merges.map((m) => graph.get(m.frame).file), ...(plan.roots || []).map((r) => graph.get(r.frame).file)];
       const file = `b${n}${tag}-start-a${k}.png`;
-      await jobs.run(`frame:b${n}${tag}:a${k}`, file, { prompt, image: this.IMAGE }, inputs, COST.image, () => jobs.image(`${log.run} b${n}${tag} a${k}`, prompt, inputs, file, this.IMAGE));
+      const need = this.needOf(want, plan);
+      await jobs.run(`frame:b${n}${tag}:a${k}`, file, { prompt, image: this.IMAGE }, inputs, COST.image, () => jobs.image(`${log.run} b${n}${tag} a${k}`, prompt, inputs, file, this.IMAGE, need));
       if (this.estimate) { L.attempts.push({ k, file, inputs, prompt, estimated: true, tag }); break; }
-      const refs = [...(seed ? [{ file: seed.file, ids: plan.kept }] : []), ...plan.merges.map((m) => ({ file: graph.get(m.frame).file, ids: m.ids }))];
+      const refs = [...(seed ? [{ file: seed.file, ids: plan.kept }] : []), ...plan.merges.map((m) => ({ file: graph.get(m.frame).file, ids: m.ids })), ...(plan.roots || []).map((r) => ({ file: graph.get(r.frame).file, ids: r.ids }))];
       want.placeRef = seed && seed.location === want.location.id ? 0 : null;
       const v = await verifyFrame(this.runDir, file, want, this.ents, refs);
       const f = graph.addFrame({ file, beat: n, role, location: beat.location, loc_version: want.location.version, shows: v.shows, seed: seed?.id || null, merged: plan.merges.map((m) => m.frame),
@@ -187,13 +237,13 @@ export class Controller {
       // Size retry: a small prop drawn at the wrong size is re-sourced from its anchor (a different source), once.
       const sized = v.hard.filter((h) => /wrong size/.test(h)).map((h) => h.split(" ")[0]).filter((id) => this.anchorOf(id) && !plan.merges.some((m) => m.ids.includes(id) && m.frame === this.anchorOf(id).id));
       if (sized.length && !resourced && k < 1 + RETRIES.same_seed + RETRIES.fallback_seeds) {
-        plan = graph.pickSeed(want, { prefer: Object.fromEntries(sized.map((id) => [id, this.anchorOf(id).id])) }); resourced = true; extra = fixText(v.hard);
+        plan = this.seedPlan(want, { prefer: Object.fromEntries(sized.map((id) => [id, this.anchorOf(id).id])) }); resourced = true; extra = fixText(v.hard);
         graph.decide({ beat: n, kind: "size-retry-from-anchor", entities: sized, ...plan }); continue;
       }
       if (k === 1 + RETRIES.same_seed) {
         // Fallback: the next best seed (and its own merges). With no other seed, a retry that reproduced every earlier fault stops
         // here (another attempt would not fix it); otherwise the last attempt repeats the fix on the same plan.
-        const alt = graph.pickSeed(want, { exclude: [plan.seed].filter(Boolean) });
+        const alt = this.seedPlan(want, { exclude: [plan.seed].filter(Boolean) });
         if (alt.seed && alt.seed !== plan.seed) { plan = alt; fallback = true; extra = ""; L.fallback_plan = alt; graph.decide({ beat: n, kind: "fallback-seed", ...alt }); continue; }
         const same = attempts[0].checks.hard.every((h) => v.hard.some((x) => x.split(":")[0] === h.split(":")[0]));
         if (same) { graph.decide({ beat: n, kind: "stop-retrying", reason: "the retry reproduced the same faults and no other seed exists" }); break; }

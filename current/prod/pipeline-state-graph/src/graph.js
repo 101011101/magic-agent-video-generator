@@ -82,6 +82,40 @@ export class StateGraph {
     return { seed: seed?.id || null, kept, merges: used, fresh, ranked: ranked.slice(0, 8), why: why + (used.length ? `; merge ${used.map((m) => `${m.ids.join(", ")} from ${m.frame}`).join(" + ")}` : "") + (fresh.length ? `; new: ${fresh.join(", ")}` : "") };
   }
 
+  // Root binding of an entity: the frame that first established what it looks like. An upload is the strongest root (the user
+  // gave us the thing itself), then an anchor (drawn beside its scale partner), then the first accepted frame that shows it.
+  // 05-solver.md:57 — "every generation conditions on the root binding. Never chain generated → generated for identity."
+  rootOf(id) {
+    const rec = this.entities[id]?.versions?.[0]?.root, byRec = rec && this.get(rec);
+    if (byRec) return byRec;
+    const ok = this.frames.filter((f) => f.accepted && f.shows[id]?.ok);
+    return ok.find((f) => f.op === "upload") || ok.find((f) => f.op === "anchor") || ok[0] || null;
+  }
+
+  // Re-anchor (05-solver.md:57). Every entity whose identity this frame must preserve gets its root among the inputs, for every
+  // kind — not only small props. Measured on the recorded runs: 32 of 36 generations carried no root for at least one entity,
+  // the keeper (a character) in 31 of them, which is the mechanism behind the recorded identity drift.
+  // Slots: ai-image-editor takes at most 10 assets, and seed + merges already use some. When roots do not all fit, the order is
+  // characters (11 recorded identity faults, the most-cited) → anchored small props (24 size faults) → locations (4 place
+  // faults) → remaining props. A root already present as the seed or a merge source is not added twice.
+  reAnchor(want, plan, { slots = 10 } = {}) {
+    const have = new Set([plan.seed, ...plan.merges.map((m) => m.frame)].filter(Boolean));
+    const rank = (e) => (e.kind === "character" ? 0 : e.kind === "prop" && this.rootOf(e.id)?.op === "anchor" ? 1 : e.kind === "location" ? 2 : 3);
+    const free = Math.max(0, slots - (plan.seed ? 1 : 0) - plan.merges.length);
+    const roots = [], skipped = [];
+    for (const e of [...want.entities].sort((a, b) => rank(a) - rank(b))) {
+      if (plan.fresh.includes(e.id)) continue;            // nothing to preserve yet: this is its first appearance
+      const r = this.rootOf(e.id);
+      if (!r || have.has(r.id)) continue;                 // no root yet, or it is already an input
+      const at = roots.find((x) => x.frame === r.id);
+      if (at) { at.ids.push(e.id); continue; }
+      if (roots.length >= free) { skipped.push(e.id); continue; }
+      roots.push({ frame: r.id, ids: [e.id], op: r.op });
+    }
+    return { ...plan, roots, roots_skipped: skipped,
+      why: plan.why + (roots.length ? `; re-anchor ${roots.map((r) => `${r.ids.join(", ")} from ${r.frame}`).join(" + ")}` : "") + (skipped.length ? `; no slot for ${skipped.join(", ")}` : "") };
+  }
+
   // Records a frame. shows: { id: { version, pose, position, interacting_with, condition, wardrobe, ok, problems } }.
   addFrame(rec) {
     const id = `f${this.frames.length + 1}`;

@@ -6,16 +6,19 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { runJob, download, uploadFile } from "../../state-manager/src/magichour.js";
 import { REPO } from "../../state-manager/src/paths.js";
+import { chooseImageTool, chooseVideoModel } from "../../state-manager/src/choose.js";
 
 export const COST = { image: 200, video_per_s: 96 }; // nano-banana-pro 2k; wan-3.0 720p
-export const CAP = 10160 + 9000; // ledger after v2 + the 9,000 granted for v3
+// Lifetime credit guard. The default stays the granted figure; MH_CAP raises it for a run the user has approved,
+// so the guard is never loosened in source. 10160 = ledger after v2; 9000 = the grant for v3.
+export const CAP = Number(process.env.MH_CAP || 10160 + 9000);
 const LEDGER = join(REPO, "current/tests/pipeline-state-graph/credits.json");
 
 export class StopError extends Error {}
 
 export class Jobs {
-  constructor(runDir, log, { estimate = false } = {}) {
-    this.runDir = runDir; this.log = log; this.estimate = estimate;
+  constructor(runDir, log, { estimate = false, sup = null } = {}) {
+    this.runDir = runDir; this.log = log; this.estimate = estimate; this.sup = sup;
     this.hashes = {}; this.dirty = new Set(); this.estimated = 0; this.calls = [];
     this.upCache = {};
     log.jobs ??= {}; log.calls ??= [];
@@ -41,6 +44,8 @@ export class Jobs {
     if (this.estimate) { this.estimated += cost; this.dirty.add(file); this.calls.push({ key, cost }); console.log(`  would run ${key} (${cost})`); return { file, estimated: true, credits: cost }; }
     const led = this.ledger();
     if (led.total - (led.runs[this.log.run] || 0) + this.spent() + cost > CAP) throw new StopError(`credit cap ${CAP}: ${key} (${cost}) would exceed it`);
+    // Supervised run: the operator approves this call before it is made, so a stop here spends nothing.
+    const done = this.sup ? await this.sup.gate({ key, file, spec, inputs, cost }) : null;
     const t0 = Date.now();
     let t;
     try { t = await fn(); } catch (e) {
@@ -52,22 +57,28 @@ export class Jobs {
     this.log.jobs[key] = { ...t, output: file, sig, at: new Date().toISOString(), wall_s: Math.round((Date.now() - t0) / 1000) };
     this.log.calls.push({ key, endpoint: t.endpoint, credits: t.credits, seconds: t.seconds, at: this.log.jobs[key].at });
     this.save(); this.charge(t.credits, key);
+    done?.({ files: [file], credits: t.credits, seconds: t.seconds });
     console.log(`  ${key}: ${t.credits} credits, ${t.seconds}s`);
     return { file, ...this.log.jobs[key] };
   }
   async upload(file) { return (this.upCache[file] ??= uploadFile(join(this.runDir, file), "image").catch((e) => { delete this.upCache[file]; throw e; })); }
-  // One image call (generator when no inputs, editor otherwise). Returns the request body and the result.
-  async image(name, prompt, inputs, file, IMAGE) {
-    const endpoint = inputs.length ? "/v1/ai-image-editor" : "/v1/ai-image-generator";
+  // One image call. The endpoint comes from the selector (SM-100), not from a ternary: with no stated need it returns
+  // what the ternary returned, and `need.preserve` makes it a function of the state. The decision goes on the record.
+  async image(name, prompt, inputs, file, IMAGE, need = null) {
+    const chosen = chooseImageTool({ inputs, need });
     const body = { name, image_count: 1, ...IMAGE, style: { prompt }, ...(inputs.length ? { assets: { image_file_paths: await Promise.all(inputs.map((f) => this.upload(f))) } } : {}) };
-    const r = await runJob(endpoint, body, "image");
+    const r = await runJob(chosen.endpoint, body, "image");
     await download(r.downloads[0], join(this.runDir, file));
-    return { endpoint, request: body, inputs, credits: r.credits, seconds: r.seconds };
+    return { endpoint: chosen.endpoint, request: body, inputs, credits: r.credits, seconds: r.seconds, choice: chosen.decision };
   }
-  async video(name, prompt, start, seconds, file, VIDEO) {
-    const body = { name, ...VIDEO, end_seconds: seconds, style: { prompt }, assets: { image_file_path: await this.upload(start) } };
+  // The model follows the step's stated needs. VIDEO.model stays the preference and is kept whenever it qualifies; it is
+  // replaced only when the step needs something that model cannot do, and the swap is recorded with its reason.
+  async video(name, prompt, start, seconds, file, VIDEO, need = null) {
+    const chosen = chooseVideoModel(VIDEO, { seconds, endFrame: false, need });
+    if (chosen.overridden) console.log(`  model: ${chosen.reason}`);
+    const body = { name, ...VIDEO, model: chosen.model, end_seconds: seconds, style: { prompt }, assets: { image_file_path: await this.upload(start) } };
     const r = await runJob("/v1/image-to-video", body, "video", { timeoutS: 2700 });
     await download(r.downloads[0], join(this.runDir, file));
-    return { endpoint: "/v1/image-to-video", request: body, start, credits: r.credits, seconds: r.seconds };
+    return { endpoint: "/v1/image-to-video", request: body, start, credits: r.credits, seconds: r.seconds, choice: chosen.decision };
   }
 }

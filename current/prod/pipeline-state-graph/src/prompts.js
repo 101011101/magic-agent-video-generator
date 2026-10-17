@@ -43,6 +43,14 @@ export function framePrompt({ style, want, plan, ents, frames }) {
     for (const id of m.ids) { const w = want.entities.find((e) => e.id === id); lines.push(`${name(id)}: ${stateLine(w)}.`); }
     k++;
   }
+  // Root bindings (05-solver.md:57). Not a content source like a merge: the entity is already coming from the seed or a merge.
+  // This is the canonical record of what it looks like, so identity is corrected against the original instead of drifting down
+  // a chain of copies. Framing, pose, position and background of the root frame are explicitly not to be used.
+  for (const r of plan.roots || []) {
+    const f = frames(r.frame);
+    lines.push(`Image ${k} is the canonical reference for ${r.ids.join(", ")} (beat ${f.beat}${r.op === "upload" ? ", the original photograph" : r.op === "anchor" ? ", drawn to establish its real size" : ""}). ${r.ids.length > 1 ? "Each of them must match it" : "It must match it"} exactly in identity — ${r.ids.map((id) => `${id}: ${ents[id].kind === "character" ? "face, age, hair, build and clothing design" : ents[id].kind === "location" ? "architecture and landscape" : "shape, design, colours, material"}, real size ${ents[id].size}`).join("; ")}. Take nothing else from image ${k}: not its framing, not its pose or position, not its background, not its light.`);
+    k++;
+  }
   for (const id of plan.fresh) {
     const w = want.entities.find((e) => e.id === id), e = ents[id];
     lines.push(`New in this frame, ${name(id)}: ${e.look} Real size: ${e.size}. ${stateLine(w)}.`);
