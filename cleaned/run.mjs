@@ -14,6 +14,7 @@ import { Tracker } from "./src/tracker.js";
 import { buildSlide } from "./src/builder.js";
 import { renderPage } from "./src/page.js";
 import { film } from "./src/film.js";
+import { renderFilm } from "./src/film-page.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0)), VIDEO_ON = args.includes("--video");
@@ -46,7 +47,11 @@ try {
     await buildSlide(s, { plan, tracker, jobs, run });
     page();
   }
-  if (VIDEO_ON) { console.log("film…"); await film({ plan, tracker, jobs, run, only: clipsOnly }); page(); }
+  if (VIDEO_ON) {
+    console.log("film…");
+    const f = await film({ plan, tracker, jobs, run, only: clipsOnly });
+    page(); writeFileSync(join(dir, "film.html"), renderFilm({ name, plan, film: f, credits: jobs.spent() }));
+  }
 } catch (e) { run.log.errors.push(String(e.stack || e)); console.error(`stopped: ${e.message}`); }
 
 const frames = tracker.frames.filter((f) => f.op === "edit");

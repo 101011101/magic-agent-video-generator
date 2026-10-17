@@ -17,10 +17,11 @@ export function ssim(a, b) {
   return m ? Math.round(Number(m[1]) * 1000) / 1000 : null;
 }
 
-// First frame vs the start keyframe; last frame vs the end keyframe (connected clips only).
+// First frame vs the start keyframe; last frame vs the end keyframe (connected) or vs the start keyframe (cut: how far the
+// unpinned clip drifted from its own keyframe — V-006).
 export function check(video, { start, end, path, key }) {
   const first = frame(video, "first", path(`clips/${key}-first.png`)), last = frame(video, "last", path(`clips/${key}-last.png`));
-  return { first_vs_start: ssim(first, start), last_vs_end: end ? ssim(last, end) : null, seconds: Math.round(duration(video) * 10) / 10 };
+  return { first_vs_start: ssim(first, start), last_vs_end: end ? ssim(last, end) : null, last_vs_start: end ? null : ssim(last, start), seconds: Math.round(duration(video) * 10) / 10 };
 }
 
 // Stitch clips into one film. At a connected seam the next clip's first frame repeats the previous clip's last frame, so it

@@ -5,6 +5,7 @@ import { links } from "./links.js";
 import { direct } from "./motion.js";
 import { check, stitch } from "./clips.js";
 import { COST, VIDEO } from "./jobs.js";
+import { duration } from "./clips.js";
 
 export const SECONDS = 5;
 
@@ -20,7 +21,7 @@ export async function film({ plan, tracker, jobs, run, only = null }) {
     console.log(`clip ${l.n} [${l.type}${end ? ` → slide ${l.next}` : ""}]: ${m.prompt}`);
     await jobs.video(key, file, prompt, start, end, SECONDS);
     const qa = run.estimate || !existsSync(run.path(file)) ? null : check(run.path(file), { start: run.path(start), end: end && run.path(end), path: run.path, key });
-    if (qa) console.log(`  first≈start ${qa.first_vs_start}${end ? `, last≈end ${qa.last_vs_end}` : ""}, ${qa.seconds}s`);
+    if (qa) console.log(`  first≈start ${qa.first_vs_start}${end ? `, last≈end ${qa.last_vs_end}` : `, last≈start ${qa.last_vs_start}`}, ${qa.seconds}s`);
     out.push({ ...l, start, end, file, prompt, motion: m, qa, model: VIDEO.model, cost: COST.video(SECONDS) });
   }
   run.log.film = { clips: out, links: L, model: VIDEO, seconds: SECONDS };
@@ -28,8 +29,19 @@ export async function film({ plan, tracker, jobs, run, only = null }) {
   if (!run.estimate && L.every((l) => existsSync(run.path(`clips/clip-${l.n}.mp4`)))) {
     const clips = L.map((l, i) => ({ file: `clips/clip-${l.n}.mp4`, trimFirst: i > 0 && L[i - 1].type === "connected" }));
     run.log.film.final = stitch(clips, "final.mp4", run.path);
+    run.log.film.chapters = chapters(L, out, run.path);
     console.log(`film: final.mp4 (${L.length} clips)`);
   }
   run.save();
   return run.log.film;
+}
+
+// Start time of each clip in final.mp4 (a clip after a connected seam lost its first frame at 24 fps).
+function chapters(L, out, path) {
+  let t = 0;
+  return L.map((l, i) => {
+    const d = duration(path(`clips/clip-${l.n}.mp4`)) - (i > 0 && L[i - 1].type === "connected" ? 1 / 24 : 0), at = t;
+    t += d;
+    return { n: l.n, at: Math.round(at * 100) / 100, type: l.type };
+  });
 }
