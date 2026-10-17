@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RUN-001 image-model sweep</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--card:#fbf7ef;--ok:#4f7a3a;--bad:#a0402d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1813;--ink:#efe4d2;--soft:#b39b80;--line:#4a3d30;--card:#28211a;--ok:#8fbf6f;--bad:#e07a62}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,serif}main{max-width:1280px;margin:0 auto;padding:32px 16px 80px}
+h1,h2,h3{font-weight:normal}h2{font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}.soft{color:var(--soft)}a{color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{font-weight:normal;color:var(--soft)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}ul{margin:6px 0;padding-left:18px}
+code{font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--card);border:1px solid var(--line);padding:1px 4px}
+.wrap{overflow-x:auto}.num{text-align:right;font-variant-numeric:tabular-nums}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0}
+.strip figure{margin:0}.strip img{width:100%;display:block;border:1px solid var(--line)}
+.strip figcaption{color:var(--soft);font-size:13px;padding-top:4px}
+.note{border-left:3px solid var(--bad);padding:2px 0 2px 12px;margin:14px 0}
+.good{border-left:3px solid var(--ok);padding:2px 0 2px 12px;margin:14px 0}</style></head><body><main>
+
+<h1>RUN-001 &middot; image-model cost sweep</h1>
+<p class="soft">Both pipelines buy every image from <code>nano-banana-pro</code> at 150&ndash;200 credits. This asks whether a model costing 5&ndash;50 holds the three properties the pipelines keep failing on at full price. Run 2026-10-15T03:56:01.227Z.</p>
+
+<div class="note"><b>Resolution is 1k, not the 2k both pipelines run.</b> 1k is the only resolution all six generator models share &mdash; <code>krea-2</code> tops out at 1k, <code>nano-banana-pro</code> starts at it. Holding resolution constant matters more than matching production, but it makes the <code>nano-banana-pro</code> row a 1k proxy for a 2k pipeline. A cheap winner needs confirming at 2k before it replaces anything, and <code>krea-2</code> never can.</div>
+
+<h2>Spend</h2>
+<div class="wrap"><table>
+<tr><th>arms</th><th>estimated</th><th>charged</th><th>cap</th><th>ledger after</th></tr>
+<tr><td class="num">3</td><td class="num">5</td><td class="num">15</td><td class="num">2000</td><td class="num">1310</td></tr>
+</table></div>
+<div class="good"><b>Cheapest passing arm:</b> <code>z-image-turbo</code> at 5 credits on scale &mdash; against <code>nano-banana-pro</code> at 150.</div>
+
+<h2>Arms</h2>
+<h3>TEST-038 (M08) — scale</h3>
+<p class="soft">Held constant: aspect_ratio = 16:9 · resolution = 1k · image_count = 1; prompt (identical in every row below): &ldquo;A woman's open palm held out flat, seen from the side in close view, with a single small ivory spiral seashell resting on it. The seashell is 7 cm long and fits easily within the cupped palm, smaller than her hand. Natural daylight, plain background.&rdquo;<br>Changed: <b>model only</b>. Pass when the shell is no more than 2x and no less than half the size it would really be against the hand (7 cm, smaller than the palm).</p>
+<div class="wrap"><table>
+<tr><th>model</th><th>est.</th><th>charged</th><th>s</th><th>verdict</th><th>observed</th><th>problem</th></tr>
+<tr><td><code>z-image-turbo</code></td><td class="num">5</td><td class="num">5</td><td class="num">7</td><td><span class="ok">PASS</span></td><td>An open, cupped palm holds a single ivory spiral seashell that rests easily in the palm and is much smaller than the hand.</td><td></td></tr>
+</table></div>
+<div class="strip"><figure><img src="scale-z-image-turbo.png" alt="z-image-turbo" loading="lazy"><figcaption>z-image-turbo · 5 cr</figcaption></figure></div>
+<h3>TEST-040 (M10) — count</h3>
+<p class="soft">Held constant: aspect_ratio = 16:9 · resolution = 1k · image_count = 1; prompt (identical in every row below): &ldquo;Exactly three identical small wooden fishing boats moored side by side at a stone harbour wall, seen from the quay. Three boats, no more and no fewer. Overcast daylight.&rdquo;<br>Changed: <b>model only</b>. Pass when exactly three boats are present — not two, not four.</p>
+<div class="wrap"><table>
+<tr><th>model</th><th>est.</th><th>charged</th><th>s</th><th>verdict</th><th>observed</th><th>problem</th></tr>
+<tr><td><code>z-image-turbo</code></td><td class="num">5</td><td class="num">5</td><td class="num">5</td><td><span class="ok">PASS</span></td><td>Three small wooden fishing boats moored side by side at a stone harbour wall.</td><td></td></tr>
+</table></div>
+<div class="strip"><figure><img src="count-z-image-turbo.png" alt="z-image-turbo" loading="lazy"><figcaption>z-image-turbo · 5 cr</figcaption></figure></div>
+<h3>TEST-041 (M11) — edit</h3>
+<p class="soft">Held constant: aspect_ratio = 16:9 · resolution = 1k · image_count = 1; prompt (identical in every row below): &ldquo;Change only the time of day to dusk, with warm low sunlight. Keep the person exactly as they are — same face, same hair, same clothing, same pose and same position in the frame. Keep the building, the landscape and every fixed object exactly where they are and the same shape. Change nothing but the light.&rdquo;; source frame: identical bytes in every row<br>Changed: <b>model only</b>. Pass when the person is recognisably the same person, and the fixed parts of the place are unchanged in shape and position.</p>
+<div class="wrap"><table>
+<tr><th>model</th><th>est.</th><th>charged</th><th>s</th><th>verdict</th><th>observed</th><th>problem</th></tr>
+<tr><td><code>flux-2-klein</code></td><td class="num">5</td><td class="num">5</td><td class="num">4</td><td><span class="ok">PASS</span></td><td>Overcast daylight changed to dusk with an orange horizon, darker clouds and foreground, warm lighting on the buildings, and a glowing lighthouse lantern. The person, buildings, and rocky coastline retain their shapes and positions.</td><td></td></tr>
+</table></div>
+<div class="strip"><figure><img src="edit-flux-2-klein.png" alt="flux-2-klein" loading="lazy"><figcaption>flux-2-klein · 5 cr</figcaption></figure></div>
+
+<h2>How to read this</h2>
+<ul>
+<li>Within a group every row shares the prompt, aspect, resolution and image count. The only difference between rows is the model, so a difference in verdict is a difference between models.</li>
+<li><b>est.</b> is the spec's &ldquo;from N credits/image&rdquo; floor; <b>charged</b> is what Magic Hour actually billed. They differ: the ledger shows <code>nano-banana-pro</code> billing 200 at 2k against a documented 150.</li>
+<li>A <span class="soft">not scored</span> verdict means the frame exists but the vision judge did not run or failed &mdash; the credits were still spent. It is not a pass.</li>
+</ul>
+<p class="soft"><a href="../../compare/index.html">&larr; Pipeline A vs B</a> &middot; ticket <code>current/tickets/06-runs/RUN-001-image-model-cost-sweep.md</code></p>
+</main></body></html>
