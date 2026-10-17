@@ -1,5 +1,5 @@
 # V-007 — Exit and entry beats when a character changes place
-**Status:** open
+**Status:** in-progress
 **Cost:** 0 (sequencer rule) + 1–3 keyframes and clips per move
 **Blocked by:** none
 
@@ -8,3 +8,6 @@ Clip 11 ends with Goldilocks in bed; clip 12 starts with her already halfway dow
 
 ## Done when
 The sequencer adds, for any on-screen move between places: an exit slide in place A (she reaches the door/window) and an entry slide in place B (the door swings open, she is in the doorway), with the run in place B as a connected chain (doorway → mid-path → leaving frame).
+
+## Patch
+Addressed in the sequencer by B-007 (step-script rules); verified on the R-004 run.

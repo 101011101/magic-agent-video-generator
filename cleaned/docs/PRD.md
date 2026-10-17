@@ -60,13 +60,19 @@ prompt ──► [S1 Sequencer] ──► plan.json (entities, locations, slides
 ## 5. Subsystems
 
 ### S1 — Sequencer (`src/sequencer.js`)
-- **Input:** one natural-language prompt. **Output:** `plan.json`.
-- Assumed to be a strong LLM; one call, strict JSON schema.
-- Defines: global `style`; `entities` (character, group, prop) with a `look`; `locations` with their fixtures drawn into the
-  look; ordered `slides`, each with `location`, `present` (entity ids), `shows` (composition), `change` (a state change of
-  things already in frame, or empty), `continues` (edit the previous slide's frame), and a `caption`.
-- Rules it is told: fixtures that never leave a place belong to the location, not to entities; a set whose relative size
-  matters (three bears) is one `group` entity; a state change is written on the slide where it happens, once.
+- **Input:** one natural-language prompt (and optionally a fixed world from another run, `--world`). **Output:** `plan.json`.
+- Three steps:
+  1. **Story** (LLM): the world (style, entities, places) and a plain prose story. A well-known tale follows its best-known version.
+  2. **Step script** (LLM): the prose rewritten in **ASD-STE100 style** (Simplified Technical English, as in aircraft manuals):
+     1–3 sentences per step, ≤ 20 words, one action, active voice, exact names. **One step = one change the camera sees**;
+     changes at different times are different steps. Each step lists every visible entity with `where` (relative to named
+     items) and `acting` (face and body). A move goes to a nearby position; an item in the way gets a waypoint step and a named
+     path. A character on screen who changes place gets an `exit` step and an `entry` step.
+  3. **Slides** (deterministic): one slide per step. The step text (`ste`), `cast` and `caption` stay on the slide; the
+     builder, verifier and the clip stage all read the same text.
+- **Lint** (deterministic): sentence length, sentence count, known names, acting present, exit/entry on a place change (a time
+  jump excuses it only for a character absent from the previous step). Violations go back to the LLM once for a rewrite;
+  what remains is shown on the page.
 
 ### S2 — Roots (`src/roots.js`)
 - One text-to-image call per entity (reference sheet on a plain background) and per location (empty plate with fixtures).
@@ -94,7 +100,8 @@ prompt ──► [S1 Sequencer] ──► plan.json (entities, locations, slides
 - One vision call per attempt. For every entity in `present ∪ base.present`, it reports present or absent and a count.
   It also reports whether the `change` is visible and whether the frame is a single image (not a grid).
 - Pass = every wanted entity present (a character exactly once), every removed one absent, the change visible,
-  a single frame.
+  a single frame, and (step-script slides) each character's position and acting as written. Expression comes from the slide
+  text, never from the reference sheet.
 - The tracker records the *observed* presence.
 
 ### S6 — Slideshow (`src/page.js`)
