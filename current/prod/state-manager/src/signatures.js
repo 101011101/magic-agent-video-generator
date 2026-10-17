@@ -47,13 +47,18 @@ export const AUDIO_ATOMS = new Set(["music", "sfx", "speech_audio", "voice"]);
 
 const slotOf = (s) => String(s).split(" ")[0];
 
-export function loadSignatures() {
+export function loadCatalog() { return JSON.parse(readFileSync(CATALOG, "utf8")); }
+
+// includeAnalysis: the solver drops analysis tools because they make nothing true. The selector needs them, because a
+// tool that only reports (Face Detection) is still the tool that supplies a property the state tracks. Default false so
+// the solver's tool set is unchanged.
+export function loadSignatures({ includeAnalysis = false } = {}) {
   const fx = JSON.parse(readFileSync(FIXTURE, "utf8"));
-  const catalog = JSON.parse(readFileSync(CATALOG, "utf8"));
+  const catalog = loadCatalog();
   const limits = Object.fromEntries(catalog.tools.map((t) => [t.name, t.limits || {}]));
   const atoms = [...fx.atoms, ...PROPOSED_ATOMS];
   const tools = [...fx.signatures, ...PROPOSED_TOOLS]
-    .filter((s) => !["analysis", "utility"].includes(s.kind) || JOIN_TOOLS.has(s.tool))
+    .filter((s) => !["analysis", "utility"].includes(s.kind) || JOIN_TOOLS.has(s.tool) || (includeAnalysis && s.kind === "analysis"))
     .map((s) => {
       const out = s.output || {};
       const patch = PATCHES[s.tool] || {};
@@ -74,6 +79,7 @@ export function loadSignatures() {
       const maxDuration = durationLimit(limits[s.tool]);
       return {
         name: s.tool, kind: JOIN_TOOLS.has(s.tool) ? "join" : s.kind, provider: s.provider || "Magic Hour",
+        endpoint: (s.endpoint || "").replace(/^POST\s+/, "").split(" ")[0] || null,
         proposed: !!s.proposed || !!PATCHES[s.tool], nature: s.nature || "",
         inputs: s.inputs || [], mediaOut, makes, passes, passOrSet, mainSlot: main?.slot || null,
         notSpecified: new Set(out.not_specified || []), maxDuration,
