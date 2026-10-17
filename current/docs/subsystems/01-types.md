@@ -68,6 +68,15 @@
 - Matrices are bindings too. Examples: the kitchen (background matrix), the painterly style, the green cardigan. A new kitchen is a new type.
 - All bound types are held constant to each other. If a previous type is not the same as a new type, they are not the same.
 - Real entities (the user's grandmother) bind to an original input. Fictional entities (the lighthouse keeper) bind to a tool output, generated once and reused.
+- **A binding is a pointer.** It names where the source lives. It is not a copy of the source. Resolving a binding fetches the source; it never redraws it.
+- **Pass-through, not regeneration.** A condition on a bound entity is satisfied by carrying the source forward and transforming it. Regenerating the entity produces a new type and the condition fails (see the re-anchor rule in [05-solver.md](05-solver.md)).
+- Deterministic extraction from a bound source (last frame, last N clips, crop) is a transform, not a regeneration. It is exact and free, so it is preferred wherever it can serve the condition.
+
+**Tool selection from the state (decided in chat):**
+- A tool spec states which properties the tool maintains ([05-solver.md](05-solver.md)).
+- The state knows which properties must survive this step, because it knows what each bound type is and where it came from.
+- Selection is the match between the two: pick the tool that maintains what the state needs preserved. A tool that does not state it maintains a rigid property cannot be chosen for a step that must preserve it.
+- This is why selection is a function of the state and not of the prompt alone.
 
 **Open (vocabulary gaps from the solver traces, see [../solver-traces.md](../solver-traces.md)):**
 - No atom for visibility (opacity over time). The `fade` tool makes nothing true.

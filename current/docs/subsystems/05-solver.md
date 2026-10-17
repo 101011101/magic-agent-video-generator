@@ -78,6 +78,14 @@
 - Landmark-first: text-to-image makes the first landmark frame with as many conditions as possible; it binds the fictional entities in it. Later frames reference it; the image editor sets the rest. Image-to-video animates between landmark frames.
 - End frame = start frame + changes (an edit of the shared start frame).
 
+**Superseded — the prototype rule above conflicts with the re-anchor rule.** "End frame = an edit of the start frame" chains generated → generated. The re-anchor rule (line above, "Re-anchor to the root") forbids that for identity, and the state model requires the source to be passed and transformed rather than redrawn ([01-types.md](01-types.md)). Where the two disagree, the re-anchor rule wins. The prototype rule stands only for conditions that carry no bound identity.
+
+**Built pipelines diverge from this rule (2026-10-14):**
+- `prod/pipeline-state-graph` seeds a cut from the highest-scoring earlier *generated* frame (`src/graph.js` `pickSeed`) and edits it. Root anchors exist only for small props (`src/controller.js:111,157`, `isSmall`). Characters and locations have no root and are chained generated → generated.
+- `prod/pipeline-memory` holds a per-entity anchor (`src/memory.js` `anchor()`) and attaches it to a cut, but the base image is still an earlier generated frame (`src/keyframes.js` `cutKeyframe`).
+- Already recorded as defect 14 in [prod/state-manager/DIAGNOSIS.md](../../prod/state-manager/DIAGNOSIS.md): "Identity copied frame to frame without the root reference — breaks the 05-solver re-anchor rule".
+- Tickets: [tickets/02-state-manager/](../../tickets/02-state-manager/).
+
 **Worked examples:** [solver-traces.md](../solver-traces.md) (grandma, logo fade, lighthouse).
 
 **Three cases for a piece:**

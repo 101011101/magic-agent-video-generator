@@ -53,6 +53,13 @@ Video
 - It closes gaps between the current state and the required state. Example: the input image has the correct face but the wrong clothing; a tool changes the clothing and keeps the face.
 - New tools add to operations only. The creative side does not change.
 
+**What the state is (decided in chat):**
+- The state tracks the key context so a later operation can be built on it. Tools are assumed to preserve a good part of what they are given.
+- **The state is an index, not a copy.** It records where the authoritative source of each type lives. At minimum it knows where to find the correct clip, frame or reference.
+- **The original source is kept continuous.** It is passed and transformed down the chain. It is not regenerated. A regenerated source is a new type (see bindings in [subsystems/01-types.md](subsystems/01-types.md)).
+- An operation that reads the state can then call a deterministic tool to take an exact portion of the source: the last frame, the last few clips, a crop. Deterministic extraction is preferred wherever it can serve the condition.
+- **The state drives tool selection.** Each tool spec states which properties it maintains. The state knows which properties must survive. The tool that maintains what the state needs preserved is the tool to pick.
+
 **How it works (from [vision.md](vision.md); subsystem designs are not started):**
 1. **Types and conditions:** a goal is an AND of true/false conditions. Each element that changes gets an atom. A tool type shows what it changes, what it maintains, and from which input each output property comes. Context that fits no atom stays free context for the tool models.
 2. **Tools are proofs:** a tool spec states its input types, its output type and the properties it maintains. A split tool and a join tool together prove equivalence.
@@ -85,6 +92,7 @@ Video
 | 4 | [Operations splitter](subsystems/04-operations-splitter.md) | operations | Operational chunks → pieces that tools accept | Problem statement |
 | 5 | [Solver](subsystems/05-solver.md) | operations | Pieces → checkable tool-call graph | Core loop decided; algorithm open |
 | 6 | [Editing](subsystems/06-editing.md) | operations | Change propagates through the solved tree | Problem statement |
+| 7 | [Test machine](subsystems/07-test-machine.md) | both | Supervised runs: approve each major step and each paid call | Built; verified in replay |
 
 **Supporting material:**
 - [vision.md](vision.md): the type-proof model in full, with open gaps.
