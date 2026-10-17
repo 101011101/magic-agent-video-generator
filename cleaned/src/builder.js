@@ -15,6 +15,9 @@ function editPrompt(plan, slide, { base, add, remove, keep, change, retryNote })
   for (const id of refKeep) { imgs.push(id); lines.push(`${name[id]} is already in image 1; image ${k++} is their identity reference — keep them looking like it.`); }
   for (const id of remove) lines.push(`Remove ${name[id]} completely; show the place behind where they were.`);
   if (change) lines.push(`Change: ${change}`);
+  // Position and acting come from the slide, never from a reference image (references are for identity only).
+  for (const c of slide.cast || []) if (plan.entities.find((e) => e.id === c.id)?.kind !== "prop")
+    lines.push(`${name[c.id]}: ${c.where}. Expression and body: ${c.acting}. Take the expression and pose from this text, not from any reference image.`);
   const prompt = `Edit image 1, a frame of ${loc.name}. Keep everything in image 1 that is not named below exactly as it is: the place, the furniture and objects and their current state, the light, the colours and the camera framing.
 ${lines.join("\n")}
 The frame should show: ${slide.shows}
@@ -38,8 +41,8 @@ export async function buildSlide(slide, { plan, tracker, jobs, run }) {
     await jobs.image(`s${slide.n}-a${a}`, file, prompt, inputs);
     const ask = [...new Set([...slide.present, ...base.present])];
     const obs = run.estimate ? { entities: ask.map((id) => ({ id, present: slide.present.includes(id), count: 1, note: "" })), change_visible: true, single_frame: true, problems: "" }
-      : await verify(run.path(file), { plan, ask, change: slide.change, shows: slide.shows });
-    const f = faults(obs, { plan, wanted: slide.present, remove, change: slide.change });
+      : await verify(run.path(file), { plan, ask, change: slide.change, shows: slide.shows, cast: slide.cast });
+    const f = faults(obs, { plan, wanted: slide.present, remove, change: slide.change, cast: slide.cast });
     const present = obs.entities.filter((e) => e.present).map((e) => e.id);
     const att = { a, file, base: base.id, base_file: base.file, add, remove, keep, change, refs: imgs.map((id) => ({ id, file: tracker.roots[id] })), prompt, obs, faults: f, present, hops: base.hops + 1 };
     attempts.push(att);

@@ -22,6 +22,8 @@ export function renderPage({ name, prompt, plan, tracker, log, credits }) {
   <section class="lin" id="lin-${s.n}">
     <h3>Slide ${s.n} · ${esc(plan.locations.find((l) => l.id === s.location)?.name)} ${badge(s.n)} ${f.forced ? '<span class="bad">forced</span>' : '<span class="ok">pass</span>'} <small>hops ${f.hops} · ${esc(f.base_why)}</small></h3>
     <p class="cap">${esc(s.caption)}</p>
+    ${s.ste ? `<p class="ste">${s.kind ? `<b>${esc(s.kind)}</b>${s.time_jump ? " · time jump" : ""} · ` : ""}${s.ste.map(esc).join(" ")}</p>
+    <p class="meta">${s.cast.map((c) => `${esc(ent[c.id]?.name || c.id)}: ${esc(c.where)}; <i>${esc(c.acting)}</i>`).join("<br>")}</p>` : ""}
     <p class="meta">present: ${s.present.map((id) => esc(ent[id].name)).join(", ") || "—"}${s.change ? ` · change: ${esc(s.change)}` : ""}${s.continues ? " · continues" : ""}</p>
     ${f.attempts.map((a) => `
     <div class="att">
@@ -50,7 +52,7 @@ h1{font-size:22px;margin:8px 0} h2{font-size:17px;margin:32px 0 8px;border-top:1
 .meta,small,figcaption{color:var(--mut);font-size:13px} .ok{color:var(--ok)} .bad{color:var(--bad)} .badc{background:color-mix(in srgb,var(--bad) 20%,transparent)}
 .stage{position:relative;background:#000;border-radius:8px;overflow:hidden} .stage img{width:100%;display:block;aspect-ratio:16/9;object-fit:contain}
 .bar{display:flex;gap:8px;align-items:center;margin:8px 0} .bar button{font:inherit;padding:4px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer}
-.capbig{font-size:17px;margin:6px 0 0} .dots{display:flex;gap:4px;flex-wrap:wrap} .dots span{width:10px;height:10px;border-radius:50%;background:var(--line);cursor:pointer} .dots span.on{background:var(--fg)}
+.capbig{font-size:17px;margin:6px 0 0} .ste{font:13px/1.5 ui-monospace,Menlo,monospace;margin:4px 0;color:var(--fg)} .dots{display:flex;gap:4px;flex-wrap:wrap} .dots span{width:10px;height:10px;border-radius:50%;background:var(--line);cursor:pointer} .dots span.on{background:var(--fg)}
 .lin{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin:12px 0}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap} figure{margin:0} .th{width:120px;border-radius:4px} .mid{width:260px;max-width:100%;border-radius:4px} .arrow{font-size:22px;color:var(--mut)}
 .grid{display:flex;gap:12px;flex-wrap:wrap} pre{white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:4px;overflow-x:auto}
@@ -62,17 +64,18 @@ table{border-collapse:collapse;font-size:13px;display:block;overflow-x:auto} td,
 <p class="meta">${esc(name)} · prompt: “${esc(prompt)}” · ${slides.length}/${plan.slides.length} slides · ${passed} passed (${first} first try) · ${credits} credits</p>
 <div class="stage"><img id="cur" alt=""></div>
 <div class="bar"><button id="prev">←</button><button id="next">→</button><span id="num" class="meta"></span><div class="dots" id="dots"></div></div>
-<p class="capbig" id="cap"></p><p class="meta" id="sub"></p>
+<p class="capbig" id="cap"></p><p class="ste" id="ste"></p><p class="meta" id="sub"></p>
 ${filmHtml}
 <h2>Lineage</h2>${lineage}
 <h2>Presence (observed)</h2>${matrix}
 <h2>Roots</h2><div class="grid">${roots}</div>
 <p class="meta">style: ${esc(plan.style)}</p>
+${plan.story ? `<h2>Story (prose → step script)</h2><p>${esc(plan.story)}</p>${plan.lint?.length ? `<p class="bad">Step-script rules still broken: ${plan.lint.map(esc).join("; ")}</p>` : `<p class="meta">Step script passed every rule check.</p>`}` : ""}
 </main><script>
-const S=${JSON.stringify(slides.map(({ s, f }) => ({ n: s.n, file: f.file, cap: s.caption, sub: `${s.location}${f.forced ? " · forced" : ""}`, link: L[s.n] })))};
+const S=${JSON.stringify(slides.map(({ s, f }) => ({ n: s.n, file: f.file, cap: s.caption, sub: `${s.location}${f.forced ? " · forced" : ""}`, ste: s.ste ? s.ste.join(" ") : "", link: L[s.n] })))};
 let i=0;const $=(x)=>document.getElementById(x);
 $("dots").innerHTML=S.map((x,k)=>'<span data-k="'+k+'" title="'+(x.link&&x.link.type==="connected"?"connected to next":"cut after")+'"></span>'+(x.link&&x.link.next?(x.link.type==="connected"?'<i class="j">—</i>':'<i class="j">|</i>'):"")).join("");
-function show(k){i=(k+S.length)%S.length;const s=S[i];$("cur").src=s.file;$("cap").textContent=s.cap;$("sub").textContent=s.sub+(s.link&&s.link.next?(s.link.type==="connected"?"  ·  ⟶ connected to "+s.link.next:"  ·  ✂ cut to "+s.link.next):"  ·  end");$("num").textContent="slide "+s.n+" / "+S.length;[...$("dots").querySelectorAll("span")].forEach((d,j)=>d.className=j===i?"on":"");}
+function show(k){i=(k+S.length)%S.length;const s=S[i];$("cur").src=s.file;$("cap").textContent=s.cap;$("ste").textContent=s.ste;$("sub").textContent=s.sub+(s.link&&s.link.next?(s.link.type==="connected"?"  ·  ⟶ connected to "+s.link.next:"  ·  ✂ cut to "+s.link.next):"  ·  end");$("num").textContent="slide "+s.n+" / "+S.length;[...$("dots").querySelectorAll("span")].forEach((d,j)=>d.className=j===i?"on":"");}
 $("prev").onclick=()=>show(i-1);$("next").onclick=()=>show(i+1);$("dots").onclick=(e)=>e.target.dataset.k&&show(+e.target.dataset.k);
 addEventListener("keydown",(e)=>{if(e.key==="ArrowRight")show(i+1);if(e.key==="ArrowLeft")show(i-1);});
 if(S.length)show(0);

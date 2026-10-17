@@ -3,7 +3,8 @@
 // Usage: node cleaned/run.mjs --case goldilocks [--label v1] [--slides N] [--video] [--clips 2,8] [--estimate]
 //   --prompt "…"  use a prompt instead of a case;  --slides N  build only the first N slides;  --estimate  spend nothing
 //   --video  also make the clips;  --clips 2,8  only these slides' clips (probe; no stitch until every clip exists)
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+//   --world <run>  reuse that run's world (style, entities, places) and its root images: no new roots are paid for
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, RUNS } from "./src/env.js";
 import { usage, MODEL } from "./src/llm.js";
@@ -32,11 +33,25 @@ Object.assign(run.log, { name, prompt, models: { llm: MODEL, image: IMAGE }, cap
 const jobs = new Jobs(run, { estimate }), tracker = new Tracker(run);
 const t0 = Date.now();
 
+// --world: the other run's world and roots. Root jobs are copied with their signatures, so makeRoots finds them cached.
+const worldRun = opt("--world", null);
+let given = null;
+if (worldRun) {
+  const src = join(RUNS, worldRun), wl = JSON.parse(readFileSync(join(src, "run.json"), "utf8"));
+  given = { title: wl.plan.title, style: wl.plan.style, entities: wl.plan.entities, locations: wl.plan.locations };
+  for (const [k, j] of Object.entries(wl.jobs)) if (k.startsWith("root-") && !run.log.jobs?.[k]) {
+    copyFileSync(join(src, j.file), join(dir, j.file));
+    (run.log.jobs ??= {})[k] = { ...j, from: worldRun, credits: 0 };
+  }
+  run.log.world_from = worldRun;
+}
+
 console.log(`${name}: sequencing…`);
-const plan = run.log.plan ? check(run.log.plan) : await sequence(prompt);
+const plan = run.log.plan ? check(run.log.plan) : await sequence(prompt, given);
+if (plan.lint?.length) console.log(`  step-script rules still broken after one rewrite:\n  - ${plan.lint.join("\n  - ")}`);
 run.log.plan = plan; run.save();
 console.log(`  ${plan.title}: ${plan.entities.length} entities, ${plan.locations.length} locations, ${plan.slides.length} slides`);
-for (const s of plan.slides) console.log(`  ${s.n}. [${s.location}] {${s.present.join(", ")}}${s.continues ? " (continues)" : ""}${s.change ? ` Δ ${s.change}` : ""}`);
+for (const s of plan.slides) console.log(`  ${s.n}. [${s.location}]${s.kind ? ` ${s.kind}` : ""} {${s.present.join(", ")}}${s.continues ? " (continues)" : ""}${s.change ? ` Δ ${s.change}` : ""}${s.ste ? `\n      ${s.ste.join(" ")}` : ""}`);
 
 const page = () => { if (!estimate) writeFileSync(join(dir, "index.html"), renderPage({ name, prompt, plan, tracker, log: run.log, credits: jobs.spent() })); };
 try {
