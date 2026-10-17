@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
 import { download, COST } from "./common.js";
 
-const FF = "/opt/homebrew/bin/ffmpeg", FP = "/opt/homebrew/bin/ffprobe", SR = 48000;
+const FF = process.env.FFMPEG || "ffmpeg", FP = process.env.FFPROBE || "ffprobe", SR = 48000;
 export const VOICE = process.env.MH_VOICE || "David Attenborough"; // calm narrator preset (1266 presets; names in docs: Morgan Freeman, David Attenborough)
 export const SYNTH = "synth placeholder: no music model on this API";
 const r2 = (x) => Math.round(x * 100) / 100;
@@ -178,10 +178,14 @@ export async function mix(run, { picture, cues, timeline, out = "final.mp4", tot
     fc.push(`[bg]volume='1-0.5*min(1,${duck})':eval=frame[dk]`, `[dk]${vo.join("")}amix=inputs=${vo.length + 1}:duration=first:normalize=0[pre]`);
     last = "[pre]";
   }
-  const graph = (ln) => [...fc, `${last}loudnorm=I=-16:TP=-1.5:LRA=11${ln},aresample=${SR}[aout]`].join(";");
+  const graph = (ln) => [...fc, `${last}loudnorm=I=-16:TP=-1.5:LRA=11${ln},aresample=${SR},aformat=channel_layouts=stereo[aout]`].join(";");
   const base = ["-y", "-i", pic, ...args];
-  const m = JSON.parse(/\{[^{}]*"input_i"[^{}]*\}/.exec(ff([...base, "-filter_complex", graph(":print_format=json"), "-map", "[aout]", "-t", totalS.toFixed(3), "-f", "null", "-"]))[0]);
-  const filter = graph(`:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`);
+  // Pass 1 measures the mix. If ffmpeg does not print the JSON (format change, truncated output, a silent mix), fall back
+  // to the single-pass loudnorm instead of dereferencing null and losing the whole mix to a TypeError.
+  const probe = /\{[^{}]*"input_i"[^{}]*\}/.exec(ff([...base, "-filter_complex", graph(":print_format=json"), "-map", "[aout]", "-t", totalS.toFixed(3), "-f", "null", "-"]));
+  if (!probe) console.error("  audio: loudnorm measurement not found in the ffmpeg output — single-pass normalisation");
+  const m = probe ? JSON.parse(probe[0]) : null;
+  const filter = m ? graph(`:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true`) : graph("");
   ff([...base, "-filter_complex", filter, "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", SR, "-ac", 2, "-shortest", "-movflags", "+faststart", abs(run, out)]);
   return { inputs, filter, out };
 }

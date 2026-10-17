@@ -57,8 +57,12 @@ export function renderPage(log, runDir) {
       ${sel.fresh?.length ? `<figure class="in"><div class="ph">text</div><figcaption><b>fresh</b> ${list(sel.fresh)}</figcaption></figure>` : ""}</div>${sel.why ? `<p class="soft">${esc(sel.why)}</p>` : ""}`;
   };
   const checks = (id) => {
-    const cs = log.keyframes?.[id]?.checks || [];
-    return cs.length ? `<p class="lab">Checks</p>${cs.map((c) => `<p>attempt ${esc(c.attempt)}: <span class="ok">✓ ${list(c.stable) || "none"}</span>${c.unstable?.length ? ` · <span class="bad">✗ ${c.unstable.map((u) => `${esc(u.name)} (${list(u.diffs)})`).join("; ")}</span>` : ""}${c.artifacts?.length ? ` · artifacts: ${list(c.artifacts)}` : ""}</p>`).join("")}` : "";
+    const cs = log.keyframes?.[id]?.checks || [], g = log.keyframes?.[id]?.gate;
+    // The gate decision is on the record whether or not it spent: a declined retry names the fault classes and why.
+    const gl = !g ? "" : `<p class="soft">Gate: ${g.faults?.length ? g.faults.map((f) => `${esc(f.name)} ${esc(f.cls)}`).join(", ") : "no entity fault"}${g.artifacts?.length ? ` · artifacts: ${list(g.artifacts)}` : ""}`
+      + ` → ${g.retried ? `<span class="ok">retry</span>${g.resourced?.length ? ` (re-sourced ${list(g.resourced)})` : ""}` : `<span class="bad">no retry</span>`}: ${esc(g.why)}`
+      + (g.compare ? ` · kept attempt ${esc(g.compare.keep)} (fixed ${list(g.compare.fixed) || "none"}, broke ${list(g.compare.broke) || "none"})` : "") + `</p>`;
+    return (cs.length ? `<p class="lab">Checks</p>${cs.map((c) => `<p>attempt ${esc(c.attempt)}: <span class="ok">✓ ${esc(c.stable)}/${esc(c.of)} stable</span>${c.unstable?.length ? ` · <span class="bad">✗ ${list(c.unstable)}</span>` : ""}${c.artifacts?.length ? ` · artifacts: ${list(c.artifacts)}` : ""}</p>`).join("")}` : "") + gl;
   };
 
   const scenesHtml = scenes.map((ids, n) => `<h2>Scene ${n + 1}${shot[ids[0]] ? ` · ${esc(shot[ids[0]].location)}` : ""}</h2>` + ids.map((id, i) => {

@@ -90,6 +90,18 @@ ${exp.map(line).join("\n")}`;
     return net(() => visionCallImages("memobserve", schema, text, [this.run.path(file)]));
   }
 
+  // How well a frame matches an accepted frame of the same place (0-10). observe() only asks whether a frame shows the place,
+  // so a retry that redraws the set (walls, materials, windows) still passes there. A score, not a yes/no: a reframed shot
+  // that loses one fixture is not the same failure as a different room.
+  async samePlace(refFile, file, loc) {
+    if (this.run.estimate) return { score: 10, diffs: [] };
+    const schema = obj({ score: int, diffs: arr(str) });
+    const text = `Image 1 is a frame of ${loc} from earlier in a film. Image 2 is a new frame meant to show the same place, possibly with another framing or camera angle.
+score = how surely image 2 is the same set, 0-10: judge architecture, wall and floor materials and colours, windows, doors and fixed furniture wherever they are visible in both. 10 = clearly the same set; 7 = the same set with one or two fixtures changed or missing; 3 = a similar but different room; 0 = another place. Different framing, people, poses, light or movable props never lower the score.
+diffs = each difference in the place itself, a few words each, or [].`;
+    return net(() => visionCallImages("memsameplace", schema, text, [this.run.path(refFile), this.run.path(file)]));
+  }
+
   // Keyframe selection for a cut shot.
   async select(shot, { max = 4 } = {}) {
     const loc = shot.location;

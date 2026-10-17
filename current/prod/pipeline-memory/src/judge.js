@@ -128,11 +128,19 @@ export async function judgeCut(run, plan, { shots }) {
   const first = (s) => s.firstFrame ?? frameAt(abs(run, s.clip), run.path(`${s.id}-judge-first.jpg`));
   const last = (s) => s.lastFrame ?? frameAt(abs(run, s.clip), run.path(`${s.id}-judge-last.jpg`), true);
   const items = shots.map((s) => ({ ...s, strip: sheet(s), lastFrame: last(s) }));
-  const [shotRes, joins, film] = await Promise.all([
-    Promise.all(items.map((s) => judgeShot(run, plan, shotOf(plan, s.id), s))),
-    Promise.all(items.slice(1).map((s, i) => judgeJoin(run, plan, items[i].id, s.id, { lastFrame: items[i].lastFrame, firstFrame: first(s), link: s.link ?? shotOf(plan, s.id).link }))),
-    judgeFilm(run, plan, { strips: items.map((s) => ({ id: s.id, file: s.strip })) }),
+  // Each judge is settled on its own. One failure used to reject the whole Promise.all and throw away every judge that had
+  // already succeeded — all of it paid for. Partial results are kept and the failures are listed on the record instead.
+  const settle = (label, p) => Promise.resolve(p).then((v) => ({ ok: true, v }), (e) => ({ ok: false, label, error: String(e?.message ?? e) }));
+  const [shotS, joinS, filmS] = await Promise.all([
+    Promise.all(items.map((s) => settle(`shot ${s.id}`, judgeShot(run, plan, shotOf(plan, s.id), s)))),
+    Promise.all(items.slice(1).map((s, i) => settle(`join ${items[i].id}→${s.id}`, judgeJoin(run, plan, items[i].id, s.id, { lastFrame: items[i].lastFrame, firstFrame: first(s), link: s.link ?? shotOf(plan, s.id).link })))),
+    settle("film", judgeFilm(run, plan, { strips: items.map((s) => ({ id: s.id, file: s.strip })) })),
   ]);
+  const failed = [...shotS, ...joinS, filmS].filter((r) => !r.ok).map(({ label, error }) => ({ label, error }));
+  const shotRes = shotS.filter((r) => r.ok).map((r) => r.v), joins = joinS.filter((r) => r.ok).map((r) => r.v), film = filmS.ok ? filmS.v : null;
   const mean = shotRes.reduce((n, s) => n + s.total, 0) / (shotRes.length || 1);
-  return { shots: shotRes, joins, film, reward: Math.round((mean * 0.6 + film.total * 0.4) * 10) / 10, computed_at: new Date().toISOString() };
+  // The reward weights shots 0.6 and the film 0.4; without the film judge it is the shot mean alone, and says so.
+  const reward = shotRes.length ? Math.round((film ? mean * 0.6 + film.total * 0.4 : mean) * 10) / 10 : null;
+  return { shots: shotRes, joins, film, reward, ...(film ? {} : { reward_basis: "shots only — the film judge failed" }),
+    ...(failed.length ? { failed } : {}), computed_at: new Date().toISOString() };
 }

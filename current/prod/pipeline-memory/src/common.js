@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { REPO } from "../../state-manager/src/paths.js";
 import { runJob, download, uploadFile } from "../../state-manager/src/magichour.js";
+import { chooseImageTool, chooseVideoModel } from "../../state-manager/src/choose.js";
 
 export { REPO, download };
 export const RUNS = join(REPO, "current/tests/pipeline-memory/runs");
@@ -23,6 +24,12 @@ export async function net(fn, tries = 3) {
   }
 }
 export function ledger() { return existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, "utf8")) : { spent: 0, jobs: [] }; }
+// Credits promised to calls that are in flight but have not reached spend() yet. The ledger on disk only moves when a job
+// finishes, so concurrent callers (anchors run under Promise.all) would each read the same spent figure, each see room under
+// the cap, and each spend — overshooting it. Reserving before the call and releasing after makes the cap hold: the
+// check-and-reserve below has no await between the two statements, so no other task can interleave inside it.
+let reserved = 0;
+export function reservedCredits() { return reserved; }
 export function spend(entry) {
   const l = ledger(); l.spent += entry.credits || 0; l.jobs.push({ at: new Date().toISOString(), ...entry });
   mkdirSync(join(LEDGER, ".."), { recursive: true }); writeFileSync(LEDGER, JSON.stringify(l, null, 2));
@@ -30,12 +37,16 @@ export function spend(entry) {
 }
 
 export class Run {
-  constructor({ caseId, label, estimate = false }) {
-    this.caseId = caseId; this.label = label; this.estimate = estimate;
+  constructor({ caseId, label, estimate = false, sup = null }) {
+    this.caseId = caseId; this.label = label; this.estimate = estimate; this.sup = sup; this.gated = 0;
     this.dir = join(RUNS, `${caseId}-${label}`); mkdirSync(this.dir, { recursive: true });
     this.logPath = join(this.dir, "run.json");
     this.log = existsSync(this.logPath) ? JSON.parse(readFileSync(this.logPath, "utf8")) : { jobs: {} };
     this.log.jobs ??= {};
+    // Per-run, despite living in the log: the keyframe gate blocks a fault class that a retry failed to fix, and that
+    // judgement must not outlive the run that made it. Loaded from run.json it would persist across --resume and every
+    // re-run of the same label, blocking the class permanently. Jobs are cached by signature; this is not.
+    this.log.retried_classes = {};
     this.hashes = {}; this.dirty = new Set(); this.estimated = []; this.upCache = {};
   }
   path(f) { return join(this.dir, f); }
@@ -50,36 +61,49 @@ export class Run {
     const sig = this.sig(spec, inputs);
     if (fresh && this.has(file) && this.log.jobs[key]?.sig === sig) return file;
     if (this.estimate) { this.estimated.push({ key, cost }); this.dirty.add(file); return file; }
-    const t = await fn();
+    // Supervised run: the operator approves this call before it is made, so a stop here spends nothing.
+    const done = this.sup ? await this.sup.gate({ key, file, spec, inputs, cost }) : null;
+    let t;
+    this.gated++;
+    try { t = await fn(); } finally { this.gated--; }
     this.touch(file);
     this.log.jobs[key] = { ...t, output: file, sig: this.sig(spec, inputs) }; this.save();
+    done?.({ files: [file], credits: t.credits, seconds: t.seconds });
     console.log(`  ${key}: ${t.credits ?? 0} credits, ${t.seconds ?? 0}s`);
     return file;
   }
   // Magic Hour call with the ledger cap. kind: image | video | audio.
   async mh(endpoint, body, kind, expect) {
+    // Backstop: every paid call currently goes through job(), which already gated. This catches any future one that does not.
+    if (this.sup && !this.gated) await this.sup.gate({ key: endpoint, file: body.name || endpoint, spec: { prompt: body.style?.prompt ?? null }, inputs: [], cost: expect, kind: "mh" });
     const l = ledger();
-    if (l.spent + expect > CAP) throw new Error(`budget: ${l.spent} spent + ${expect} would pass the cap of ${CAP}`);
+    if (l.spent + reserved + expect > CAP) throw new Error(`budget: ${l.spent} spent + ${reserved} in flight + ${expect} would pass the cap of ${CAP}`);
+    reserved += expect;
     let r;
     try { r = kind === "audio" ? await audioJob(endpoint, body) : await runJob(endpoint, body, kind, { timeoutS: kind === "video" ? 2700 : 1200 }); }
     catch (e) { if (/HTTP 402/.test(String(e))) { spend({ run: `${this.caseId}-${this.label}`, endpoint, credits: 0, error: "402" }); throw new Error(`402 out of credits: ${e.message}`); } throw e; }
+    finally { reserved -= expect; }
     spend({ run: `${this.caseId}-${this.label}`, endpoint, name: body.name, credits: r.credits || 0 });
     return r;
   }
   async up(file, type = "image") { return (this.upCache[file] ??= uploadFile(this.path(file), type)); }
   // Image generation (no inputs) or edit (inputs = run-relative files). Returns the job record.
-  async image(name, prompt, inputs, outFile) {
-    const endpoint = inputs.length ? "/v1/ai-image-editor" : "/v1/ai-image-generator";
+  // Endpoint from the selector (SM-100) rather than a ternary. With no `need` the answer is the one the ternary gave;
+  // passing `need.preserve` (the reference-only atoms of the entities in frame) makes it a function of the state.
+  async image(name, prompt, inputs, outFile, need = null) {
+    const chosen = chooseImageTool({ inputs, need });
     const body = { name, image_count: 1, ...IMAGE, style: { prompt }, ...(inputs.length ? { assets: { image_file_paths: await Promise.all(inputs.map((f) => this.up(f))) } } : {}) };
-    const r = await this.mh(endpoint, body, "image", COST.image);
+    const r = await this.mh(chosen.endpoint, body, "image", COST.image);
     await download(r.downloads[0], this.path(outFile)); this.touch(outFile);
-    return { endpoint, request: body, inputs, credits: r.credits, seconds: r.seconds };
+    return { endpoint: chosen.endpoint, request: body, inputs, credits: r.credits, seconds: r.seconds, choice: chosen.decision };
   }
-  async video(name, prompt, startFile, seconds, outFile) {
-    const body = { name, ...VIDEO, end_seconds: seconds, style: { prompt }, assets: { image_file_path: await this.up(startFile) } };
+  async video(name, prompt, startFile, seconds, outFile, need = null) {
+    const chosen = chooseVideoModel(VIDEO, { seconds, endFrame: false, need });
+    if (chosen.overridden) console.log(`  model: ${chosen.reason}`);
+    const body = { name, ...VIDEO, model: chosen.model, end_seconds: seconds, style: { prompt }, assets: { image_file_path: await this.up(startFile) } };
     const r = await this.mh("/v1/image-to-video", body, "video", COST.video_s * seconds);
     await download(r.downloads[0], this.path(outFile)); this.touch(outFile);
-    return { endpoint: "/v1/image-to-video", request: body, start: startFile, credits: r.credits, seconds: r.seconds };
+    return { endpoint: "/v1/image-to-video", request: body, start: startFile, credits: r.credits, seconds: r.seconds, choice: chosen.decision };
   }
   totalCredits() { return Object.values(this.log.jobs).reduce((n, j) => n + (j.credits || 0), 0); }
 }

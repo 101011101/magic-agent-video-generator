@@ -1,10 +1,14 @@
 // Keyframes: anchors (character sheets, in-context scale anchors for props, location plates with their fixtures drawn in),
 // cut start frames built from the memory bank (base frame + extra frames + anchors + fresh entities + carried state),
-// a FilmWorld closed-loop gate (record → diff → one corrected retry → keep the better attempt), in-place repair of a
+// a FilmWorld closed-loop gate (record → diff → stop rule → at most one corrected retry → keep the better attempt;
+// a look or real-size fault is re-sourced from the entity's reference rather than re-prompted blind), in-place repair of a
 // real last frame, and versioned anchors for persisted appearance changes. All file names are run-relative.
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { COST } from "./common.js";
+import { preservedAtoms } from "../../state-manager/src/select.js";
+import { checkReference } from "../../state-manager/src/face.js";
 
+const PLACE_DROP = 3;
 const SINGLE = "One single frame, not a grid, storyboard or collage; no text.";
 const st = (name, o = {}) => ({ name, position: "", holding: null, held_by: null, placed_on: null, condition: "", ...o });
 const copy = (run, from, to) => { if (run.has(from)) { mkdirSync(run.path(to.split("/").slice(0, -1).join("/") || "."), { recursive: true }); copyFileSync(run.path(from), run.path(to)); run.touch(to); } return to; };
@@ -62,7 +66,13 @@ export async function anchors(run, plan, memory, uploads = {}) {
     const file = `refs/${e.name}.png`;
     if (e.upload) {
       copy(run, uploads[e.upload] ?? `uploads/${e.upload}.png`, file);
-      run.log.anchors[e.name] = { file, prompt: null, inputs: [], kind: "upload", why: `upload ${e.upload}` };
+      // SM-104: an upload adopted as an identity anchor is the reference for every later frame, so it is checked before
+      // it is adopted. The check reports and never repairs — a crop or a substitute would be a different decision than
+      // the storyboard's, and the whole point of the anchor is that the original is carried, not quietly replaced.
+      const ref = run.estimate ? { ok: true, checked: false, why: "estimate mode" }
+        : await checkReference(run.path(file), { name: e.name, kind: e.kind, saveTo: (i) => run.path(`refs/${e.name}-face${i}.png`) });
+      if (!ref.ok) { (run.log.errors ??= []).push({ step: "anchor-reference", entity: e.name, problem: ref.why }); console.log(`  reference: ${ref.why}`); }
+      run.log.anchors[e.name] = { file, prompt: null, inputs: [], kind: "upload", why: `upload ${e.upload}`, reference_check: ref };
       memory.setAnchor(e.name, file);
       if (!run.estimate) await memory.record({ file, shot: { id: "anchor", location: e.kind === "location" ? e.name : null }, role: "anchor", expected: [st(e.name)], sources: {} });
       return file;
@@ -70,7 +80,9 @@ export async function anchors(run, plan, memory, uploads = {}) {
     const partner = e.kind === "prop" && e.scale_partner && byName[e.scale_partner] ? e.scale_partner : null;
     const partnerFile = partner ? (await done[partner]) ?? memory.anchor(partner) : null;
     const a = anchorPrompt(plan, e, byName, partnerFile), inputs = partnerFile ? [partnerFile] : [];
-    await run.job(`anchor:${e.name}`, file, { prompt: a.prompt }, inputs, COST.image, () => run.image(`${run.caseId} anchor ${e.name}`, a.prompt, inputs, file));
+    // With a partner frame the partner is carried and the prop is made; with no input nothing can be preserved.
+    const need = partner ? { preserve: preservedAtoms([{ id: partner, kind: "character" }]), make: ["pose_action", "props"], carried: [partner] } : null;
+    await run.job(`anchor:${e.name}`, file, { prompt: a.prompt }, inputs, COST.image, () => run.image(`${run.caseId} anchor ${e.name}`, a.prompt, inputs, file, need));
     run.log.anchors[e.name] = { file, prompt: a.prompt, inputs, kind: a.kind, why: a.why };
     memory.setAnchor(e.name, file);
     if (!run.estimate) {
@@ -83,8 +95,13 @@ export async function anchors(run, plan, memory, uploads = {}) {
   // Partners first: a prop's scale anchor waits on its partner's sheet so the hand belongs to that character.
   const order = [...want.filter((e) => e.kind === "character"), ...want.filter((e) => e.kind !== "character")];
   for (const e of order) done[e.name] = make(e);
-  await Promise.all(Object.values(done));
+  // allSettled, not all: a rejection must not abandon the siblings. They are paid jobs already in flight — letting them
+  // finish means run.job() records each one, so nothing is spent without being written down. Failures surface together.
+  const names = Object.keys(done);
+  const settled = await Promise.allSettled(names.map((n) => done[n]));
   run.save();
+  const failed = settled.map((s, i) => ({ name: names[i], s })).filter(({ s }) => s.status === "rejected");
+  if (failed.length) throw new Error(`anchors failed: ${failed.map(({ name, s }) => `${name}: ${s.reason?.message ?? s.reason}`).join("; ")}`);
   return run.log.anchors;
 }
 
@@ -119,8 +136,83 @@ function corrections(plan, entry, names) {
 }
 const summary = (entry, attempt, names) => entry && ({ attempt, id: entry.id, file: entry.file, stable: stableCount(entry, names), of: names.length,
   unstable: names.filter((n) => !entry.entities?.[n]?.stable), artifacts: entry.quality?.artifacts || [] });
+const artifactsOf = (entry) => { const a = entry?.quality?.artifacts; return (Array.isArray(a) ? a : a ? [a] : []).map(diffText).filter(Boolean); };
 
-// Start frame of a cut: memory.select → prompt → gate with one corrected retry; keeps the attempt with more stable entities.
+// Fault class per unstable entity. REF = the fault names what the thing IS (its look or its real size); it comes from a
+// reference image, so prompt text alone does not move it (state-manager: "reference-only atoms cannot be re-made by a
+// prompt; they pass through from a binding"; pipeline A v2 flagged the shell in every beat and never fixed it by text).
+// TEXT = the fault names what the frame DOES with the thing; a re-prompt can move it.
+const REF = ["size", "look"], TEXT = ["missing", "duplicate", "state"];
+export function faults(plan, entry, names) {
+  const out = [];
+  for (const n of names) {
+    const x = entry?.entities?.[n];
+    if (!x || x.stable) continue;
+    const cls = !x.present ? "missing" : x.count > 1 ? "duplicate" : /too (large|small)/i.test(x.size || "") ? "size" : x.look_ok === false ? "look" : "state";
+    out.push({ name: n, cls, kind: plan.entities.find((y) => y.name === n)?.kind ?? null, diffs: (x.diffs || []).map(diffText) });
+  }
+  return out;
+}
+
+// Stop rule, before any spend. A retry costs COST.image, so it must have something new to offer:
+//   - artifacts only (no entity fault): never. Recorded 0 of 3 fixed by a re-prompt; the flaw is in the model's text
+//     rendering, not in our instruction.
+//   - a REF fault whose entity has an anchor that was not an input: re-source. 6 of the 7 recorded no-help retries were
+//     blind repeats with the same inputs while the faulted entity's own reference sat unused (pipeline A's v3 fix).
+//   - a REF fault with every reference already shown, whose entity+class already FAILED a retry in this run: stop. The
+//     test is that the earlier retry did not fix it, not merely that one was tried — pipeline A's controller.js stops on
+//     the same fault class repeating, and on this record "already tried" alone is a wash (it would have saved one wasted
+//     retry and thrown away one that worked), while "already failed" separates the two.
+//   - a TEXT fault: retry (one corrected attempt).
+// Returns { retry, why, add: [files], resourced: [names] }.
+export function retryPlan(run, plan, memory, fs, artifacts, inputs) {
+  const seen = (run.log.retried_classes ??= {});
+  if (!fs.length) return { retry: false, why: artifacts.length ? "artifacts only: a re-prompt does not fix rendered text or collage flaws" : "no fault", add: [], resourced: [] };
+  const add = [], resourced = [];
+  for (const f of fs.filter((x) => REF.includes(x.cls))) {
+    const a = memory.anchor(f.name);
+    if (a && !inputs.includes(a) && !add.includes(a)) { add.push(a); resourced.push(f.name); }
+  }
+  if (add.length) return { retry: true, why: `re-source ${resourced.join(", ")} from its reference (${fs.filter((x) => REF.includes(x.cls)).map((x) => `${x.name}: ${x.cls}`).join("; ")})`, add, resourced };
+  const text = fs.filter((x) => TEXT.includes(x.cls));
+  if (text.length) return { retry: true, why: `prompt-fixable: ${text.map((x) => `${x.name}: ${x.cls}`).join("; ")}`, add: [], resourced: [] };
+  const failed = fs.filter((x) => seen[`${x.name}:${x.cls}`]?.helped === false);
+  if (failed.length && failed.length === fs.length) return { retry: false, why: `${failed.map((x) => `${x.name}: ${x.cls}`).join("; ")} already failed a retry in this run (${failed.map((x) => seen[`${x.name}:${x.cls}`].shot).join(", ")}) and there is no further reference to show`, add: [], resourced: [] };
+  return { retry: true, why: `${fs.map((x) => `${x.name}: ${x.cls}`).join("; ")}; no reference left to add, one corrected attempt`, add: [], resourced: [] };
+}
+
+// Which attempt to keep. Counting stable entities alone hides a swap: a retry that fixes one entity and breaks another nets
+// zero and was discarded. Compare the per-entity transitions instead, and treat a new image flaw as a regression.
+// A tie keeps attempt 1: it is already drawn and observed, nothing in the record prefers the later draw, and keeping it
+// makes a replay of the run deterministic.
+// place: { name, a1, a2 } match scores (0-10) from memory.samePlace(); the location is not a named entity, so a retry that
+// fixes props by redrawing the set would otherwise count as a pure gain. A drop of PLACE_DROP or more counts as broken.
+export function better(a1, a2, names, place = null) {
+  const st = (e, n) => !!e?.entities?.[n]?.stable;
+  const fixed = names.filter((n) => !st(a1, n) && st(a2, n)), broke = names.filter((n) => st(a1, n) && !st(a2, n));
+  if (place && place.a1 - place.a2 >= PLACE_DROP) broke.push(place.name);
+  if (place && place.a2 - place.a1 >= PLACE_DROP) fixed.push(place.name);
+  const art1 = artifactsOf(a1).length, art2 = artifactsOf(a2).length;
+  const keep2 = fixed.length > broke.length && !(art2 > art1);
+  return { keep: keep2 ? 2 : 1, fixed, broke, artifacts_before: art1, artifacts_after: art2 };
+}
+
+// Start frame of a cut: memory.select → prompt → gate (stop rule decides whether a retry can offer anything; a retry
+// re-sources a look or size fault from the entity's reference) → keeps the attempt that fixes more than it breaks.
+// What a cut keyframe must carry rather than remake (SM-100). Only entities an input actually shows contribute their
+// reference-only atoms: the base's stable entities, anything merged from another bank entry, and anything with an anchor
+// attached. A `fresh` entity is being made, so preserving it would be a contradiction that rejects every tool.
+export function needOfCut(plan, sel, names) {
+  const byName = Object.fromEntries(plan.entities.map((e) => [e.name, e]));
+  const shown = new Set([
+    ...(sel.base ? names.filter((n) => sel.base.entities?.[n]?.stable) : []),
+    ...(sel.extra || []).flatMap((x) => x.names),
+    ...(sel.anchors || []).map((a) => a.name),
+  ]);
+  const carried = [...shown].filter((n) => byName[n]).map((n) => ({ id: n, kind: byName[n].kind }));
+  return { preserve: preservedAtoms(carried), make: carried.length ? ["pose_action", "background", "lighting"] : [], carried: carried.map((e) => e.id) };
+}
+
 export async function cutKeyframe(run, plan, memory, shot) {
   const id = shot.id, file = `${id}-start.png`, byName = Object.fromEntries(plan.entities.map((e) => [e.name, e]));
   const expected = shot.start.entities, names = expected.map((x) => x.name);
@@ -142,10 +234,12 @@ export async function cutKeyframe(run, plan, memory, shot) {
   const sel = await memory.select(shot);
   const inputs = [], lines = [], sources = {};
   const b = sel.base;
+  let placeRef = null; // an accepted frame of this place, for the gate's same-place check
   if (b) {
     inputs.push(b.file);
     const baseLoc = b.location ?? b.shot?.location;
     const same = baseLoc ? baseLoc === shot.location : !!b.entities?.[shot.location]?.present;
+    if (same) placeRef = b.file;
     const keep = names.filter((n) => b.entities?.[n]?.stable);
     for (const n of keep) sources[n] = b.id;
     lines.push(same || !keep.length
@@ -171,7 +265,8 @@ export async function cutKeyframe(run, plan, memory, shot) {
     + (state.length ? `\nState at this frame:\n${state.join("\n")}` : "") + SIZE + `\nTime and light: ${shot.start.time_light}.`;
   const selection = { base: b?.id ?? null, extra: (sel.extra || []).map((x) => ({ id: x.entry.id, names: x.names, why: x.why })),
     anchors: (sel.anchors || []).map(({ name, file, why }) => ({ name, file, why })), fresh: sel.fresh || [], why: sel.why };
-  const gen = (key, p, attempt) => run.job(key, file, { prompt: p, attempt }, inputs, COST.image, () => run.image(`${run.caseId} ${id} a${attempt}`, p, inputs, file));
+  const need = needOfCut(plan, sel, names);
+  const gen = (key, p, attempt) => run.job(key, file, { prompt: p, attempt }, inputs, COST.image, () => run.image(`${run.caseId} ${id} a${attempt}`, p, inputs, file, need));
 
   const before = run.log.jobs[`frame:${id}`];
   await gen(`frame:${id}`, prompt, 1);
@@ -179,25 +274,48 @@ export async function cutKeyframe(run, plan, memory, shot) {
   const cached = !run.estimate && run.log.jobs[`frame:${id}`] === before && run.log.keyframes[id]?.prompt === prompt;
   let entry = await memory.record({ file, shot, role: "start", expected, sources });
   const checks = [summary(entry, 1, names)].filter(Boolean);
-  let retry = null;
+  let retry = null, gate = null;
   // Gate: runs only on a fresh first attempt (a cached frame already passed its gate in an earlier run).
   if (!run.estimate && !cached && entry) {
     const fix = corrections(plan, entry, names);
-    if (fix.length) {
+    const fs = faults(plan, entry, names), art = artifactsOf(entry);
+    const rp = retryPlan(run, plan, memory, fs, art, inputs);
+    gate = { faults: fs.map((f) => ({ name: f.name, cls: f.cls })), artifacts: art, retried: rp.retry, why: rp.why, resourced: rp.resourced };
+    if (fix.length && !rp.retry) console.log(`  frame:${id}: no retry — ${rp.why}`);
+    if (fix.length && rp.retry) {
       const a1 = `${id}-start-a1.png`;
       copy(run, file, a1);
       entry.file = a1; // assumption: the bank holds this object; attempt 1 now lives in a1
-      retry = `${prompt}\nFix these problems from the previous attempt: ${fix.join("; ")}.`;
-      await gen(`frame:${id}:retry`, retry, 2);
+      const ins = [...inputs, ...rp.add];
+      retry = `${prompt}${rp.add.map((a, k) => `\n${anchorLine(run, plan, inputs.length + k + 1, rp.resourced[k])}`).join("")}`
+        + `\nFix these problems from the previous attempt: ${fix.join("; ")}.`;
+      // The retry adds anchors, so more is carried, not less: recompute rather than reuse attempt 1's need.
+      const needRetry = { ...need, preserve: preservedAtoms([...need.carried, ...rp.resourced].filter((n, k, a) => a.indexOf(n) === k).map((n) => ({ id: n, kind: plan.entities.find((e) => e.name === n)?.kind }))) };
+      await run.job(`frame:${id}:retry`, file, { prompt: retry, attempt: 2 }, ins, COST.image, () => run.image(`${run.caseId} ${id} a2`, retry, ins, file, needRetry));
       const e2 = await memory.record({ file, shot, role: "start", expected, sources });
       checks.push(summary(e2, 2, names));
-      const s1 = stableCount(entry, names) - (entry.quality?.artifacts?.length ? 0.5 : 0);
-      const s2 = stableCount(e2, names) - (e2.quality?.artifacts?.length ? 0.5 : 0);
-      if (s1 > s2) { copy(run, a1, file); entry.file = file; await memory.drop?.(e2.id); console.log(`  frame:${id}: retry worse (${s2} < ${s1}) → kept attempt 1`); }
-      else { await memory.drop?.(entry.id); entry = e2; }
+      placeRef ??= run.log.anchors?.[shot.location]?.file ?? null;
+      let place = null;
+      if (placeRef && run.has(placeRef)) {
+        const [p1, p2] = await Promise.all([memory.samePlace(placeRef, a1, shot.location), memory.samePlace(placeRef, file, shot.location)]);
+        place = { name: shot.location, ref: placeRef, a1: p1.score, a2: p2.score, diffs1: p1.diffs, diffs2: p2.diffs };
+        gate.place = place;
+      }
+      const cmp = better(entry, e2, names, place);
+      gate.compare = cmp;
+      // Record per fault class whether this retry fixed it, so a later shot with the same fault does not pay again for
+      // an attempt that is known not to work.
+      // A class counts as helped if any retry in this run fixed it — first-write-wins would freeze an early failure
+      // even after a later retry of the same class succeeded.
+      for (const f of fs) {
+        const k = `${f.name}:${f.cls}`, helped = cmp.keep === 2 && cmp.fixed.includes(f.name), prev = run.log.retried_classes[k];
+        run.log.retried_classes[k] = { shot: prev?.shot ?? id, helped: !!(prev?.helped || helped) };
+      }
+      if (cmp.keep === 1) { copy(run, a1, file); entry.file = file; await memory.drop?.(e2.id); console.log(`  frame:${id}: retry kept nothing (fixed ${cmp.fixed.join(", ") || "none"}, broke ${cmp.broke.join(", ") || "none"}) → kept attempt 1`); }
+      else { await memory.drop?.(entry.id); entry = e2; console.log(`  frame:${id}: retry fixed ${cmp.fixed.join(", ")}${cmp.broke.length ? `, broke ${cmp.broke.join(", ")}` : ""}`); }
     }
   }
-  const out = { file, selection, inputs, prompt, retry_prompt: retry, checks, sources, done: !run.estimate };
+  const out = { file, selection, inputs, prompt, retry_prompt: retry, gate, checks, sources, done: !run.estimate };
   run.log.keyframes[id] = { ...out, entry: entry?.id ?? null }; run.save();
   return { ...out, entry };
 }
@@ -210,7 +328,11 @@ export async function repairStart(run, plan, memory, shot, lastFile, missing) {
   for (const n of missing) { const a = memory.anchor(n); if (a) { inputs.push(a); refs.push(anchorLine(run, plan, inputs.length, n)); } }
   const prompt = `${plan.style}. 16:9 film frame. ${SINGLE} Image 1 is the current frame: keep its place, camera, light and every object exactly. Add ${missing.join(", ")}: ${about.join(" ") || shot.start.description}`
     + (refs.length ? `\n${refs.join("\n")}` : "");
-  await run.job(`repair:${shot.id}`, file, { prompt }, inputs, COST.image, async () => ({ ...(await run.image(`${run.caseId} ${shot.id} repair`, prompt, inputs, file)), repaired_from: lastFile, missing }));
+  // Everything already in the frame must be carried, and so must each entity whose anchor was attached above.
+  const kinds = Object.fromEntries(plan.entities.map((e) => [e.name, e.kind]));
+  const held = [...shot.start.entities.map((e) => e.name), ...missing].filter((n, k, a) => a.indexOf(n) === k && kinds[n]);
+  const need = { preserve: preservedAtoms(held.map((n) => ({ id: n, kind: kinds[n] }))), make: ["pose_action"], carried: held };
+  await run.job(`repair:${shot.id}`, file, { prompt }, inputs, COST.image, async () => ({ ...(await run.image(`${run.caseId} ${shot.id} repair`, prompt, inputs, file, need)), repaired_from: lastFile, missing }));
   (run.log.repairs ??= {})[shot.id] = { file, from: lastFile, missing, prompt, inputs }; run.save();
   return file;
 }
@@ -222,7 +344,10 @@ export async function versionAnchor(run, plan, memory, req) {
   const prompt = from_anchor
     ? `${plan.style}. Single frame, not a grid. Image 1 is the reference of ${name}. Image 2 shows ${name} after a change. Make a new clean reference of ${name}, identical to image 1 except: ${prompt_hint}. Same framing and background as image 1.`
     : `${plan.style}. Single frame, not a grid. Image 1 shows ${name} after a change: ${prompt_hint}. Make a clean reference of ${name} as it is in image 1: centred, plain light grey background, even soft light.`;
-  await run.job(`anchor:${name}-v${v}`, file, { prompt }, inputs, COST.image, () => run.image(`${run.caseId} anchor ${name} v${v}`, prompt, inputs, file));
+  // A version change alters wardrobe or condition; the identity underneath must be carried, which is the whole point.
+  const kind = plan.entities.find((e) => e.name === name)?.kind || "prop";
+  const need = { preserve: preservedAtoms([{ id: name, kind }]), make: ["wardrobe", "lighting"], carried: [name] };
+  await run.job(`anchor:${name}-v${v}`, file, { prompt }, inputs, COST.image, () => run.image(`${run.caseId} anchor ${name} v${v}`, prompt, inputs, file, need));
   const base = run.log.anchors?.[name];
   (run.log.anchors ??= {})[`${name}-v${v}`] = { file, prompt, inputs, kind: base?.kind ?? plan.entities.find((e) => e.name === name)?.kind, why: `version ${v}: ${prompt_hint}` };
   memory.setAnchor(name, file, v);

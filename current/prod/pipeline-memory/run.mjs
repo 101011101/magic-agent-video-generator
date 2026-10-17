@@ -3,7 +3,8 @@
 // + carried observed state, closed-loop gate) or the real last frame (continuous, trimmed, repaired if entities are
 // missing) → wan-3.0 clip with sound cues → observe the last frame into memory, persist state versions → stitch (hold/settle
 // trims, xfade on continuous joins) → text layers → audio agent (cue sheet, beds, placeholder score, VO) → judge → page.
-// Usage: node current/prod/pipeline-memory/run.mjs --case p4-lighthouse [--clips 9] [--scenes 1] [--label v1] [--estimate] [--remix] [--rejudge] [--xfade 0]
+// Usage: node current/prod/pipeline-memory/run.mjs --case p4-lighthouse [--clips 9] [--scenes 1] [--label v1] [--estimate] [--remix] [--rejudge] [--xfade 0] [--supervised]
+//   --supervised  approve every major step and every paid call in a browser page first (see ../test-machine/README.md)
 //   A finished shot is marked done in run.json and replayed on re-runs (its keyframe decision and clip are final; memory is re-read from cache).
 import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -11,7 +12,7 @@ import { join } from "node:path";
 import { usage } from "../state-manager/src/llm.js";
 import { firstFrame, ssim } from "../state-manager/src/continuity.js";
 import { renderText } from "../pipeline-v2/src/text.js";
-import { Run, loadCase, ledger, COST, CAP, VIDEO } from "./src/common.js";
+import { Run, loadCase, ledger, COST, CAP, VIDEO, RUNS as RUNS_DIR } from "./src/common.js";
 import { storyboard, scenesOf, byName as entitiesOf } from "./src/storyboard.js";
 import { Memory } from "./src/memory.js";
 import { anchors, cutKeyframe, repairStart, versionAnchor } from "./src/keyframes.js";
@@ -19,6 +20,7 @@ import { motionProfile, settleAtEnd, snapAtEnd, stitch, measureJoins } from "./s
 import { renderAudio, cueSheet } from "./src/audio.js";
 import { judgeCut, contactSheet } from "./src/judge.js";
 import { renderPage } from "./src/page.js";
+import { maybeSupervisor, StopRun } from "../test-machine/supervisor.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const caseId = opt("--case", "p4-lighthouse"), label = opt("--label", "v1"), estimate = args.includes("--estimate"), remix = args.includes("--remix"), rejudge = args.includes("--rejudge");
@@ -27,7 +29,9 @@ const XFADE = Number(opt("--xfade", 0)), maxScenes = Number(opt("--scenes", 0));
 const t0 = Date.now();
 const c = loadCase(caseId);
 const clips = Number(opt("--clips", caseId === "p1-grandma" ? 1 : 9));
-const run = new Run({ caseId, label, estimate });
+const sup = await maybeSupervisor(args, { runDir: join(RUNS_DIR, `${caseId}-${label}`), title: `B · memory bank · ${caseId}-${label}` });
+const gate = async (name, about, detail) => (sup ? await sup.step(name, about, detail) : () => {});
+const run = new Run({ caseId, label, estimate, sup });
 const log = run.log;
 log.case = { id: c.id, title: c.title, request: c.request, uploads: c.uploads };
 log.models = { IMAGE: "nano-banana-pro 2k", VIDEO, COST, CAP };
@@ -47,6 +51,7 @@ log.scenes = scenes.map((s) => s.map((x) => x.id));
 const E = entitiesOf(plan);
 run.save();
 console.log(`  ${plan.shots.length} shots in ${allScenes.length} scenes; running ${scenes.length} scenes (${scenes.flat().length} clips); ${plan.entities.length} entities`);
+(await gate("storyboard", `${scenes.flat().length} clips in ${scenes.length} scenes, ${plan.entities.length} entities`, { note: plan.shots.map((x) => `${x.id} [${x.link}] ${x.location}: ${x.action}`).join("\n") }))({ text: "storyboard approved" });
 
 const memory = new Memory(run, plan);
 const stamp = () => { log.memory = { entities: memory.entities, bank: memory.bank }; log.total_credits = run.totalCredits(); log.elapsed_s = Math.round((Date.now() - t0) / 1000); log.llm = usage; log.ledger_spent = ledger().spent; run.save(); };
@@ -65,7 +70,7 @@ function endState(shot) {
   return out;
 }
 // A post-generation step never kills the run: the error is logged and the page is still written.
-async function step(name, fn) { try { await fn(); } catch (e) { console.error(`  ${name}: ${e.message}`); (log.errors ??= []).push({ step: name, error: String(e.message), cause: String(e.cause?.message ?? e.cause ?? "") }); stamp(); page(); } }
+async function step(name, fn) { try { await fn(); return true; } catch (e) { console.error(`  ${name}: ${e.message}`); (log.errors ??= []).push({ step: name, error: String(e.message), cause: String(e.cause?.message ?? e.cause ?? "") }); stamp(); page(); return false; } }
 // Frame k (0-based) of a video as PNG.
 const frameAt = (video, k, out) => execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", video, "-vf", `select=eq(n\\,${k})`, "-frames:v", "1", "-update", "1", out]);
 const clipPrompt = (shot) => {
@@ -75,16 +80,26 @@ const clipPrompt = (shot) => {
 };
 
 if (!remix) {
+  // Reset the per-run records before the first step that can write to them: anchors now report failures into log.errors,
+  // so clearing it after that step would erase the very error the run needs to show.
+  log.carry ??= {}; log.trims ??= {}; log.errors = []; log.done ??= {};
+
   // 2. Anchors.
-  await anchors(run, plan, memory);
+  (await gate("anchors", "identity sheets, scale anchors and location plates", { note: plan.entities.map((e) => `${e.name} (${e.kind}) size: ${e.size}${e.scale_partner ? ` · scale partner: ${e.scale_partner}` : ""}`).join("\n") }))({});
+  // Anchors are the foundation: every later keyframe references them. A failure here is recorded and the page is written
+  // (it used to throw straight out of the process, losing the record), and the shots are skipped rather than generated
+  // against missing references — that would spend the whole clip budget on frames that cannot be right.
+  const anchorsOk = await step("anchors", () => anchors(run, plan, memory));
+  if (!anchorsOk) console.error("  anchors failed — skipping the shots; fix the anchor errors in run.json and re-run");
   stamp();
 
   // 3. Shots in story order (memory conditions each cut on what came before).
-  log.carry ??= {}; log.trims ??= {}; log.errors = []; log.done ??= {};
-  for (const [k, scene] of scenes.entries()) {
+  for (const [k, scene] of (anchorsOk ? scenes : []).entries()) {
     let start = null, lastEntry = null;
     for (const [i, shot] of scene.entries()) {
       try {
+        const afterShot = await gate(`shot ${shot.id}`, `[${shot.link}] ${shot.location} · ${shot.seconds}s · ${shot.action}`,
+          { note: `${shot.start.description}\ncamera: ${shot.camera}\nsound: ${shot.sound.ambient}` });
         // A done shot is replayed: its start decision is final, its clip exists; memory is re-read (vision cached).
         const done = !!log.done[shot.id] && run.has(`${shot.id}.mp4`) && run.has(`${shot.id}-last.png`);
         if (i === 0) {
@@ -107,7 +122,8 @@ if (!remix) {
         }
         const prompt = clipPrompt(shot);
         const clip = await run.job(`clip:${shot.id}`, `${shot.id}.mp4`, { prompt, seconds: shot.seconds, model: VIDEO }, [start], COST.video_s * shot.seconds,
-          () => run.video(`${caseId} ${shot.id}`, prompt, start, shot.seconds, `${shot.id}.mp4`));
+          // The clip's model follows the shot: its sound cue decides audio, the shot decides length. No end frame.
+          () => run.video(`${caseId} ${shot.id}`, prompt, start, shot.seconds, `${shot.id}.mp4`, { audio: !!VIDEO.audio, endFrame: false, seconds: shot.seconds, resolution: VIDEO.resolution || null }));
         if (run.estimate) { if (run.dirty.has(clip)) run.dirty.add(`${shot.id}-last.png`); continue; } // a cached clip keeps its last frame
         // Real last frame = the last frame before the end settle (so the next continuous clip does not start from a frozen pose).
         firstFrame(run.path(clip), run.path(`${shot.id}-first.png`));
@@ -124,10 +140,12 @@ if (!remix) {
         const later = (n) => plan.shots.slice(plan.shots.findIndex((x) => x.id === shot.id) + 1).some((x) => x.start.entities.some((e) => e.name === n));
         for (const req of memory.persist(shot)) if (!E[req.name]?.fixture_of && later(req.name) && (req.from_anchor || req.from_frame)) await versionAnchor(run, plan, memory, req);
         log.done[shot.id] = true;
+        afterShot({ files: [`${shot.id}.mp4`, `${shot.id}-last.png`] });
         stamp(); page();
       } catch (e) {
         console.error(`  scene ${k + 1} shot ${shot.id}: ${e.message}`);
         log.errors.push({ scene: k + 1, shot: shot.id, error: String(e.message), cause: String(e.cause?.message ?? e.cause ?? ""), at: String(e.stack).split("\n").slice(1, 4).join(" | ") }); stamp();
+        if (e instanceof StopRun) { log.stopped = String(e.message); stamp(); page(); console.log(`STOP: ${e.message}`); break; }
         if (/402|budget/.test(String(e))) { page(); process.exit(2); }
         break;
       }
@@ -142,6 +160,7 @@ if (!remix) {
 
   // 4. Stitch: trims at continuous joins, xfade on continuous joins, hard cuts; measures before (hard concat) and after.
   await step("stitch", async () => {
+  (await gate("stitch", "trims, joins and seam measures", {}))({});
   const ids = scenes.flat().map((s) => s.id).filter((id) => run.has(`${id}.mp4`));
   const links = ids.map((id) => plan.shots.find((s) => s.id === id).link);
   const clipsIn = ids.map((id) => ({ id, file: run.path(`${id}.mp4`), location: plan.shots.find((s) => s.id === id).location }));
@@ -171,6 +190,7 @@ if (!remix) {
 // 5. Audio agent: cue sheet (cues.json, editable; --remix re-renders from it) → beds → score → VO → mix → final.mp4.
 const timeline = log.stitch?.timeline || [];
 await step("audio", async () => {
+  (await gate("audio", "cue sheet → beds, score, voiceover, mix", {}))({});
   // A fresh run rebuilds cues.json from the plan and timeline; --remix keeps the edited file.
   const audio = await renderAudio(run, { plan, timeline, picture: "picture.mp4", out: "final.mp4", cues: remix ? undefined : cueSheet(plan, timeline, run.path("cues.json")) });
   log.cues = audio.cues;
@@ -184,9 +204,12 @@ stamp();
 // 6. Judge on the compiled cut (stale when the timeline changed; --rejudge forces it).
 const stale = !log.judge || JSON.stringify((log.judge.shots || []).map((s) => s.id)) !== JSON.stringify(timeline.map((t) => t.id));
 if (!remix || stale || rejudge) await step("judge", async () => {
+  (await gate("judge", "VLM scoring of the compiled cut", {}))({});
   const ids = timeline.map((t) => t.id);
   log.judge = await judgeCut(run, plan, { shots: ids.map((id) => ({ id, clip: `${id}.mp4`, strip: `${id}-strip.jpg`, startFrame: log.jobs[`clip:${id}`]?.start, lastFrame: `${id}-last.png`, link: plan.shots.find((s) => s.id === id).link })) });
 });
 stamp(); page();
 console.log(JSON.stringify({ credits: log.total_credits, ledger: log.ledger_spent, elapsed_s: log.elapsed_s, errors: log.errors, reward: log.judge?.reward, joins: log.measures?.after?.joins }, null, 1));
+sup?.finish({ credits: log.total_credits, elapsed_s: log.elapsed_s, reward: log.judge?.reward, stopped: log.stopped });
 console.log(`page: ${run.path("index.html")}`);
+if (sup) console.log("  test machine still serving; ctrl-c to close.");
