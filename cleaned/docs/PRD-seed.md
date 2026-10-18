@@ -1,6 +1,6 @@
 # PRD — Seed: asset bank + starting seeds + ground plans
 
-> Not built. Stage 0, before the sequencer. Tickets: `tickets/A-*`.
+> Generated places: built (B-008), first run R-005. User uploads (A-001, A-002): not built. Tickets: `tickets/A-*`, B-008.
 
 ## 1. Thesis
 
@@ -37,6 +37,17 @@ stage 1 (tracker, builder, verifier) — edit prompts also carry the place's gro
 ```
 - **Intended** plan: written by A1 before the plate exists (drives the plate prompt).
 - **Observed** plan: read from the plate by A3. The observed plan wins; the LLM plans against the picture, not against its intent.
+
+## 3b. As built (B-008)
+
+- One LLM pass after the story writes every place's plan: `camera`, `marks[{ id, name, where, size, faces, key }]` (directed parts
+  are their own marks: `bed.head`, `bed.foot`), `doors[{ mark, leads_to }]`, `light`, and character `scale`. Rules: camera terms
+  only (left/centre/right, near/middle/far, which wall), sizes relative to a grown person, every door leads somewhere, a clear
+  floor path between the marks the story uses.
+- The plate prompt is the plan, mark by mark. Vision answers per mark: visible, matches, observed_where. A missing or misplaced
+  key mark regenerates the plate with the misses as a note (≤ 3 tries); the best try is kept.
+- Canonical marks = the plate's answers; marks the plate does not show are dropped, so steps cannot use them.
+- The seed is only for seeding: after the first frame of a place, the frames carry everything.
 
 ## 4. Decisions
 

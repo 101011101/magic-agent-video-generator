@@ -1,5 +1,5 @@
 # A-003 — Observed ground plans from plates
-**Status:** open
+**Status:** in-progress (generated places: B-008; user-uploaded places still open)
 **Cost:** 0 (LLM vision only)
 **Blocked by:** A-002
 

@@ -38,41 +38,39 @@
 ## 4. Pipeline
 
 ```
-prompt ──► [S1 Sequencer] ──► plan.json (entities, locations, slides)
-                                   │
-              ┌────────────────────┴───────────────────┐
-              ▼                                        ▼
-      [S2 Roots] entity sheets               location plates
-              │                                        │
-              └──────────────► [S3 Tracker] ◄──────────┘
-                                   │  base = latest frame at location
-                                   ▼
-                            [S4 Builder] edit: base + refs, keep all else
-                                   │
-                            [S5 Verifier] presence / absence / change
-                                   │  accept → tracker.add(observed)
-                                   ▼
-                            [S6 Slideshow] index.html
-                                   ▼
-                            (stage 2: clips between keyframes)
+prompt ──► [S1a World] style, entities, places, prose story
+                │
+                ▼
+          [S0 Seed] ground plan per place (marks: bed, bed.head, door…) ──► plate ──► vision check per mark
+                │      (≤ 3 plate tries; the observed marks are canonical: the picture wins)       │
+                ▼                                                                                   │
+          [S1b Blocking] one record per step against the marks; code folds the changes into state   │
+                │                                                                                   │
+      [S2 Roots] entity sheets                                               plates ◄───────────────┘
+                └──────────────► [S3 Tracker] base = latest frame at the location
+                                        ▼
+                                 [S4 Builder] edit: base + refs; prompt names only what changed
+                                        │
+                                 [S5 Verifier] focused questions + framing gate (SSIM, border)
+                                        ▼
+                                 [S6 Slideshow] index.html (seed, blocking, lineage)
 ```
 
 ## 5. Subsystems
 
+### S0 — Seed (`src/seed.js`, PRD-seed.md)
+- Used once per place, at the start. Ground plan → plate → per-mark vision check → canonical marks. After the first frame the
+  frames carry the state; the seed only names the marks the steps may use.
+
 ### S1 — Sequencer (`src/sequencer.js`)
-- **Input:** one natural-language prompt (and optionally a fixed world from another run, `--world`). **Output:** `plan.json`.
-- Three steps:
-  1. **Story** (LLM): the world (style, entities, places) and a plain prose story. A well-known tale follows its best-known version.
-  2. **Step script** (LLM): the prose rewritten in **ASD-STE100 style** (Simplified Technical English, as in aircraft manuals):
-     1–3 sentences per step, ≤ 20 words, one action, active voice, exact names. **One step = one change the camera sees**;
-     changes at different times are different steps. Each step lists every visible entity with `where` (relative to named
-     items) and `acting` (face and body). A move goes to a nearby position; an item in the way gets a waypoint step and a named
-     path. A character on screen who changes place gets an `exit` step and an `entry` step.
-  3. **Slides** (deterministic): one slide per step. The step text (`ste`), `cast` and `caption` stay on the slide; the
-     builder, verifier and the clip stage all read the same text.
-- **Lint** (deterministic): sentence length, sentence count, known names, acting present, exit/entry on a place change (a time
-  jump excuses it only for a character absent from the previous step). Violations go back to the LLM once for a rewrite;
-  what remains is shown on the page.
+- **World** (LLM): style, entities, places and a plain prose story (best-known version of a known tale, climax and feelings shown).
+- **Blocking** (LLM, after the seed): one record per step, like stage blocking: `beats[{ actor, action, to, via, object, pose,
+  expression }]`, `change{ mark, state }`, `caption`. Marks come from the canonical seed. Only changes are written.
+- **Fold and lint** (code): the beats are folded into the full state (who is where, holding what, feeling what). Lint: marks exist,
+  ≤ 2 beats per step, enter/exit at door marks, exit before a character on screen appears elsewhere, pose and expression on
+  arrival, pick-up/put-down consistency. One rewrite; what remains is shown on the page.
+- **Slides** (code): one per step. The action sentence is generated from the record; the caption is the only free text.
+- Runs saved with the STE step script (B-007) or the first one-call plan re-run from their saved plan.
 
 ### S2 — Roots (`src/roots.js`)
 - One text-to-image call per entity (reference sheet on a plain background) and per location (empty plate with fixtures).
@@ -88,6 +86,8 @@ prompt ──► [S1 Sequencer] ──► plan.json (entities, locations, slides
 - `hops` counts edits since the plate, so drift can be measured and bounded later.
 
 ### S4 — Builder (`src/builder.js`)
+- Blocking slides: the prompt names only the changed actors (mark, path, pose, expression), adds, removes and the change;
+  everything else is "as in image 1", including zoom, crop and border. Style drops "film still" / "16:9" (they push full-bleed).
 - `add = present − base.present`, `remove = base.present − present`, `keep = present ∩ base.present`.
 - One image-editor call: image 1 = base; then the roots of the added entities; then identity roots of kept characters
   (at most 10 images).
@@ -97,7 +97,10 @@ prompt ──► [S1 Sequencer] ──► plan.json (entities, locations, slides
   (1 + 1). The best attempt is kept; if none passes, it is used and flagged `forced`.
 
 ### S5 — Verifier (`src/verify.js`)
-- One vision call per attempt. For every entity in `present ∪ base.present`, it reports present or absent and a count.
+- Blocking slides (`verifyStep`): presence for characters and groups and for props the step uses; per changed actor, at its mark /
+  pose / expression; the change; single frame; physically impossible? Plus the framing gate (`clips.js`): SSIM to the base
+  < 0.70 or a corner shift ≥ 10 rejects the edit (calibrated on custom-rrh1: normal 0.78–0.98, re-paints 0.08–0.61).
+- Older slides: one vision call per attempt. For every entity in `present ∪ base.present`, it reports present or absent and a count.
   It also reports whether the `change` is visible and whether the frame is a single image (not a grid).
 - Pass = every wanted entity present (a character exactly once), every removed one absent, the change visible,
   a single frame, and (step-script slides) each character's position and acting as written. Expression comes from the slide
