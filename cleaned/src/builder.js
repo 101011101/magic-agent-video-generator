@@ -78,7 +78,10 @@ export async function buildSlide(slide, { plan, tracker, jobs, run }) {
     attempts.push(att);
     console.log(`  slide ${slide.n} try ${a}: base ${base.id}, +[${add}] -[${remove}]${change ? " Δ" : ""} → ${f.length ? f.map((x) => `${x.id || ""} ${x.kind}`.trim()).join(", ") : "pass"}`);
     const gain = add.some((id) => present.includes(id));
-    if (!best || f.length < best.faults.length) best = { ...att, gain };
+    // A forced slide keeps the least-bad attempt. A re-painted picture (framing, grid) is the worst fault: every later frame at
+    // the place inherits it (custom-rrh2 slide 12 kept a new room over two tries that only duplicated Red).
+    const cost = (fs) => fs.reduce((n, x) => n + (/^framing changed|^not a single frame/.test(x.kind) ? 10 : 1), 0);
+    if (!best || cost(f) < cost(best.faults)) best = { ...att, gain };
     if (!f.length) break;
     retryNote = f.map((x) => (x.id ? `${plan.entities.find((e) => e.id === x.id).name} ${x.kind}` : x.kind)).join("; ") + (obs.problems ? `; ${obs.problems}` : "");
     // Build on a partial success: it already holds some of what was added (and the change, if visible).
