@@ -8,10 +8,11 @@ export function rootPrompt(plan, thing, kind) {
   return `${plan.style}. ${SINGLE} Character reference of ${thing.name}: ${thing.look} ${who}, front view, standing, neutral pose, plain light grey background, even soft light.`;
 }
 
-export async function makeRoots(plan, jobs, tracker) {
+// places: false when the seed makes the plates (S0); entity sheets are made here either way.
+export async function makeRoots(plan, jobs, tracker, { places = true } = {}) {
   const work = [
     ...plan.entities.map((e) => ({ id: e.id, kind: "entity", file: `roots/${e.id}.png`, prompt: rootPrompt(plan, e, "entity") })),
-    ...plan.locations.map((l) => ({ id: l.id, kind: "location", file: `roots/${l.id}.png`, prompt: rootPrompt(plan, l, "location") })),
+    ...(places ? plan.locations : []).map((l) => ({ id: l.id, kind: "location", file: `roots/${l.id}.png`, prompt: rootPrompt(plan, l, "location") })),
   ];
   await Promise.all(work.map(async (w) => {
     await jobs.image(`root-${w.id}`, w.file, w.prompt);

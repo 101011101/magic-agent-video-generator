@@ -41,6 +41,15 @@ export function renderPage({ name, prompt, plan, tracker, log, credits }) {
     <p class="meta">● observed present · ✕ wanted but not observed · red cell = observation differs from the plan</p>`;
   const roots = [...plan.entities.map((e) => [e.name, tracker.roots[e.id]]), ...plan.locations.map((l) => [l.name, tracker.frames.find((f) => f.op === "plate" && f.location === l.id)?.file])]
     .map(([n, f]) => `<figure>${img(f, "mid")}<figcaption>${esc(n)}</figcaption></figure>`).join("");
+  // Seed (S0): each place's plate tries and its marks, intended vs canonical (the picture's answer wins).
+  const seedHtml = !plan.seed ? "" : `<h2>Seed: ground plans and plates</h2>${Object.entries(plan.seed).map(([id, p]) => `
+    <section class="lin"><h3>${esc(plan.locations.find((l) => l.id === id)?.name || id)} <small>${p.tries} plate tr${p.tries === 1 ? "y" : "ies"}${p.unresolved?.length ? ` · <span class="bad">still off: ${esc(p.unresolved.join(", "))}</span>` : ' · <span class="ok">key marks match</span>'}</small></h3>
+    <div class="row">${Array.from({ length: p.tries }, (_, k) => k === 0 ? `roots/${id}.png` : `roots/${id}-t${k + 1}.png`).map((f) => `<figure>${img(f, f === p.plate ? "mid" : "th")}<figcaption>${f === p.plate ? "canonical plate" : "rejected try"}</figcaption></figure>`).join("")}</div>
+    <p class="meta">camera: ${esc(p.camera)} · light: ${esc(p.light)}${p.doors.length ? ` · doors: ${p.doors.map((d) => `${esc(d.mark)} → ${esc(d.leads_to)}`).join("; ")}` : ""}</p>
+    <table><tr><th>mark</th><th>where (canonical)</th><th>intended</th><th>size</th></tr>${p.marks.map((m) => `<tr><td>${esc(m.id)}${m.key ? " ★" : ""}</td><td style="text-align:left">${esc(m.where)}</td><td style="text-align:left" class="${m.intended && m.intended !== m.where ? "badc" : ""}">${esc(m.intended && m.intended !== m.where ? m.intended : "same")}</td><td>${esc(m.size)}</td></tr>`).join("")}</table></section>`).join("")}
+    <p class="meta">★ key mark (the story uses it) · red = the plate put it elsewhere, so the steps use the plate's answer</p>`;
+  const blocking = !plan.steps ? "" : `<h2>Blocking (all ${plan.slides.length} steps)</h2><table><tr><th>step</th><th>place</th><th>kind</th><th style="text-align:left">action (generated from the record)</th><th style="text-align:left">caption</th></tr>${plan.slides.map((s) => `<tr><td>${tracker.bySlide(s.n) ? `<a href="#lin-${s.n}">${s.n}</a>` : s.n}</td><td>${esc(s.location)}</td><td>${esc(s.kind)}${s.time_jump ? " ⏭" : ""}</td><td style="text-align:left">${s.ste.map(esc).join(" ")}</td><td style="text-align:left">${esc(s.caption)}</td></tr>`).join("")}</table>
+    ${plan.lint?.length ? `<p class="bad">Rules still broken after one rewrite: ${plan.lint.map(esc).join("; ")}</p>` : `<p class="meta">Blocking passed every rule check.</p>`}`;
   const passed = slides.filter((x) => !x.f.forced).length, first = slides.filter((x) => x.f.attempts.length === 1 && !x.f.forced).length;
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(plan.title)} slideshow</title>
 <style>
@@ -66,11 +75,14 @@ table{border-collapse:collapse;font-size:13px;display:block;overflow-x:auto} td,
 <div class="bar"><button id="prev">←</button><button id="next">→</button><span id="num" class="meta"></span><div class="dots" id="dots"></div></div>
 <p class="capbig" id="cap"></p><p class="ste" id="ste"></p><p class="meta" id="sub"></p>
 ${filmHtml}
+${seedHtml}
+${blocking}
 <h2>Lineage</h2>${lineage}
 <h2>Presence (observed)</h2>${matrix}
 <h2>Roots</h2><div class="grid">${roots}</div>
 <p class="meta">style: ${esc(plan.style)}</p>
-${plan.story ? `<h2>Story (prose → step script)</h2><p>${esc(plan.story)}</p>${plan.lint?.length ? `<p class="bad">Step-script rules still broken: ${plan.lint.map(esc).join("; ")}</p>` : `<p class="meta">Step script passed every rule check.</p>`}` : ""}
+${plan.story && plan.steps ? `<h2>Story (prose → seed → blocking)</h2><p>${esc(plan.story)}</p>` : ""}
+${plan.story && !plan.steps ? `<h2>Story (prose → step script)</h2><p>${esc(plan.story)}</p>${plan.lint?.length ? `<p class="bad">Step-script rules still broken: ${plan.lint.map(esc).join("; ")}</p>` : `<p class="meta">Step script passed every rule check.</p>`}` : ""}
 </main><script>
 const S=${JSON.stringify(slides.map(({ s, f }) => ({ n: s.n, file: f.file, cap: s.caption, sub: `${s.location}${f.forced ? " · forced" : ""}`, ste: s.ste ? s.ste.join(" ") : "", link: L[s.n] })))};
 let i=0;const $=(x)=>document.getElementById(x);

@@ -17,6 +17,21 @@ export function ssim(a, b) {
   return m ? Math.round(Number(m[1]) * 1000) / 1000 : null;
 }
 
+// Darkest of the four corner patches (mean luma, 0–255), at 688×384. A painted edge on white paper reads ≈ 254; full bleed lower.
+export function corners(file) {
+  const W = 688, H = 384, p = execFileSync("ffmpeg", ["-loglevel", "error", "-i", file, "-vf", `scale=${W}:${H},format=gray`, "-f", "rawvideo", "-"], { maxBuffer: 1 << 24 });
+  const at = (x, y) => { let s = 0; for (let j = 0; j < 10; j++) for (let i = 0; i < 10; i++) s += p[(y + j) * W + x + i]; return s / 100; };
+  return Math.round(Math.min(at(2, 2), at(W - 12, 2), at(2, H - 12), at(W - 12, H - 12)));
+}
+
+// Framing gate for an edit: did the editor re-paint the whole picture (zoom, crop, border) instead of changing part of it?
+// Calibrated on custom-rrh1 (38 edits): normal edits 0.78–0.98 SSIM to their base; whole re-paints 0.08–0.61, or the border flips.
+export const FRAMING = { minSsim: 0.7, maxCornerShift: 10 };
+export function framing(file, base) {
+  const s = ssim(file, base), c = Math.abs(corners(file) - corners(base));
+  return { ssim: s, corner_shift: c, changed: (s !== null && s < FRAMING.minSsim) || c >= FRAMING.maxCornerShift };
+}
+
 // First frame vs the start keyframe; last frame vs the end keyframe (connected) or vs the start keyframe (cut: how far the
 // unpinned clip drifted from its own keyframe — V-006).
 export function check(video, { start, end, path, key }) {

@@ -1,15 +1,19 @@
-// Stage 1 pipeline: prompt → plan (S1) → roots (S2) → per slide: base (S3) → edit (S4) → verify (S5) → slideshow (S6).
-// Stage 2 (--video): one clip per slide (V1–V5, src/film.js) → final.mp4.
+// Pipeline: prompt → world + story (S1) → seed: ground plans and verified plates (S0) → blocking (S1) → roots (S2) →
+// per slide: base (S3) → edit (S4) → verify (S5) → slideshow (S6). Stage 2 (--video): one clip per slide → final.mp4.
+// Runs saved with the older step script (or the first one-call plan) re-run from their saved plan.
 // Usage: node cleaned/run.mjs --case goldilocks [--label v1] [--slides N] [--video] [--clips 2,8] [--estimate]
 //   --prompt "…"  use a prompt instead of a case;  --slides N  build only the first N slides;  --estimate  spend nothing
+//   --first-frames  build only the first slide of each place (checks the seed: plates and the first state of every place)
 //   --video  also make the clips;  --clips 2,8  only these slides' clips (probe; no stitch until every clip exists)
-//   --world <run>  reuse that run's world (style, entities, places) and its root images: no new roots are paid for
+//   --world <run>  reuse that run's world and root images (saved-plan runs only)
+//   --entities-from <run>  reuse only that run's characters and props and their sheets; places, seed and story are new
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, RUNS } from "./src/env.js";
 import { usage, MODEL } from "./src/llm.js";
 import { Jobs, CAP, IMAGE } from "./src/jobs.js";
-import { sequence, check } from "./src/sequencer.js";
+import { writeWorld, block, check } from "./src/sequencer.js";
+import { seedPlan, makeSeed } from "./src/seed.js";
 import { makeRoots } from "./src/roots.js";
 import { Tracker } from "./src/tracker.js";
 import { buildSlide } from "./src/builder.js";
@@ -19,6 +23,7 @@ import { renderFilm } from "./src/film-page.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0)), VIDEO_ON = args.includes("--video");
+const firstFrames = args.includes("--first-frames");
 const clipsOnly = opt("--clips", null)?.split(",").map(Number) || null;
 const caseId = opt("--case", "custom"), label = opt("--label", "v1");
 const prompt = opt("--prompt", null) ?? JSON.parse(readFileSync(join(ROOT, "cases/cases.json"), "utf8")).find((c) => c.id === caseId)?.prompt;
@@ -33,31 +38,51 @@ Object.assign(run.log, { name, prompt, models: { llm: MODEL, image: IMAGE }, cap
 const jobs = new Jobs(run, { estimate }), tracker = new Tracker(run);
 const t0 = Date.now();
 
-// --world: the other run's world and roots. Root jobs are copied with their signatures, so makeRoots finds them cached.
-const worldRun = opt("--world", null);
+// --world: the other run's world and roots; --entities-from: its characters and props only. Root jobs are copied with their
+// signatures, so makeRoots finds them cached and pays nothing.
+const worldRun = opt("--world", null), entRun = opt("--entities-from", null);
 let given = null;
-if (worldRun) {
-  const src = join(RUNS, worldRun), wl = JSON.parse(readFileSync(join(src, "run.json"), "utf8"));
-  given = { title: wl.plan.title, style: wl.plan.style, entities: wl.plan.entities, locations: wl.plan.locations };
-  for (const [k, j] of Object.entries(wl.jobs)) if (k.startsWith("root-") && !run.log.jobs?.[k]) {
+for (const from of [worldRun, entRun].filter(Boolean)) {
+  const src = join(RUNS, from), wl = JSON.parse(readFileSync(join(src, "run.json"), "utf8")), ents = new Set(wl.plan.entities.map((e) => e.id));
+  given = from === worldRun ? { title: wl.plan.title, style: wl.plan.style, entities: wl.plan.entities, locations: wl.plan.locations }
+    : { style: wl.plan.style, entities: wl.plan.entities };
+  for (const [k, j] of Object.entries(wl.jobs)) if (k.startsWith("root-") && (from === worldRun || ents.has(k.slice(5))) && !run.log.jobs?.[k]) {
     copyFileSync(join(src, j.file), join(dir, j.file));
-    (run.log.jobs ??= {})[k] = { ...j, from: worldRun, credits: 0 };
+    (run.log.jobs ??= {})[k] = { ...j, from, credits: 0 };
   }
-  run.log.world_from = worldRun;
+  run.log[from === worldRun ? "world_from" : "entities_from"] = from;
 }
 
-console.log(`${name}: sequencing…`);
-const plan = run.log.plan ? check(run.log.plan) : await sequence(prompt, given);
-if (plan.lint?.length) console.log(`  step-script rules still broken after one rewrite:\n  - ${plan.lint.join("\n  - ")}`);
-run.log.plan = plan; run.save();
-console.log(`  ${plan.title}: ${plan.entities.length} entities, ${plan.locations.length} locations, ${plan.slides.length} slides`);
-for (const s of plan.slides) console.log(`  ${s.n}. [${s.location}]${s.kind ? ` ${s.kind}` : ""} {${s.present.join(", ")}}${s.continues ? " (continues)" : ""}${s.change ? ` Δ ${s.change}` : ""}${s.ste ? `\n      ${s.ste.join(" ")}` : ""}`);
-
-const page = () => { if (!estimate) writeFileSync(join(dir, "index.html"), renderPage({ name, prompt, plan, tracker, log: run.log, credits: jobs.spent() })); };
+let plan = run.log.plan ? check(run.log.plan) : null;
+const page = () => { if (!estimate && plan) writeFileSync(join(dir, "index.html"), renderPage({ name, prompt, plan, tracker, log: run.log, credits: jobs.spent() })); };
 try {
-  console.log("roots…");
-  await makeRoots(plan, jobs, tracker);
-  for (const s of (only ? plan.slides.slice(0, only) : plan.slides)) {
+  if (!plan && worldRun) throw new Error("--world reuses an older run's world for its saved plan; new runs use --entities-from");
+  if (!plan) {
+    // Story → seed (ground plans, verified plates; the picture wins) → blocking against the canonical marks.
+    console.log(`${name}: story…`);
+    const world = run.log.world ??= await writeWorld(prompt, given); run.save();
+    console.log("seed plan…");
+    const sp = run.log.seed_plan ??= await seedPlan(world, world.story); run.save();
+    console.log("roots and seed plates…");
+    await makeRoots(world, jobs, tracker, { places: false });
+    const seed = await makeSeed({ style: world.style, locations: world.locations, seed: sp }, jobs, tracker, { estimate });
+    run.log.seed = seed; run.save();
+    console.log("blocking…");
+    plan = await block(world, seed);
+    plan.seed = seed;
+  } else {
+    console.log(`${name}: plan from run.json; roots…`);
+    await makeRoots(plan, jobs, tracker, { places: !plan.seed });
+    if (plan.seed) for (const [id, p] of Object.entries(plan.seed)) tracker.addPlate(id, p.plate);
+  }
+  if (plan.lint?.length) console.log(`  rules still broken after one rewrite:\n  - ${plan.lint.join("\n  - ")}`);
+  run.log.plan = plan; run.save();
+  console.log(`  ${plan.title}: ${plan.entities.length} entities, ${plan.locations.length} locations, ${plan.slides.length} slides`);
+  for (const s of plan.slides) console.log(`  ${s.n}. [${s.location}]${s.kind ? ` ${s.kind}` : ""} {${s.present.join(", ")}}${s.continues ? " (continues)" : ""}${s.change ? ` Δ ${s.change}` : ""}${s.ste ? `\n      ${s.ste.join(" ")}` : ""}`);
+
+  const firsts = new Set(plan.locations.map((l) => plan.slides.find((s) => s.location === l.id)?.n).filter(Boolean));
+  const todo = firstFrames ? plan.slides.filter((s) => firsts.has(s.n)) : only ? plan.slides.slice(0, only) : plan.slides;
+  for (const s of todo) {
     console.log(`slide ${s.n}: ${s.caption}`);
     await buildSlide(s, { plan, tracker, jobs, run });
     page();
