@@ -93,3 +93,20 @@ addEventListener("keydown",(e)=>{if(e.key==="ArrowRight")show(i+1);if(e.key==="A
 if(S.length)show(0);
 </script></body></html>`;
 }
+
+// Asset bank review page: every sheet with its tries and the checks (A0).
+export function renderAssets({ name, world, assets, credits }) {
+  const card = (a) => `<section class="lin"><h3>${esc(a.name)} <small>${esc(a.kind)} · ${a.ok ? '<span class="ok">checks pass</span>' : '<span class="bad">checks still fail</span>'}${a.set && !(a.set.style_matches_set && a.set.scale_ok) ? ` · <span class="bad">set: ${esc(a.set.note)}</span>` : ""}</small></h3>
+    <p class="meta">${esc(a.spec)}${a.height ? ` <b>Height:</b> ${esc(a.height)}` : ""}</p>
+    <div class="row">${a.tries.map((t) => `<figure><img class="${t.file === a.file ? "mid" : "th"}" src="${esc(t.file)}" alt=""><figcaption>${t.file === a.file ? "<b>canonical</b>" : "try " + t.t} · ${t.ok ? '<span class="ok">ok</span>' : `<span class="bad">${esc([t.chk && !t.chk.single_subject && "not single", t.chk && !t.chk.plain_background && "background", t.chk && !t.chk.matches_spec && t.chk.misses].filter(Boolean).join("; "))}</span>`}</figcaption></figure>`).join("")}</div></section>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(world.title)} assets</title>
+<style>:root{--bg:#fafaf8;--fg:#1b1b1b;--mut:#6b6b6b;--line:#e2e2dc;--ok:#1f7a3a;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--fg:#ececec;--mut:#9a9a9a;--line:#2c2c2c;--ok:#5bc27a;--bad:#ff7b72}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}main{max-width:1100px;margin:0 auto;padding:16px}
+.meta{color:var(--mut);font-size:13px}.ok{color:var(--ok)}.bad{color:var(--bad)}.lin{border-top:1px solid var(--line);padding:10px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}figure{margin:0}figcaption{font-size:12px;color:var(--mut);max-width:360px}
+img.mid{width:360px;max-width:100%;border-radius:6px}img.th{width:160px;border-radius:6px;opacity:.85}</style></head><body><main>
+<h1>${esc(world.title)}: asset bank</h1><p class="meta">${esc(name)} · ${Object.keys(assets).length} sheets · ${credits} credits · style: ${esc(world.style)}</p>
+<div class="row">${Object.values(assets).map((a) => `<figure><img class="th" src="${esc(a.file)}" alt=""><figcaption>${esc(a.name)}</figcaption></figure>`).join("")}</div>
+${Object.values(assets).map(card).join("")}</main></body></html>`;
+}

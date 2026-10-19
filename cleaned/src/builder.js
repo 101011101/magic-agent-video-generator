@@ -58,7 +58,10 @@ export async function buildSlide(slide, { plan, tracker, jobs, run }) {
   let base = base0, retryNote = "", best = null;
   for (let a = 1; a <= MAX; a++) {
     const add0 = slide.present.filter((id) => !base.present.includes(id));
-    const add = a > 1 && best?.gain ? add0.slice(0, 1) : add0;              // 1 + 1 after a partial success
+    // 1 + 1 only on top of a partial success (the rebased frame already holds the rest). From the original base every wanted
+    // entity is added with its sheet: custom-rrh2 s7-a2 retried from the plate with Grandmother only, and the editor invented
+    // the wolf, nightcap and tools from text.
+    const add = base !== base0 ? add0.slice(0, 1) : add0;
     const remove = base.present.filter((id) => !slide.present.includes(id));
     const keep = slide.present.filter((id) => base.present.includes(id));
     const change = base.changeDone ? "" : slide.change;                       // a change already made on the base is not redone
@@ -68,7 +71,7 @@ export async function buildSlide(slide, { plan, tracker, jobs, run }) {
     await jobs.image(`s${slide.n}-a${a}`, file, prompt, inputs);
     const ask = [...new Set([...slide.present, ...base.present])];
     const obs = run.estimate ? { entities: ask.map((id) => ({ id, present: slide.present.includes(id), count: 1, note: "" })), actors: [], change_visible: true, single_frame: true, problems: "" }
-      : blocking ? await verifyStep(run.path(file), { plan, slide, ask })
+      : blocking ? await verifyStep(run.path(file), { plan, slide, ask, sheets: Object.fromEntries(Object.entries(tracker.roots).map(([id, f]) => [id, run.path(f)])), added: add })
       : await verify(run.path(file), { plan, ask, change: slide.change, shows: slide.shows, cast: slide.cast });
     const f = blocking ? stepFaults(obs, { plan, wanted: slide.present, remove, slide }) : faults(obs, { plan, wanted: slide.present, remove, change: slide.change, cast: slide.cast });
     // Framing gate (blocking runs): an edit that re-paints the whole picture is rejected, whatever the vision check says.

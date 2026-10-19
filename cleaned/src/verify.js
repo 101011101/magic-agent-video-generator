@@ -40,7 +40,7 @@ export function faults(obs, { plan, wanted, remove, change, cast = null }) {
 // Blocking slides: focused questions, one per thing that changed. Presence is asked only for characters and groups, and for
 // props this step uses (tiny props are not reliably visible and must not fail a frame). Each changed actor is asked whether it
 // is at its mark (with the mark's canonical description), in its pose, with its expression. Plus physical sense.
-export async function verifyStep(file, { plan, slide, ask }) {
+export async function verifyStep(file, { plan, slide, ask, sheets = {}, added = [] }) {
   const byId = Object.fromEntries(plan.entities.map((e) => [e.id, e]));
   // Props are asked only when a beat handles them (picked up, put down, moved, brought in); a prop merely placed ("be") is not:
   // a tiny needle on a shelf failed custom-rrh2 s7-a2, a correct frame.
@@ -48,23 +48,29 @@ export async function verifyStep(file, { plan, slide, ask }) {
   const askP = ask.filter((id) => byId[id].kind !== "prop" || used.has(id));
   const beats = slide.beats.filter((b) => b.action !== "vanish" && byId[b.actor]?.kind !== "prop");
   const castOf = Object.fromEntries(slide.cast.map((c) => [c.id, c]));
+  // Identity: every character or group this step adds or changes is compared with its asset sheet (image 2, 3, …).
+  const idIds = [...new Set([...added, ...beats.map((b) => b.actor)])].filter((id) => byId[id]?.kind !== "prop" && sheets[id] && slide.present.includes(id)).slice(0, 8);
   const schema = S.obj({
     // One required property per id, so no answer can be skipped.
     entities: S.obj(Object.fromEntries(askP.map((id) => [id, S.obj({ present: S.bool, count: S.int })]))),
     actors: S.obj(Object.fromEntries(beats.map((b) => [b.actor, S.obj({ at_mark: S.bool, pose_ok: S.bool, expression_ok: S.bool, note: S.str })]))),
+    identity: S.obj(Object.fromEntries(idIds.map((id) => [id, S.obj({ same_character: S.bool, note: S.str })]))),
     change_visible: S.bool, single_frame: S.bool, impossible: S.bool, problems: S.str,
   });
-  const prompt = `This is a frame from an illustrated story. Answer from the picture only.
+  const prompt = `Image 1 is a frame from an illustrated story. Answer from image 1 unless a question names another image.
 Presence — for each, is it clearly visible, and how many times does it appear (a group counts once if complete)?
 ${askP.map((id) => `- ${id}: ${byId[id].name} (${byId[id].kind}) — ${byId[id].look}`).join("\n")}
 Actors — for each, answer three questions:
 ${beats.map((b) => `- ${b.actor}: at_mark: is ${byId[b.actor].name} ${castOf[b.actor]?.where || b.to_text}? pose_ok: is the body "${castOf[b.actor]?.acting.split("; ")[0] || b.pose}"? expression_ok: does the face read as "${castOf[b.actor]?.acting.split("; ").slice(1).join("; ") || b.expression}" (a smile is NOT ok for fear)?`).join("\n") || "- none: answer true for all."}
+Identity — ${idIds.length ? idIds.map((id, k) => `image ${k + 2} is the reference sheet of ${byId[id].name}`).join("; ") : "no sheets: answer nothing"}. For each, same_character:
+is the one in image 1 clearly the same character (face, hair style and colour, clothes and colours, build, species, art style)?
+Pose, expression and background may differ. note: what differs, or "".
 change_visible: ${slide.change ? `is this visible: "${slide.change}"?` : "true (no change to check)."}
-single_frame: true if this is one single picture (not a grid, collage, storyboard or a picture with text labels).
+single_frame: true if image 1 is one single picture (not a grid, collage, storyboard or a picture with text labels).
 impossible: true if anything is physically impossible: someone lying with the head at the foot end of a bed (the head end has the
 headboard and pillow), a body part where the body cannot be (a tail out of the far end of the covers), a body through furniture,
 something floating. problems: one short sentence naming what is wrong, or "".`;
-  const r = await jsonCall({ name: "verify-step", schema, prompt, images: [file], effort: "medium" });
+  const r = await jsonCall({ name: "verify-step", schema, prompt, images: [file, ...idIds.map((id) => sheets[id])], effort: "medium" });
   return {
     ...r,
     entities: ask.map((id) => (askP.includes(id) ? { id, ...r.entities[id] } : { id, present: true, count: 1, unasked: true })),
@@ -85,6 +91,7 @@ export function stepFaults(obs, { plan, wanted, remove, slide }) {
     if (!a.pose_ok) out.push({ id: a.id, kind: "wrong pose" });
     if (!a.expression_ok) out.push({ id: a.id, kind: "wrong expression" });
   }
+  for (const [id, v] of Object.entries(obs.identity || {})) if (!v.same_character) out.push({ id, kind: `not the same character${v.note ? ` (${v.note})` : ""}` });
   if (slide.change && !obs.change_visible) out.push({ id: null, kind: "change not visible" });
   if (!obs.single_frame) out.push({ id: null, kind: "not a single frame" });
   if (obs.impossible) out.push({ id: null, kind: `physically impossible${obs.problems ? `: ${obs.problems}` : ""}` });

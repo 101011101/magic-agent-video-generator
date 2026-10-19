@@ -7,6 +7,9 @@
 //   --video  also make the clips;  --clips 2,8  only these slides' clips (probe; no stitch until every clip exists)
 //   --world <run>  reuse that run's world and root images (saved-plan runs only)
 //   --entities-from <run>  reuse only that run's characters and props and their sheets; places, seed and story are new
+//   --plan-from <run>  reuse that run's world, story and ground plans (not its images); sheets come from the asset bank (A0)
+//   --redo-assets a,b  regenerate only these sheets (re-specced); the others are re-checked from their images, no credits
+//   --assets-only  stop after the asset bank (sheets checked one by one and as a set): writes assets.html for review
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, RUNS } from "./src/env.js";
@@ -15,6 +18,8 @@ import { Jobs, CAP, IMAGE } from "./src/jobs.js";
 import { writeWorld, block, check } from "./src/sequencer.js";
 import { seedPlan, makeSeed } from "./src/seed.js";
 import { makeRoots } from "./src/roots.js";
+import { specAssets, makeAssets } from "./src/assets.js";
+import { renderAssets } from "./src/page.js";
 import { Tracker } from "./src/tracker.js";
 import { buildSlide } from "./src/builder.js";
 import { renderPage } from "./src/page.js";
@@ -23,7 +28,7 @@ import { renderFilm } from "./src/film-page.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0)), VIDEO_ON = args.includes("--video");
-const firstFrames = args.includes("--first-frames");
+const firstFrames = args.includes("--first-frames"), assetsOnly = args.includes("--assets-only"), planFrom = opt("--plan-from", null);
 const clipsOnly = opt("--clips", null)?.split(",").map(Number) || null;
 const caseId = opt("--case", "custom"), label = opt("--label", "v1");
 const prompt = opt("--prompt", null) ?? JSON.parse(readFileSync(join(ROOT, "cases/cases.json"), "utf8")).find((c) => c.id === caseId)?.prompt;
@@ -53,6 +58,10 @@ for (const from of [worldRun, entRun].filter(Boolean)) {
   run.log[from === worldRun ? "world_from" : "entities_from"] = from;
 }
 
+if (planFrom && !run.log.world) {
+  const pl = JSON.parse(readFileSync(join(RUNS, planFrom, "run.json"), "utf8"));
+  Object.assign(run.log, { world: pl.world, seed_plan: pl.seed_plan, plan_from: planFrom });
+}
 let plan = run.log.plan ? check(run.log.plan) : null;
 const page = () => { if (!estimate && plan) writeFileSync(join(dir, "index.html"), renderPage({ name, prompt, plan, tracker, log: run.log, credits: jobs.spent() })); };
 try {
@@ -63,8 +72,23 @@ try {
     const world = run.log.world ??= await writeWorld(prompt, given); run.save();
     console.log("seed plan…");
     const sp = run.log.seed_plan ??= await seedPlan(world, world.story); run.save();
-    console.log("roots and seed plates…");
-    await makeRoots(world, jobs, tracker, { places: false });
+    if (entRun) await makeRoots(world, jobs, tracker, { places: false });   // reused sheets (copied jobs, cached)
+    else {
+      // A0 asset bank: spec every tracked thing against the others, then a checked sheet each.
+      console.log("asset bank…");
+      // --redo-assets a,b: re-spec and regenerate only these; every other sheet is re-checked from its existing tries.
+      const redo = opt("--redo-assets", null)?.split(",").filter(Boolean);
+      if (redo?.length && run.log.asset_specs) {
+        const fresh = await specAssets({ ...world, entities: world.entities.filter((e) => redo.includes(e.id)) });
+        run.log.asset_specs = run.log.asset_specs.map((a) => fresh.find((f) => f.id === a.id) || a);
+      }
+      const specs = run.log.asset_specs ??= await specAssets(world); run.save();
+      const keep = redo ? Object.fromEntries(Object.entries(run.log.assets || {}).filter(([id]) => !redo.includes(id))) : {};
+      run.log.assets = await makeAssets(world, specs, jobs, tracker, { estimate, keep }); run.save();
+      if (!estimate) writeFileSync(join(dir, "assets.html"), renderAssets({ name, world, assets: run.log.assets, credits: jobs.spent() }));
+      if (assetsOnly) throw Object.assign(new Error("assets only: stopped after the asset bank"), { stop: true });
+    }
+    console.log("seed plates…");
     const seed = await makeSeed({ style: world.style, locations: world.locations, seed: sp }, jobs, tracker, { estimate });
     run.log.seed = seed; run.save();
     console.log("blocking…");
@@ -92,7 +116,7 @@ try {
     const f = await film({ plan, tracker, jobs, run, only: clipsOnly });
     page(); writeFileSync(join(dir, "film.html"), renderFilm({ name, plan, film: f, credits: jobs.spent() }));
   }
-} catch (e) { run.log.errors.push(String(e.stack || e)); console.error(`stopped: ${e.message}`); }
+} catch (e) { if (!e.stop) run.log.errors.push(String(e.stack || e)); console.error(`stopped: ${e.message}`); }
 
 const frames = tracker.frames.filter((f) => f.op === "edit");
 run.log.summary = { slides: frames.length, passed: frames.filter((f) => !f.forced).length, first_try: frames.filter((f) => !f.forced && f.attempts.length === 1).length,

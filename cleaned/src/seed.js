@@ -42,15 +42,15 @@ export async function seedPlan(world, story) {
 
 // The plate prompt is the plan itself, mark by mark.
 export const platePrompt = (style, loc, gp, note = "") => `${frameStyle(style)}. One single image, not a grid, collage or storyboard. No text or labels.
-Establishing view of ${loc.name}, empty of people and animals. Camera: ${gp.camera}.
-Exactly this layout, from this camera:
+Establishing view of ${loc.name}, empty of people and animals. ${loc.look}
+Camera: ${gp.camera}. A full, lived-in, richly painted place in this style (not a sparse diagram), with exactly this layout:
 ${gp.marks.map((m) => `- ${m.name}: ${m.where}${m.size ? `; ${m.size}` : ""}${m.faces ? `; ${m.faces}` : ""}`).join("\n")}
 ${gp.doors.length ? `Doors: ${gp.doors.map((d) => `${gp.marks.find((m) => m.id === d.mark)?.name || d.mark} leads to ${d.leads_to}`).join("; ")}.\n` : ""}Light: ${gp.light}.${note ? `\nThe last try got this wrong; fix it: ${note}` : ""}`;
 
 // One focused question per mark. observed_where is written in the same camera terms, from the picture. One required property
 // per mark id: in a free list the model once answered only the first mark (custom-rrh2 cottage try 1) and the rest read as missing.
 export async function observePlate(file, gp) {
-  const OBS = S.obj({ marks: S.obj(Object.fromEntries(gp.marks.map((m) => [m.id, S.obj({ visible: S.bool, matches: S.bool, observed_where: S.str })]))), problems: S.str });
+  const OBS = S.obj({ marks: S.obj(Object.fromEntries(gp.marks.map((m) => [m.id, S.obj({ visible: S.bool, matches: S.bool, observed_where: S.str })]))), impossible: S.bool, quality: S.int, problems: S.str });
   const r = await jsonCall({ name: "seed-observe", schema: OBS, images: [file], effort: "medium",
     prompt: `This picture is meant to show a place with this layout, from this camera (${gp.camera}).
 For each mark, look at the picture only and answer:
@@ -59,8 +59,10 @@ visible: the item (or part) is clearly in the picture. matches: it is where the 
 observed_where: where it really is, in camera terms (left / centre / right, near / middle / far, against which wall, next to which
 other mark). For a part with a direction (a bed's head and foot), say which end is which: the head is the end with the headboard
 and pillow. Write "" if not visible.
-problems: one short sentence on anything physically impossible (a door that leads nowhere, overlapping furniture), or "".` });
-  return gp.marks.map((m) => ({ id: m.id, ...r.marks[m.id], key: m.key, problems: r.problems }));
+impossible: true if anything is physically impossible: a door that could not open (it swings into a fireplace or furniture,
+it hangs from nothing, it leads nowhere), overlapping or floating furniture. problems: one short sentence naming it, or "".
+quality: 1-5, how rich, finished and in-style the painting is (5 = a finished storybook page; 1 = a sparse sketch or diagram).` });
+  return gp.marks.map((m) => ({ id: m.id, ...r.marks[m.id], key: m.key, impossible: r.impossible, quality: r.quality, problems: r.problems }));
 }
 
 // Plates for every place: generate → observe → regenerate on a missing or contradicted key mark. The observed plan is canonical.
@@ -75,11 +77,15 @@ export async function makeSeed(plan, jobs, tracker, { estimate }) {
       await jobs.image(t === 1 ? `root-${loc.id}` : `root-${loc.id}-t${t}`, file, platePrompt(plan.style, loc, gp, note));
       if (estimate) { best = { file, obs: [], bad: [] }; break; }
       const obs = await observePlate(jobs.run.path(file), gp);
-      const bad = obs.filter((o) => o.key && (!o.visible || !o.matches));
-      console.log(`  plate ${loc.id} try ${t}: ${bad.length ? bad.map((o) => `${o.id} ${o.visible ? "misplaced" : "missing"}`).join(", ") : "key marks ok"}${obs[0]?.problems ? ` · ${obs[0].problems}` : ""}`);
-      if (!best || bad.length < best.bad.length) best = { file, obs, bad, t };
-      if (!bad.length) break;
-      note = bad.map((o) => `${o.id} must be: ${gp.marks.find((m) => m.id === o.id).where}${o.visible ? ` (it is: ${o.observed_where})` : " (missing)"}`).join("; ");
+      const bad = obs.filter((o) => o.key && (!o.visible || !o.matches)), imp = obs[0]?.impossible, q = obs[0]?.quality || 0;
+      console.log(`  plate ${loc.id} try ${t}: ${bad.length ? bad.map((o) => `${o.id} ${o.visible ? "misplaced" : "missing"}`).join(", ") : "key marks ok"}${imp ? ` · impossible: ${obs[0].problems}` : ""} · quality ${q}`);
+      // Best plate: correct layout first, then physically possible, then the better painting.
+      const rank = (x) => x.bad.length * 100 + (x.imp ? 50 : 0) - x.q;
+      const cur = { file, obs, bad, t, imp, q };
+      if (!best || rank(cur) < rank(best)) best = cur;
+      if (!bad.length && !imp && q >= 3) break;
+      note = [...bad.map((o) => `${o.id} must be: ${gp.marks.find((m) => m.id === o.id).where}${o.visible ? ` (it is: ${o.observed_where})` : " (missing)"}`),
+        imp ? `physically impossible: ${obs[0].problems}` : "", q < 3 ? "paint a full, finished storybook page, not a sparse sketch" : ""].filter(Boolean).join("; ");
     }
     // Canonical marks: the picture's answer where it saw the mark; marks it could not see are dropped (unusable by the steps).
     const marks = estimate ? gp.marks : gp.marks.filter((m) => best.obs.find((o) => o.id === m.id)?.visible)
