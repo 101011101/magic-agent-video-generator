@@ -9,14 +9,29 @@ const MAX = 3, SLOTS = 10;
 
 // Blocking slides: the prompt names only what changes (who moves, from which mark, to which mark, by which mark; pose and
 // expression), plus what is added or removed. Everyone else is "as in image 1", never restated, so the editor has less to redo.
-function blockPrompt(plan, slide, { add, remove, keep, change, retryNote }) {
+// References follow the state manager: the base frame already holds everyone in it (look, clothes, what they carry, where they
+// are), so an entity in the base gets NO reference. An entity added to the frame gets one image: the latest earlier frame that
+// shows it (its look as the story left it), or its sheet only the first time it ever appears (seeding). Passing sheets of
+// characters already in the frame made the editor redraw them: whole-picture re-paints and a second Red (G-006 P14, P17).
+function blockPrompt(plan, slide, { add, remove, change, retryNote, tracker }) {
   const ent = Object.fromEntries(plan.entities.map((e) => [e.id, e]));
   const loc = plan.locations.find((l) => l.id === slide.location), cast = Object.fromEntries(slide.cast.map((c) => [c.id, c]));
   const imgs = [], lines = [];
   let k = 2;
-  for (const id of add) { imgs.push(id); lines.push(`Add ${ent[id].name}: they must look exactly like image ${k++} (identity, face, fur or hair, clothing, colours, proportions; ignore that image's pose and plain background).`); }
-  const refKeep = keep.filter((id) => k <= SLOTS && ent[id].kind !== "prop" && slide.changed.includes(id));
-  for (const id of refKeep) { imgs.push(id); lines.push(`${ent[id].name} is already in image 1; image ${k++} is their identity reference — keep them looking like it.`); }
+  // Entities last seen in the same frame share that one image (it already holds them together, as the story left them).
+  const byFrame = new Map(), fresh = [];
+  for (const id of add) { const seen = tracker.lastSeen(id, slide.n); if (seen) byFrame.set(seen.id, [...(byFrame.get(seen.id) || []), id]); else fresh.push(id); }
+  for (const [fid, ids] of byFrame) {
+    if (k > SLOTS) break;
+    const names = ids.map((id) => ent[id].name).join(" and "), f = tracker.get(fid);
+    for (const id of ids) imgs.push({ id, file: f.file, from: fid });
+    lines.push(`Add ${names}: copy exactly how ${names} look${ids.length > 1 ? "" : "s"} in image ${k} (find them there: same face, hair or fur, clothes, colours, size, and anything worn or carried). Use only ${names} from image ${k++}; ignore the rest of it.`);
+  }
+  for (const id of fresh) {
+    if (k > SLOTS) break;
+    imgs.push({ id, file: tracker.roots[id], from: "sheet" });
+    lines.push(`Add ${ent[id].name}: they must look exactly like image ${k++} (identity, face, fur or hair, clothing, colours, proportions; ignore that image's pose and plain background).`);
+  }
   for (const id of remove) lines.push(`Remove ${ent[id].name} completely; show the place behind where they were.`);
   for (const b of slide.beats) {
     if (b.action === "vanish" || remove.includes(b.actor)) continue;
@@ -66,18 +81,19 @@ export async function buildSlide(slide, { plan, tracker, jobs, run }) {
     const keep = slide.present.filter((id) => base.present.includes(id));
     const change = base.changeDone ? "" : slide.change;                       // a change already made on the base is not redone
     const blocking = !!slide.beats;
-    const { prompt, imgs } = (blocking ? blockPrompt : editPrompt)(plan, slide, { base, add, remove, keep, change, retryNote });
-    const file = `frames/s${slide.n}-a${a}.png`, inputs = [base.file, ...imgs.map((id) => tracker.roots[id])];
+    const { prompt, imgs: raw } = (blocking ? blockPrompt : editPrompt)(plan, slide, { base, add, remove, keep, change, retryNote, tracker });
+    const imgs = raw.map((x) => (typeof x === "string" ? { id: x, file: tracker.roots[x], from: "sheet" } : x));
+    const file = `frames/s${slide.n}-a${a}.png`, inputs = [base.file, ...new Set(imgs.map((x) => x.file))];   // one image per shared frame
     await jobs.image(`s${slide.n}-a${a}`, file, prompt, inputs);
     const ask = [...new Set([...slide.present, ...base.present])];
     const obs = run.estimate ? { entities: ask.map((id) => ({ id, present: slide.present.includes(id), count: 1, note: "" })), actors: [], change_visible: true, single_frame: true, problems: "" }
-      : blocking ? await verifyStep(run.path(file), { plan, slide, ask, sheets: Object.fromEntries(Object.entries(tracker.roots).map(([id, f]) => [id, run.path(f)])), added: add })
+      : blocking ? await verifyStep(run.path(file), { plan, slide, ask, sheets: Object.fromEntries(Object.entries(tracker.roots).map(([id, f]) => [id, run.path(f)])), added: imgs.filter((x) => x.from === "sheet").map((x) => x.id) })
       : await verify(run.path(file), { plan, ask, change: slide.change, shows: slide.shows, cast: slide.cast });
     const f = blocking ? stepFaults(obs, { plan, wanted: slide.present, remove, slide }) : faults(obs, { plan, wanted: slide.present, remove, change: slide.change, cast: slide.cast });
     // Framing gate (blocking runs): an edit that re-paints the whole picture is rejected, whatever the vision check says.
     if (blocking && !run.estimate) { obs.framing = framing(run.path(file), run.path(base.file)); if (obs.framing.changed) f.push({ id: null, kind: `framing changed (SSIM ${obs.framing.ssim}, corners ${obs.framing.corner_shift})` }); }
     const present = obs.entities.filter((e) => e.present).map((e) => e.id);
-    const att = { a, file, base: base.id, base_file: base.file, add, remove, keep, change, refs: imgs.map((id) => ({ id, file: tracker.roots[id] })), prompt, obs, faults: f, present, hops: base.hops + 1 };
+    const att = { a, file, base: base.id, base_file: base.file, add, remove, keep, change, refs: imgs.map((x) => ({ id: x.id, file: x.file, from: x.from })), prompt, obs, faults: f, present, hops: base.hops + 1 };
     attempts.push(att);
     console.log(`  slide ${slide.n} try ${a}: base ${base.id}, +[${add}] -[${remove}]${change ? " Δ" : ""} → ${f.length ? f.map((x) => `${x.id || ""} ${x.kind}`.trim()).join(", ") : "pass"}`);
     const gain = add.some((id) => present.includes(id));

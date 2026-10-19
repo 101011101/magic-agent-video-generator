@@ -16,8 +16,10 @@
    shows*, not how they look.
 2. **Edit, do not regenerate.** A new keyframe = the latest frame that carries the wanted state + a few reference images,
    through an image editor told to keep everything else the same.
-3. **Additive build (1 + k, falling back to 1 + 1).** Missing entities are added from their clean reference sheets. If an edit
-   misses some, the next attempt adds only the ones still missing, on top of the frame that got the rest.
+3. **Deltas from the latest frame.** A new frame is the latest frame of its place, edited with only what changes. Anything
+   already in that frame gets no reference: the frame already holds it, with every change the story made to it. An element that
+   enters is taken from the latest frame that shows it (one shared image when several entering elements were last seen together);
+   its seed sheet is used only the first time it ever appears. After the frame is made, the tracker records what it shows.
 4. **Changes live in the latest frame.** A change to an entity (empty bowl, broken chair) is made once, on the frame where it
    happens. Later retrieval of that location returns that frame, so the change carries forward with no text state.
 5. **Observed, not intended.** What a frame shows is read back by a vision check after generation. The tracker records the
@@ -46,7 +48,7 @@ prompt ──► [S1a World] style, entities, places, prose story
                 ▼                                                                                   │
           [S1b Blocking] one record per step against the marks; code folds the changes into state   │
                 │                                                                                   │
-      [S2 Roots] entity sheets                                               plates ◄───────────────┘
+      [S2 Asset seed bank] sheets (first appearance only)                      plates ◄───────────────┘
                 └──────────────► [S3 Tracker] base = latest frame at the location
                                         ▼
                                  [S4 Builder] edit: base + refs; prompt names only what changed
@@ -72,13 +74,16 @@ prompt ──► [S1a World] style, entities, places, prose story
 - **Slides** (code): one per step. The action sentence is generated from the record; the caption is the only free text.
 - Runs saved with the STE step script (B-007) or the first one-call plan re-run from their saved plan.
 
-### S2 — Roots (`src/roots.js`)
-- One text-to-image call per entity (reference sheet on a plain background) and per location (empty plate with fixtures).
-- Roots are never edited. Every later edit that shows an entity can use its root, so identity never chains
-  generated → generated.
+### S2 — Asset seed bank (`src/assets.js`; older runs: `src/roots.js`)
+- Every asset the story mentions (characters, groups, props) gets a spec written against the whole set (one style, agreeing
+  sizes, the starting look only), one sheet on a plain background, a check per sheet, and a check of all sheets together.
+- **Seeding only.** A sheet is used the first time its asset appears; from then on the asset's context is the frames it is in.
+- Not built: the interaction matrix (A-005): which assets interact or contain each other (a house and its rooms, a character
+  and what it carries), and an LLM pass that adds the constraints those pairs need before anything is generated.
 
 ### S3 — Tracker (`src/tracker.js`)
 - Records frames: `{ id, file, slide, location, present[], base, refs[], op, hops, accepted }`.
+- `lastSeen(asset, slide)`: the latest accepted frame before the slide that shows the asset (any place).
 - Presence only. No pose, expression, position or condition.
 - `baseFor(slide)`: if `continues`, the previous slide's frame. Otherwise the **latest** accepted frame at the same location,
   because it carries the latest state of the place. An older frame that shows more wanted entities is not preferred: entities are
@@ -89,8 +94,9 @@ prompt ──► [S1a World] style, entities, places, prose story
 - Blocking slides: the prompt names only the changed actors (mark, path, pose, expression), adds, removes and the change;
   everything else is "as in image 1", including zoom, crop and border. Style drops "film still" / "16:9" (they push full-bleed).
 - `add = present − base.present`, `remove = base.present − present`, `keep = present ∩ base.present`.
-- One image-editor call: image 1 = base; then the roots of the added entities; then identity roots of kept characters
-  (at most 10 images).
+- One image-editor call: image 1 = base; then one image per entering asset: the latest frame that shows it (shared when
+  several were last seen together), or its seed sheet the first time it ever appears (at most 10 images). Assets already in the
+  base get no image (passing their sheets made the editor redraw them: whole-picture re-paints, a second Red; G-006).
 - The prompt says: keep image 1 the same (place, furniture, objects, light, camera) except for the listed adds, removes
   and the change.
 - Up to 3 attempts. After a partial success, the next attempt builds on the new frame and adds only what is still missing

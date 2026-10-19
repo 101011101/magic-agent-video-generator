@@ -15,8 +15,8 @@ const PLAN = S.obj({
   places: S.arr(S.obj({
     id: { type: "string", pattern: "^[a-z][a-z0-9-]*$" },
     camera: S.str,                                    // where the one camera stands and looks
-    marks: S.arr(S.obj({ id: MARK_ID, name: S.str, where: S.str, size: S.str, faces: S.str, key: S.bool })),
-    doors: S.arr(S.obj({ mark: MARK_ID, leads_to: S.str })),
+    marks: S.arr(S.obj({ id: MARK_ID, name: S.str, where: S.str, essential: S.str, area: S.bool, size: S.str, faces: S.str, key: S.bool })),
+    doors: S.arr(S.obj({ mark: MARK_ID, leads_to: S.str, swing: S.str })),
     light: S.str,
   })),
   scale: S.arr(S.obj({ id: { type: "string", pattern: "^[a-z][a-z0-9-]*$" }, height: S.str })),
@@ -24,45 +24,59 @@ const PLAN = S.obj({
 
 const PLAN_RULES = `Write the canonical GROUND PLAN of every place, from its one fixed camera. It is used once, to paint the empty place.
 - camera: where the camera stands and what it looks at (height, wide or close). Keep it simple: one wall-facing or corner view.
-- marks: every fixed item a character can be at, pass, or use, and every PART that has a direction. Ids are short: "bed",
+- marks: every fixed item a character can be at, pass, or use, and every PART that has a direction. Never the story's
+  characters or movable props (listed below): they are added to the frames later from their own sheets. Ids are short: "bed",
   "bed.head", "bed.foot", "door", "window", "hearth", "sewing-table", "path.near", "path.far". A part's id is "<item>.<part>".
   where: in camera terms only: left / centre / right, near (foreground) / middle / far (back wall), against which wall, and next
   to which other mark. Example: "bed.head: headboard against the LEFT wall, nearest the camera; pillow on it".
   size: relative to a grown person ("waist high", "as long as a person lying down"). faces: which way it opens or points, or "".
+  essential: the ONE fact the story needs about the mark, at most 12 words, camera terms only (side, wall, end), no relations to
+  other marks unless it is a part of one ("bed.head: against the back wall, pillow at this end"). Only essentials are checked.
+  area: true for floor zones and paths that are open space, not objects (they are kept clear, never painted as things).
   key: true for marks the story needs (the bed, its head, the door, anything a character uses).
+- doors: for each door, where it leads, and swing: which edge is hinged and where the open leaf rests, clear of everything
+  ("hinged on its far edge, opens inward and lies flat against the left wall toward the camera, away from the hearth").
 - The marks must be consistent with each other and with physics: sizes fit the room, a bed's head and foot are its two ends,
   every door leads somewhere (doors), a window is in a wall, nothing floats or overlaps, there is a clear floor path between
   the marks the story uses.
 - scale: every character and group, height relative to a grown person ("a small child, half a grown person").`;
 
 export async function seedPlan(world, story) {
-  return jsonCall({ name: "seed-plan", schema: PLAN, effort: "high",
-    prompt: `${PLAN_RULES}\n\nPlaces:\n${world.locations.map((l) => `- ${l.id}: ${l.name}. ${l.look}`).join("\n")}\nCharacters:\n${world.entities.filter((e) => e.kind !== "prop").map((e) => `- ${e.id}: ${e.name}. ${e.look}`).join("\n")}\n\nThe story (what the places must allow):\n${story}` });
+  const r = await jsonCall({ name: "seed-plan", schema: PLAN, effort: "high",
+    prompt: `${PLAN_RULES}\n\nPlaces:\n${world.locations.map((l) => `- ${l.id}: ${l.name}. ${l.look}`).join("\n")}\nCharacters and props (never marks):\n${world.entities.map((e) => `- ${e.id} (${e.kind}): ${e.name}. ${e.look}`).join("\n")}\n\nThe story (what the places must allow):\n${story}` });
+  // Belt and braces: drop any mark that is one of the story's entities. Open areas are never key (they are kept clear, not checked).
+  const ents = new Set(world.entities.map((e) => e.id));
+  for (const p of r.places) p.marks = p.marks.filter((m) => !ents.has(m.id.split(".")[0])).map((m) => ({ ...m, key: m.key && !m.area }));
+  return r;
 }
 
-// The plate prompt is the plan itself, mark by mark.
-export const platePrompt = (style, loc, gp, note = "") => `${frameStyle(style)}. One single image, not a grid, collage or storyboard. No text or labels.
+// The plate prompt is a painting brief, not the plan: the place's look, the camera, one essential fact per object, how each door
+// swings, and the open areas to keep clear. The full plan (2,500 characters of chained clauses in custom-rrh3) gave the painter
+// contradictions to guess at, such as a door wedged against the hearth.
+export const platePrompt = (style, loc, gp, note = "") => {
+  const objs = gp.marks.filter((m) => !m.area), areas = gp.marks.filter((m) => m.area);
+  return `${frameStyle(style)}. One single image, not a grid, collage or storyboard. No text or labels.
 Establishing view of ${loc.name}, empty of people and animals. ${loc.look}
-Camera: ${gp.camera}. A full, lived-in, richly painted place in this style (not a sparse diagram), with exactly this layout:
-${gp.marks.map((m) => `- ${m.name}: ${m.where}${m.size ? `; ${m.size}` : ""}${m.faces ? `; ${m.faces}` : ""}`).join("\n")}
-${gp.doors.length ? `Doors: ${gp.doors.map((d) => `${gp.marks.find((m) => m.id === d.mark)?.name || d.mark} leads to ${d.leads_to}`).join("; ")}.\n` : ""}Light: ${gp.light}.${note ? `\nThe last try got this wrong; fix it: ${note}` : ""}`;
+Camera: ${gp.camera}. A full, finished storybook painting of a lived-in place, with these facts:
+${objs.map((m) => `- ${m.name}: ${m.essential || m.where}`).join("\n")}
+${gp.doors.map((d) => `- ${gp.marks.find((m) => m.id === d.mark)?.name || d.mark}: ${d.swing || "opens freely"}; leads to ${d.leads_to}.`).join("\n")}
+${areas.length ? `Keep clear (open floor, nothing standing there): ${areas.map((m) => m.name).join("; ")}.\n` : ""}Light: ${gp.light}${note ? `\nThe last try got this wrong; fix only this: ${note}` : ""}`;
+};
 
-// One focused question per mark. observed_where is written in the same camera terms, from the picture. One required property
-// per mark id: in a free list the model once answered only the first mark (custom-rrh2 cottage try 1) and the rest read as missing.
+// One focused question per essential fact (not the full chained "where"), one required property per mark id (a free list once
+// answered only 1 of 14 marks), plus a separate door question: the general "impossible?" question missed a door into the hearth.
 export async function observePlate(file, gp) {
-  const OBS = S.obj({ marks: S.obj(Object.fromEntries(gp.marks.map((m) => [m.id, S.obj({ visible: S.bool, matches: S.bool, observed_where: S.str })]))), impossible: S.bool, quality: S.int, problems: S.str });
+  const OBS = S.obj({ marks: S.obj(Object.fromEntries(gp.marks.map((m) => [m.id, S.obj({ visible: S.bool, holds: S.bool, observed_where: S.str })]))),
+    doors_open_freely: S.bool, quality: S.int, problems: S.str });
   const r = await jsonCall({ name: "seed-observe", schema: OBS, images: [file], effort: "medium",
-    prompt: `This picture is meant to show a place with this layout, from this camera (${gp.camera}).
-For each mark, look at the picture only and answer:
-${gp.marks.map((m) => `- ${m.id}: ${m.name} — intended: ${m.where}`).join("\n")}
-visible: the item (or part) is clearly in the picture. matches: it is where the intended text says (same side, same wall, same end).
-observed_where: where it really is, in camera terms (left / centre / right, near / middle / far, against which wall, next to which
-other mark). For a part with a direction (a bed's head and foot), say which end is which: the head is the end with the headboard
-and pillow. Write "" if not visible.
-impossible: true if anything is physically impossible: a door that could not open (it swings into a fireplace or furniture,
-it hangs from nothing, it leads nowhere), overlapping or floating furniture. problems: one short sentence naming it, or "".
-quality: 1-5, how rich, finished and in-style the painting is (5 = a finished storybook page; 1 = a sparse sketch or diagram).` });
-  return gp.marks.map((m) => ({ id: m.id, ...r.marks[m.id], key: m.key, impossible: r.impossible, quality: r.quality, problems: r.problems }));
+    prompt: `This picture is meant to show an empty place from this camera (${gp.camera}). Answer from the picture only.
+For each mark: visible (it is clearly in the picture; for an open area: the floor there is visible and clear), holds (this fact is
+true in the picture), observed_where (where it really is, in camera terms; for a bed, which end has the headboard and pillow):
+${gp.marks.map((m) => `- ${m.id}: ${m.name} — ${m.essential || m.where}`).join("\n")}
+doors_open_freely: every door could swing fully open and closed without hitting a fireplace, furniture or a wall it is not hinged on.
+quality: 1-5, how rich, finished and in-style the painting is (5 = a finished storybook page; 1 = a sparse sketch or diagram).
+problems: one short sentence on anything physically impossible (a blocked door, overlapping or floating furniture), or "".` });
+  return gp.marks.map((m) => ({ id: m.id, ...r.marks[m.id], matches: r.marks[m.id].holds, key: m.key, impossible: !r.doors_open_freely, quality: r.quality, problems: r.doors_open_freely ? r.problems : `door cannot open freely. ${r.problems}` }));
 }
 
 // Plates for every place: generate → observe → regenerate on a missing or contradicted key mark. The observed plan is canonical.
@@ -84,7 +98,7 @@ export async function makeSeed(plan, jobs, tracker, { estimate }) {
       const cur = { file, obs, bad, t, imp, q };
       if (!best || rank(cur) < rank(best)) best = cur;
       if (!bad.length && !imp && q >= 3) break;
-      note = [...bad.map((o) => `${o.id} must be: ${gp.marks.find((m) => m.id === o.id).where}${o.visible ? ` (it is: ${o.observed_where})` : " (missing)"}`),
+      note = [...bad.map((o) => { const m = gp.marks.find((x) => x.id === o.id); return `${m.name}: ${m.essential || m.where}${o.visible ? ` (it is: ${o.observed_where})` : " (missing)"}`; }),
         imp ? `physically impossible: ${obs[0].problems}` : "", q < 3 ? "paint a full, finished storybook page, not a sparse sketch" : ""].filter(Boolean).join("; ");
     }
     // Canonical marks: the picture's answer where it saw the mark; marks it could not see are dropped (unusable by the steps).

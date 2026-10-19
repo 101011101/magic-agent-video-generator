@@ -5,6 +5,8 @@ export class Tracker {
   constructor(run) { this.run = run; this.roots = {}; this.frames = []; }
   save() { if (!this.run.estimate) writeFileSync(this.run.path("tracker.json"), JSON.stringify({ roots: this.roots, frames: this.frames }, null, 2)); }
   get(id) { return this.frames.find((f) => f.id === id) || null; }
+  // The latest accepted frame before slide n that shows this entity (any place): its look as the story last left it.
+  lastSeen(id, n) { return this.frames.filter((f) => f.accepted && f.op === "edit" && (f.slide ?? 0) < n && f.present.includes(id)).at(-1) || null; }
   bySlide(n) { return this.frames.find((f) => f.slide === n) || null; }
 
   addPlate(location, file) {
