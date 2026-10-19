@@ -37,25 +37,20 @@
 | Keyframe builder (edit loop) with presence verification | Camera-angle indexing of frames |
 | Slideshow page with lineage | User uploads as roots |
 
-## 4. Pipeline
+## 4. Pipeline (states first)
 
 ```
-prompt ──► [S1a World] style, entities, places, prose story
-                │
-                ▼
-          [S0 Seed] ground plan per place (marks: bed, bed.head, door…) ──► plate ──► vision check per mark
-                │      (≤ 3 plate tries; the observed marks are canonical: the picture wins)       │
-                ▼                                                                                   │
-          [S1b Blocking] one record per step against the marks; code folds the changes into state   │
-                │                                                                                   │
-      [S2 Asset seed bank] sheets (first appearance only)                      plates ◄───────────────┘
-                └──────────────► [S3 Tracker] base = latest frame at the location
-                                        ▼
-                                 [S4 Builder] edit: base + refs; prompt names only what changed
-                                        │
-                                 [S5 Verifier] focused questions + framing gate (SSIM, border)
-                                        ▼
-                                 [S6 Slideshow] index.html (seed, blocking, lineage)
+prompt ─► [S1a World] style, entities, places, prose story
+            ─► [S0a Ground plans] text only: marks per place (bed, bed.head, door…), essentials, door swing
+            ─► [S1b Blocking] one record per step against the marks, folded into the STATE TABLE (code):
+                 every requested asset is in its frame; a prop used at a place without being brought in was always
+                 there → the place's INITIAL CONTENTS; characters must start, enter or reappear; carried props move with
+                 their holder; a prop seen elsewhere must be carried in
+            ─► [S2 Asset seed bank] sheets only for assets whose first appearance is an entry (not for initial contents)
+            ─► [S0b Plates] each place painted from its ground plan + its initial contents; checked; the plan wins
+            ─► per slide: [S3] base = latest row at the place · entering assets from the latest row that has them,
+                 else their sheet · [S4] edit with only what changes · [S5] focused checks + framing gate
+            ─► [S6] slideshow
 ```
 
 ## 5. Subsystems

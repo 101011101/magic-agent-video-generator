@@ -9,6 +9,7 @@
 //   --entities-from <run>  reuse only that run's characters and props and their sheets; places, seed and story are new
 //   --plan-from <run>  reuse that run's world, story and ground plans (not its images); sheets come from the asset bank (A0)
 //   --redo-assets a,b  regenerate only these sheets (re-specced); the others are re-checked from their images, no credits
+//   --seed-only  stop after the asset bank and the seed plates (page shows sheets and plates)
 //   --assets-only  stop after the asset bank (sheets checked one by one and as a set): writes assets.html for review
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
@@ -28,7 +29,7 @@ import { renderFilm } from "./src/film-page.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0)), VIDEO_ON = args.includes("--video");
-const firstFrames = args.includes("--first-frames"), assetsOnly = args.includes("--assets-only"), planFrom = opt("--plan-from", null);
+const firstFrames = args.includes("--first-frames"), assetsOnly = args.includes("--assets-only"), seedOnly = args.includes("--seed-only"), planFrom = opt("--plan-from", null);
 const clipsOnly = opt("--clips", null)?.split(",").map(Number) || null;
 const caseId = opt("--case", "custom"), label = opt("--label", "v1");
 const prompt = opt("--prompt", null) ?? JSON.parse(readFileSync(join(ROOT, "cases/cases.json"), "utf8")).find((c) => c.id === caseId)?.prompt;
@@ -67,37 +68,36 @@ const page = () => { if (!estimate && plan) writeFileSync(join(dir, "index.html"
 try {
   if (!plan && worldRun) throw new Error("--world reuses an older run's world for its saved plan; new runs use --entities-from");
   if (!plan) {
-    // Story → seed (ground plans, verified plates; the picture wins) → blocking against the canonical marks.
+    // States first: story → ground plans (text) → blocking solved into the state table (with each place's initial contents)
+    // → then assets from the solved states: seed sheets only for assets whose first appearance is an entry, and plates painted
+    // with their initial contents. Nothing can appear from nowhere: a prop used without being brought in was always there.
     console.log(`${name}: story…`);
     const world = run.log.world ??= await writeWorld(prompt, given); run.save();
-    console.log("seed plan…");
+    console.log("ground plans (text)…");
     const sp = run.log.seed_plan ??= await seedPlan(world, world.story); run.save();
+    console.log("blocking (states)…");
+    const blocking = run.log.blocking ??= await block(world, Object.fromEntries(sp.places.map((p) => [p.id, p]))); run.save();
+    const initialIds = new Set(Object.values(blocking.initial || {}).flat());
+    console.log(`  initial contents: ${Object.entries(blocking.initial || {}).map(([k, v]) => `${k}: ${v.join(", ") || "—"}`).join(" · ") || "none"}`);
     if (entRun) await makeRoots(world, jobs, tracker, { places: false });   // reused sheets (copied jobs, cached)
-    else {
-      // A0 asset bank: spec every tracked thing against the others, then a checked sheet each.
-      console.log("asset bank…");
-      // --redo-assets a,b: re-spec and regenerate only these; every other sheet is re-checked from its existing tries.
+    console.log("asset bank (first appearances by entry only)…");
+    const specs = run.log.asset_specs ??= await specAssets(world); run.save();
+    if (!entRun) {
       const redo = opt("--redo-assets", null)?.split(",").filter(Boolean);
-      if (redo?.length && run.log.asset_specs) {
-        const fresh = await specAssets({ ...world, entities: world.entities.filter((e) => redo.includes(e.id)) });
-        run.log.asset_specs = run.log.asset_specs.map((a) => fresh.find((f) => f.id === a.id) || a);
-      }
-      const specs = run.log.asset_specs ??= await specAssets(world); run.save();
       const keep = redo ? Object.fromEntries(Object.entries(run.log.assets || {}).filter(([id]) => !redo.includes(id))) : {};
-      run.log.assets = await makeAssets(world, specs, jobs, tracker, { estimate, keep }); run.save();
+      run.log.assets = await makeAssets(world, specs.filter((a) => !initialIds.has(a.id)), jobs, tracker, { estimate, keep }); run.save();
       if (!estimate) writeFileSync(join(dir, "assets.html"), renderAssets({ name, world, assets: run.log.assets, credits: jobs.spent() }));
       if (assetsOnly) throw Object.assign(new Error("assets only: stopped after the asset bank"), { stop: true });
     }
-    console.log("seed plates…");
-    const seed = await makeSeed({ style: world.style, locations: world.locations, seed: sp }, jobs, tracker, { estimate });
+    console.log("seed plates (with initial contents)…");
+    const seed = await makeSeed({ style: world.style, locations: world.locations, seed: sp, initial: blocking.initial, specs }, jobs, tracker, { estimate });
     run.log.seed = seed; run.save();
-    console.log("blocking…");
-    plan = await block(world, seed);
-    plan.seed = seed;
+    plan = { ...blocking, seed };
+    if (seedOnly) throw Object.assign(new Error("seed only: stopped after the plates"), { stop: true });
   } else {
     console.log(`${name}: plan from run.json; roots…`);
     await makeRoots(plan, jobs, tracker, { places: !plan.seed });
-    if (plan.seed) for (const [id, p] of Object.entries(plan.seed)) tracker.addPlate(id, p.plate);
+    if (plan.seed) for (const [id, p] of Object.entries(plan.seed)) tracker.addPlate(id, p.plate, p.contents || []);
   }
   if (plan.lint?.length) console.log(`  rules still broken after one rewrite:\n  - ${plan.lint.join("\n  - ")}`);
   run.log.plan = plan; run.save();

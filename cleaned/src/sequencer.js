@@ -40,6 +40,8 @@ Each step becomes one keyframe; the frame shows the state AFTER the step. Write 
     move     goes to another mark (to = mark, via = the mark it passes or goes around, if anything is in the way)
     sit / lie / stand / kneel / turn   changes pose at a mark (to = mark, or "" for where it is)
     pick-up  takes object (an entity id)                                    put-down puts object at to
+  A prop that is simply part of a place (scissors on a shelf) needs no beat until someone uses it: it is assumed to have been
+  there from the place's first frame. A prop seen in another place must be carried in: enter with object = that prop.
     act      only the expression or gesture changes
   pose and expression: the actor's body and face after the beat ("lying on his back, head on the pillow"; "smug, grinning").
   Required for be / enter / appear on characters. Otherwise "" means unchanged. Feelings follow the story (fear while fleeing).
@@ -75,13 +77,30 @@ export async function block(w, seed) {
       prompt: `${blockPrompt(w, seed)}\n\nYour last blocking broke these rules. Rewrite all of it and fix every one:\n${bad.map((b) => `- ${b}`).join("\n")}\n\nLast blocking:\n${JSON.stringify(r.steps)}` });
     ({ bad } = fold(w, seed, r.steps));
   }
-  const { slides } = fold(w, seed, r.steps);
-  return check({ title: w.title, style: w.style, entities: w.entities, locations: w.locations, story: w.story, lint: bad, steps: r.steps, slides });
+  const { slides, initial } = fold(w, seed, r.steps);
+  return check({ title: w.title, style: w.style, entities: w.entities, locations: w.locations, story: w.story, lint: bad, steps: r.steps, slides, initial });
 }
 
-// The state machine. Folds the beats into the full state per step and lints them. Returns the slides and the violations.
+// The state machine. Folds the beats into the full state per step and lints them, in two passes:
+//   pass 1 finds props that are used at a place without ever being brought in (and were never anywhere else): by induction they
+//          were there from the place's first frame, so they are the place's INITIAL contents (they go into its plate);
+//   pass 2 folds again with those props present from the place's establish step.
+// Characters are never assumed: they start in the establish step, enter, or reappear after vanishing. A prop already seen
+// elsewhere must be carried in (enter with object, or held). Returns the slides, the violations and the initial contents.
 export function fold(w, seed, steps) {
-  const ent = Object.fromEntries(w.entities.map((e) => [e.id, e])), bad = [], slides = [];
+  let initial = {};
+  for (let pass = 0; pass < 3; pass++) {
+    const r = foldOnce(w, seed, steps, initial);
+    if (!Object.values(r.missing).some((x) => x.size)) return { slides: r.slides, bad: r.bad, initial: Object.fromEntries(Object.entries(initial).map(([k, v]) => [k, [...v]])) };
+    for (const [place, ids] of Object.entries(r.missing)) initial[place] = new Set([...(initial[place] || []), ...ids]);
+  }
+  const r = foldOnce(w, seed, steps, initial);
+  return { slides: r.slides, bad: r.bad, initial: Object.fromEntries(Object.entries(initial).map(([k, v]) => [k, [...v]])) };
+}
+
+function foldOnce(w, seed, steps, initial) {
+  const ent = Object.fromEntries(w.entities.map((e) => [e.id, e])), bad = [], slides = [], missing = {}, everSeen = new Set();
+  const isProp = (id) => ent[id] && ent[id].kind !== "character";   // props and groups of things (six stones)
   const markOf = (place, id) => seed[place]?.marks.find((m) => m.id === id);
   const doorMarks = (place) => new Set((seed[place]?.doors || []).map((d) => d.mark));
   const state = {};                                   // actor → { place, at, pose, expression, holder }
@@ -94,6 +113,14 @@ export function fold(w, seed, steps) {
     if (s.kind !== "establish" && !established.has(s.place)) err(`first step at ${s.place} must be its establish step`);
     const firstHere = s.kind === "establish" && !established.has(s.place);
     established.add(s.place);
+    // The place's initial contents are present from its first frame.
+    if (firstHere) for (const id of initial[s.place] || []) if (!state[id]) { state[id] = { place: s.place, at: "", pose: "", expression: "", holder: null, initial: true }; everSeen.add(id); }
+    // A prop used here that is not here: never seen anywhere → it was always here (initial); seen elsewhere → must be carried in.
+    const need = (id, what) => {
+      if (!id || !isProp(id) || (state[id] && (state[id].holder ? state[state[id].holder]?.place === s.place : state[id].place === s.place))) return true;
+      if (!everSeen.has(id)) { (missing[s.place] ??= new Set()).add(id); return false; }
+      err(`${what} ${id}, which is not in ${s.place} (it was last in ${state[id]?.place || "another place"}; carry it in)`); return false;
+    };
     for (const a of leaving) delete state[a];         // an exit frame shows the actor at the door; the next step does not
     leaving = new Set();
     const chars = s.beats.filter((b) => ent[b.actor]?.kind !== "prop").map((b) => b.actor);
@@ -106,12 +133,14 @@ export function fold(w, seed, steps) {
       if (b.to && !mk(b.to)) err(`${b.actor} ${b.action}: "${b.to}" is not a mark of ${s.place}`);
       if (b.via && !mk(b.via)) err(`${b.actor} ${b.action}: via "${b.via}" is not a mark of ${s.place}`);
       if (b.object && !ent[b.object]) err(`${b.actor} ${b.action}: unknown object "${b.object}"`);
-      const here = cur && cur.place === s.place;
+      const here = cur && (cur.holder ? state[cur.holder]?.place === s.place : cur.place === s.place);
       const arrives = ["be", "enter", "appear"].includes(b.action);
+      if (!arrives && isProp(b.actor) && !here && !need(b.actor, `${b.action} of`)) continue;
+      if (["pick-up"].includes(b.action) && !need(b.object, `${b.actor} picks up`)) continue;
       if (arrives) {
         if (here) err(`${b.actor} ${b.action}s ${s.place} but is already there`);
         if (b.action === "be" && !firstHere) err(`"be" is only for the first (establish) step of a place (${b.actor}); use enter or appear`);
-        if (b.action === "appear" && e.kind !== "prop" && !vanished.has(b.actor)) err(`${b.actor} appears but never vanished; characters enter by a door or path mark`);
+        if (b.action === "appear" && !vanished.has(b.actor)) err(`${b.actor} appears but never vanished: ${isProp(b.actor) ? "a prop that is simply there needs no beat (it is part of the place), or carry it in" : "characters enter by a door or path mark"}`);
         if (b.action === "enter" && doorMarks(s.place).size && !doorMarks(s.place).has(b.to)) err(`${b.actor} enters at "${b.to}", not a door of ${s.place} (${[...doorMarks(s.place)].join(", ")})`);
         if (!b.to) err(`${b.actor} ${b.action} needs a mark (to)`);
         if (e.kind === "character" && (!b.pose.trim() || !b.expression.trim())) err(`${b.actor} ${b.action}: pose and expression are required`);
@@ -119,12 +148,15 @@ export function fold(w, seed, steps) {
         if (cur && cur.place !== s.place && prevOnScreen.has(b.actor)) err(`${b.actor} goes from ${cur.place} to ${s.place} without an exit step`);
         if (cur && cur.place !== s.place && !prevOnScreen.has(b.actor) && !s.time_jump && b.action !== "appear") err(`${b.actor} reappears in ${s.place}: add an exit from ${cur.place} or set time_jump`);
         state[b.actor] = { place: s.place, at: b.to, pose: b.pose, expression: b.expression, holder: null };
+        everSeen.add(b.actor);
+        // enter with an object: the actor carries it in.
+        if (b.object && ent[b.object]) { state[b.object] = { ...(state[b.object] || {}), place: s.place, at: "", holder: b.actor, pose: state[b.object]?.pose || "", expression: "" }; everSeen.add(b.object); }
         continue;
       }
       if (!here) { err(`${b.actor} ${b.action} in ${s.place} but is not there (enter, appear or be first)`); continue; }
       if (b.action === "exit") { if (doorMarks(s.place).size && !doorMarks(s.place).has(b.to)) err(`${b.actor} exits at "${b.to}", not a door of ${s.place}`); leaving.add(b.actor); }
       if (b.action === "vanish") { vanished.add(b.actor); delete state[b.actor]; for (const [k, v] of Object.entries(state)) if (v.holder === b.actor) delete state[k]; continue; }
-      if (b.action === "pick-up") { const o = state[b.object]; if (!o || o.place !== s.place) err(`${b.actor} picks up ${b.object}, which is not in ${s.place}`); else Object.assign(o, { holder: b.actor, at: "" }); }
+      if (b.action === "pick-up") { const o = state[b.object]; if (o) Object.assign(o, { holder: b.actor, at: "" }); }
       if (b.action === "put-down") { const o = state[b.object]; if (!o || o.holder !== b.actor) err(`${b.actor} puts down ${b.object} without holding it`); else Object.assign(o, { holder: null, at: b.to }); }
       if (b.to && !["pick-up", "put-down"].includes(b.action)) cur.at = b.to;
       if (b.via) cur.via = b.via; else delete cur.via;
@@ -133,12 +165,13 @@ export function fold(w, seed, steps) {
     }
     // Held props move with their holder, and are off screen while the holder is.
     for (const v of Object.values(state)) if (v.holder && state[v.holder]) v.place = state[v.holder].place;
+    for (const id of Object.keys(state)) everSeen.add(id);
     const onScreen = Object.entries(state).filter(([, v]) => (v.holder ? state[v.holder]?.place === s.place : v.place === s.place)).map(([id]) => id);
     if (!onScreen.length) err("nobody and nothing is on screen");
     slides.push(toSlide(w, seed, s, n, onScreen, state));
     prevOnScreen = new Set(onScreen.filter((id) => ent[id]?.kind !== "prop"));
   });
-  return { slides, bad: [...new Set(bad)] };
+  return { slides, bad: [...new Set(bad)], missing };
 }
 
 const VERB = { be: "is at", enter: "comes in at", exit: "goes out at", appear: "appears at", vanish: "disappears", move: "goes to", sit: "sits down at", lie: "lies down at", stand: "stands up at", kneel: "kneels at", turn: "turns at", "pick-up": "picks up", "put-down": "puts down", act: "" };

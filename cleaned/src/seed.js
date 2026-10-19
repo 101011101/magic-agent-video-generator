@@ -53,44 +53,49 @@ export async function seedPlan(world, story) {
 // The plate prompt is a painting brief, not the plan: the place's look, the camera, one essential fact per object, how each door
 // swings, and the open areas to keep clear. The full plan (2,500 characters of chained clauses in custom-rrh3) gave the painter
 // contradictions to guess at, such as a door wedged against the hearth.
-export const platePrompt = (style, loc, gp, note = "") => {
+export const platePrompt = (style, loc, gp, note = "", contents = []) => {
   const objs = gp.marks.filter((m) => !m.area), areas = gp.marks.filter((m) => m.area);
   return `${frameStyle(style)}. One single image, not a grid, collage or storyboard. No text or labels.
 Establishing view of ${loc.name}, empty of people and animals. ${loc.look}
 Camera: ${gp.camera}. A full, finished storybook painting of a lived-in place, with these facts:
 ${objs.map((m) => `- ${m.name}: ${m.essential || m.where}`).join("\n")}
 ${gp.doors.map((d) => `- ${gp.marks.find((m) => m.id === d.mark)?.name || d.mark}: ${d.swing || "opens freely"}; leads to ${d.leads_to}.`).join("\n")}
-${areas.length ? `Keep clear (open floor, nothing standing there): ${areas.map((m) => m.name).join("; ")}.\n` : ""}Light: ${gp.light}${note ? `\nThe last try got this wrong; fix only this: ${note}` : ""}`;
+${contents.length ? `Already in the place, each where it naturally belongs (they are used later in the story):\n${contents.map((a) => `- ${a.name}: ${a.spec}`).join("\n")}\n` : ""}${areas.length ? `Keep clear (open floor, nothing standing there): ${areas.map((m) => m.name).join("; ")}.\n` : ""}Light: ${gp.light}${note ? `\nThe last try got this wrong; fix only this: ${note}` : ""}`;
 };
 
 // One focused question per essential fact (not the full chained "where"), one required property per mark id (a free list once
 // answered only 1 of 14 marks), plus a separate door question: the general "impossible?" question missed a door into the hearth.
-export async function observePlate(file, gp) {
+export async function observePlate(file, gp, contents = []) {
   const OBS = S.obj({ marks: S.obj(Object.fromEntries(gp.marks.map((m) => [m.id, S.obj({ visible: S.bool, holds: S.bool, observed_where: S.str })]))),
+    contents: S.obj(Object.fromEntries(contents.map((a) => [a.id, S.obj({ visible: S.bool })]))),
     doors_open_freely: S.bool, quality: S.int, problems: S.str });
   const r = await jsonCall({ name: "seed-observe", schema: OBS, images: [file], effort: "medium",
     prompt: `This picture is meant to show an empty place from this camera (${gp.camera}). Answer from the picture only.
 For each mark: visible (it is clearly in the picture; for an open area: the floor there is visible and clear), holds (this fact is
 true in the picture), observed_where (where it really is, in camera terms; for a bed, which end has the headboard and pillow):
 ${gp.marks.map((m) => `- ${m.id}: ${m.name} — ${m.essential || m.where}`).join("\n")}
-doors_open_freely: every door could swing fully open and closed without hitting a fireplace, furniture or a wall it is not hinged on.
+${contents.length ? `contents: is each of these clearly in the picture? ${contents.map((a) => `${a.id} (${a.name})`).join(", ")}\n` : ""}doors_open_freely: every door could swing fully open and closed without hitting a fireplace, furniture or a wall it is not hinged on.
 quality: 1-5, how rich, finished and in-style the painting is (5 = a finished storybook page; 1 = a sparse sketch or diagram).
 problems: one short sentence on anything physically impossible (a blocked door, overlapping or floating furniture), or "".` });
-  return gp.marks.map((m) => ({ id: m.id, ...r.marks[m.id], matches: r.marks[m.id].holds, key: m.key, impossible: !r.doors_open_freely, quality: r.quality, problems: r.doors_open_freely ? r.problems : `door cannot open freely. ${r.problems}` }));
+  const extra = { impossible: !r.doors_open_freely, quality: r.quality, problems: r.doors_open_freely ? r.problems : `door cannot open freely. ${r.problems}` };
+  return [...gp.marks.map((m) => ({ id: m.id, ...r.marks[m.id], matches: r.marks[m.id].holds, key: m.key, ...extra })),
+    ...contents.map((a) => ({ id: a.id, visible: r.contents[a.id].visible, matches: true, holds: true, observed_where: "", key: true, ...extra }))];
 }
 
 // Plates for every place: generate → observe → regenerate on a missing or contradicted key mark. The observed plan is canonical.
+// plan.initial: { place: [asset ids] } from the solved states; plan.specs: asset specs (for painting initial contents).
 export async function makeSeed(plan, jobs, tracker, { estimate }) {
   const out = {};
   await Promise.all(plan.locations.map(async (loc) => {
     const gp = plan.seed.places.find((p) => p.id === loc.id);
     if (!gp) throw new Error(`seed: no ground plan for ${loc.id}`);
+    const contents = (plan.initial?.[loc.id] || []).map((id) => plan.specs.find((a) => a.id === id)).filter(Boolean);
     let note = "", best = null;
     for (let t = 1; t <= PLATE_TRIES; t++) {
       const file = t === 1 ? `roots/${loc.id}.png` : `roots/${loc.id}-t${t}.png`;
-      await jobs.image(t === 1 ? `root-${loc.id}` : `root-${loc.id}-t${t}`, file, platePrompt(plan.style, loc, gp, note));
+      await jobs.image(t === 1 ? `root-${loc.id}` : `root-${loc.id}-t${t}`, file, platePrompt(plan.style, loc, gp, note, contents));
       if (estimate) { best = { file, obs: [], bad: [] }; break; }
-      const obs = await observePlate(jobs.run.path(file), gp);
+      const obs = await observePlate(jobs.run.path(file), gp, contents);
       const bad = obs.filter((o) => o.key && (!o.visible || !o.matches)), imp = obs[0]?.impossible, q = obs[0]?.quality || 0;
       console.log(`  plate ${loc.id} try ${t}: ${bad.length ? bad.map((o) => `${o.id} ${o.visible ? "misplaced" : "missing"}`).join(", ") : "key marks ok"}${imp ? ` · impossible: ${obs[0].problems}` : ""} · quality ${q}`);
       // Best plate: correct layout first, then physically possible, then the better painting.
@@ -101,11 +106,10 @@ export async function makeSeed(plan, jobs, tracker, { estimate }) {
       note = [...bad.map((o) => { const m = gp.marks.find((x) => x.id === o.id); return `${m.name}: ${m.essential || m.where}${o.visible ? ` (it is: ${o.observed_where})` : " (missing)"}`; }),
         imp ? `physically impossible: ${obs[0].problems}` : "", q < 3 ? "paint a full, finished storybook page, not a sparse sketch" : ""].filter(Boolean).join("; ");
     }
-    // Canonical marks: the picture's answer where it saw the mark; marks it could not see are dropped (unusable by the steps).
-    const marks = estimate ? gp.marks : gp.marks.filter((m) => best.obs.find((o) => o.id === m.id)?.visible)
-      .map((m) => { const o = best.obs.find((x) => x.id === m.id); return { ...m, intended: m.where, where: o.matches ? m.where : o.observed_where }; });
-    out[loc.id] = { ...gp, marks, plate: best.file, tries: best.t || 1, unresolved: best.bad.map((o) => o.id) };
-    tracker.addPlate(loc.id, best.file);
+    // The plan wins: the states were solved against these marks, so the marks stay; the plate is retried until it matches
+    // (what is still off is reported). The observation is kept for the page.
+    out[loc.id] = { ...gp, plate: best.file, tries: best.t || 1, unresolved: best.bad.map((o) => o.id), observed: best.obs, contents: contents.map((a) => a.id) };
+    tracker.addPlate(loc.id, best.file, contents.map((a) => a.id));
   }));
   return out;
 }

@@ -7,12 +7,13 @@ export class Tracker {
   save() { if (!this.run.estimate) writeFileSync(this.run.path("tracker.json"), JSON.stringify({ roots: this.roots, frames: this.frames }, null, 2)); }
   get(id) { return this.frames.find((f) => f.id === id) || null; }
   // The latest accepted frame before slide n that shows this entity (any place): its look as the story last left it.
-  lastSeen(id, n) { return this.frames.filter((f) => f.accepted && f.op === "edit" && (f.slide ?? 0) < n && f.present.includes(id)).at(-1) || null; }
+  lastSeen(id, n) { return this.frames.filter((f) => f.accepted && (f.slide ?? 0) < n && f.present.includes(id)).at(-1) || null; }
   bySlide(n) { return this.frames.find((f) => f.slide === n) || null; }
 
-  addPlate(location, file) {
+  // A plate's row holds the place's initial contents (props that were always there), painted into it.
+  addPlate(location, file, present = []) {
     if (!this.frames.some((f) => f.op === "plate" && f.location === location))
-      this.frames.push({ id: `plate-${location}`, file, slide: null, location, present: [], base: null, refs: [], op: "plate", hops: 0, accepted: true });
+      this.frames.push({ id: `plate-${location}`, file, slide: null, location, present: [...present], base: null, refs: [], op: "plate", hops: 0, accepted: true });
   }
   add(rec) {
     const f = { id: `s${rec.slide}`, ...rec };
