@@ -75,3 +75,25 @@ pictures must agree on (side, wall, colour, material, size), else "".\n\nStory:\
   }
   return links;
 }
+
+// Role of every id: an ASSET moves, is carried or acts (characters, animals, handheld props) and is tracked frame to frame;
+// a FIXTURE stays where it is (bed, table, shelf, door, flowers) and belongs to one place's ground plan; a PLACE is a setting;
+// a PART belongs to another id (a wolf's ears, a bed's head); NONE is not drawable. Fixtures name their place, parts their parent.
+export async function classifyIds(story, table) {
+  const ids = table.map((t) => t.id), places = table.filter((t) => t.kind === "place").map((t) => t.id);
+  const r = await jsonCall({ name: "ids-classify", effort: "medium",
+    schema: S.obj({ roles: S.obj(Object.fromEntries(ids.map((id) => [id, S.obj({
+      role: S.enum(["asset", "fixture", "place", "part", "none"]), kind: S.enum(["character", "group", "prop", "none"]),
+      place: S.enum([...places, "none"]), parent: S.enum([...ids, "none"]), inside: S.enum([...ids, "none"]) })]))) }),
+    prompt: `Classify every id of this story.
+role: asset = a character or animal, or a thing that is moved, carried, worn or handed over in the story (tracked frame to frame);
+fixture = a thing that stays where it is in one place (furniture, a door, a window, plants, a hearth); place = a setting where
+scenes happen; part = a part of another id (a wolf's ears, a bed's head); none = not something to draw.
+kind (assets only): character (a person or animal that acts), group (several things that always appear together), prop; else none.
+place (fixtures only): the place it belongs to; else none. parent (parts only): the id it is part of; else none.
+Clothes a character wears all story long are a PART of that character (one part even if named twice: hood and cloak); clothes
+taken off, swapped or handed to someone else are assets.
+inside (assets only): the asset it is packed in, inside or on when it first appears (a cake in a basket); else none.
+Ids:\n${table.map((t) => `- ${t.id} (${t.kind}): ${t.name}; aliases: ${t.aliases.join(", ") || "none"}`).join("\n")}\n\nStory:\n${story}` });
+  return table.map((t) => ({ ...t, ...r.roles[t.id] }));
+}

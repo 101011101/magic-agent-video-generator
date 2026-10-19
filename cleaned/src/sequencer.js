@@ -57,6 +57,19 @@ Each step becomes one keyframe; the frame shows the state AFTER the step. Write 
 - Cover EVERY event of the story, in order, from its first sentence to its last. Do not start late or skip an event to save steps.
 - 12 to 30 steps. Fewer steps when nothing changes; never merge changes that happen at different times.`;
 
+// Story only (title, style, prose). The ids, assets and places come from the story afterwards (I0, A0).
+export async function writeStory(prompt) {
+  return jsonCall({ name: "story", effort: "high", schema: S.obj({ title: S.str, style: S.str, story: S.str }),
+    prompt: `Write a short illustrated story for the request below.
+- style: one line of visual style for every image (medium, palette, light). Do not ask for full-bleed or "film still" framing.
+- story: the story in plain prose, 150-300 words, with every action in the order it happens. Name things concretely (what is on
+  the table, which door). For a well-known tale, follow its best-known version unless the request says otherwise, and show its
+  climax and its feelings on screen (fear, escape).
+
+The request:
+${prompt}` });
+}
+
 export async function writeWorld(prompt, given = null) {
   const keep = given ? Object.keys(given) : [];
   const want = Object.fromEntries(Object.entries({ ...WORLD, story: S.str }).filter(([k]) => !keep.includes(k)));
@@ -100,6 +113,9 @@ export function fold(w, seed, steps) {
 
 function foldOnce(w, seed, steps, initial) {
   const ent = Object.fromEntries(w.entities.map((e) => [e.id, e])), bad = [], slides = [], missing = {}, everSeen = new Set();
+  // Contents travel inside their container (a cake in a basket) until someone takes them out.
+  const contents = (id) => w.entities.filter((e) => e.inside === id).map((e) => e.id);
+  const pack = (id) => { for (const c of contents(id)) if (!everSeen.has(c)) { state[c] = { place: state[id]?.place, at: "", pose: "", expression: "", holder: id }; everSeen.add(c); pack(c); } };
   const isProp = (id) => ent[id] && ent[id].kind !== "character";   // props and groups of things (six stones)
   const markOf = (place, id) => seed[place]?.marks.find((m) => m.id === id);
   const doorMarks = (place) => new Set((seed[place]?.doors || []).map((d) => d.mark));
@@ -114,7 +130,7 @@ function foldOnce(w, seed, steps, initial) {
     const firstHere = s.kind === "establish" && !established.has(s.place);
     established.add(s.place);
     // The place's initial contents are present from its first frame.
-    if (firstHere) for (const id of initial[s.place] || []) if (!state[id]) { state[id] = { place: s.place, at: "", pose: "", expression: "", holder: null, initial: true }; everSeen.add(id); }
+    if (firstHere) for (const id of initial[s.place] || []) if (!state[id]) { state[id] = { place: s.place, at: "", pose: "", expression: "", holder: null, initial: true }; everSeen.add(id); pack(id); }
     // A prop used here that is not here: never seen anywhere → it was always here (initial); seen elsewhere → must be carried in.
     const need = (id, what) => {
       if (!id || !isProp(id) || (state[id] && (state[id].holder ? state[state[id].holder]?.place === s.place : state[id].place === s.place))) return true;
@@ -148,9 +164,9 @@ function foldOnce(w, seed, steps, initial) {
         if (cur && cur.place !== s.place && prevOnScreen.has(b.actor)) err(`${b.actor} goes from ${cur.place} to ${s.place} without an exit step`);
         if (cur && cur.place !== s.place && !prevOnScreen.has(b.actor) && !s.time_jump && b.action !== "appear") err(`${b.actor} reappears in ${s.place}: add an exit from ${cur.place} or set time_jump`);
         state[b.actor] = { place: s.place, at: b.to, pose: b.pose, expression: b.expression, holder: null };
-        everSeen.add(b.actor);
+        everSeen.add(b.actor); pack(b.actor);
         // enter with an object: the actor carries it in.
-        if (b.object && ent[b.object]) { state[b.object] = { ...(state[b.object] || {}), place: s.place, at: "", holder: b.actor, pose: state[b.object]?.pose || "", expression: "" }; everSeen.add(b.object); }
+        if (b.object && ent[b.object]) { state[b.object] = { ...(state[b.object] || {}), place: s.place, at: "", holder: b.actor, pose: state[b.object]?.pose || "", expression: "" }; everSeen.add(b.object); pack(b.object); }
         continue;
       }
       if (!here) { err(`${b.actor} ${b.action} in ${s.place} but is not there (enter, appear or be first)`); continue; }
@@ -164,7 +180,7 @@ function foldOnce(w, seed, steps, initial) {
       if (b.expression.trim()) cur.expression = b.expression;
     }
     // Held props move with their holder, and are off screen while the holder is.
-    for (const v of Object.values(state)) if (v.holder && state[v.holder]) v.place = state[v.holder].place;
+    for (let k = 0; k < 3; k++) for (const v of Object.values(state)) if (v.holder && state[v.holder]) v.place = state[v.holder].place;   // chains: cake → basket → Red
     for (const id of Object.keys(state)) everSeen.add(id);
     const onScreen = Object.entries(state).filter(([, v]) => (v.holder ? state[v.holder]?.place === s.place : v.place === s.place)).map(([id]) => id);
     if (!onScreen.length) err("nobody and nothing is on screen");

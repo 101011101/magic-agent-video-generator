@@ -14,6 +14,7 @@ const MARK_ID = { type: "string", pattern: "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)
 const PLAN = S.obj({
   places: S.arr(S.obj({
     id: { type: "string", pattern: "^[a-z][a-z0-9-]*$" },
+    look: S.str,                                      // the place as a painter would describe it (materials, mood), no layout
     camera: S.str,                                    // where the one camera stands and looks
     marks: S.arr(S.obj({ id: MARK_ID, name: S.str, where: S.str, essential: S.str, area: S.bool, size: S.str, faces: S.str, key: S.bool })),
     doors: S.arr(S.obj({ mark: MARK_ID, leads_to: S.str, swing: S.str })),
@@ -41,9 +42,18 @@ const PLAN_RULES = `Write the canonical GROUND PLAN of every place, from its one
   the marks the story uses.
 - scale: every character and group, height relative to a grown person ("a small child, half a grown person").`;
 
-export async function seedPlan(world, story) {
+// The environment assets' specs (asset bank, spec half). fixtures: ids that stay in a place, which must be marks there with the
+// same id; links: confirmed physical links (a room inside a house), whose constraints both places must respect.
+export async function seedPlan(world, story, { fixtures = [], links = [] } = {}) {
+  const fx = (pid) => fixtures.filter((f) => f.place === pid);
   const r = await jsonCall({ name: "seed-plan", schema: PLAN, effort: "high",
-    prompt: `${PLAN_RULES}\n\nPlaces:\n${world.locations.map((l) => `- ${l.id}: ${l.name}. ${l.look}`).join("\n")}\nCharacters and props (never marks):\n${world.entities.map((e) => `- ${e.id} (${e.kind}): ${e.name}. ${e.look}`).join("\n")}\n\nThe story (what the places must allow):\n${story}` });
+    prompt: `${PLAN_RULES}
+- look: one or two sentences describing the place as a painter would (materials, mood, season), without layout.
+
+Places:\n${world.locations.map((l) => `- ${l.id}: ${l.name}. ${l.look || ""}${fx(l.id).length ? `\n  Its marks MUST include these story things with exactly these ids: ${fx(l.id).map((f) => `${f.id} (${f.name})`).join(", ")}` : ""}`).join("\n")}
+Characters and props (never marks):\n${world.entities.map((e) => `- ${e.id} (${e.kind}): ${e.name}. ${e.look || ""}`).join("\n")}
+${links.length ? `\nPhysical links the places must respect (both sides):\n${links.map((l) => `- ${l.a} ${l.relation} ${l.b}: ${l.constraint}`).join("\n")}\n` : ""}
+The story (what the places must allow):\n${story}` });
   // Belt and braces: drop any mark that is one of the story's entities. Open areas are never key (they are kept clear, not checked).
   const ents = new Set(world.entities.map((e) => e.id));
   for (const p of r.places) p.marks = p.marks.filter((m) => !ents.has(m.id.split(".")[0])).map((m) => ({ ...m, key: m.key && !m.area }));
@@ -56,7 +66,7 @@ export async function seedPlan(world, story) {
 export const platePrompt = (style, loc, gp, note = "", contents = []) => {
   const objs = gp.marks.filter((m) => !m.area), areas = gp.marks.filter((m) => m.area);
   return `${frameStyle(style)}. One single image, not a grid, collage or storyboard. No text or labels.
-Establishing view of ${loc.name}, empty of people and animals. ${loc.look}
+Establishing view of ${loc.name}, empty of people and animals. ${gp.look || loc.look || ""}
 Camera: ${gp.camera}. A full, finished storybook painting of a lived-in place, with these facts:
 ${objs.map((m) => `- ${m.name}: ${m.essential || m.where}`).join("\n")}
 ${gp.doors.map((d) => `- ${gp.marks.find((m) => m.id === d.mark)?.name || d.mark}: ${d.swing || "opens freely"}; leads to ${d.leads_to}.`).join("\n")}

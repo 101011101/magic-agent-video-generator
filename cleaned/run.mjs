@@ -16,7 +16,8 @@ import { join } from "node:path";
 import { ROOT, RUNS } from "./src/env.js";
 import { usage, MODEL } from "./src/llm.js";
 import { Jobs, CAP, IMAGE } from "./src/jobs.js";
-import { writeWorld, block, check } from "./src/sequencer.js";
+import { writeWorld, writeStory, block, check } from "./src/sequencer.js";
+import { assignIds, classifyIds, linkIds } from "./src/ids.js";
 import { seedPlan, makeSeed } from "./src/seed.js";
 import { makeRoots } from "./src/roots.js";
 import { specAssets, makeAssets } from "./src/assets.js";
@@ -72,12 +73,32 @@ try {
     // → then assets from the solved states: seed sheets only for assets whose first appearance is an entry, and plates painted
     // with their initial contents. Nothing can appear from nowhere: a prop used without being brought in was always there.
     console.log(`${name}: story…`);
-    const world = run.log.world ??= await writeWorld(prompt, given); run.save();
-    console.log("ground plans (text)…");
-    const sp = run.log.seed_plan ??= await seedPlan(world, world.story); run.save();
+    let world, fixtures = [], links = [];
+    if (given) world = run.log.world ??= await writeWorld(prompt, given);   // --entities-from / --plan-from: the older world call
+    else {
+      // I0: every physical thing in the story gets an id (aliases, pronouns, coverage), a role (asset / fixture / place / part)
+      // and its physical links. Assets are tracked; fixtures become marks of their place; places get ground plans.
+      const st = run.log.story ??= await writeStory(prompt); run.save();
+      console.log("ids…");
+      if (!run.log.ids) {
+        const tagged = await assignIds(st.story), table = await classifyIds(st.story, tagged.table);
+        run.log.ids = { table, chunks: tagged.chunks, links: await linkIds(st.story, table) }; run.save();
+      }
+      const T = run.log.ids.table;
+      world = run.log.world ??= { title: st.title, style: st.style, story: st.story,
+        entities: T.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => ({ id: t.id, name: t.name, kind: t.kind, look: "", inside: t.inside && t.inside !== "none" ? t.inside : "" })),
+        locations: T.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
+      fixtures = T.filter((t) => t.role === "fixture" && t.place !== "none");
+      links = run.log.ids.links.filter((l) => l.belongs);
+      console.log(`  ${T.length} ids: ${world.entities.length} assets, ${fixtures.length} fixtures, ${world.locations.length} places, ${links.length} links`);
+    }
+    console.log("asset bank, spec half: ground plans…");
+    const sp = run.log.seed_plan ??= await seedPlan(world, world.story, { fixtures, links }); run.save();
     console.log("blocking (states)…");
     const blocking = run.log.blocking ??= await block(world, Object.fromEntries(sp.places.map((p) => [p.id, p]))); run.save();
-    const initialIds = new Set(Object.values(blocking.initial || {}).flat());
+    // No sheet for assets that first appear as a place's initial contents (painted into its plate) or packed inside another
+    // asset (they come with their container: a cake in the basket).
+    const initialIds = new Set([...Object.values(blocking.initial || {}).flat(), ...world.entities.filter((e) => e.inside).map((e) => e.id)]);
     console.log(`  initial contents: ${Object.entries(blocking.initial || {}).map(([k, v]) => `${k}: ${v.join(", ") || "—"}`).join(" · ") || "none"}`);
     if (entRun) await makeRoots(world, jobs, tracker, { places: false });   // reused sheets (copied jobs, cached)
     console.log("asset bank (first appearances by entry only)…");
@@ -90,7 +111,8 @@ try {
       if (assetsOnly) throw Object.assign(new Error("assets only: stopped after the asset bank"), { stop: true });
     }
     console.log("seed plates (with initial contents)…");
-    const seed = await makeSeed({ style: world.style, locations: world.locations, seed: sp, initial: blocking.initial, specs }, jobs, tracker, { estimate });
+    const used = world.locations.filter((l) => blocking.slides.some((x) => x.location === l.id));   // plates only where scenes happen
+    const seed = await makeSeed({ style: world.style, locations: used, seed: sp, initial: blocking.initial, specs }, jobs, tracker, { estimate });
     run.log.seed = seed; run.save();
     plan = { ...blocking, seed };
     if (seedOnly) throw Object.assign(new Error("seed only: stopped after the plates"), { stop: true });

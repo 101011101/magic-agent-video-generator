@@ -37,20 +37,22 @@
 | Keyframe builder (edit loop) with presence verification | Camera-angle indexing of frames |
 | Slideshow page with lineage | User uploads as roots |
 
-## 4. Pipeline (states first)
+## 4. Pipeline (states first, end to end)
 
 ```
-prompt ─► [S1a World] style, entities, places, prose story
-            ─► [S0a Ground plans] text only: marks per place (bed, bed.head, door…), essentials, door swing
-            ─► [S1b Blocking] one record per step against the marks, folded into the STATE TABLE (code):
-                 every requested asset is in its frame; a prop used at a place without being brought in was always
-                 there → the place's INITIAL CONTENTS; characters must start, enter or reappear; carried props move with
-                 their holder; a prop seen elsewhere must be carried in
-            ─► [S2 Asset seed bank] sheets only for assets whose first appearance is an entry (not for initial contents)
-            ─► [S0b Plates] each place painted from its ground plan + its initial contents; checked; the plan wins
-            ─► per slide: [S3] base = latest row at the place · entering assets from the latest row that has them,
-                 else their sheet · [S4] edit with only what changes · [S5] focused checks + framing gate
-            ─► [S6] slideshow
+prompt ─► [S1a Story] title, style, prose
+       ─► [I0 IDs] every physical thing → one id (aliases, pronouns; coverage check); role: asset (tracked) / fixture
+            (stays in a place) / place / part; physical links proposed and checked against the text (room ⊂ house)
+       ─► [A0 Asset bank, spec half] (text) asset specs; environment specs = ground plans: named marks (fixtures keep
+            their ids), essentials, door swing; constraints from links and from the user's input
+       ─► [S1b Blocking] records against the marks, folded into the STATE TABLE (code): every requested asset is in its
+            frame; a prop used at a place without being brought in was always there → the place's INITIAL CONTENTS;
+            characters start, enter or reappear; held props go with their holder; props seen elsewhere are carried in
+       ─► [A0 Asset bank, image half] sheets only for assets that first appear by entering; plates for the places scenes
+            use, painted with their ground plan + initial contents, checked (the plan wins)
+       ─► per slide: base = latest row at the place · entering assets from the latest row that has them, else their sheet ·
+            edit with only what changes · focused checks + framing gate
+       ─► [S6] slideshow
 ```
 
 ## 5. Subsystems
