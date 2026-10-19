@@ -107,7 +107,9 @@ export async function buildSlide(slide, { plan, tracker, jobs, run }) {
     if (gain && f.every((x) => x.kind === "missing" || x.kind === "change not visible") && obs.single_frame)
       base = { id: `s${slide.n}-a${a}`, file, present, hops: att.hops, changeDone: !slide.change || obs.change_visible };
   }
-  const frame = tracker.add({ slide: slide.n, file: best.file, location: slide.location, present: best.present, base: best.base, refs: best.refs,
+  // The state table records what was REQUESTED for this frame (by induction every requested asset is in it). The vision check
+  // only accepts or retries a frame; it never edits the table (a missed tiny prop must not make the state manager forget it).
+  const frame = tracker.add({ slide: slide.n, file: best.file, location: slide.location, present: [...slide.present], observed: best.present, base: best.base, refs: best.refs,
     op: "edit", hops: best.hops, accepted: true, forced: best.faults.length > 0, base_why: why, attempts });
   return frame;
 }

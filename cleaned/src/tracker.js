@@ -1,4 +1,5 @@
-// S3 Tracker: frames indexed by location and the entities they show. Presence only; the pixels carry everything else.
+// S3 Tracker (state manager): one row per frame: its place and the asset ids requested for it. Plain code, no model. An asset's
+// latest context is the latest row that contains its id; a place's latest state is its latest row. The pixels carry the rest.
 import { writeFileSync } from "node:fs";
 
 export class Tracker {
