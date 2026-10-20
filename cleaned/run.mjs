@@ -112,7 +112,9 @@ try {
     }
     console.log("seed plates (with initial contents)…");
     const used = world.locations.filter((l) => blocking.slides.some((x) => x.location === l.id));   // plates only where scenes happen
-    const seed = await makeSeed({ style: world.style, locations: used, seed: sp, initial: blocking.initial, specs }, jobs, tracker, { estimate });
+    const usedMarks = {};
+    for (const st of blocking.steps) for (const m of [...st.beats.flatMap((b) => [b.to, b.via]), st.change.mark].filter(Boolean)) (usedMarks[st.place] ??= new Set()).add(m);
+    const seed = await makeSeed({ style: world.style, locations: used, seed: JSON.parse(JSON.stringify(sp)), initial: blocking.initial, specs, used: usedMarks }, jobs, tracker, { estimate });
     run.log.seed = seed; run.save();
     plan = { ...blocking, seed };
     if (seedOnly) throw Object.assign(new Error("seed only: stopped after the plates"), { stop: true });

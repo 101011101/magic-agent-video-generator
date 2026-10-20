@@ -1,0 +1,81 @@
+<title>Red Riding Hood rrh4 Assets</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: plates first (each place: canonical + rejected tries + checks), then the sheet grid, then the ids the bank came from. */
+:root {
+  --bg: #f4f5f2; --panel: #ffffff; --fg: #1c211e; --mut: #5f6863; --line: #dbe0dc; --accent: #2d6a4f;
+  --ok: #1f6f43; --ok-bg: #e2f3e8; --no: #a3281f; --no-bg: #fbe4e1; --gold: #b07d12;
+  --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111412; --panel: #191d1a; --fg: #e5eae6; --mut: #98a29c; --line: #2b322e; --accent: #7cc9a3;
+  --ok: #6fd09a; --ok-bg: #173323; --no: #ff8f85; --no-bg: #3b1d1a; --gold: #e0b040; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111412; --panel: #191d1a; --fg: #e5eae6; --mut: #98a29c; --line: #2b322e; --accent: #7cc9a3;
+  --ok: #6fd09a; --ok-bg: #173323; --no: #ff8f85; --no-bg: #3b1d1a; --gold: #e0b040; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--sans); }
+main { max-width: 1180px; margin: 0 auto; padding-block: 22px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1 { font-size: 24px; margin: 0; text-wrap: balance; }
+h2 { font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--mut); margin: 0; }
+h3 { font-size: 16px; margin: 0; }
+.sub, .mini { color: var(--mut); } .mini { font-size: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+.canon { flex: 1 1 520px; min-width: 0; } .canon img { width: 100%; border-radius: 8px; border: 3px solid var(--gold); display: block; }
+.tries { flex: 0 1 260px; display: grid; gap: 8px; } .tries figure { margin: 0; } .tries img { width: 100%; border-radius: 6px; border: 1px solid var(--line); display: block; }
+figcaption { font: 12px var(--mono); color: var(--mut); }
+ul.checks { margin: 0; padding-left: 18px; font: 12px/1.6 var(--mono); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 16px; font-size: 13px; }
+.facts div b { display: block; font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--mut); }
+.sheets { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: grid; }
+.sheet img { width: 100%; aspect-ratio: 16/10; object-fit: contain; background: var(--bg); display: block; }
+.sheet .t { padding: 10px 12px; display: grid; gap: 4px; }
+.pill { font: 600 11px var(--mono); padding: 1px 7px; border-radius: 999px; justify-self: start; }
+.p-ok { color: var(--ok); background: var(--ok-bg); } .p-no { color: var(--no); background: var(--no-bg); }
+.sheet p { margin: 0; font-size: 12.5px; color: var(--mut); }
+.tw { overflow-x: auto; } table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--mut); }
+.role { font: 12px var(--mono); }
+details summary { cursor: pointer; font-weight: 600; }
+</style>
+
+<main>
+  <header>
+    <h1 id="title">Asset bank</h1>
+    <p class="sub">Run rrh4: story → ids → specs and ground plans → states solved → sheets only for assets that first appear by entering → plates painted with each place's initial contents. Gold border = canonical.</p>
+  </header>
+
+  <section style="display:grid;gap:12px"><h2>Plates (environments)</h2><div id="places" style="display:grid;gap:14px"></div></section>
+  <section style="display:grid;gap:12px"><h2>Asset sheets</h2><div class="sheets" id="sheets"></div><p class="mini" id="skipped"></p></section>
+  <section class="card"><details><summary>Ids from the story (where the asset bank came from)</summary><div class="tw" style="margin-top:10px"><table id="ids"></table></div><p class="mini" id="links"></p></details></section>
+  <section class="card"><details><summary>The story</summary><div id="story" style="margin-top:10px;max-width:70ch"></div></details></section>
+</main>
+
+<script>
+(async () => {
+  const D = await (await fetch("data.json")).json(), $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  $("title").textContent = `${D.title}: sheets and plates`;
+  $("places").innerHTML = D.places.map((p) => `<article class="card">
+    <h3>${esc(p.name)} ${p.unresolved.length ? `<span class="pill p-no">still off: ${esc(p.unresolved.join(", "))}</span>` : '<span class="pill p-ok">checks pass</span>'}</h3>
+    <div class="row"><div class="canon"><img src="${esc(p.canonical)}" alt="${esc(p.name)} plate"></div>
+      ${p.tries.length > 1 ? `<div class="tries">${p.tries.filter((t) => t !== p.canonical).map((t) => `<figure><img src="${esc(t)}" alt="rejected try"><figcaption>rejected: ${esc(t.split("/")[1])}</figcaption></figure>`).join("")}</div>` : ""}</div>
+    <div class="facts">
+      <div><b>Look</b>${esc(p.look)}</div><div><b>Camera</b>${esc(p.camera)}</div>
+      <div><b>Already in it (initial contents)</b>${p.contents.length ? esc(p.contents.join(", ")) : "nothing"}</div>
+      <div><b>Checked (spots the story uses, doors)</b>${p.keys.length ? p.keys.map(esc).join("<br>") : "nothing: no scene uses a spot here"}</div>
+      ${p.doors.length ? `<div><b>Doors</b>${p.doors.map(esc).join("<br>")}</div>` : ""}
+    </div>
+    <ul class="checks">${p.lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul></article>`).join("");
+  $("sheets").innerHTML = D.assets.map((a) => `<div class="sheet"><img src="${esc(a.img)}" alt="${esc(a.name)} sheet">
+    <div class="t"><b>${esc(a.name)}</b><span class="pill ${a.ok ? "p-ok" : "p-no"}">${a.ok ? "checks pass" : "checks fail"}</span>
+    <p>${esc(a.spec)}${a.height ? ` <i>Height: ${esc(a.height)}.</i>` : ""}</p>${a.note ? `<p>minor: ${esc(a.note)}</p>` : ""}</div></div>`).join("");
+  $("skipped").innerHTML = "No sheet needed: " + D.skipped.map((s) => `<b>${esc(s.name)}</b> (${esc(s.why)})`).join(" · ");
+  $("ids").innerHTML = `<tr><th>id</th><th>name</th><th>role</th><th>belongs to</th><th>aliases</th></tr>` + D.ids.map((t) => `<tr><td class="role">${esc(t.id)}</td><td>${esc(t.name)}</td><td class="role">${esc(t.role)}${t.kind && t.kind !== "none" ? " · " + esc(t.kind) : ""}</td><td class="role">${esc([t.place !== "none" && t.place ? "in " + t.place : "", t.parent !== "none" && t.parent ? "part of " + t.parent : "", t.inside && t.inside !== "none" ? "inside " + t.inside : ""].filter(Boolean).join(" · "))}</td><td>${esc((t.aliases || []).join(", "))}</td></tr>`).join("");
+  $("links").textContent = "Physical links (constraints both sides respect): " + (D.links.map((l) => `${l.a} ${l.relation} ${l.b}: ${l.constraint}`).join(" · ") || "none");
+  $("story").innerHTML = D.story.split(/\n\s*\n/).map((p) => `<p>${esc(p)}</p>`).join("");
+})();
+</script>

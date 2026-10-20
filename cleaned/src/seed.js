@@ -100,6 +100,10 @@ export async function makeSeed(plan, jobs, tracker, { estimate }) {
     const gp = plan.seed.places.find((p) => p.id === loc.id);
     if (!gp) throw new Error(`seed: no ground plan for ${loc.id}`);
     const contents = (plan.initial?.[loc.id] || []).map((id) => plan.specs.find((a) => a.id === id)).filter(Boolean);
+    // Key = what the solved states actually use here (marks in beats and changes, their parent item) and the doors. Other marks
+    // are painted but not checked: custom-rrh4 rejected good plates over a door latch and a "bare" bed surface.
+    const used = plan.used?.[loc.id];
+    if (used) { const doors = new Set(gp.doors.map((d) => d.mark)); gp.marks = gp.marks.map((m) => ({ ...m, key: !m.area && (used.has(m.id) || doors.has(m.id) || [...used].some((u) => u.split(".")[0] === m.id)) })); }
     let note = "", best = null;
     for (let t = 1; t <= PLATE_TRIES; t++) {
       const file = t === 1 ? `roots/${loc.id}.png` : `roots/${loc.id}-t${t}.png`;
