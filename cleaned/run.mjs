@@ -102,9 +102,13 @@ try {
     console.log(`  initial contents: ${Object.entries(blocking.initial || {}).map(([k, v]) => `${k}: ${v.join(", ") || "—"}`).join(" · ") || "none"}`);
     if (entRun) await makeRoots(world, jobs, tracker, { places: false });   // reused sheets (copied jobs, cached)
     console.log("asset bank (first appearances by entry only)…");
+    const redo = opt("--redo-assets", null)?.split(",").filter(Boolean);
+    if (redo?.length && run.log.asset_specs) {   // re-spec only these (e.g. a container whose contents were missing)
+      const fresh = await specAssets(world, redo);
+      run.log.asset_specs = run.log.asset_specs.map((a) => fresh.find((f) => f.id === a.id) || a);
+    }
     const specs = run.log.asset_specs ??= await specAssets(world); run.save();
     if (!entRun) {
-      const redo = opt("--redo-assets", null)?.split(",").filter(Boolean);
       const keep = redo ? Object.fromEntries(Object.entries(run.log.assets || {}).filter(([id]) => !redo.includes(id))) : {};
       run.log.assets = await makeAssets(world, specs.filter((a) => !initialIds.has(a.id)), jobs, tracker, { estimate, keep }); run.save();
       if (!estimate) writeFileSync(join(dir, "assets.html"), renderAssets({ name, world, assets: run.log.assets, credits: jobs.spent() }));

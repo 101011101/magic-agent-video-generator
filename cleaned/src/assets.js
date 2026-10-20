@@ -11,7 +11,8 @@ import { frameStyle } from "./seed.js";
 const TRIES = 3;
 const SPEC = S.obj({ assets: S.arr(S.obj({ id: S.str, spec: S.str, height: S.str })) });
 
-export async function specAssets(world) {
+// only: spec just these ids (the rest of the set is still listed, for consistency and for what they contain).
+export async function specAssets(world, only = null) {
   const r = await jsonCall({ name: "asset-spec", schema: SPEC, effort: "high",
     prompt: `Write the canonical reference spec of every tracked thing in this story, so all of them can be drawn as one consistent set.
 For each id below write:
@@ -26,10 +27,10 @@ The set must agree with itself: one art style (below), consistent sizes, colours
 the story mentions (Red's red hooded cape, Grandmother's white nightcap…).
 Style: ${world.style}
 Things:
-${world.entities.map((e) => `- ${e.id} (${e.kind}): ${e.name}. ${e.look}`).join("\n")}
+${world.entities.filter((e) => !only || only.includes(e.id)).map((e) => { const inner = world.entities.filter((x) => x.inside === e.id).map((x) => x.name); return `- ${e.id} (${e.kind}): ${e.name}. ${e.look || ""}${inner.length ? ` At the start it holds: ${inner.join(", ")} (draw them in it).` : ""}`; }).join("\n")}
 Story (for details it mentions):
 ${world.story}` });
-  return world.entities.map((e) => ({ ...e, ...(r.assets.find((a) => a.id === e.id) || { spec: e.look, height: "" }) }));
+  return world.entities.filter((e) => !only || only.includes(e.id)).map((e) => ({ ...e, ...(r.assets.find((a) => a.id === e.id) || { spec: e.look, height: "" }) }));
 }
 
 export const sheetPrompt = (style, a, note = "") => `${frameStyle(style)}. Reference sheet of ONE ${a.kind === "prop" ? "object" : a.kind === "group" ? "group, all members side by side at their true relative sizes" : "character"}: ${a.name}. ${a.spec}${a.height ? ` Height: ${a.height}.` : ""}
