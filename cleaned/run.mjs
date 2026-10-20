@@ -85,7 +85,7 @@ try {
         run.log.ids = { table, chunks: tagged.chunks, links: await linkIds(st.story, table) }; run.save();
       }
       const T = run.log.ids.table;
-      world = run.log.world ??= { title: st.title, style: st.style, story: st.story,
+      world = run.log.world ??= { title: st.title, style: st.style, story: st.story, story_ids: run.log.ids.chunks.map((c) => c.tagged).join("\n\n"),
         entities: T.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => ({ id: t.id, name: t.name, kind: t.kind, look: "", inside: t.inside && t.inside !== "none" ? t.inside : "" })),
         locations: T.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
       fixtures = T.filter((t) => t.role === "fixture" && t.place !== "none");

@@ -79,18 +79,32 @@ export async function writeWorld(prompt, given = null) {
 }
 
 const marksText = (seed) => Object.entries(seed).map(([id, p]) => `Place ${id} (camera: ${p.camera}):\n${p.marks.map((m) => `  ${m.id}: ${m.name} — ${m.where}`).join("\n")}${p.doors.length ? `\n  doors: ${p.doors.map((d) => `${d.mark} → ${d.leads_to}`).join("; ")}` : ""}`).join("\n");
-const blockPrompt = (w, seed) => `${BLOCK_RULES}\n\nEntities:\n${w.entities.map((e) => `- ${e.id} (${e.kind}): ${e.name}`).join("\n")}\n\nMarks:\n${marksText(seed)}\n\nThe story:\n${w.story}`;
+// With an id'd story (I0), every mention is already resolved: "she{grandmother}". The blocking copies those ids instead of
+// re-reading pronouns itself, so the state manager and the id pass agree on who is who.
+const blockPrompt = (w, seed) => `${BLOCK_RULES}\n\nEntities:\n${w.entities.map((e) => `- ${e.id} (${e.kind}): ${e.name}`).join("\n")}\n\nMarks:\n${marksText(seed)}\n\n${w.story_ids ? `The story, with every mention resolved to its id in {braces}. Use exactly these ids for actors and objects; never re-decide who a word refers to:\n${w.story_ids}` : `The story:\n${w.story}`}`;
 
 // w: world; seed: { placeId: { camera, marks, doors } } (canonical, observed marks).
 export async function block(w, seed) {
+  // Lint = the state machine's rules + the cross-check with the id pass (every tagged asset on screen somewhere; nothing on
+  // screen the story never mentions). Up to two rewrites with the violations listed.
+  const lintAll = (steps) => {
+    const f = fold(w, seed, steps), bad = [...f.bad];
+    if (w.story_ids) {
+      const tagged = new Set([...w.story_ids.matchAll(/\{([a-z0-9,-]+)\}/g)].flatMap((m) => m[1].split(",")));
+      const shown = new Set(f.slides.flatMap((x) => x.present)), assets = new Set(w.entities.map((e) => e.id));
+      for (const id of assets) if (tagged.has(id) && !shown.has(id)) bad.push(`${id} is in the story but never on screen`);
+      for (const id of shown) if (!tagged.has(id)) bad.push(`${id} is on screen but the story never mentions it`);
+    }
+    return { ...f, bad };
+  };
   let r = await jsonCall({ name: "block", schema: S.obj({ steps: S.arr(STEP) }), effort: "high", prompt: blockPrompt(w, seed) });
-  let { bad } = fold(w, seed, r.steps);
-  if (bad.length) {
-    r = await jsonCall({ name: "block-fix", schema: S.obj({ steps: S.arr(STEP) }), effort: "high",
+  let { bad } = lintAll(r.steps);
+  for (let k = 0; k < 2 && bad.length; k++) {
+    r = await jsonCall({ name: k ? `block-fix${k + 1}` : "block-fix", schema: S.obj({ steps: S.arr(STEP) }), effort: "high",
       prompt: `${blockPrompt(w, seed)}\n\nYour last blocking broke these rules. Rewrite all of it and fix every one:\n${bad.map((b) => `- ${b}`).join("\n")}\n\nLast blocking:\n${JSON.stringify(r.steps)}` });
-    ({ bad } = fold(w, seed, r.steps));
+    ({ bad } = lintAll(r.steps));
   }
-  const { slides, initial } = fold(w, seed, r.steps);
+  const { slides, initial } = lintAll(r.steps);
   return check({ title: w.title, style: w.style, entities: w.entities, locations: w.locations, story: w.story, lint: bad, steps: r.steps, slides, initial });
 }
 
