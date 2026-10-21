@@ -9,6 +9,7 @@
 //   --entities-from <run>  reuse only that run's characters and props and their sheets; places, seed and story are new
 //   --plan-from <run>  reuse that run's world, story and ground plans (not its images); sheets come from the asset bank (A0)
 //   --redo-assets a,b  regenerate only these sheets (re-specced); the others are re-checked from their images, no credits
+//   --plan-only  stop after the states are solved (editor, ids, blocking, questions): no images
 //   --seed-only  stop after the asset bank and the seed plates (page shows sheets and plates)
 //   --assets-only  stop after the asset bank (sheets checked one by one and as a set): writes assets.html for review
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
@@ -18,6 +19,7 @@ import { usage, MODEL } from "./src/llm.js";
 import { Jobs, CAP, IMAGE } from "./src/jobs.js";
 import { writeWorld, writeStory, block, check } from "./src/sequencer.js";
 import { assignIds, classifyIds, linkIds } from "./src/ids.js";
+import { reviewStory, questions, answerQuestions } from "./src/editor.js";
 import { seedPlan, makeSeed } from "./src/seed.js";
 import { makeRoots } from "./src/roots.js";
 import { specAssets, makeAssets } from "./src/assets.js";
@@ -30,7 +32,7 @@ import { renderFilm } from "./src/film-page.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const estimate = args.includes("--estimate"), only = Number(opt("--slides", 0)), VIDEO_ON = args.includes("--video");
-const firstFrames = args.includes("--first-frames"), assetsOnly = args.includes("--assets-only"), seedOnly = args.includes("--seed-only"), planFrom = opt("--plan-from", null);
+const firstFrames = args.includes("--first-frames"), assetsOnly = args.includes("--assets-only"), seedOnly = args.includes("--seed-only"), planOnly = args.includes("--plan-only"), planFrom = opt("--plan-from", null);
 const clipsOnly = opt("--clips", null)?.split(",").map(Number) || null;
 const caseId = opt("--case", "custom"), label = opt("--label", "v1");
 const prompt = opt("--prompt", null) ?? JSON.parse(readFileSync(join(ROOT, "cases/cases.json"), "utf8")).find((c) => c.id === caseId)?.prompt;
@@ -73,29 +75,48 @@ try {
     // → then assets from the solved states: seed sheets only for assets whose first appearance is an entry, and plates painted
     // with their initial contents. Nothing can appear from nowhere: a prop used without being brought in was always there.
     console.log(`${name}: story…`);
-    let world, fixtures = [], links = [];
-    if (given) world = run.log.world ??= await writeWorld(prompt, given);   // --entities-from / --plan-from: the older world call
-    else {
-      // I0: every physical thing in the story gets an id (aliases, pronouns, coverage), a role (asset / fixture / place / part)
-      // and its physical links. Assets are tracked; fixtures become marks of their place; places get ground plans.
+    let world, fixtures = [], links = [], sp, blocking;
+    if (given) {   // --entities-from / --plan-from: the older world call, no editor
+      world = run.log.world ??= await writeWorld(prompt, given);
+      sp = run.log.seed_plan ??= await seedPlan(world, world.story); run.save();
+      blocking = run.log.blocking ??= await block(world, Object.fromEntries(sp.places.map((p) => [p.id, p]))); run.save();
+    } else {
       const st = run.log.story ??= await writeStory(prompt); run.save();
-      console.log("ids…");
-      if (!run.log.ids) {
-        const tagged = await assignIds(st.story), table = await classifyIds(st.story, tagged.table);
-        run.log.ids = { table, chunks: tagged.chunks, links: await linkIds(st.story, table) }; run.save();
+      // E1: the editor reads the story for logic holes right away (minimal edits).
+      if (!run.log.edit) { console.log("editor…"); const rv = await reviewStory(st.story); run.log.edit = { original: st.story, review: rv.holes, story: rv.story, rounds: [] }; run.save(); }
+      // Solve one story text: I0 ids (pronouns resolved in context) → ground plans → blocking → state manager (code, in block()).
+      const solve = async (text) => {
+        const tagged = await assignIds(text), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
+        const w = { title: st.title, style: st.style, story: text, story_ids: tagged.chunks.map((c) => c.tagged).join("\n\n"),
+          entities: table.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => ({ id: t.id, name: t.name, kind: t.kind, look: "", inside: t.inside && t.inside !== "none" ? t.inside : "" })),
+          locations: table.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
+        const fx = table.filter((t) => t.role === "fixture" && t.place !== "none"), ls = ids.links.filter((l) => l.belongs);
+        const plan0 = await seedPlan(w, text, { fixtures: fx, links: ls });
+        return { ids, world: w, sp: plan0, blocking: await block(w, Object.fromEntries(plan0.places.map((p) => [p.id, p]))) };
+      };
+      if (!run.log.blocking) {
+        // Q: the state manager's findings become questions; the editor answers them all at once; solve again (≤ 2 rounds).
+        console.log("ids, ground plans, blocking, state manager…");
+        let text = run.log.edit.story, solved = await solve(text);
+        const answered = [];
+        for (let r = 0; r < 2; r++) {
+          const qs = questions({ blocking: solved.blocking, ids: solved.ids, answered });
+          console.log(`  question round ${r + 1}: ${qs.length} question(s)${qs.length ? ": " + qs.map((q) => q.key).join(", ") : ""}`);
+          if (!qs.length) break;
+          const ans = await answerQuestions(text, qs);
+          answered.push(...ans.answers.filter((a) => a.kind === "always-there").map((a) => a.key));
+          run.log.edit.rounds.push({ questions: qs, answers: ans.answers, before: text, after: ans.story }); run.save();
+          text = ans.story; solved = await solve(text);
+        }
+        run.log.edit.story = text;
+        run.log.edit.open = questions({ blocking: solved.blocking, ids: solved.ids, answered });
+        Object.assign(run.log, { ids: solved.ids, world: solved.world, seed_plan: solved.sp, blocking: solved.blocking }); run.save();
       }
-      const T = run.log.ids.table;
-      world = run.log.world ??= { title: st.title, style: st.style, story: st.story, story_ids: run.log.ids.chunks.map((c) => c.tagged).join("\n\n"),
-        entities: T.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => ({ id: t.id, name: t.name, kind: t.kind, look: "", inside: t.inside && t.inside !== "none" ? t.inside : "" })),
-        locations: T.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
-      fixtures = T.filter((t) => t.role === "fixture" && t.place !== "none");
-      links = run.log.ids.links.filter((l) => l.belongs);
-      console.log(`  ${T.length} ids: ${world.entities.length} assets, ${fixtures.length} fixtures, ${world.locations.length} places, ${links.length} links`);
+      world = run.log.world; sp = run.log.seed_plan; blocking = run.log.blocking;
+      fixtures = run.log.ids.table.filter((t) => t.role === "fixture" && t.place !== "none"); links = run.log.ids.links.filter((l) => l.belongs);
+      console.log(`  ${run.log.ids.table.length} ids: ${world.entities.length} assets, ${fixtures.length} fixtures, ${world.locations.length} places, ${links.length} links · open questions: ${run.log.edit.open.length}`);
     }
-    console.log("asset bank, spec half: ground plans…");
-    const sp = run.log.seed_plan ??= await seedPlan(world, world.story, { fixtures, links }); run.save();
-    console.log("blocking (states)…");
-    const blocking = run.log.blocking ??= await block(world, Object.fromEntries(sp.places.map((p) => [p.id, p]))); run.save();
+    if (planOnly) { plan = { ...blocking }; throw Object.assign(new Error("plan only: states solved, no images"), { stop: true }); }
     // No sheet for assets that first appear as a place's initial contents (painted into its plate) or packed inside another
     // asset (they come with their container: a cake in the basket).
     const initialIds = new Set([...Object.values(blocking.initial || {}).flat(), ...world.entities.filter((e) => e.inside).map((e) => e.id)]);
