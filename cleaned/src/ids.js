@@ -18,8 +18,8 @@ async function tagChunk(chunk, table, i, note = "") {
   return jsonCall({ name: "ids-tag", effort: "medium",
     schema: S.obj({ mentions: S.arr(S.obj({ text: S.str, ids: S.arr(ID) })), new_ids: S.arr(S.obj({ id: ID, name: S.str, kind: S.enum(KINDS) })), tagged: S.str }),
     prompt: `Give every PHYSICAL thing this story text mentions an id: characters, animals, objects, food, places, rooms, buildings, and
-parts of things (a door, a bed's head, a wolf's belly). Every noun, alias and pronoun that refers to a thing gets the id of that
-thing. Mentions that mean the same thing get the same id ("the old woman", "she", "Grandmother" → grandmother). A plural pronoun
+parts of things (a door, a bed's head, a dog's tail). Every noun, alias and pronoun that refers to a thing gets the id of that
+thing. Mentions that mean the same thing get the same id ("the old man", "he", "Grandpa" → grandpa). A plural pronoun
 for several things gets all their ids ("they" → red, grandmother); never make a new id for a temporary set. Sounds, voices, light,
 feelings and other things you cannot draw as an object get no id. Reuse ids from the table; add a new id (short, lowercase,
 hyphens) only for a thing not in it. kind "group" only for things that always appear together (six stones).
@@ -78,7 +78,7 @@ pictures must agree on (side, wall, colour, material, size), else "".\n\nStory:\
 
 // Role of every id: an ASSET moves, is carried or acts (characters, animals, handheld props) and is tracked frame to frame;
 // a FIXTURE stays where it is (bed, table, shelf, door, flowers) and belongs to one place's ground plan; a PLACE is a setting;
-// a PART belongs to another id (a wolf's ears, a bed's head); NONE is not drawable. Fixtures name their place, parts their parent.
+// a PART belongs to another id (a dog's ears, a bed's head); NONE is not drawable. Fixtures name their place, parts their parent.
 export async function classifyIds(story, table) {
   const ids = table.map((t) => t.id), places = table.filter((t) => t.kind === "place").map((t) => t.id);
   const r = await jsonCall({ name: "ids-classify", effort: "medium",
@@ -88,7 +88,7 @@ export async function classifyIds(story, table) {
     prompt: `Classify every id of this story.
 role: asset = a character or animal, or a thing that is moved, carried, worn or handed over in the story (tracked frame to frame);
 fixture = a thing that stays where it is in one place (furniture, a door, a window, plants, a hearth); place = a setting where
-scenes happen; part = a part of another id (a wolf's ears, a bed's head); none = not something to draw.
+scenes happen; part = a part of another id (a dog's ears, a bed's head); none = not something to draw.
 kind (assets only): character (a person or animal that acts), group (several things that always appear together), prop; else none.
 place (fixtures only): the place it belongs to; else none. parent (parts only): the id it is part of; else none.
 Clothes a character wears all story long are a PART of that character (one part even if named twice: hood and cloak); clothes

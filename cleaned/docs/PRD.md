@@ -40,20 +40,53 @@
 ## 4. Pipeline (states first, end to end)
 
 ```
-prompt ─► [S1a Story] title, style, prose
-       ─► [I0 IDs] every physical thing → one id (aliases, pronouns; coverage check); role: asset (tracked) / fixture
-            (stays in a place) / place / part; physical links proposed and checked against the text (room ⊂ house)
-       ─► [A0 Asset bank, spec half] (text) asset specs; environment specs = ground plans: named marks (fixtures keep
-            their ids), essentials, door swing; constraints from links and from the user's input
-       ─► [S1b Blocking] records against the marks, folded into the STATE TABLE (code): every requested asset is in its
-            frame; a prop used at a place without being brought in was always there → the place's INITIAL CONTENTS;
-            characters start, enter or reappear; held props go with their holder; props seen elsewhere are carried in
-       ─► [A0 Asset bank, image half] sheets only for assets that first appear by entering; plates for the places scenes
-            use, painted with their ground plan + initial contents, checked (the plan wins)
-       ─► per slide: base = latest row at the place · entering assets from the latest row that has them, else their sheet ·
-            edit with only what changes · focused checks + framing gate
-       ─► [S6] slideshow
+natural-language prompt
+  ─► [S1a Story]          LLM (creative director): title, style, prose
+  ─► [E1 Editor]          LLM: logic read of the story (holes, objects from nowhere, unclear motives) → minimal edits     (planned)
+  ─► [I0 IDs]             small LLM calls: every mention → id in context (pronouns, aliases); coverage; role
+                           (asset / fixture / place / part); inside-of; physical links proposed then checked
+  ─► [A0 spec half]       LLM: asset specs; environment specs = ground plans (fixtures are marks; link constraints)
+  ─► [S1b Blocking]       LLM: one record per step against the marks, using the ids from I0 (never re-reading pronouns)
+  ─► [SM State manager]   CODE: fold the records into the state table (rows of ids per frame); infer each place's initial
+                           contents; lint; cross-check against the ids
+  ─► [Q Question loop]    CODE writes questions from the state manager's findings (props inferred as always there, assets
+                           never on screen, untagged mentions, entry/exit repairs, props seen where never carried);
+                           E1 answers ALL of them at once with minimal story edits; I0 → SM rerun; ≤ 2 rounds; what is
+                           left goes to the user                                                                     (planned)
+  ─► [A0 image half]      image jobs: sheets for first appearances by entry; plates with initial contents; vision checks
+  ─► [S3–S5 Slides]       CODE picks base and references from the state table; image edit; vision check; framing gate (code)
+  ─► [S6] slideshow (CODE)
 ```
+
+### 4.1 Determinism: what is code, what is a model
+
+| Stage | Kind | Calls (`name` in `.cache/`) |
+|---|---|---|
+| Story | LLM, creative | `story` (older runs: `world`) |
+| Editor | LLM | planned: `edit`, `edit-answer` |
+| IDs | small LLM calls | `ids-tag` + `ids-coverage` per chunk, `ids-classify`, `ids-link-propose`, `ids-link-check` per pair |
+| Asset specs, ground plans | LLM, creative | `asset-spec`, `seed-plan` |
+| Blocking | LLM | `block`, `block-fix`, `block-fix2` |
+| **State manager** | **code** | none: `fold` (states, initial contents, lint), id cross-check, `tracker` rows, `lastSeen`, `baseFor` |
+| Question loop | code (questions) + LLM (answers) | questions: none; answers: the editor |
+| Sheet and plate checks | vision LLM | `asset-check`, `asset-set`, `seed-observe` |
+| Frame building | code | prompts are templates from the records; references from the state table |
+| Frame checks | vision LLM + code | `verify-step` (accept or retry only; never writes the state table); framing gate is SSIM (code) |
+| Clip prompts (stage 2) | LLM | `motion` |
+
+Rule: a model never writes the state table. The table is the requested ids per frame (by induction every requested asset is
+in its frame); vision checks only accept or retry an image.
+
+### 4.2 Same input, same result
+- Every LLM call is cached on disk by (model, call name, schema, prompt, images); every paid image job by (spec, input file
+  hashes). The same prompt reproduces the same story, ids, states and images with no new calls and no credits.
+- Strictly, a state depends on the story AND the blocking call; with the cache, one story gives one blocking and so one state.
+
+### 4.3 Stages and fixtures (planned, T-001)
+- Each stage reads and writes one JSON file in the run directory (`story.json`, `ids.json`, `specs.json`, `blocking.json`,
+  `states.json`, `assets.json`, `plates.json`, `frames/`). `node cleaned/stage.mjs <stage> --run <dir>` runs one stage.
+- `cleaned/tests/fixtures/` holds hand-checked inputs (a perfect blocking, a story with a known hole); a stage run on a
+  fixture tests that stage alone. The full script on any prompt runs every stage in order.
 
 ## 5. Subsystems
 

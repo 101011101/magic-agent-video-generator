@@ -47,7 +47,7 @@ Each step becomes one keyframe; the frame shows the state AFTER the step. Write 
   Required for be / enter / appear on characters. Otherwise "" means unchanged. Feelings follow the story (fear while fleeing).
   For a group or prop, pose may say its state; expression "".
 - Each place has exactly ONE establish step: the first step there. Anyone who arrives later must enter (by a door or path mark),
-  or appear (only someone who vanished earlier, e.g. out of the wolf, or a prop brought in).
+  or appear (only someone who vanished earlier, e.g. out of a hiding place, or a prop brought in).
 - Lie, sit and sleep on furniture marks (the bed, bed.head), not on floor marks, unless the story says the floor.
 - A move goes to a nearby mark. If an item is between the actor and the mark, set via to it, or add a step to that item first.
 - A character on screen who goes to another place gets an exit step here and an enter beat there. Set time_jump = true instead

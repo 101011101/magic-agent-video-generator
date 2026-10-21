@@ -20,11 +20,11 @@ For each id below write:
   distinctive details that must never change. For an animal say whether it is natural or stands and dresses like a person. For a
   prop: shape, material, colour, size in hands.
   Describe ONLY its normal look at the START of the story, on its own: never later states (a swollen belly, wearing someone
-  else's cap, torn, filled) and never other characters or their body parts (no "the wolf's ears" in the nightcap's spec).
-- height: relative to a grown person ("a small child, about half a grown person", "a wolf standing upright, a head taller than a
+  else's cap, torn, filled) and never other characters or their body parts (no "the dog's ears" in a hat's spec).
+- height: relative to a grown person ("a small child, about half a grown person", "a large dog standing on its hind legs, a head taller than a
   grown man", "fits in one hand").
 The set must agree with itself: one art style (below), consistent sizes, colours that suit the story's palette, and every detail
-the story mentions (Red's red hooded cape, Grandmother's white nightcap…).
+the story mentions (a red hooded cape, a white nightcap…).
 Style: ${world.style}
 Things:
 ${world.entities.filter((e) => !only || only.includes(e.id)).map((e) => { const inner = world.entities.filter((x) => x.inside === e.id).map((x) => x.name); return `- ${e.id} (${e.kind}): ${e.name}. ${e.look || ""}${inner.length ? ` At the start it holds: ${inner.join(", ")} (draw them in it).` : ""}`; }).join("\n")}
