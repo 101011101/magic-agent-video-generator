@@ -22,7 +22,8 @@ parts of things (a door, a bed's head, a dog's tail). Every noun, alias and pron
 thing. Mentions that mean the same thing get the same id ("the old man", "he", "Grandpa" → grandpa). A plural pronoun
 for several things gets all their ids ("they" → red, grandmother); never make a new id for a temporary set. Sounds, voices, light,
 feelings and other things you cannot draw as an object get no id. Reuse ids from the table; add a new id (short, lowercase,
-hyphens) only for a thing not in it. kind "group" only for things that always appear together (six stones).
+hyphens) only for a thing not in it; never rename or re-id a thing already in the table. A pronoun that refers to nothing
+("It's me!", "It was raining") is not a mention. kind "group" only for things that always appear together (six stones).
 mentions: each mention in order, exactly as written, with its id(s). new_ids: things added to the table by this chunk.
 tagged: the text unchanged except that every mention is followed by {id} or {id,id}, e.g. "They{red,grandmother} opened the door{cottage-door}."
 ${note ? `\nThe last pass missed these; tag them too: ${note}\n` : ""}
@@ -37,11 +38,13 @@ async function coverage(tagged) {
   return jsonCall({ name: "ids-coverage", effort: "medium", schema: S.obj({ untagged: S.arr(S.str) }),
     prompt: `In this text every mention of a thing (noun, alias or pronoun referring to a character, animal, object, food, place, room,
 building or part of one) should be followed by {id}. List every such mention that has no {id} after it, exactly as written.
-Abstract words (fear, time, idea) do not need one. Return [] if none.\n\n${tagged}` });
+Abstract words (fear, time, idea) and pronouns that refer to nothing ("It's me!") do not need one. Return [] if none.\n\n${tagged}` });
 }
 
-export async function assignIds(story) {
-  const table = [], parts = [];
+// prev: the id table of an earlier solve of the same story (after an edit). Starting from it keeps ids stable, so an answered
+// question about "flowers" is not asked again about "daisies".
+export async function assignIds(story, prev = []) {
+  const table = prev.map((t) => ({ id: t.id, name: t.name, kind: t.kind, aliases: [...(t.aliases || [])] })), parts = [];
   for (const [i, c] of chunks(story).entries()) {
     let r = await tagChunk(c, table, i);
     let miss = (await coverage(r.tagged)).untagged;

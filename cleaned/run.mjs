@@ -97,8 +97,8 @@ try {
       // E1: the editor reads the story for logic holes right away (minimal edits).
       if (!run.log.edit) { console.log("editor…"); const rv = await reviewStory(st.story); run.log.edit = { original: st.story, review: rv.holes, story: rv.story, rounds: [] }; run.save(); }
       // Solve one story text: I0 ids (pronouns resolved in context) → ground plans → blocking → state manager (code, in block()).
-      const solve = async (text) => {
-        const tagged = await assignIds(text), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
+      const solve = async (text, prev = []) => {
+        const tagged = await assignIds(text, prev), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
         const w = { title: st.title, style: st.style, story: text, story_ids: tagged.chunks.map((c) => c.tagged).join("\n\n"),
           entities: assetsOf(table),
           locations: table.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
@@ -118,7 +118,7 @@ try {
           const ans = await answerQuestions(text, qs);
           answered.push(...ans.answers.filter((a) => a.kind === "always-there").map((a) => a.key));
           run.log.edit.rounds.push({ questions: qs, answers: ans.answers, before: text, after: ans.story }); run.save();
-          text = ans.story; solved = await solve(text);
+          text = ans.story; solved = await solve(text, solved.ids.table);   // same things keep the same ids
         }
         run.log.edit.story = text;
         run.log.edit.open = questions({ blocking: solved.blocking, ids: solved.ids, answered });
