@@ -1,0 +1,130 @@
+<title>Keyframe Pipeline Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: flow chart first, then the stages as a table (what goes in and out, model or code), the state manager's rules, and the schemas. */
+:root {
+  --bg: #f4f5f2; --panel: #ffffff; --fg: #1c211e; --mut: #5f6863; --line: #dbe0dc; --accent: #2d6a4f;
+  --llm: #8a4b00; --llm-bg: #fbecd6; --code: #1f5f6b; --code-bg: #dcecef; --img: #6b3fa0; --img-bg: #ece3f7;
+  --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111412; --panel: #191d1a; --fg: #e5eae6; --mut: #98a29c; --line: #2b322e; --accent: #7cc9a3;
+  --llm: #f0b45c; --llm-bg: #3a2c14; --code: #7cc3cf; --code-bg: #17303a; --img: #c7a6f0; --img-bg: #2c2140; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111412; --panel: #191d1a; --fg: #e5eae6; --mut: #98a29c; --line: #2b322e; --accent: #7cc9a3;
+  --llm: #f0b45c; --llm-bg: #3a2c14; --code: #7cc3cf; --code-bg: #17303a; --img: #c7a6f0; --img-bg: #2c2140; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 14px/1.55 var(--sans); }
+main { max-width: 1120px; margin: 0 auto; padding-block: 24px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1 { font-size: 24px; margin: 0; text-wrap: balance; }
+h2 { font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--mut); margin: 0; }
+p { max-width: 75ch; margin: 0; } .mut { color: var(--mut); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.chart { overflow-x: auto; }
+.tag { font: 600 11px var(--mono); padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.t-llm { color: var(--llm); background: var(--llm-bg); } .t-code { color: var(--code); background: var(--code-bg); } .t-img { color: var(--img); background: var(--img-bg); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--mut); }
+.tw { overflow-x: auto; } table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--mut); }
+code { font: 12px var(--mono); }
+ol.rules { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 80ch; }
+</style>
+
+<main>
+  <header style="display:grid;gap:6px">
+    <h1>Keyframe pipeline: flow, logic and schemas</h1>
+    <p class="mut">From a natural-language prompt to slides. Models write and check; code keeps the state. Nothing is painted until the plan is clean.</p>
+  </header>
+  <div class="legend"><span><span class="tag t-llm">LLM</span> language model (cached by exact input)</span><span><span class="tag t-code">code</span> deterministic</span><span><span class="tag t-img">image</span> paid image job + vision check</span></div>
+
+  <section class="card">
+    <h2>Flow chart</h2>
+    <div class="chart">
+<pre class="mermaid">
+flowchart TD
+  P([Natural-language prompt]) --> S[Story<br/>LLM: title, style, prose]
+  S --> E[Editor review<br/>LLM: logic holes, minimal edits]
+  E --> I1
+  subgraph SOLVE [Solve one story text]
+    I1[ID pass: tag each chunk in order<br/>LLM, running id table; unchanged chunks reused]
+    I1 --> I2[Coverage<br/>parser in code; LLM only for leftovers]
+    I2 --> I3[Classify + links<br/>LLM: role, place, parent, inside; propose then check links]
+    I3 --> G[Environment specs = ground plans<br/>LLM; reused if environments and fixtures unchanged]
+    G --> B[Blocking<br/>LLM: records against marks, using ids; patch after an edit]
+    B --> SM[State manager<br/>CODE: fold records into the state table,<br/>initial contents, rules, id cross-check]
+  end
+  SM --> Q{Questions?<br/>CODE from findings}
+  Q -- yes, round 1 or 2 --> A[Editor answers all at once<br/>LLM: edit / always-there / cut]
+  A --> I1
+  Q -- none, or 2 rounds done --> GATE{Clean plan?<br/>CODE}
+  GATE -- no --> U([Stop: show the open questions])
+  GATE -- yes --> SP[Asset specs<br/>LLM]
+  SP --> SH[Sheets for first appearances by entry<br/>IMAGE + vision check]
+  GATE -- yes --> PL[Plates: environment + initial contents<br/>IMAGE + vision check]
+  SH --> F
+  PL --> F
+  subgraph SLIDE [Per slide]
+    F[Pick base and references<br/>CODE: base = lastSeen environment;<br/>entering asset = lastSeen asset, else its sheet] --> T[Edit prompt from the record<br/>CODE template]
+    T --> X[Image edit<br/>IMAGE]
+    X --> V[Check<br/>vision: accept or retry; framing gate in CODE]
+    V -- retry --> X
+    V -- accept --> R[(State table row:<br/>requested ids)]
+  end
+  R --> SL([Slideshow])
+</pre>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Stages</h2>
+    <div class="tw"><table>
+      <tr><th>Stage</th><th>Kind</th><th>In</th><th>Out</th><th>Call names</th></tr>
+      <tr><td>Story</td><td><span class="tag t-llm">LLM</span></td><td>prompt</td><td><code>story{title, style, story}</code></td><td><code>story</code></td></tr>
+      <tr><td>Editor review</td><td><span class="tag t-llm">LLM</span></td><td>story</td><td>holes + edited story</td><td><code>edit-review</code></td></tr>
+      <tr><td>ID pass</td><td><span class="tag t-llm">LLM</span> <span class="tag t-code">code</span></td><td>story, earlier id table and chunks</td><td>id table, tagged chunks, links</td><td><code>ids-tag</code> (changed chunks), parser then <code>ids-coverage</code> (leftovers), <code>ids-classify</code>, <code>ids-link-propose</code>, <code>ids-link-check</code></td></tr>
+      <tr><td>Environment specs</td><td><span class="tag t-llm">LLM</span></td><td>environments, fixtures, links, story</td><td>ground plans: marks, essentials, doors</td><td><code>seed-plan</code> (skipped when unchanged)</td></tr>
+      <tr><td>Blocking</td><td><span class="tag t-llm">LLM</span></td><td>id'd story, marks, earlier blocking</td><td>records (steps)</td><td><code>block</code>, <code>block-patch</code>, <code>block-fix</code></td></tr>
+      <tr><td>State manager</td><td><span class="tag t-code">code</span></td><td>records, entities</td><td>folded state per slide, initial contents, rule breaks</td><td>none</td></tr>
+      <tr><td>Questions</td><td><span class="tag t-code">code</span></td><td>state manager findings</td><td>questions with keys</td><td>none</td></tr>
+      <tr><td>Editor answers</td><td><span class="tag t-llm">LLM</span></td><td>story + all questions</td><td>edited story</td><td><code>edit-answer</code></td></tr>
+      <tr><td>Gate</td><td><span class="tag t-code">code</span></td><td>rule breaks, open questions</td><td>go / stop</td><td>none</td></tr>
+      <tr><td>Asset specs</td><td><span class="tag t-llm">LLM</span></td><td>assets, contents, story</td><td>spec per asset</td><td><code>asset-spec</code></td></tr>
+      <tr><td>Sheets</td><td><span class="tag t-img">image</span></td><td>specs of assets that first appear by entering</td><td>one sheet each</td><td><code>asset-check</code>, <code>asset-set</code></td></tr>
+      <tr><td>Plates</td><td><span class="tag t-img">image</span></td><td>ground plan + initial contents</td><td>one plate per environment</td><td><code>seed-observe</code></td></tr>
+      <tr><td>Slides</td><td><span class="tag t-code">code</span> <span class="tag t-img">image</span></td><td>state table, record</td><td>frame + state row</td><td><code>verify-step</code> (accept or retry only)</td></tr>
+    </table></div>
+  </section>
+
+  <section class="card">
+    <h2>State manager rules (code)</h2>
+    <ol class="rules">
+      <li>A frame's row is the ids requested for it, plus its environment. By induction every requested asset is in its frame. No model writes a row.</li>
+      <li>The base of a slide is the latest row that contains its environment; an asset entering a frame comes from the latest row that contains it; its sheet is used only the first time it ever appears.</li>
+      <li>A prop used at a place without being brought in, and never seen elsewhere, was always there: it joins that place's initial contents (painted into the plate). Characters are never assumed.</li>
+      <li>Held props move with their holder; contents move inside their container; things packed in a fixture are part of its place; things on a part come with its owner.</li>
+      <li>A prop seen elsewhere must be carried in; "appear" is only allowed after "vanish"; a character on screen must exit before it is somewhere else.</li>
+      <li>Every asset the id pass tagged is on screen somewhere; nothing on screen is untagged.</li>
+      <li>Each finding becomes a question for the editor; images wait until there are none.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Schemas (run.json)</h2>
+    <div class="tw"><table>
+      <tr><th>Record</th><th>Fields</th></tr>
+      <tr><td>story</td><td><code>title, style, story</code></td></tr>
+      <tr><td>edit</td><td><code>original, review[{hole, fix}], rounds[{questions[{key, q}], answers[{key, kind, sentence}], before, after}], story, open[]</code></td></tr>
+      <tr><td>ids.table row</td><td><code>id, name, tag_kind, role (asset | fixture | place | part | none), kind (character | group | prop | none), place, parent, inside, aliases[]</code></td></tr>
+      <tr><td>ids.chunks</td><td><code>text, tagged ("she{grandmother}"), mentions[{text, ids[]}], new_ids, untagged[]</code></td></tr>
+      <tr><td>ids.links</td><td><code>a, b, relation (part-of | inside | same-thing-other-view), belongs, evidence, constraint</code></td></tr>
+      <tr><td>world</td><td><code>title, style, story, story_ids, entities[{id, name, kind, inside, home}], locations[{id, name}]</code></td></tr>
+      <tr><td>ground plan (environment spec)</td><td><code>id, look, camera, marks[{id, name, where, essential, area, key}], doors[{mark, leads_to, swing}], light</code></td></tr>
+      <tr><td>blocking record (step)</td><td><code>place, kind, time_jump, beats[{actor, action, to, via, object, pose, expression}], change{mark, state}, caption</code></td></tr>
+      <tr><td>folded slide</td><td><code>n, location, present[], cast[{id, where, acting}], changed[], beats, change, ste[], caption</code> · plan: <code>initial{place: [ids]}, lint[]</code></td></tr>
+      <tr><td>state table row (tracker)</td><td><code>id, slide, location, present[] (requested), observed[], file, base, refs[{id, file, from}], op, hops, accepted, forced</code></td></tr>
+      <tr><td>asset / plate</td><td><code>asset: id, name, kind, spec, height, file, tries[], ok</code> · <code>plate: plate, tries, unresolved[], contents[]</code></td></tr>
+      <tr><td>jobs / ledger</td><td><code>jobs{key: {sig, endpoint, file, inputs, prompt, credits}}</code> · <code>ledger{total, runs{name: credits}}</code></td></tr>
+    </table></div>
+  </section>
+</main>

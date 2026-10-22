@@ -42,7 +42,7 @@
 ```
 natural-language prompt
   ─► [S1a Story]          LLM (creative director): title, style, prose
-  ─► [E1 Editor]          LLM: logic read of the story (holes, objects from nowhere, unclear motives) → minimal edits     (planned)
+  ─► [E1 Editor]          LLM: logic read of the story (holes, objects from nowhere, unclear motives) → minimal edits
   ─► [I0 IDs]             small LLM calls: every mention → id in context (pronouns, aliases); coverage; role
                            (asset / fixture / place / part); inside-of; physical links proposed then checked
   ─► [A0 spec half]       LLM: asset specs; environment specs = ground plans (fixtures are marks; link constraints)
@@ -52,21 +52,31 @@ natural-language prompt
   ─► [Q Question loop]    CODE writes questions from the state manager's findings (props inferred as always there, assets
                            never on screen, untagged mentions, entry/exit repairs, props seen where never carried);
                            E1 answers ALL of them at once with minimal story edits; I0 → SM rerun; ≤ 2 rounds; what is
-                           left goes to the user                                                                     (planned)
+                           left goes to the user; images only from a clean plan (gate)
   ─► [A0 image half]      image jobs: sheets for first appearances by entry; plates with initial contents; vision checks
   ─► [S3–S5 Slides]       CODE picks base and references from the state table; image edit; vision check; framing gate (code)
   ─► [S6] slideshow (CODE)
 ```
+
+### 4.0 The loop in one line
+Story → editor → solve (ids → ground plans → blocking → state manager) → questions → editor answers all at once → solve again
+reusing what did not change (unchanged chunks keep their tags; ground plans reused when environments and fixtures are the same;
+blocking revised as a patch) → at most 2 rounds → **gate**: images only from a clean plan (no broken rule, no open question).
+
+### 4.0b Environments are elements
+A frame row holds its environment like any element. The base of a slide is `lastSeen(environment)`, the same lookup as an asset's
+latest context. What is special about an environment is three properties, not a separate pipeline: every frame has exactly one;
+other elements stand on its marks and fixtures belong to it; its first appearance is a painted plate (its "sheet").
 
 ### 4.1 Determinism: what is code, what is a model
 
 | Stage | Kind | Calls (`name` in `.cache/`) |
 |---|---|---|
 | Story | LLM, creative | `story` (older runs: `world`) |
-| Editor | LLM | planned: `edit`, `edit-answer` |
-| IDs | small LLM calls | `ids-tag` + `ids-coverage` per chunk, `ids-classify`, `ids-link-propose`, `ids-link-check` per pair |
+| Editor | LLM | `edit-review` (after the story), `edit-answer` (all questions at once) |
+| IDs | small LLM calls + parser | `ids-tag` per changed chunk; coverage: parser (code) first, `ids-coverage` only for leftovers; `ids-classify`, `ids-link-propose`, `ids-link-check` per pair |
 | Asset specs, ground plans | LLM, creative | `asset-spec`, `seed-plan` |
-| Blocking | LLM | `block`, `block-fix`, `block-fix2` |
+| Blocking | LLM | `block` (first solve), `block-patch` (after an edit: changed steps only), `block-fix`, `block-fix2` |
 | **State manager** | **code** | none: `fold` (states, initial contents, lint), id cross-check, `tracker` rows, `lastSeen`, `baseFor` |
 | Question loop | code (questions) + LLM (answers) | questions: none; answers: the editor |
 | Sheet and plate checks | vision LLM | `asset-check`, `asset-set`, `seed-observe` |
@@ -76,6 +86,23 @@ natural-language prompt
 
 Rule: a model never writes the state table. The table is the requested ids per frame (by induction every requested asset is
 in its frame); vision checks only accept or retry an image.
+
+### 4.1b Data schemas (all in `runs/<case>-<label>/run.json`)
+| Record | Fields |
+|---|---|
+| story | `title, style, story` |
+| edit | `original, review[{hole, fix}], rounds[{questions[{key, q}], answers[{key, kind: edit/always-there/cut, sentence}], before, after}], story, open[]` |
+| ids.table row | `id, name, tag_kind, role: asset/fixture/place/part/none, kind: character/group/prop/none, place, parent, inside, aliases[]` |
+| ids.chunks | `text, tagged ("she{grandmother}"), mentions[{text, ids[]}], new_ids, untagged[]` |
+| ids.links | `a, b, relation: part-of/inside/same-thing-other-view, belongs, evidence, constraint` |
+| world | `title, style, story, story_ids, entities[{id, name, kind, inside, home}], locations[{id, name}]` |
+| seed_plan.places (environment spec) | `id, look, camera, marks[{id, name, where, essential, area, size, faces, key}], doors[{mark, leads_to, swing}], light` |
+| blocking.steps (record) | `place, kind, time_jump, beats[{actor, action, to, via, object, pose, expression}], change{mark, state}, caption` |
+| blocking.slides (folded state) | `n, location, present[], cast[{id, where, acting}], changed[], beats, change, ste[], caption`; `initial{place: [ids]}`, `lint[]` |
+| asset_specs / assets | `id, name, kind, spec, height` / `file, tries[{t, file, ok, chk}], ok, set` |
+| seed (plates) | `place: {plate, tries, unresolved[], observed[], contents[]}` |
+| tracker.json frames (state table) | `id, slide, location, present[] (requested ids), observed[], file, base, refs[{id, file, from}], op, hops, accepted, forced` |
+| jobs / ledger | `jobs{key: {sig, endpoint, file, inputs, prompt, credits}}`; `runs/ledger.json {total, runs{name: credits}}` |
 
 ### 4.2 Same input, same result
 - Every LLM call is cached on disk by (model, call name, schema, prompt, images); every paid image job by (spec, input file
