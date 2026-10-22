@@ -116,6 +116,7 @@ th.cur { background: var(--retry-bg); }
 <script>
 (async () => {
   const D = await (await fetch("data.json")).json();
+  D.notes ??= {};
   const $ = (id) => document.getElementById(id), esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const S = D.slides, name = (id) => D.entities[id]?.name || id;
   const status = (s) => !s.built ? "none" : s.forced ? "fail" : s.attempts.length > 1 ? "retry" : "pass";
@@ -158,13 +159,13 @@ th.cur { background: var(--retry-bg); }
         <div><b>${esc(name(c.id))}</b>${sheet ? '<span class="tag t-sheet">sheet</span>' : '<span class="tag t-carry">from base</span>'}${seen ? "" : '<span class="tag t-miss">not seen</span>'}${s.changed.includes(c.id) ? '<span class="tag t-carry">changes</span>' : ""}
         <small>${esc(c.where)}${c.acting ? " · " + esc(c.acting) : ""}</small></div></div>`;
     }).join("");
-    const st = s.state;
-    $("state").innerHTML = `<div class="envrow"><img src="${esc(st.env.img)}" alt="Base frame"><div><b>Environment:</b> ${esc(st.env.place)}, taken from <b>${esc(st.env.from)}</b> (the latest frame of this place)<br>
-      <b>Remembered in it:</b> ${st.remembered.length ? st.remembered.map(name).map(esc).join(", ") : "nothing (empty plate)"}<br>
-      ${st.onlyBase ? '<span class="good">Everything asked for is already in the base frame → the only reference should be the base; just transform it.</span>' : '<span>Some assets enter this frame → each comes from the latest frame that shows it, or its seed sheet if it never appeared.</span>'}
-      ${st.dropped.length ? `<br><b>Leaves the frame:</b> ${st.dropped.map(name).map(esc).join(", ")}` : ""}${st.lost.length ? `<br><span class="badc">Not seen after the edit (tracker forgets): ${st.lost.map(name).map(esc).join(", ")}</span>` : ""}</div></div>
+    const sm = s.state;
+    $("state").innerHTML = `<div class="envrow"><img src="${esc(sm.env.img)}" alt="Base frame"><div><b>Environment:</b> ${esc(sm.env.place)}, taken from <b>${esc(sm.env.from)}</b> (the latest frame of this place)<br>
+      <b>Remembered in it:</b> ${sm.remembered.length ? sm.remembered.map(name).map(esc).join(", ") : "nothing (empty plate)"}<br>
+      ${sm.onlyBase ? '<span class="good">Everything asked for is already in the base frame → the only reference should be the base; just transform it.</span>' : '<span>Some assets enter this frame → each comes from the latest frame that shows it, or its seed sheet if it never appeared.</span>'}
+      ${sm.dropped.length ? `<br><b>Leaves the frame:</b> ${sm.dropped.map(name).map(esc).join(", ")}` : ""}${sm.lost.length ? `<br><span class="badc">Not seen after the edit (tracker forgets): ${sm.lost.map(name).map(esc).join(", ")}</span>` : ""}</div></div>
       <div class="st"><table><tr><th>Asset asked for</th><th>In base?</th><th>Source by the rule</th><th>What the run passed</th><th></th></tr>
-      ${st.asked.map((a) => `<tr><td>${esc(name(a.id))}</td><td>${a.inBase ? "yes" : "no"}</td><td>${esc(a.rule)}</td><td>${esc(a.used)}</td><td>${a.ok ? '<span class="good">✓ matches</span>' : '<span class="badc">✕ wrong</span>'}</td></tr>`).join("")}</table></div>`;
+      ${sm.asked.map((a) => `<tr><td>${esc(name(a.id))}</td><td>${a.inBase ? "yes" : "no"}</td><td>${esc(a.rule)}</td><td>${esc(a.used)}</td><td>${a.ok ? '<span class="good">✓ matches</span>' : '<span class="badc">✕ wrong</span>'}</td></tr>`).join("")}</table></div>`;
     $("atts").innerHTML = s.attempts.map((a) => `<div class="att">
       <div><img src="${esc(a.baseImg)}" alt="Base ${esc(a.base)}"><div class="mini">base: ${esc(a.base)}</div>
         <div class="refs">${a.refs.map((id) => `<img src="${esc(D.sheets[id])}" alt="${esc(name(id))}" title="${esc(name(id))} sheet">`).join("")}</div>
