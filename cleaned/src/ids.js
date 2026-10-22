@@ -118,7 +118,8 @@ kind (assets only): character (a person or animal that acts), group (several thi
 place (fixtures only): the place it belongs to; else none. parent (parts only): the id it is part of; else none.
 Clothes a character wears all story long are a PART of that character (one part even if named twice: hood and cloak); clothes
 taken off, swapped or handed to someone else are assets.
-inside (assets only): the asset it is packed in, inside or on when it first appears (a cake in a basket); else none.
+inside (props and groups only): the thing it is packed in, inside or on when it first appears (a cake in a basket); else none.
+Characters are never inside anything (a person in a bed is lying in it): none.
 Ids:\n${table.map((t) => `- ${t.id} (${t.kind}): ${t.name}; aliases: ${t.aliases.join(", ") || "none"}`).join("\n")}\n\nStory:\n${story}` });
   return table.map((t) => ({ ...t, tag_kind: t.tag_kind || t.kind, ...r.roles[t.id] }));
 }

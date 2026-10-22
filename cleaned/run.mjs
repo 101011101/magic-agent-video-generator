@@ -73,7 +73,9 @@ if (planFrom && !run.log.world) {
 function assetsOf(table) {
   const by = Object.fromEntries(table.map((t) => [t.id, t]));
   return table.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => {
-    let c = t.inside && t.inside !== "none" ? by[t.inside] : null, inside = "", home = "";
+    // Only props are packed in things; a character "inside" a bed is just lying in it (custom-rrh4 made Grandmother part of the
+    // cottage's initial contents that way).
+    let c = t.kind !== "character" && t.inside && t.inside !== "none" ? by[t.inside] : null, inside = "", home = "";
     if (c?.role === "part" && by[c.parent]?.role === "asset") c = by[c.parent];
     if (c?.role === "asset") inside = c.id; else if (c?.role === "fixture" && c.place !== "none") home = c.place;
     return { id: t.id, name: t.name, kind: t.kind, look: "", inside, home };
