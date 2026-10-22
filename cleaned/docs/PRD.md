@@ -45,8 +45,8 @@ natural-language prompt
   ─► [E1 Editor]          LLM: logic read of the story (holes, objects from nowhere, unclear motives) → minimal edits
   ─► [I0 IDs]             small LLM calls: every mention → id in context (pronouns, aliases); coverage; role
                            (asset / fixture / place / part); inside-of; physical links proposed then checked
-  ─► [A0 spec half]       LLM: asset specs; environment specs = ground plans (fixtures are marks; link constraints)
-  ─► [S1b Blocking]       LLM: one record per step against the marks, using the ids from I0 (never re-reading pronouns)
+  ─► [A0 spec half]       LLM: asset specs; environment specs = environment specs (layout) (fixtures are marks; link constraints)
+  ─► [S1b Text text blocking]       LLM: one record per step against the marks, using the ids from I0 (never re-reading pronouns)
   ─► [SM State manager]   CODE: fold the records into the state table (rows of ids per frame); infer each place's initial
                            contents; lint; cross-check against the ids
   ─► [Q Question loop]    CODE writes questions from the state manager's findings (props inferred as always there, assets
@@ -58,10 +58,16 @@ natural-language prompt
   ─► [S6] slideshow (CODE)
 ```
 
+### 4.00 Terms
+- **Text blocking**: turning the story into scene records, one per slide, like a screenplay that writes only what changes
+  (who moves, from which spot to which, pose, expression). Code folds the records into the state table.
+- **Environment spec (layout)**: an environment's description plus its named spots (`bed.head`, `door`). The spots are what text
+  blocking positions things against; the plate is painted from the spec.
+
 ### 4.0 The loop in one line
-Story → editor → solve (ids → ground plans → blocking → state manager) → questions → editor answers all at once → solve again
-reusing what did not change (unchanged chunks keep their tags; ground plans reused when environments and fixtures are the same;
-blocking revised as a patch) → at most 2 rounds → **gate**: images only from a clean plan (no broken rule, no open question).
+Story → editor → solve (ids → environment specs (layout) → text blocking → state manager) → questions → editor answers all at once → solve again
+reusing what did not change (unchanged chunks keep their tags; environment specs (layout) reused when environments and fixtures are the same;
+text blocking revised as a patch) → at most 2 rounds → **gate**: images only from a clean plan (no broken rule, no open question).
 
 ### 4.0b Environments are elements
 A frame row holds its environment like any element. The base of a slide is `lastSeen(environment)`, the same lookup as an asset's
@@ -75,8 +81,8 @@ other elements stand on its marks and fixtures belong to it; its first appearanc
 | Story | LLM, creative | `story` (older runs: `world`) |
 | Editor | LLM | `edit-review` (after the story), `edit-answer` (all questions at once) |
 | IDs | small LLM calls + parser | `ids-tag` per changed chunk; coverage: parser (code) first, `ids-coverage` only for leftovers; `ids-classify`, `ids-link-propose`, `ids-link-check` per pair |
-| Asset specs, ground plans | LLM, creative | `asset-spec`, `seed-plan` |
-| Blocking | LLM | `block` (first solve), `block-patch` (after an edit: changed steps only), `block-fix`, `block-fix2` |
+| Asset specs, environment specs (layout) | LLM, creative | `asset-spec`, `seed-plan` |
+| Text text blocking | LLM | `block` (first solve), `block-patch` (after an edit: changed steps only), `block-fix`, `block-fix2` |
 | **State manager** | **code** | none: `fold` (states, initial contents, lint), id cross-check, `tracker` rows, `lastSeen`, `baseFor` |
 | Question loop | code (questions) + LLM (answers) | questions: none; answers: the editor |
 | Sheet and plate checks | vision LLM | `asset-check`, `asset-set`, `seed-observe` |
@@ -107,23 +113,23 @@ in its frame); vision checks only accept or retry an image.
 ### 4.2 Same input, same result
 - Every LLM call is cached on disk by (model, call name, schema, prompt, images); every paid image job by (spec, input file
   hashes). The same prompt reproduces the same story, ids, states and images with no new calls and no credits.
-- Strictly, a state depends on the story AND the blocking call; with the cache, one story gives one blocking and so one state.
+- Strictly, a state depends on the story AND the text blocking call; with the cache, one story gives one text blocking and so one state.
 
 ### 4.3 Stages and fixtures (planned, T-001)
 - Each stage reads and writes one JSON file in the run directory (`story.json`, `ids.json`, `specs.json`, `blocking.json`,
   `states.json`, `assets.json`, `plates.json`, `frames/`). `node cleaned/stage.mjs <stage> --run <dir>` runs one stage.
-- `cleaned/tests/fixtures/` holds hand-checked inputs (a perfect blocking, a story with a known hole); a stage run on a
+- `cleaned/tests/fixtures/` holds hand-checked inputs (a perfect text blocking, a story with a known hole); a stage run on a
   fixture tests that stage alone. The full script on any prompt runs every stage in order.
 
 ## 5. Subsystems
 
 ### S0 — Seed (`src/seed.js`, PRD-seed.md)
-- Used once per place, at the start. Ground plan → plate → per-mark vision check → canonical marks. After the first frame the
+- Used once per place, at the start. Environment spec (layout) → plate → per-mark vision check → canonical marks. After the first frame the
   frames carry the state; the seed only names the marks the steps may use.
 
 ### S1 — Sequencer (`src/sequencer.js`)
 - **World** (LLM): style, entities, places and a plain prose story (best-known version of a known tale, climax and feelings shown).
-- **Blocking** (LLM, after the seed): one record per step, like stage blocking: `beats[{ actor, action, to, via, object, pose,
+- **Text text blocking** (LLM, after the seed): one record per step, like stage text blocking: `beats[{ actor, action, to, via, object, pose,
   expression }]`, `change{ mark, state }`, `caption`. Marks come from the canonical seed. Only changes are written.
 - **Fold and lint** (code): the beats are folded into the full state (who is where, holding what, feeling what). Lint: marks exist,
   ≤ 2 beats per step, enter/exit at door marks, exit before a character on screen appears elsewhere, pose and expression on
@@ -148,7 +154,7 @@ in its frame); vision checks only accept or retry an image.
 - `hops` counts edits since the plate, so drift can be measured and bounded later.
 
 ### S4 — Builder (`src/builder.js`)
-- Blocking slides: the prompt names only the changed actors (mark, path, pose, expression), adds, removes and the change;
+- Text text blocking slides: the prompt names only the changed actors (mark, path, pose, expression), adds, removes and the change;
   everything else is "as in image 1", including zoom, crop and border. Style drops "film still" / "16:9" (they push full-bleed).
 - `add = present − base.present`, `remove = base.present − present`, `keep = present ∩ base.present`.
 - One image-editor call: image 1 = base; then one image per entering asset: the latest frame that shows it (shared when
@@ -160,7 +166,7 @@ in its frame); vision checks only accept or retry an image.
   (1 + 1). The best attempt is kept; if none passes, it is used and flagged `forced`.
 
 ### S5 — Verifier (`src/verify.js`)
-- Blocking slides (`verifyStep`): presence for characters and groups and for props the step uses; per changed actor, at its mark /
+- Text text blocking slides (`verifyStep`): presence for characters and groups and for props the step uses; per changed actor, at its mark /
   pose / expression; the change; single frame; physically impossible? Plus the framing gate (`clips.js`): SSIM to the base
   < 0.70 or a corner shift ≥ 10 rejects the edit (calibrated on custom-rrh1: normal 0.78–0.98, re-paints 0.08–0.61).
 - Older slides: one vision call per attempt. For every entity in `present ∪ base.present`, it reports present or absent and a count.

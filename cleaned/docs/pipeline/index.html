@@ -50,8 +50,8 @@ flowchart TD
     I1[ID pass: tag each chunk in order<br/>LLM, running id table; unchanged chunks reused]
     I1 --> I2[Coverage<br/>parser in code; LLM only for leftovers]
     I2 --> I3[Classify + links<br/>LLM: role, place, parent, inside; propose then check links]
-    I3 --> G[Environment specs = ground plans<br/>LLM; reused if environments and fixtures unchanged]
-    G --> B[Blocking<br/>LLM: records against marks, using ids; patch after an edit]
+    I3 --> G[Environment specs = environment specs (layout)<br/>LLM; reused if environments and fixtures unchanged]
+    G --> B[Text text blocking<br/>LLM: records against marks, using ids; patch after an edit]
     B --> SM[State manager<br/>CODE: fold records into the state table,<br/>initial contents, rules, id cross-check]
   end
   SM --> Q{Questions?<br/>CODE from findings}
@@ -83,15 +83,15 @@ flowchart TD
       <tr><td>Story</td><td><span class="tag t-llm">LLM</span></td><td>prompt</td><td><code>story{title, style, story}</code></td><td><code>story</code></td></tr>
       <tr><td>Editor review</td><td><span class="tag t-llm">LLM</span></td><td>story</td><td>holes + edited story</td><td><code>edit-review</code></td></tr>
       <tr><td>ID pass</td><td><span class="tag t-llm">LLM</span> <span class="tag t-code">code</span></td><td>story, earlier id table and chunks</td><td>id table, tagged chunks, links</td><td><code>ids-tag</code> (changed chunks), parser then <code>ids-coverage</code> (leftovers), <code>ids-classify</code>, <code>ids-link-propose</code>, <code>ids-link-check</code></td></tr>
-      <tr><td>Environment specs</td><td><span class="tag t-llm">LLM</span></td><td>environments, fixtures, links, story</td><td>ground plans: marks, essentials, doors</td><td><code>seed-plan</code> (skipped when unchanged)</td></tr>
-      <tr><td>Blocking</td><td><span class="tag t-llm">LLM</span></td><td>id'd story, marks, earlier blocking</td><td>records (steps)</td><td><code>block</code>, <code>block-patch</code>, <code>block-fix</code></td></tr>
+      <tr><td>Environment specs</td><td><span class="tag t-llm">LLM</span></td><td>environments, fixtures, links, story</td><td>environment specs (layout): marks, essentials, doors</td><td><code>seed-plan</code> (skipped when unchanged)</td></tr>
+      <tr><td>Text text blocking</td><td><span class="tag t-llm">LLM</span></td><td>id'd story, marks, earlier text blocking</td><td>records (steps)</td><td><code>block</code>, <code>block-patch</code>, <code>block-fix</code></td></tr>
       <tr><td>State manager</td><td><span class="tag t-code">code</span></td><td>records, entities</td><td>folded state per slide, initial contents, rule breaks</td><td>none</td></tr>
       <tr><td>Questions</td><td><span class="tag t-code">code</span></td><td>state manager findings</td><td>questions with keys</td><td>none</td></tr>
       <tr><td>Editor answers</td><td><span class="tag t-llm">LLM</span></td><td>story + all questions</td><td>edited story</td><td><code>edit-answer</code></td></tr>
       <tr><td>Gate</td><td><span class="tag t-code">code</span></td><td>rule breaks, open questions</td><td>go / stop</td><td>none</td></tr>
       <tr><td>Asset specs</td><td><span class="tag t-llm">LLM</span></td><td>assets, contents, story</td><td>spec per asset</td><td><code>asset-spec</code></td></tr>
       <tr><td>Sheets</td><td><span class="tag t-img">image</span></td><td>specs of assets that first appear by entering</td><td>one sheet each</td><td><code>asset-check</code>, <code>asset-set</code></td></tr>
-      <tr><td>Plates</td><td><span class="tag t-img">image</span></td><td>ground plan + initial contents</td><td>one plate per environment</td><td><code>seed-observe</code></td></tr>
+      <tr><td>Plates</td><td><span class="tag t-img">image</span></td><td>environment spec (layout) + initial contents</td><td>one plate per environment</td><td><code>seed-observe</code></td></tr>
       <tr><td>Slides</td><td><span class="tag t-code">code</span> <span class="tag t-img">image</span></td><td>state table, record</td><td>frame + state row</td><td><code>verify-step</code> (accept or retry only)</td></tr>
     </table></div>
   </section>
@@ -105,10 +105,10 @@ flowchart TD
     <h2>Where the data lives</h2>
     <div class="tw"><table>
       <tr><th>What</th><th>Where</th><th>Notes</th></tr>
-      <tr><td>Everything a run decided</td><td><code>cleaned/runs/&lt;case&gt;-&lt;label&gt;/run.json</code></td><td>story, edit, ids, world, seed_plan, blocking (records + folded slides), asset_specs, assets, seed (plates), jobs, calls, summary. Re-running a label resumes from it.</td></tr>
+      <tr><td>Everything a run decided</td><td><code>cleaned/runs/&lt;case&gt;-&lt;label&gt;/run.json</code></td><td>story, edit, ids, world, seed_plan, text blocking (records + folded slides), asset_specs, assets, seed (plates), jobs, calls, summary. Re-running a label resumes from it.</td></tr>
       <tr><td>State table</td><td><code>…/tracker.json</code></td><td>one row per frame and plate: requested ids, environment, file, base, references</td></tr>
       <tr><td>Images</td><td><code>…/roots/*.png</code> (sheets, plates and their tries), <code>…/frames/s&lt;n&gt;-a&lt;try&gt;.png</code></td><td>git-ignored; pages use small JPEG copies</td></tr>
-      <tr><td>Pages</td><td><code>…/index.html</code> (slideshow), <code>…/assets.html</code>, <code>…/states/</code>, <code>…/blocking/</code></td><td>built from run.json</td></tr>
+      <tr><td>Pages</td><td><code>…/index.html</code> (slideshow), <code>…/assets.html</code>, <code>…/states/</code>, <code>…/text blocking/</code></td><td>built from run.json</td></tr>
       <tr><td>LLM cache</td><td><code>cleaned/.cache/&lt;call-name&gt;-&lt;hash&gt;.json</code></td><td>key = model, call name, schema, prompt, images; same input → no call</td></tr>
       <tr><td>Image job cache</td><td><code>run.json</code> → <code>jobs</code></td><td>key = spec + input file hashes; same input → no credits</td></tr>
       <tr><td>Credit ledger</td><td><code>cleaned/runs/ledger.json</code></td><td>credits per run; the cap (<code>CLEANED_CAP</code>) is checked before every paid job</td></tr>
@@ -120,9 +120,9 @@ flowchart TD
     <h2>Where the time goes (rrh4 slideshow run, first 26 minutes)</h2>
     <div class="tw"><table>
       <tr><th>Calls</th><th>Count</th><th>Time</th><th>Why</th></tr>
-      <tr><td>Blocking: <code>block</code> + 2 rewrites</td><td>3</td><td>818 s (52%)</td><td>each writes all 30 steps as JSON at high effort (4–5 min); the first draft broke rules twice</td></tr>
+      <tr><td>Text text blocking: <code>block</code> + 2 rewrites</td><td>3</td><td>818 s (52%)</td><td>each writes all 30 steps as JSON at high effort (4–5 min); the first draft broke rules twice</td></tr>
       <tr><td>ID tagging <code>ids-tag</code></td><td>14</td><td>356 s (23%)</td><td>in story order (each chunk needs the table so far); smaller chunks = more calls on the first solve, fewer on re-solves</td></tr>
-      <tr><td>Ground plans <code>seed-plan</code></td><td>1</td><td>219 s (14%)</td><td>one large high-effort call; reused on re-solves when places are unchanged</td></tr>
+      <tr><td>Environment specs (layout) <code>seed-plan</code></td><td>1</td><td>219 s (14%)</td><td>one large high-effort call; reused on re-solves when places are unchanged</td></tr>
       <tr><td>Coverage, classify, links, editor answer</td><td>14</td><td>166 s (11%)</td><td>small calls</td></tr>
     </table></div>
     <p class="mut">Paid image jobs come after planning: about 30–45 s each, sheets and plates in parallel, slides one after another (each slide needs the frame before it).</p>
@@ -151,8 +151,8 @@ flowchart TD
       <tr><td>ids.chunks</td><td><code>text, tagged ("she{grandmother}"), mentions[{text, ids[]}], new_ids, untagged[]</code></td></tr>
       <tr><td>ids.links</td><td><code>a, b, relation (part-of | inside | same-thing-other-view), belongs, evidence, constraint</code></td></tr>
       <tr><td>world</td><td><code>title, style, story, story_ids, entities[{id, name, kind, inside, home}], locations[{id, name}]</code></td></tr>
-      <tr><td>ground plan (environment spec)</td><td><code>id, look, camera, marks[{id, name, where, essential, area, key}], doors[{mark, leads_to, swing}], light</code></td></tr>
-      <tr><td>blocking record (step)</td><td><code>place, kind, time_jump, beats[{actor, action, to, via, object, pose, expression}], change{mark, state}, caption</code></td></tr>
+      <tr><td>environment spec (layout) (environment spec)</td><td><code>id, look, camera, marks[{id, name, where, essential, area, key}], doors[{mark, leads_to, swing}], light</code></td></tr>
+      <tr><td>text-blocking record (step)</td><td><code>place, kind, time_jump, beats[{actor, action, to, via, object, pose, expression}], change{mark, state}, caption</code></td></tr>
       <tr><td>folded slide</td><td><code>n, location, present[], cast[{id, where, acting}], changed[], beats, change, ste[], caption</code> · plan: <code>initial{place: [ids]}, lint[]</code></td></tr>
       <tr><td>state table row (tracker)</td><td><code>id, slide, location, present[] (requested), observed[], file, base, refs[{id, file, from}], op, hops, accepted, forced</code></td></tr>
       <tr><td>asset / plate</td><td><code>asset: id, name, kind, spec, height, file, tries[], ok</code> · <code>plate: plate, tries, unresolved[], contents[]</code></td></tr>
