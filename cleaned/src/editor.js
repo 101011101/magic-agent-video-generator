@@ -21,6 +21,12 @@ other word unchanged. Do not change the plot, the tone or the length beyond the 
 Story:\n${story}` });
 }
 
+// Which fixer a question goes to: story holes (where something comes from, an unclear word) → the editor; things the story
+// already uses but the blocking left out, and broken rules → a blocking patch (custom-rrh4 sent "the needle is never seen" to the
+// editor, which only repeated the needle in the story).
+export const forBlocking = (q) => q.key.startsWith("unseen:") || q.key.startsWith("rule:");
+export const blockingNote = (q) => q.key.startsWith("unseen:") ? `${q.key.slice(7)} is in the story but never on screen: show it in the step where the story uses it (held, worn or at its mark)` : q.key.slice(5);
+
 // Findings → questions. `answered` holds keys of questions already answered "always there" so they are not asked again.
 export function questions({ blocking, ids, answered = [] }) {
   const out = [], name = (id) => ids.table.find((t) => t.id === id)?.name || id;

@@ -26,7 +26,7 @@ export function untaggedCandidates(text, tagged) {
 const ID = { type: "string", pattern: "^[a-z][a-z0-9-]*$" };
 const KINDS = ["character", "group", "prop", "place", "part"];
 const chunks = (story) => story.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
-  .reduce((out, p) => { const last = out.at(-1); if (last && (last + p).length < 600) out[out.length - 1] = `${last}\n\n${p}`; else out.push(p); return out; }, []);
+  .reduce((out, p) => { const last = out.at(-1); if (last && (last + p).length < 300) out[out.length - 1] = `${last}\n\n${p}`; else out.push(p); return out; }, []);   // small chunks: an edit leaves most of them unchanged (their tags are reused)
 const tableText = (table) => (table.length ? table.map((t) => `- ${t.id} (${t.kind}): ${t.name}; aliases: ${t.aliases.join(", ") || "none"}`).join("\n") : "(empty)");
 
 async function tagChunk(chunk, table, i, note = "") {

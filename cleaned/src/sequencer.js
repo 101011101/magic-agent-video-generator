@@ -98,7 +98,8 @@ export function applyPatch(steps, ops) {
 }
 
 // prev: { steps, story_ids } of an earlier solve. With it, the blocking is revised as a patch (only changed steps), not rewritten.
-export async function block(w, seed, prev = null) {
+// notes: blocking-level fixes to make in the same patch (things the story uses but the blocking left out, broken rules).
+export async function block(w, seed, prev = null, notes = []) {
   // Lint = the state machine's rules + the cross-check with the id pass (every tagged asset on screen somewhere; nothing on
   // screen the story never mentions). Up to two rewrites with the violations listed.
   const lintAll = (steps) => {
@@ -116,13 +117,20 @@ export async function block(w, seed, prev = null) {
     const p = await jsonCall({ name: "block-patch", schema: PATCH, effort: "high",
       prompt: `${blockPrompt(w, seed)}\n\nThe story was edited. Below are the earlier story and the earlier blocking (steps numbered from 1). Return ONLY
 the operations that make the blocking match the new story: replace a step, insert steps after a step, or delete a step ("at" is
-the earlier step number). Leave every other step as it is. Return no operations if nothing needs to change.\n\nEarlier story:\n${prev.story_ids}\n\nEarlier blocking:\n${prev.steps.map((x, i) => `${i + 1}. ${JSON.stringify(x)}`).join("\n")}` });
+the earlier step number). Leave every other step as it is. Return no operations if nothing needs to change.${notes.length ? `\nAlso fix these in the blocking (the story is right; the blocking left them out or broke a rule):\n${notes.map((n) => `- ${n}`).join("\n")}` : ""}\n\nEarlier story:\n${prev.story_ids}\n\nEarlier blocking:\n${prev.steps.map((x, i) => `${i + 1}. ${JSON.stringify(x)}`).join("\n")}` });
     r = { steps: applyPatch(prev.steps, p.ops), patch: p.ops };
   } else r = await jsonCall({ name: "block", schema: S.obj({ steps: S.arr(STEP) }), effort: "high", prompt: blockPrompt(w, seed) });
   let { bad } = lintAll(r.steps);
   for (let k = 0; k < 2 && bad.length; k++) {
-    r = await jsonCall({ name: k ? `block-fix${k + 1}` : "block-fix", schema: S.obj({ steps: S.arr(STEP) }), effort: "high",
-      prompt: `${blockPrompt(w, seed)}\n\nYour last blocking broke these rules. Rewrite all of it and fix every one:\n${bad.map((b) => `- ${b}`).join("\n")}\n\nLast blocking:\n${JSON.stringify(r.steps)}` });
+    if (r.patch) {
+      // A patched blocking that breaks a rule is patched again with the violations listed (not rewritten from scratch).
+      const p = await jsonCall({ name: k ? `block-repatch${k + 1}` : "block-repatch", schema: PATCH, effort: "high",
+        prompt: `${blockPrompt(w, seed)}\n\nThis blocking breaks these rules. Return ONLY the operations (replace, insert_after, delete; "at" = step number below) that fix every one, leaving every other step as it is:\n${bad.map((b) => `- ${b}`).join("\n")}\n\nBlocking:\n${r.steps.map((x, i) => `${i + 1}. ${JSON.stringify(x)}`).join("\n")}` });
+      r = { steps: applyPatch(r.steps, p.ops), patch: [...r.patch, ...p.ops] };
+    } else {
+      r = await jsonCall({ name: k ? `block-fix${k + 1}` : "block-fix", schema: S.obj({ steps: S.arr(STEP) }), effort: "high",
+        prompt: `${blockPrompt(w, seed)}\n\nYour last blocking broke these rules. Rewrite all of it and fix every one:\n${bad.map((b) => `- ${b}`).join("\n")}\n\nLast blocking:\n${JSON.stringify(r.steps)}` });
+    }
     ({ bad } = lintAll(r.steps));
   }
   const { slides, initial } = lintAll(r.steps);

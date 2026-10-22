@@ -20,7 +20,7 @@ import { usage, MODEL } from "./src/llm.js";
 import { Jobs, CAP, IMAGE } from "./src/jobs.js";
 import { writeWorld, writeStory, block, check } from "./src/sequencer.js";
 import { assignIds, classifyIds, linkIds } from "./src/ids.js";
-import { reviewStory, questions, answerQuestions } from "./src/editor.js";
+import { reviewStory, questions, answerQuestions, forBlocking, blockingNote } from "./src/editor.js";
 import { seedPlan, makeSeed } from "./src/seed.js";
 import { makeRoots } from "./src/roots.js";
 import { specAssets, makeAssets } from "./src/assets.js";
@@ -102,7 +102,7 @@ try {
       // Solve one story text: I0 ids (pronouns resolved in context) → ground plans → blocking → state manager (code, in block()).
       // Solve one story text. prev: the earlier solve of this story (after an edit). Only what changed is redone: unchanged chunks
       // keep their tags, the ground plans are reused when environments and fixtures are the same, the blocking is patched.
-      const solve = async (text, prev = null) => {
+      const solve = async (text, prev = null, notes = []) => {
         const tagged = await assignIds(text, prev?.ids.table || [], prev?.ids.chunks || []), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
         const w = { title: st.title, style: st.style, story: text, story_ids: tagged.chunks.map((c) => c.tagged).join("\n\n"),
           entities: assetsOf(table),
@@ -111,7 +111,7 @@ try {
         const envSig = (t, f) => JSON.stringify([t.filter((x) => x.role === "place").map((x) => x.id).sort(), f.map((x) => `${x.id}@${x.place}`).sort()]);
         const reusePlan = prev && envSig(table, fx) === envSig(prev.ids.table, prev.ids.table.filter((t) => t.role === "fixture" && t.place !== "none"));
         const plan0 = reusePlan ? prev.sp : await seedPlan(w, text, { fixtures: fx, links: ls });
-        const bl = await block(w, Object.fromEntries(plan0.places.map((p) => [p.id, p])), prev ? { steps: prev.blocking.steps, story_ids: prev.world.story_ids } : null);
+        const bl = await block(w, Object.fromEntries(plan0.places.map((p) => [p.id, p])), prev ? { steps: prev.blocking.steps, story_ids: prev.world.story_ids } : null, notes);
         console.log(`    solved: ${tagged.chunks.filter((c) => prev?.ids.chunks.some((p) => p.text === c.text)).length}/${tagged.chunks.length} chunks reused · ground plans ${reusePlan ? "reused" : "new"} · blocking ${bl.patch ? `patched (${bl.patch.length} op)` : "written"} · ${bl.lint.length} rule(s) broken`);
         return { ids, world: w, sp: plan0, blocking: bl };
       };
@@ -124,10 +124,19 @@ try {
           const qs = questions({ blocking: solved.blocking, ids: solved.ids, answered });
           console.log(`  question round ${r + 1}: ${qs.length} question(s)${qs.length ? ": " + qs.map((q) => q.key).join(", ") : ""}`);
           if (!qs.length) break;
-          const ans = await answerQuestions(text, qs);
-          answered.push(...ans.answers.filter((a) => a.kind === "always-there").map((a) => a.key));
-          run.log.edit.rounds.push({ questions: qs, answers: ans.answers, before: text, after: ans.story }); run.save();
-          text = ans.story; solved = await solve(text, solved);   // same things keep the same ids; only changes are redone
+          // Route: story questions to the editor; blocking questions become notes for the blocking patch.
+          const sq = qs.filter((q) => !forBlocking(q)), bq = qs.filter(forBlocking), notes = bq.map(blockingNote);
+          if (sq.length) {
+            const ans = await answerQuestions(text, sq);
+            answered.push(...ans.answers.filter((a) => a.kind === "always-there").map((a) => a.key));
+            run.log.edit.rounds.push({ questions: qs, answers: ans.answers, blocking_notes: notes, before: text, after: ans.story }); run.save();
+            text = ans.story; solved = await solve(text, solved, notes);   // same things keep the same ids; only changes are redone
+          } else {
+            run.log.edit.rounds.push({ questions: qs, answers: [], blocking_notes: notes, before: text, after: text }); run.save();
+            const seedMap = Object.fromEntries(solved.sp.places.map((p) => [p.id, p]));
+            solved = { ...solved, blocking: await block(solved.world, seedMap, { steps: solved.blocking.steps, story_ids: solved.world.story_ids }, notes) };
+            console.log(`    blocking patched for ${notes.length} note(s) · ${solved.blocking.lint.length} rule(s) broken`);
+          }
         }
         run.log.edit.story = text;
         run.log.edit.open = questions({ blocking: solved.blocking, ids: solved.ids, answered });
