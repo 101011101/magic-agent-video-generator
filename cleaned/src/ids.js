@@ -44,7 +44,9 @@ Abstract words (fear, time, idea) and pronouns that refer to nothing ("It's me!"
 // prev: the id table of an earlier solve of the same story (after an edit). Starting from it keeps ids stable, so an answered
 // question about "flowers" is not asked again about "daisies".
 export async function assignIds(story, prev = []) {
-  const table = prev.map((t) => ({ id: t.id, name: t.name, kind: t.kind, aliases: [...(t.aliases || [])] })), parts = [];
+  // The tagger's kind (character, group, prop, place, part) is kept as tag_kind: classification reuses "kind" for its own
+  // labels, and losing "place" on a re-solve left every fixture without a place (custom-rrh4).
+  const table = prev.map((t) => ({ id: t.id, name: t.name, kind: t.tag_kind || t.kind, aliases: [...(t.aliases || [])] })), parts = [];
   for (const [i, c] of chunks(story).entries()) {
     let r = await tagChunk(c, table, i);
     let miss = (await coverage(r.tagged)).untagged;
@@ -83,7 +85,7 @@ pictures must agree on (side, wall, colour, material, size), else "".\n\nStory:\
 // a FIXTURE stays where it is (bed, table, shelf, door, flowers) and belongs to one place's ground plan; a PLACE is a setting;
 // a PART belongs to another id (a dog's ears, a bed's head); NONE is not drawable. Fixtures name their place, parts their parent.
 export async function classifyIds(story, table) {
-  const ids = table.map((t) => t.id), places = table.filter((t) => t.kind === "place").map((t) => t.id);
+  const ids = table.map((t) => t.id), places = table.filter((t) => (t.tag_kind || t.kind) === "place" || t.role === "place").map((t) => t.id);
   const r = await jsonCall({ name: "ids-classify", effort: "medium",
     schema: S.obj({ roles: S.obj(Object.fromEntries(ids.map((id) => [id, S.obj({
       role: S.enum(["asset", "fixture", "place", "part", "none"]), kind: S.enum(["character", "group", "prop", "none"]),
@@ -98,5 +100,5 @@ Clothes a character wears all story long are a PART of that character (one part 
 taken off, swapped or handed to someone else are assets.
 inside (assets only): the asset it is packed in, inside or on when it first appears (a cake in a basket); else none.
 Ids:\n${table.map((t) => `- ${t.id} (${t.kind}): ${t.name}; aliases: ${t.aliases.join(", ") || "none"}`).join("\n")}\n\nStory:\n${story}` });
-  return table.map((t) => ({ ...t, ...r.roles[t.id] }));
+  return table.map((t) => ({ ...t, tag_kind: t.tag_kind || t.kind, ...r.roles[t.id] }));
 }

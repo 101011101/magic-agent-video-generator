@@ -9,6 +9,7 @@
 //   --entities-from <run>  reuse only that run's characters and props and their sheets; places, seed and story are new
 //   --plan-from <run>  reuse that run's world, story and ground plans (not its images); sheets come from the asset bank (A0)
 //   --redo-assets a,b  regenerate only these sheets (re-specced); the others are re-checked from their images, no credits
+//   --force-paint  paint even if the plan still breaks a rule or has open questions (normally the run stops before images)
 //   --plan-only  stop after the states are solved (editor, ids, blocking, questions): no images
 //   --seed-only  stop after the asset bank and the seed plates (page shows sheets and plates)
 //   --assets-only  stop after the asset bank (sheets checked one by one and as a set): writes assets.html for review
@@ -129,6 +130,13 @@ try {
       console.log(`  ${run.log.ids.table.length} ids: ${world.entities.length} assets, ${fixtures.length} fixtures, ${world.locations.length} places, ${links.length} links · open questions: ${run.log.edit.open.length}`);
     }
     if (planOnly) { plan = { ...blocking }; throw Object.assign(new Error("plan only: states solved, no images"), { stop: true }); }
+    // Gate: no image is paid for while the plan still breaks a rule or has open questions (custom-rrh4 painted 3,600 credits
+    // of sheets and plates from a plan with five). --force-paint overrides.
+    const openQs = run.log.edit?.open || [];
+    if ((blocking.lint?.length || openQs.length) && !args.includes("--force-paint")) {
+      plan = { ...blocking };
+      throw Object.assign(new Error(`plan not clean, no images: ${blocking.lint?.length || 0} rule(s) broken, ${openQs.length} open question(s): ${[...(blocking.lint || []), ...openQs.map((q) => q.key)].join("; ")}`), { stop: true });
+    }
     // No sheet for assets that first appear as a place's initial contents (painted into its plate) or packed inside another
     // asset (they come with their container: a cake in the basket).
     const initialIds = new Set([...Object.values(blocking.initial || {}).flat(), ...world.entities.filter((e) => e.inside).map((e) => e.id)]);
