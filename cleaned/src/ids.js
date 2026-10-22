@@ -6,7 +6,22 @@
 //   3. links    (LLM twice) which ids are physically connected (a house and its rooms, a cottage door seen inside and out):
 //               one call proposes pairs, a second checks each against the text ("does x belong to y?"). Only confirmed pairs
 //               get a constraint. Ordinary props (a needle, scissors) are not linked.
+import nlp from "compromise";
 import { jsonCall, S } from "./llm.js";
+
+// Coverage, deterministic first: a text parser (compromise) lists every noun phrase, proper noun and pronoun; one counts as
+// tagged when its head word is followed by {id} in the tagged text. Only what is left goes to an LLM, which decides whether it
+// refers to a thing at all ("It's me!" does not).
+const reEsc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export function untaggedCandidates(text, tagged) {
+  const d = nlp(text);
+  const cands = [...d.nouns().out("array"), ...d.pronouns().out("array"), ...d.match("#ProperNoun+").out("array")]
+    .map((p) => p.replace(/[.,!?;:"“”()]+/g, "").trim()).filter(Boolean);
+  return [...new Set(cands)].filter((c) => {
+    const head = c.split(/\s+/).at(-1).replace(/[’']s$/i, "");
+    return head && !new RegExp(`${reEsc(head)}(?:[’']s)?\\s*\\{`, "i").test(tagged);
+  });
+}
 
 const ID = { type: "string", pattern: "^[a-z][a-z0-9-]*$" };
 const KINDS = ["character", "group", "prop", "place", "part"];
@@ -34,26 +49,31 @@ Text (chunk ${i + 1}):
 ${chunk}` });
 }
 
-async function coverage(tagged) {
-  return jsonCall({ name: "ids-coverage", effort: "medium", schema: S.obj({ untagged: S.arr(S.str) }),
-    prompt: `In this text every mention of a thing (noun, alias or pronoun referring to a character, animal, object, food, place, room,
-building or part of one) should be followed by {id}. List every such mention that has no {id} after it, exactly as written.
-Abstract words (fear, time, idea) and pronouns that refer to nothing ("It's me!") do not need one. Return [] if none.\n\n${tagged}` });
+async function coverage(text, tagged) {
+  const left = untaggedCandidates(text, tagged);
+  if (!left.length) return { untagged: [] };   // the parser found nothing untagged: no LLM call
+  return jsonCall({ name: "ids-coverage", effort: "low", schema: S.obj({ untagged: S.arr(S.str) }),
+    prompt: `A parser found these words in the text below without an {id} after them: ${left.map((x) => `"${x}"`).join(", ")}.
+Return the ones that refer to a physical thing (a character, animal, object, food, place, room, building or part of one) and so
+need an id, exactly as listed. Abstract words (fear, time) and pronouns that refer to nothing ("It's me!") do not. [] if none.\n\n${tagged}` });
 }
 
 // prev: the id table of an earlier solve of the same story (after an edit). Starting from it keeps ids stable, so an answered
 // question about "flowers" is not asked again about "daisies".
-export async function assignIds(story, prev = []) {
+// prevChunks: the chunks of the earlier solve; a chunk whose text did not change keeps its tags (no LLM call).
+export async function assignIds(story, prev = [], prevChunks = []) {
   // The tagger's kind (character, group, prop, place, part) is kept as tag_kind: classification reuses "kind" for its own
   // labels, and losing "place" on a re-solve left every fixture without a place (custom-rrh4).
   const table = prev.map((t) => ({ id: t.id, name: t.name, kind: t.tag_kind || t.kind, aliases: [...(t.aliases || [])] })), parts = [];
   for (const [i, c] of chunks(story).entries()) {
+    const same = prevChunks.find((p) => p.text === c && p.mentions);
+    if (same) { parts.push({ ...same }); continue; }
     let r = await tagChunk(c, table, i);
-    let miss = (await coverage(r.tagged)).untagged;
-    if (miss.length) { r = await tagChunk(c, table, i, miss.join("; ")); miss = (await coverage(r.tagged)).untagged; }
+    let miss = (await coverage(c, r.tagged)).untagged;
+    if (miss.length) { r = await tagChunk(c, table, i, miss.join("; ")); miss = (await coverage(c, r.tagged)).untagged; }
     for (const n of r.new_ids) if (!table.some((t) => t.id === n.id)) table.push({ ...n, aliases: [] });
     for (const m of r.mentions) if (m.ids.length === 1) { const t = table.find((x) => x.id === m.ids[0]); if (t && m.text !== t.name && !t.aliases.includes(m.text)) t.aliases.push(m.text); }
-    parts.push({ text: c, tagged: r.tagged, untagged: miss });
+    parts.push({ text: c, tagged: r.tagged, untagged: miss, mentions: r.mentions, new_ids: r.new_ids });
   }
   return { table, chunks: parts };
 }

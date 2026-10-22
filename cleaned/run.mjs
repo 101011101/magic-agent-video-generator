@@ -98,14 +98,20 @@ try {
       // E1: the editor reads the story for logic holes right away (minimal edits).
       if (!run.log.edit) { console.log("editor…"); const rv = await reviewStory(st.story); run.log.edit = { original: st.story, review: rv.holes, story: rv.story, rounds: [] }; run.save(); }
       // Solve one story text: I0 ids (pronouns resolved in context) → ground plans → blocking → state manager (code, in block()).
-      const solve = async (text, prev = []) => {
-        const tagged = await assignIds(text, prev), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
+      // Solve one story text. prev: the earlier solve of this story (after an edit). Only what changed is redone: unchanged chunks
+      // keep their tags, the ground plans are reused when environments and fixtures are the same, the blocking is patched.
+      const solve = async (text, prev = null) => {
+        const tagged = await assignIds(text, prev?.ids.table || [], prev?.ids.chunks || []), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
         const w = { title: st.title, style: st.style, story: text, story_ids: tagged.chunks.map((c) => c.tagged).join("\n\n"),
           entities: assetsOf(table),
           locations: table.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
         const fx = table.filter((t) => t.role === "fixture" && t.place !== "none"), ls = ids.links.filter((l) => l.belongs);
-        const plan0 = await seedPlan(w, text, { fixtures: fx, links: ls });
-        return { ids, world: w, sp: plan0, blocking: await block(w, Object.fromEntries(plan0.places.map((p) => [p.id, p]))) };
+        const envSig = (t, f) => JSON.stringify([t.filter((x) => x.role === "place").map((x) => x.id).sort(), f.map((x) => `${x.id}@${x.place}`).sort()]);
+        const reusePlan = prev && envSig(table, fx) === envSig(prev.ids.table, prev.ids.table.filter((t) => t.role === "fixture" && t.place !== "none"));
+        const plan0 = reusePlan ? prev.sp : await seedPlan(w, text, { fixtures: fx, links: ls });
+        const bl = await block(w, Object.fromEntries(plan0.places.map((p) => [p.id, p])), prev ? { steps: prev.blocking.steps, story_ids: prev.world.story_ids } : null);
+        console.log(`    solved: ${tagged.chunks.filter((c) => prev?.ids.chunks.some((p) => p.text === c.text)).length}/${tagged.chunks.length} chunks reused · ground plans ${reusePlan ? "reused" : "new"} · blocking ${bl.patch ? `patched (${bl.patch.length} op)` : "written"} · ${bl.lint.length} rule(s) broken`);
+        return { ids, world: w, sp: plan0, blocking: bl };
       };
       if (!run.log.blocking) {
         // Q: the state manager's findings become questions; the editor answers them all at once; solve again (≤ 2 rounds).
@@ -119,7 +125,7 @@ try {
           const ans = await answerQuestions(text, qs);
           answered.push(...ans.answers.filter((a) => a.kind === "always-there").map((a) => a.key));
           run.log.edit.rounds.push({ questions: qs, answers: ans.answers, before: text, after: ans.story }); run.save();
-          text = ans.story; solved = await solve(text, solved.ids.table);   // same things keep the same ids
+          text = ans.story; solved = await solve(text, solved);   // same things keep the same ids; only changes are redone
         }
         run.log.edit.story = text;
         run.log.edit.open = questions({ blocking: solved.blocking, ids: solved.ids, answered });
