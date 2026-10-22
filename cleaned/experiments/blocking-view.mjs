@@ -9,9 +9,14 @@ import { RUNS } from "../src/env.js";
 
 const name = process.argv[2], dir = join(RUNS, name), log = JSON.parse(readFileSync(join(dir, "run.json"), "utf8"));
 const plan = log.plan || { ...log.blocking, seed: log.seed };   // a seed-only run has its states and plates but no plan yet
-const bank = new Set(Object.keys((existsSync(join(dir, "tracker.json")) ? JSON.parse(readFileSync(join(dir, "tracker.json"), "utf8")) : { roots: {} }).roots));
+// The asset bank: sheets made so far (tracker), or, for a plan-only run, the assets that will need one (first appearance by
+// entry: not a place's initial contents, not packed inside another asset).
+const planOnly = !log.seed;
+const bank = planOnly
+  ? new Set((log.world?.entities || []).filter((e) => !e.inside && !Object.values(log.blocking?.initial || {}).flat().includes(e.id)).map((e) => e.id))
+  : new Set(Object.keys((existsSync(join(dir, "tracker.json")) ? JSON.parse(readFileSync(join(dir, "tracker.json"), "utf8")) : { roots: {} }).roots));
 const ent = Object.fromEntries((log.world?.entities || plan.entities).map((e) => [e.id, e]));
-const sheetImg = Object.fromEntries([...bank].map((id) => [id, `img/${id}.jpg`]));
+const sheetImg = planOnly ? {} : Object.fromEntries([...bank].map((id) => [id, `img/${id}.jpg`]));
 const plateImg = Object.fromEntries(Object.entries(plan.seed || {}).map(([id, s]) => [id, `img/${s.plate.split("/")[1].replace(".png", ".jpg")}`]));
 const t = existsSync(join(dir, "tracker.json")) ? JSON.parse(readFileSync(join(dir, "tracker.json"), "utf8")) : { frames: [] };
 const keptImg = Object.fromEntries(t.frames.filter((f) => f.slide).map((f) => [f.slide, `img/${f.file.replace(/[/]/g, "_").replace(/\.png$/, ".jpg")}`]));
@@ -23,10 +28,10 @@ const VERB = { be: "is at", enter: "comes in at", exit: "goes out at", appear: "
 const slides = plan.slides.map((s, i) => {
   const step = plan.steps[i], place = s.location;
   const baseRow = rows.filter((r) => r.place === place).at(-1);
-  const base = baseRow && baseRow.slide ? { kind: "frame", slide: baseRow.slide } : { kind: "plate", place, img: plateImg[place] };
+  const base = baseRow && baseRow.slide ? { kind: "frame", slide: baseRow.slide } : { kind: "plate", place, img: plateImg[place] || null };
   const baseIds = baseRow ? baseRow.ids : [];
   // Screenplay block
-  const heading = `${place === "woodland" ? "EXT." : "INT."} ${(plan.locations.find((l) => l.id === place)?.name || place).toUpperCase()}${step.time_jump ? " — LATER" : ""}`;
+  const heading = `${(plan.locations.find((l) => l.id === place)?.name || place).toUpperCase()}${step.time_jump ? " — LATER" : ""}`;
   const lines = step.beats.map((b) => {
     const who = ent[b.actor]?.name || b.actor, obj = b.object ? ent[b.object]?.name || b.object : "";
     const where = b.to ? ` ${markName(place, b.to)}` : "", via = b.via ? `, passing ${markName(place, b.via)}` : "";
@@ -60,6 +65,6 @@ const slides = plan.slides.map((s, i) => {
 mkdirSync(join(dir, "blocking"), { recursive: true });
 writeFileSync(join(dir, "blocking", "data.json"), JSON.stringify({ title: plan.title, story: plan.story, run: name, lint: plan.lint || [], slides,
   plates: Object.entries(plan.seed || {}).map(([id, s]) => ({ id, name: (log.world?.locations || []).find((l) => l.id === id)?.name || id, img: plateImg[id], contents: s.contents || [] })),
-  sheets: [...bank].filter((id) => ent[id]).map((id) => ({ id, name: ent[id].name, img: sheetImg[id] })) }));
+  sheets: [...bank].filter((id) => ent[id]).map((id) => ({ id, name: ent[id].name, img: sheetImg[id] })), planOnly, edit: log.edit || null, initial: plan.initial || {} }));
 const c = (k) => slides.flatMap((s) => s.assets).filter((a) => a.src.kind === k).length;
 console.log(`${slides.length} slides · sources: base ${c("base")}, earlier frame ${c("frame")}, asset bank ${c("bank")}, generated ${c("gen")} · only-base slides ${slides.filter((s) => s.onlyBase).length}`);

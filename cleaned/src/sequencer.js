@@ -144,6 +144,8 @@ function foldOnce(w, seed, steps, initial) {
     const firstHere = s.kind === "establish" && !established.has(s.place);
     established.add(s.place);
     // The place's initial contents are present from its first frame.
+    // Things packed in a fixture of this place (a needle in a sewing basket) are there from its first frame too.
+    if (firstHere) for (const e of w.entities) if (e.home === s.place && !state[e.id]) (initial[s.place] ??= new Set()).add(e.id);
     if (firstHere) for (const id of initial[s.place] || []) if (!state[id]) { state[id] = { place: s.place, at: "", pose: "", expression: "", holder: null, initial: true }; everSeen.add(id); pack(id); }
     // A prop used here that is not here: never seen anywhere → it was always here (initial); seen elsewhere → must be carried in.
     const need = (id, what) => {
@@ -168,6 +170,7 @@ function foldOnce(w, seed, steps, initial) {
       if (!arrives && isProp(b.actor) && !here && !need(b.actor, `${b.action} of`)) continue;
       if (["pick-up"].includes(b.action) && !need(b.object, `${b.actor} picks up`)) continue;
       if (arrives) {
+        if (here && b.action === "be" && cur.initial) { if (b.to) cur.at = b.to; continue; }   // placing a thing already part of the place: just its spot
         if (here) err(`${b.actor} ${b.action}s ${s.place} but is already there`);
         if (b.action === "be" && !firstHere) err(`"be" is only for the first (establish) step of a place (${b.actor}); use enter or appear`);
         if (b.action === "appear" && !vanished.has(b.actor)) err(`${b.actor} appears but never vanished: ${isProp(b.actor) ? "a prop that is simply there needs no beat (it is part of the place), or carry it in" : "characters enter by a door or path mark"}`);

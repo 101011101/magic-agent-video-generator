@@ -66,6 +66,18 @@ if (planFrom && !run.log.world) {
   const pl = JSON.parse(readFileSync(join(RUNS, planFrom, "run.json"), "utf8"));
   Object.assign(run.log, { world: pl.world, seed_plan: pl.seed_plan, plan_from: planFrom });
 }
+// Tracked assets from the id table. "inside" is resolved to something the state manager tracks: packed in an asset → that
+// asset; in a part of an asset (shears on a belt) → that asset; in a fixture (a needle in a sewing basket) → the fixture's place
+// (home: there from the place's first frame).
+function assetsOf(table) {
+  const by = Object.fromEntries(table.map((t) => [t.id, t]));
+  return table.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => {
+    let c = t.inside && t.inside !== "none" ? by[t.inside] : null, inside = "", home = "";
+    if (c?.role === "part" && by[c.parent]?.role === "asset") c = by[c.parent];
+    if (c?.role === "asset") inside = c.id; else if (c?.role === "fixture" && c.place !== "none") home = c.place;
+    return { id: t.id, name: t.name, kind: t.kind, look: "", inside, home };
+  });
+}
 let plan = run.log.plan ? check(run.log.plan) : null;
 const page = () => { if (!estimate && plan) writeFileSync(join(dir, "index.html"), renderPage({ name, prompt, plan, tracker, log: run.log, credits: jobs.spent() })); };
 try {
@@ -88,7 +100,7 @@ try {
       const solve = async (text) => {
         const tagged = await assignIds(text), table = await classifyIds(text, tagged.table), ids = { table, chunks: tagged.chunks, links: await linkIds(text, table) };
         const w = { title: st.title, style: st.style, story: text, story_ids: tagged.chunks.map((c) => c.tagged).join("\n\n"),
-          entities: table.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => ({ id: t.id, name: t.name, kind: t.kind, look: "", inside: t.inside && t.inside !== "none" ? t.inside : "" })),
+          entities: assetsOf(table),
           locations: table.filter((t) => t.role === "place").map((t) => ({ id: t.id, name: t.name, look: "" })) };
         const fx = table.filter((t) => t.role === "fixture" && t.place !== "none"), ls = ids.links.filter((l) => l.belongs);
         const plan0 = await seedPlan(w, text, { fixtures: fx, links: ls });
