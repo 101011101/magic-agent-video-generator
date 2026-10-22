@@ -20,7 +20,9 @@ function blockPrompt(plan, slide, { add, remove, change, retryNote, tracker }) {
   let k = 2;
   // Entities last seen in the same frame share that one image (it already holds them together, as the story left them).
   const byFrame = new Map(), fresh = [];
-  for (const id of add) { const seen = tracker.lastSeen(id, slide.n); if (seen) byFrame.set(seen.id, [...(byFrame.get(seen.id) || []), id]); else fresh.push(id); }
+  // Contents of something in this frame (bread in the basket) come with their container: no reference of their own.
+  const packed = (id) => { const c = ent[id]?.inside; return c && (slide.present.includes(c) || ent[c]?.kind === "character"); };
+  for (const id of add) { if (packed(id)) continue; const seen = tracker.lastSeen(id, slide.n); if (seen) byFrame.set(seen.id, [...(byFrame.get(seen.id) || []), id]); else fresh.push(id); }
   for (const [fid, ids] of byFrame) {
     if (k > SLOTS) break;
     const names = ids.map((id) => ent[id].name).join(" and "), f = tracker.get(fid);
@@ -29,6 +31,7 @@ function blockPrompt(plan, slide, { add, remove, change, retryNote, tracker }) {
   }
   for (const id of fresh) {
     if (k > SLOTS) break;
+    if (!tracker.roots[id]) { console.log(`  note: ${id} enters with no frame and no sheet; drawn from the text`); lines.push(`Add ${ent[id].name}: ${ent[id].spec || ent[id].name}.`); continue; }
     imgs.push({ id, file: tracker.roots[id], from: "sheet" });
     lines.push(`Add ${ent[id].name}: they must look exactly like image ${k++} (identity, face, fur or hair, clothing, colours, proportions; ignore that image's pose and plain background).`);
   }

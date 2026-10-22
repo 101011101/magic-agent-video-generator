@@ -182,7 +182,10 @@ try {
     if (seedOnly) throw Object.assign(new Error("seed only: stopped after the plates"), { stop: true });
   } else {
     console.log(`${name}: plan from run.json; roots…`);
-    await makeRoots(plan, jobs, tracker, { places: !plan.seed });
+    // New-style runs restore their sheets from their own asset bank; makeRoots is the older runs' path (it would repaint sheets
+    // with the older prompts).
+    if (run.log.assets) { for (const [id, a] of Object.entries(run.log.assets)) tracker.roots[id] = a.file; }
+    else await makeRoots(plan, jobs, tracker, { places: !plan.seed });
     if (plan.seed) for (const [id, p] of Object.entries(plan.seed)) tracker.addPlate(id, p.plate, p.contents || []);
   }
   if (plan.lint?.length) console.log(`  rules still broken after one rewrite:\n  - ${plan.lint.join("\n  - ")}`);
