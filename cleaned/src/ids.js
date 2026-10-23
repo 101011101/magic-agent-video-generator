@@ -132,7 +132,9 @@ export async function mergeIds(story, table) {
   if (ids.length < 2) return { table, map: {} };
   const r = await jsonCall({ name: "ids-merge", effort: "low", schema: S.obj({ same: S.arr(S.obj({ keep: S.enum(ids), drop: S.enum(ids), why: S.str })) }),
     prompt: `Which of these ids refer to the SAME physical thing or place (two names for one street, one shop, one person)? List pairs to
-merge: keep the more specific id, drop the other. Different things that merely relate (a shop and its street) are not the same.
+merge: keep the more specific id, drop the other. Places: a broad area and the one spot in it the story shows (a "neighbourhood"
+and "the street" the bakery is on) are the same place when every scene set in the area happens on that spot. Different things that
+merely relate (a shop and its street) are not the same.
 Return [] if none.\n${table.map((t) => `- ${t.id} (${t.role || t.kind}): ${t.name}; aliases: ${(t.aliases || []).join(", ") || "none"}`).join("\n")}\n\nStory:\n${story}` });
   const map = {};
   for (const m of r.same) if (m.keep !== m.drop && !map[m.keep]) map[m.drop] = map[m.drop] || m.keep;
