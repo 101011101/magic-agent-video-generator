@@ -39,10 +39,12 @@ export async function download(url, file) {
   }
 }
 
+// Images, audio (voice tracks for lip sync) and video (clips for lip sync).
+const MEDIA = { mp3: ["audio", "audio/mpeg"], wav: ["audio", "audio/wav"], m4a: ["audio", "audio/mp4"], mp4: ["video", "video/mp4"], mov: ["video", "video/quicktime"] };
 export async function upload(file) {
-  const ext = file.split(".").pop().toLowerCase();
-  const { items: [item] } = await request("POST", "/v1/files/upload-urls", { items: [{ type: "image", extension: ext }] });
-  const put = await fetch(item.upload_url, { method: "PUT", body: readFileSync(file), headers: { "content-type": `image/${ext === "jpg" ? "jpeg" : ext}` } });
+  const ext = file.split(".").pop().toLowerCase(), [type, mime] = MEDIA[ext] || ["image", `image/${ext === "jpg" ? "jpeg" : ext}`];
+  const { items: [item] } = await request("POST", "/v1/files/upload-urls", { items: [{ type, extension: ext }] });
+  const put = await fetch(item.upload_url, { method: "PUT", body: readFileSync(file), headers: { "content-type": mime } });
   if (!put.ok) throw new Error(`upload PUT ${put.status} for ${file}`);
   return item.file_path;
 }

@@ -46,6 +46,14 @@ export class Jobs {
     });
   }
 
+  // Lip sync (Magic Hour): a clip and a voice track → the clip with the mouth moving to the voice. 1 credit per frame (lite).
+  async lipsync(key, file, video, audio, seconds, mode = "lite") {
+    return this.paid(key, file, { endpoint: "/v1/lip-sync", mode, seconds }, [video, audio], Math.ceil(seconds * 30), async ([v, a]) => {
+      const body = { name: `${this.run.name} ${key}`, start_seconds: 0, end_seconds: seconds, max_fps_limit: 30, style: { generation_mode: mode }, assets: { video_source: "file", video_file_path: v, audio_file_path: a } };
+      return runJob("/v1/lip-sync", body, { kind: "video" });
+    });
+  }
+
   // Shared gate: signature cache → estimate → cap check (reserved) → upload inputs → job → download → record.
   async paid(key, file, spec, inputs, cost, call) {
     const sig = createHash("sha256").update(JSON.stringify({ spec, inputs: inputs.map((f) => this.hash(f)) })).digest("hex").slice(0, 16);
