@@ -16,7 +16,7 @@ import { writeScreenplay, addSound, screenplayText } from "./src/screenplay.js";
 import { storyboardScene, checkPanels } from "./src/storyboard.js";
 import { Tracker } from "./src/tracker.js";
 import { framing } from "./src/clips.js";
-import { gridPrompt, cropCells, checkGrid, layout } from "./src/grid.js";
+import { gridPrompt, cropCells, checkGrid, checkCellsRoom, layout } from "./src/grid.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const prompt = opt("--prompt", null), label = opt("--label", "v1"), planOnly = args.includes("--plan-only"), estimate = args.includes("--estimate"), force = args.includes("--force");
@@ -99,25 +99,40 @@ try {
   // 7. One grid per scene, in order.
   let slideN = 0;
   for (const s of scenes) {
-    const { frame: base } = tracker.baseFor({ location: s.env, n: 100000 });
+    // Image 1 is always the environment's plate (room and camera); image 2 the latest frame there, when one exists (state).
+    const plate = tracker.frames.find((f) => f.op === "plate" && f.location === s.env), { frame: latest } = tracker.baseFor({ location: s.env, n: 100000 });
+    const base = latest, hasState = latest && latest.op !== "plate";
     const inScene = [...new Set(s.panels.flatMap((p) => p.elements))], entering = inScene.filter((id) => !base.present.includes(id) && !(ent[id].inside && inScene.includes(ent[id].inside)));
     const refs = [];
     for (const id of entering) { const seen = tracker.lastSeen(id, 100000); if (seen) refs.push({ id, kind: ent[id].kind, file: seen.file, from: seen.id }); else if (tracker.roots[id]) refs.push({ id, kind: ent[id].kind, file: tracker.roots[id], from: "sheet" }); else refs.push({ id, kind: ent[id].kind, spec: ent[id].spec, from: "text" }); }
-    const gp = gridPrompt({ scene: s, panels: s.panels, env: s.heading, style: L.style_medium, refs: refs.filter((r) => r.file).slice(0, 9), textRefs: refs.filter((r) => !r.file), name: nm });
-    const gridFile = `grids/scene-${s.k}.png`;
-    say(`scene ${s.k}: grid of ${s.panels.length} (${layout(s.panels.length).join("×")}) from ${base.id} · refs: ${refs.map((r) => `${nm(r.id)}←${r.from === "sheet" ? "sheet" : r.from}`).join(", ") || "none"}`);
-    await jobs.image(`grid-s${s.k}`, gridFile, gp, [base.file, ...new Set(refs.filter((r) => r.file).slice(0, 9).map((r) => r.file))], { ...IMAGE, resolution: "4k" });
+    const imgRefs = refs.filter((r) => r.file).slice(0, hasState ? 8 : 9);
+    let gp = gridPrompt({ scene: s, panels: s.panels, env: s.heading, style: L.style_medium, refs: imgRefs, textRefs: refs.filter((r) => !r.file), name: nm, hasState });
+    const inputs = [plate.file, ...(hasState ? [latest.file] : []), ...new Set(imgRefs.map((r) => r.file))];
+    say(`scene ${s.k}: grid of ${s.panels.length} (${layout(s.panels.length).join("×")}) · room: plate${hasState ? ` + state from ${latest.id}` : ""} · refs: ${refs.map((r) => `${nm(r.id)}←${r.from === "sheet" ? "sheet" : r.from}`).join(", ") || "none"}`);
+    let gridFile = `grids/scene-${s.k}.png`, gc, cells, room;
+    // One retry when cells leave the room or change the camera.
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      if (attempt === 2) gridFile = `grids/scene-${s.k}-a2.png`;
+      await jobs.image(`grid-s${s.k}${attempt === 2 ? "-a2" : ""}`, gridFile, gp, inputs, { ...IMAGE, resolution: "4k" });
+      if (estimate) break;
+      gc = await checkGrid(run.path(gridFile), s.panels.length);
+      say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
+      cells = cropCells(run.path(gridFile), s.panels.length, (i) => run.path(`frames/s${s.k}-p${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : null);
+      room = await checkCellsRoom(cells, run.path(plate.file));
+      const off = room.filter((c) => !c.same_room || !c.same_camera);
+      say(`  room check: ${off.length ? off.map((c) => `cell ${c.cell}: ${!c.same_room ? "other room" : "other camera"} (${c.note})`).join("; ") : "every cell in the same room from the same camera"}`);
+      if (!off.length || attempt === 2) break;
+      gp += `\nThe last attempt broke the rule in these cells; fix them: ${off.map((c) => `cell ${c.cell} ${!c.same_room ? "showed a different room" : "changed the camera"}`).join("; ")}. Every cell: image 1's room, image 1's camera.`;
+    }
     if (estimate) { slideN += s.panels.length; continue; }
-    const gc = await checkGrid(run.path(gridFile), s.panels.length), [rows, cols] = layout(s.panels.length);
-    say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
-    const cells = cropCells(run.path(gridFile), s.panels.length, (i) => run.path(`frames/s${s.k}-p${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : null);
     // Cell checks run in parallel (they were a serial minute per grid).
     const checks = await Promise.all(s.panels.map((p) => { const ids = p.elements.filter((id) => !(ent[id].inside && p.elements.includes(ent[id].inside))); return jsonCall({ name: "panel-check", effort: "low", images: [run.path(`frames/s${s.k}-p${p.n}.png`)], schema: S.obj({ counts: S.obj(Object.fromEntries(ids.map((id) => [id, S.int]))), impossible: S.bool, problems: S.str }),
       prompt: `One frame of a story. counts: how many times each appears (0 if not visible):\n${ids.map((id) => `- ${id}: ${nm(id)}`).join("\n")}\nimpossible: true only if something is physically impossible. problems: short, or "".` }).then((r) => ({ ids, r })); }));
     for (const [j, p] of s.panels.entries()) {
       slideN++;
       const file = `frames/s${s.k}-p${p.n}.png`, { ids, r } = checks[j];
-      const faults = ids.flatMap((id) => (r.counts[id] === 0 ? [`${nm(id)}: missing`] : r.counts[id] > 1 && ent[id].kind === "character" ? [`${nm(id)}: duplicated`] : [])).concat(r.impossible ? [`impossible: ${r.problems}`] : []);
+      const faults = ids.flatMap((id) => (r.counts[id] === 0 ? [`${nm(id)}: missing`] : r.counts[id] > 1 && ent[id].kind === "character" ? [`${nm(id)}: duplicated`] : [])).concat(r.impossible ? [`impossible: ${r.problems}`] : [])
+        .concat(room[j] && !room[j].same_room ? ["other room"] : [], room[j] && !room[j].same_camera ? ["other camera"] : []);
       say(`    cell ${p.n}: ${faults.length ? faults.join(", ") : "ok"} · ${p.action.slice(0, 80)}`);
       tracker.add({ slide: slideN, scene: s.k, panel: p.n, file, location: s.env, present: [...p.elements], observed: ids.filter((id) => r.counts[id] > 0), base: base.id, refs: refs.map((x) => ({ id: x.id, file: x.file, from: x.from })), op: "edit", hops: (base.hops || 0) + 1, accepted: true, forced: faults.length > 0, grid: gridFile, attempts: [{ a: 1, file, base: base.id, base_file: base.file, add: entering, remove: [], keep: [], change: "", refs: refs.map((x) => ({ id: x.id, file: x.file, from: x.from })), prompt: gp, obs: r, faults: faults.map((f) => ({ id: null, kind: f })), present: p.elements, hops: 1 }] });
     }

@@ -7,18 +7,22 @@ import { jsonCall, S } from "./llm.js";
 
 export const layout = (n) => (n <= 1 ? [1, 1] : n <= 4 ? [2, 2] : [3, 3]);
 
-export function gridPrompt({ scene, panels, env, style, refs, textRefs = [], name }) {
-  const [rows, cols] = layout(panels.length);
-  const refLines = textRefs.map((r) => `${name(r.id)}: ${r.spec || name(r.id)}`).concat(refs.map((r, i) => `${name(r.id)}: ${r.from === "sheet" ? `the same ${r.kind === "character" ? "person" : "object"} as image ${i + 2} (same face, hair, clothes and colours; its pose and plain background do not apply)` : `exactly as ${r.kind === "character" ? "they look" : "it looks"} in image ${i + 2} (take only ${name(r.id)} from it)`}`));
+// hasState: image 2 is the latest frame of the environment (state: what has changed since the plate); references then start at 3.
+export function gridPrompt({ scene, panels, env, style, refs, textRefs = [], name, hasState = false }) {
+  const [rows, cols] = layout(panels.length), off = hasState ? 3 : 2;
+  const refLines = textRefs.map((r) => `${name(r.id)}: ${r.spec || name(r.id)}`).concat(refs.map((r, i) => `${name(r.id)}: ${r.from === "sheet" ? `the same ${r.kind === "character" ? "person" : "object"} as image ${i + off} (same face, hair, clothes and colours; its pose and plain background do not apply)` : `exactly as ${r.kind === "character" ? "they look" : "it looks"} in image ${i + off} (take only ${name(r.id)} from it)`}`));
   const cells = panels.map((p, i) => {
     const enters = p.enters.map((e) => `${name(e.id)} ${e.where}${e.doing ? `, ${e.doing}` : ""}`).join("; ");
     const changes = p.changes.map((c) => `${name(c.id)}: ${c.now}`).join("; ");
     return `${i + 1}. ${p.action}${enters ? ` [${enters}]` : ""}${changes ? ` (${changes})` : ""}${p.leaves.length ? ` (${p.leaves.map(name).join(", ")} no longer in the picture)` : ""}`;
   });
   return `One image that is a storyboard GRID of ${panels.length} panels in ${rows} rows × ${cols} columns, all cells the same size, filling the
-image edge to edge with no gutters, borders, numbers or text. Every cell is the same place from the same camera as image 1
-(${env}), with the same light and colours. The cells are consecutive moments of one continuous scene, in reading order
-(left to right, top to bottom); whatever is not said to change stays the same from one cell to the next.
+image edge to edge with no gutters, borders, numbers or text.
+Image 1 is the place itself (${env}): EVERY cell shows this same room from this same fixed wide camera, the same walls, furniture,
+light and colours, as if the camera never moved and only the people and things in it changed. No close-ups, no new angles, no
+other rooms.${hasState ? "\nImage 2 is the latest moment in this place: start from its state (what is open, where things lie) in cell 1." : ""}
+The cells are consecutive moments of one continuous scene, in reading order (left to right, top to bottom); whatever is not said
+to change stays the same from one cell to the next.
 ${refLines.length ? `Who is who:\n${refLines.join("\n")}\n` : ""}The ${panels.length} moments:
 ${cells.join("\n")}${panels.length < rows * cols ? `\nLeave the last ${rows * cols - panels.length} cell(s) as the empty place.` : ""}
 Style: ${style}`;
@@ -36,6 +40,16 @@ export function cropCells(gridFile, n, outFor, grid = null) {
     out.push(f);
   }
   return out;
+}
+
+// Each cell against the environment: same room and same camera as the plate? (the counts check cannot see a changed room).
+export async function checkCellsRoom(cellFiles, plateFile) {
+  const r = await jsonCall({ name: "grid-room-check", effort: "low", images: [plateFile, ...cellFiles],
+    schema: S.obj({ cells: S.arr(S.obj({ cell: S.int, same_room: S.bool, same_camera: S.bool, note: S.str })) }),
+    prompt: `Image 1 is an empty place (the plate). Images 2 to ${cellFiles.length + 1} are cells of a storyboard that must show this same place
+from the same fixed camera. For each cell (numbered 1 to ${cellFiles.length} in order): same_room: the same walls, furniture and layout as image 1
+(people and small objects may differ); same_camera: the same wide framing and angle (not a close-up, not another angle). note: short.` });
+  return cellFiles.map((_, i) => r.cells.find((c) => c.cell === i + 1) || { cell: i + 1, same_room: false, same_camera: false, note: "not reported" });
 }
 
 // Did the model draw the grid as asked? One vision call on the whole image: cell count and whether cells are equal and ungapped.
