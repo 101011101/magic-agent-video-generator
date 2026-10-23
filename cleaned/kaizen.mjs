@@ -15,7 +15,7 @@ const { slides, violations, perScene } = await run.storyboard();
 console.log(`  ${slides.length} panels in ${perScene.length} scenes (${perScene.join(", ")}) · hard rule: ${violations.length ? violations.join("; ") : "every element has a source"}`);
 const next = () => (slides.find((s) => !run.tracker.bySlide(s.n))?.n ?? slides.length);
 
-const page = readFileSync(new URL("./src/kaizen.html", import.meta.url), "utf8");
+const page = readFileSync(new URL("./src/kaizen.html", import.meta.url), "utf8"), studio = readFileSync(new URL("./src/studio.html", import.meta.url), "utf8");
 const MIME = { ".png": "image/png", ".jpg": "image/jpeg", ".html": "text/html; charset=utf-8", ".json": "application/json" };
 const json = (res, code, body) => { res.writeHead(code, { "content-type": "application/json" }); res.end(JSON.stringify(body)); };
 const body = (req) => new Promise((r) => { let s = ""; req.on("data", (d) => (s += d)); req.on("end", () => r(s ? JSON.parse(s) : {})); });
@@ -25,6 +25,7 @@ createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`), p = url.pathname;
   try {
     if (p === "/") { res.writeHead(200, { "content-type": MIME[".html"] }); return res.end(page); }
+    if (p === "/studio") { res.writeHead(200, { "content-type": MIME[".html"] }); return res.end(studio); }
     if (p.startsWith("/files/")) { const f = run.run.path(decodeURIComponent(p.slice(7))); if (!existsSync(f)) return json(res, 404, { error: "no file" }); res.writeHead(200, { "content-type": MIME[extname(f)] || "application/octet-stream" }); return res.end(readFileSync(f)); }
     if (p === "/api/state") return json(res, 200, { name: run.name, total: slides.length, next: next(), spent: run.spent(), violations, done: slides.filter((s) => run.tracker.bySlide(s.n)).map((s) => ({ n: s.n, file: run.tracker.bySlide(s.n).file, forced: run.tracker.bySlide(s.n).forced })), scenes: run.sp.scenes.map((sc, i) => ({ n: i + 1, place: sc.place, panels: slides.filter((s) => s.scene === i + 1).map((s) => s.n) })) });
     const m = p.match(/^\/api\/(preview|generate|accept)\/(\d+)$/);
@@ -36,6 +37,19 @@ createServer(async (req, res) => {
       try {
         if (m[1] === "generate") { const b = await body(req); return json(res, 200, await run.generate(n, { prompt: b.prompt || null })); }
         if (m[1] === "accept") { const b = await body(req); return json(res, 200, { accepted: run.accept(n, b.a) }); }
+      } finally { busy = false; }
+    }
+    const st = p.match(/^\/api\/studio\/(\d+)(?:\/(run|pick|frame))?$/);
+    if (st) {
+      const k = Number(st[1]);
+      if (!st[2]) return json(res, 200, run.studioScene(k));
+      const b = await body(req);
+      if (st[2] === "pick") { run.studioPick(k, b.v); return json(res, 200, { ok: true }); }
+      if (busy) return json(res, 409, { error: "a generation is already running" });
+      busy = true;
+      try {
+        if (st[2] === "run") return json(res, 200, await run.studioRun(k, b.instruction || null));
+        if (st[2] === "frame") return json(res, 200, await run.studioFrame(k, b.v, b.panel, b.prompt || null));
       } finally { busy = false; }
     }
     json(res, 404, { error: "not found" });

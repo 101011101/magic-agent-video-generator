@@ -10,7 +10,7 @@ import { Jobs } from "./jobs.js";
 import { Tracker } from "./tracker.js";
 import { framing } from "./clips.js";
 import { frameStyle } from "./seed.js";
-import { storyboardScene, checkPanels } from "./storyboard.js";
+import { storyboardScene, storyboardPrompt, checkPanels } from "./storyboard.js";
 
 const SLOTS = 10;
 
@@ -157,4 +157,55 @@ picture (not a grid or comic). problems: one short sentence naming what is wrong
     this.run.save(); return att;
   }
   spent() { return this.jobs.spent(); }
+
+  // ---- Scene studio: screenplay scene → storyboard instruction (editable) → panels → frame prompts; every run kept.
+  ctx() { return { assets: Object.values(this.ent).map((e) => ({ id: e.id, name: e.name })), envs: this.envs }; }
+  toSlides(k, b) {
+    return b.panels.map((p, j) => ({ n: j + 1, scene: k, first: j === 0, location: b.environment, present: [...new Set(p.elements)].filter((id) => this.ent[id]),
+      what: p.action, changes: p.changes || [], enters: (p.enters || []).filter((e) => this.ent[e.id]), leaves: (p.leaves || []).filter((id) => this.ent[id]), intro: p.introductions || [],
+      beats: p.beats.map((i) => this.sp.scenes[k - 1].beats[i - 1]).filter(Boolean) }));
+  }
+  // Frame prompts for a scene's panels as they would be built in order: the first from the plate, each next one from the panel
+  // before it (virtual, not generated). References for returning elements come from accepted frames if any, else sheets.
+  scenePrompts(k, b) {
+    const slides = this.toSlides(k, b), out = [];
+    let base = this.tracker.frames.find((f) => f.op === "plate" && f.location === b.environment) || { id: `plate-${b.environment}`, op: "plate", location: b.environment, present: [], file: "", hops: 0 };
+    for (const s of slides) {
+      const add = s.present.filter((id) => !base.present.includes(id)), remove = base.present.filter((id) => this.ent[id] && (s.leaves.includes(id) || (!s.present.includes(id) && this.ent[id].kind === "character")));
+      const { prompt, imgs } = this.prompt({ ...s, n: 10000 + s.n }, base, add, remove);
+      out.push({ n: s.n, action: s.what, elements: s.present.map((id) => this.name_(id)), enters: s.enters, changes: s.changes, leaves: s.leaves.map((id) => this.name_(id)), beats: s.beats,
+        base: base.op === "plate" ? `plate of ${base.location}` : `panel ${base.n} of this scene (not generated yet)`, refs: imgs.map((x) => ({ id: this.name_(x.id), from: x.from === "sheet" ? "seed sheet" : `frame ${x.from}` })), prompt, violations: checkPanels([b]).filter((v) => v.includes(`panel ${s.n}:`)) });
+      base = { id: `virtual-${s.n}`, op: "virtual", n: s.n, location: b.environment, present: [...s.present], file: "", hops: 1 };
+    }
+    return out;
+  }
+  async studioRun(k, instruction = null) {
+    const sc = this.sp.scenes[k - 1], ctx = this.ctx(), prompt = instruction || storyboardPrompt(sc, k, ctx);
+    const b = await storyboardScene(sc, k, ctx, { prompt });
+    const st = (this.run.log.studio ??= {}), versions = (st[k] ??= { versions: [], favourite: null }).versions;
+    const v = { v: versions.length + 1, instruction: prompt, board: b, panels: this.scenePrompts(k, b), at: new Date().toISOString() };
+    versions.push(v); this.run.save();
+    return v;
+  }
+  studioScene(k) {
+    const sc = this.sp.scenes[k - 1], st = this.run.log.studio?.[k] || { versions: [], favourite: null };
+    return { k, heading: `${sc.inside ? "INT." : "EXT."} ${sc.place} — ${sc.time}${sc.cut ? " (CUT)" : ""}`, beats: sc.beats, ambience: sc.ambience || "", defaultInstruction: storyboardPrompt(sc, k, this.ctx()), versions: st.versions, favourite: st.favourite,
+      current: this.run.log.board?.[k - 1] ? this.scenePrompts(k, this.run.log.board[k - 1]) : null };
+  }
+  studioPick(k, v) { (this.run.log.studio[k] ??= { versions: [] }).favourite = v; this.run.save(); }
+  // Make one frame from a studio panel (prompt editable). Base: the real latest frame of the environment (or its plate).
+  async studioFrame(k, v, pn, override = null) {
+    const ver = this.run.log.studio[k].versions.find((x) => x.v === v), b = ver.board, s = { ...this.toSlides(k, b)[pn - 1], n: 0 };
+    const { frame: base } = this.tracker.baseFor({ ...s, n: 10000 });
+    const add = s.present.filter((id) => !base.present.includes(id)), remove = base.present.filter((id) => this.ent[id] && (s.leaves.includes(id) || (!s.present.includes(id) && this.ent[id].kind === "character")));
+    const built = this.prompt({ ...s, n: 10000 }, base, add, remove), prompt = override || built.prompt;
+    const tries = (ver.frames ??= {})[pn] ??= [], a = tries.length + 1, file = `frames/studio-s${k}-v${v}-p${pn}-a${a}.png`;
+    await this.jobs.image(`studio-s${k}-v${v}-p${pn}-a${a}`, file, prompt, [base.file, ...new Set(built.imgs.map((x) => x.file))]);
+    const { faults } = await this.check(this.run.path(file), s, remove);
+    const fr = framing(this.run.path(file), this.run.path(base.file));
+    if (fr.changed) faults.push({ id: null, kind: `framing changed (SSIM ${fr.ssim})` });
+    const rec = { a, file, prompt, base: base.id, refs: built.imgs.map((x) => ({ id: this.name_(x.id), from: x.from })), faults: faults.map((x) => `${x.id ? this.name_(x.id) + ": " : ""}${x.kind}`), edited: !!override };
+    tries.push(rec); this.run.save();
+    return rec;
+  }
 }

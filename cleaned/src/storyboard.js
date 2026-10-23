@@ -16,12 +16,11 @@ const PANEL = S.obj({
   introductions: S.arr(S.obj({ id: ID, beat: S.int })),
 });
 
-export async function storyboardScene(scene, k, { assets, envs }) {
+// The instruction sent to the storyboard model for one scene (shown and editable in the kaizen scene studio).
+export function storyboardPrompt(scene, k, { assets, envs }) {
   const beats = scene.beats.map((b, j) => `  ${j + 1}. ${b.kind === "dialogue" ? `${b.who}: "${b.text}"` : b.text}`).join("\n");
   const envText = envs.map((e) => `- ${e.id}: ${e.look || ""}\n    layout (fixed, from the painted plate): ${(e.marks || []).filter((m) => !m.area).map((m) => `${m.name} — ${m.essential || m.where}`).join("; ")}`).join("\n");
-  return jsonCall({ name: "storyboard", effort: "medium",
-    schema: S.obj({ environment: S.enum(envs.map((e) => e.id)), panels: S.arr(PANEL) }),
-    prompt: `You are the storyboard artist of an animated storybook film. Break this screenplay scene into PANELS. Each panel is one
+  return `You are the storyboard artist of an animated storybook film. Break this screenplay scene into PANELS. Each panel is one
 keyframe: ONE instant in time (several things may happen in it at once). Pick the moments a viewer must see for the scene to
 read, in order; a beat that only continues a motion needs no panel. Usually 2-6 panels per scene.
 For each panel:
@@ -48,7 +47,11 @@ Environments:\n${envText}
 Tracked assets:\n${assets.map((a) => `- ${a.id}: ${a.name}`).join("\n")}
 
 Scene ${k}: ${scene.inside ? "INT." : "EXT."} ${scene.place} — ${scene.time}${scene.cut ? " (after a cut)" : ""}
-${beats}` });
+${beats}`;
+}
+
+export async function storyboardScene(scene, k, ctx, { prompt = null } = {}) {
+  return jsonCall({ name: "storyboard", effort: "medium", schema: S.obj({ environment: S.enum(ctx.envs.map((e) => e.id)), panels: S.arr(PANEL) }), prompt: prompt || storyboardPrompt(scene, k, ctx) });
 }
 
 // The one hard rule, by code: every element in a panel has a source. Sources: the scene's first panel (a new scene may start
