@@ -29,10 +29,10 @@ export class Jobs {
   }
 
   // One image job. inputs: run-relative image files (empty → generator, else editor). Returns { file, cached, credits }.
-  async image(key, file, prompt, inputs = []) {
+  async image(key, file, prompt, inputs = [], image = IMAGE) {
     const endpoint = inputs.length ? "/v1/ai-image-editor" : "/v1/ai-image-generator";
-    return this.paid(key, file, { endpoint, ...IMAGE, prompt }, inputs, COST.image, async (paths) => {
-      const body = { name: `${this.run.name} ${key}`, image_count: 1, ...IMAGE, style: { prompt }, ...(paths.length ? { assets: { image_file_paths: paths } } : {}) };
+    return this.paid(key, file, { endpoint, ...image, prompt }, inputs, image.resolution === "4k" ? COST.image * 2 : COST.image, async (paths) => {
+      const body = { name: `${this.run.name} ${key}`, image_count: 1, ...image, style: { prompt }, ...(paths.length ? { assets: { image_file_paths: paths } } : {}) };
       return runJob(endpoint, body, { kind: "image" });
     });
   }
