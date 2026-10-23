@@ -76,7 +76,7 @@ export async function makeAssets(world, assets, jobs, tracker, { estimate, keep 
   const firsts = await Promise.all(assets.map((a) => (keep[a.id] ? recheck(a) : attempt(a, 1, "").then((x) => [x]))));
   for (const [i, a] of assets.entries()) {
     const tries = firsts[i];
-    if (keep[a.id]) { const best = tries.reduce((b, x) => ((x.ok ? 10 : 0) + x.chk.score > (b.ok ? 10 : 0) + b.chk.score ? x : b)); out[a.id] = { ...a, file: best.file, tries, ok: best.ok }; continue; }
+    if (keep[a.id]) { const best = tries.reduce((b, x) => ((x.ok ? 10 : 0) + x.chk.score > (b.ok ? 10 : 0) + b.chk.score ? x : b)); out[a.id] = { ...a, file: best.file, tries, ok: best.ok, set_retry: !!keep[a.id].set_retry || tries.length >= TRIES }; continue; }
     try { while (!tries.at(-1).ok && tries.length < TRIES) tries.push(await attempt(a, tries.length + 1, note(tries.at(-1).chk))); }
     catch (e) { if (!/credit cap/.test(e.message)) throw e; console.log(`  sheet ${a.id}: retries stopped (${e.message.split(":")[0]})`); }
     // The best try, not the last: custom-rrh3 kept Red's third try (hood down, short coral cape) over a better first try.
@@ -93,11 +93,14 @@ the others, not a sheet of several views), scale_ok (its drawn proportions fit i
     for (const id of ids) {
       const v = r.sheets[id]; out[id].set = v;
       if (v.style_matches_set && v.scale_ok) continue;
+      // One set retry per asset, ever: a resumed run re-ran it every time (custom-bakery-real: 7 tries of one sheet).
+      if (out[id].set_retry) { console.log(`  sheet ${id}: set check still off (${v.note}); already retried, keeping the best`); continue; }
       console.log(`  sheet ${id}: set check — ${v.note}`);
       try {
         const x = await attempt(out[id], out[id].tries.length + 1, `${note(out[id].tries.at(-1).chk || {}) || ""}${v.note ? `; match the other sheets: ${v.note}` : ""}`);
         out[id].tries.push({ t: x.t, file: x.file, ok: x.ok, chk: x.chk });
-        if (x.ok) Object.assign(out[id], { file: x.file, ok: true, set_retry: true });
+        out[id].set_retry = true;
+        if (x.ok) Object.assign(out[id], { file: x.file, ok: true });
       } catch (e) { if (!/credit cap/.test(e.message)) throw e; console.log(`  sheet ${id}: set retry stopped (cap)`); }
     }
   }
