@@ -25,8 +25,9 @@ Style: ${style}`;
 }
 
 // Crop the grid into its cells (ffmpeg), left to right, top to bottom. Returns the cell files.
-export function cropCells(gridFile, n, outFor) {
-  const [rows, cols] = layout(n), out = [];
+// grid: [rows, cols] actually drawn (from checkGrid) when it differs from the requested layout but still holds n cells.
+export function cropCells(gridFile, n, outFor, grid = null) {
+  const [rows, cols] = grid && grid[0] * grid[1] >= n ? grid : layout(n), out = [];
   const [W, H] = execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", gridFile]).toString().trim().split(",").map(Number);
   const cw = Math.floor(W / cols), ch = Math.floor(H / rows);
   for (let i = 0; i < n; i++) {

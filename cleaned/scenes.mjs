@@ -107,7 +107,7 @@ try {
     if (estimate) { slideN += s.panels.length; continue; }
     const gc = await checkGrid(run.path(gridFile), s.panels.length), [rows, cols] = layout(s.panels.length);
     say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
-    const cells = cropCells(run.path(gridFile), s.panels.length, (i) => run.path(`frames/s${s.k}-p${i}.png`));
+    const cells = cropCells(run.path(gridFile), s.panels.length, (i) => run.path(`frames/s${s.k}-p${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : null);
     for (const [j, p] of s.panels.entries()) {
       slideN++;
       const file = `frames/s${s.k}-p${p.n}.png`, ids = p.elements.filter((id) => !(ent[id].inside && p.elements.includes(ent[id].inside)));
