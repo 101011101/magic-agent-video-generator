@@ -35,7 +35,7 @@ ${world.story}` });
 
 export const sheetPrompt = (style, a, note = "") => `${frameStyle(style)}. Reference sheet of ONE ${a.kind === "prop" ? "object" : a.kind === "group" ? "group, all members side by side at their true relative sizes" : "character"}: ${a.name}. ${a.spec}${a.height ? ` Height: ${a.height}.` : ""}
 ${a.kind === "prop" ? "The object alone, centred, whole, seen slightly from above." : "Full body, front view, standing in a neutral pose, arms relaxed, whole figure visible head to feet."}
-Plain flat light-grey background and nothing else: no scenery, no ground, no plants, no buildings, no other characters or animals, no frame or border, no text or labels.${note ? `\nThe last try got this wrong; fix it: ${note}` : ""}`;
+Plain light-grey backdrop (seamless studio paper) and nothing else: no scenery, no plants, no buildings, no other characters or animals, no frame or border, no text or labels.${note ? `\nThe last try got this wrong; fix it: ${note}` : ""}`;
 
 // major: a miss that changes who or what it is (species, build, main colours, a signature item, an extra subject or view, a
 // later story state); minor misses (a hem a little long, boots vs shoes) do not fail a sheet. score ranks tries when none passes.
@@ -45,7 +45,8 @@ async function checkSheet(file, a) {
     prompt: `This should be a reference sheet of ONE ${a.kind}: ${a.name}. Spec: ${a.spec}${a.height ? ` Height: ${a.height}.` : ""}
 single_subject: only this one ${a.kind === "group" ? "group" : "subject"} is shown, ONCE (no second view or pose, no other characters, animals or
 objects besides what it wears or holds).
-plain_background: the background is plain and flat (no scenery, trees, buildings, ground plane, or framing).
+plain_background: a plain backdrop with nothing in it (no scenery, trees, buildings, furniture, props or framing). A studio floor
+shadow, a soft gradient or seamless-paper look is fine, especially for photographs.
 matches_spec: every detail of the spec is right (hair, clothes, colours, build, species). misses: what is wrong, or "".
 major: true if a miss changes who or what it is: species or build, main colours, a signature item missing or added (a hood, a
 cap, ears on a cap), a later story state (swollen belly, wearing another's clothes), extra subjects or views. Small differences in
@@ -66,7 +67,7 @@ export async function makeAssets(world, assets, jobs, tracker, { estimate, keep 
     console.log(`  sheet ${a.id} try ${t}: ${ok ? "ok" : [!chk.single_subject && "not single", !chk.plain_background && "background", !chk.matches_spec && `spec: ${chk.misses}`].filter(Boolean).join("; ")}`);
     return { t, file, ok, chk };
   };
-  const note = (c) => [!c.single_subject && "show ONLY this one subject", !c.plain_background && "plain flat light-grey background, no scenery or ground", (c.major || !c.matches_spec) && c.misses].filter(Boolean).join("; ");
+  const note = (c) => [!c.single_subject && "show ONLY this one subject", !c.plain_background && "plain light-grey studio backdrop, nothing else in the picture", (c.major || !c.matches_spec) && c.misses].filter(Boolean).join("; ");
   const recheck = async (a) => Promise.all(keep[a.id].tries.map(async (t) => {
     const chk = await checkSheet(jobs.run.path(t.file), a), ok = chk.single_subject && chk.plain_background && !chk.major;
     console.log(`  sheet ${a.id} (kept) try ${t.t}: ${ok ? "ok" : chk.misses} · score ${chk.score}`);
