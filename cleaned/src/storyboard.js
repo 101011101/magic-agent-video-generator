@@ -7,6 +7,7 @@ import { jsonCall, S } from "./llm.js";
 
 const ID = { type: "string", pattern: "^[a-z][a-z0-9-]*$" };
 const PANEL = S.obj({
+  environment: S.str,                                              // where this instant is (a screenplay scene may cut between places)
   action: S.str,                                                   // what happens in this instant, plainly
   elements: S.arr(ID),
   beats: S.arr(S.int),
@@ -41,7 +42,8 @@ For each panel:
   an element missing from "elements" by mistake is NOT removed.
 - introductions: an element in this panel that was not in the previous panel of this scene and does not walk, run or come in on
   screen: the beat that introduces it. The first panel of a scene needs no introductions.
-environment: the one environment this scene happens in. Use its layout: where the bed, door and table really are.
+environment: the environment the scene is mostly in; each panel also names its own environment (a scene that starts outside and
+cuts inside has panels in two environments). Use each environment's layout: where its furniture and doors really are.
 
 Environments:\n${envText}
 Tracked assets:\n${assets.map((a) => `- ${a.id}: ${a.name}`).join("\n")}
@@ -51,7 +53,8 @@ ${beats}`;
 }
 
 export async function storyboardScene(scene, k, ctx, { prompt = null } = {}) {
-  return jsonCall({ name: "storyboard", effort: "medium", schema: S.obj({ environment: S.enum(ctx.envs.map((e) => e.id)), panels: S.arr(PANEL) }), prompt: prompt || storyboardPrompt(scene, k, ctx) });
+  const ENV = S.enum(ctx.envs.map((e) => e.id)), panel = { ...PANEL, properties: { ...PANEL.properties, environment: ENV } };
+  return jsonCall({ name: "storyboard", effort: "medium", schema: S.obj({ environment: ENV, panels: S.arr(panel) }), prompt: prompt || storyboardPrompt(scene, k, ctx) });
 }
 
 // The one hard rule, by code: every element in a panel has a source. Sources: the scene's first panel (a new scene may start

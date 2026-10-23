@@ -7,9 +7,9 @@ import { jsonCall, S } from "./llm.js";
 
 export const layout = (n) => (n <= 1 ? [1, 1] : n <= 4 ? [2, 2] : [3, 3]);
 
-export function gridPrompt({ scene, panels, env, style, refs, name }) {
+export function gridPrompt({ scene, panels, env, style, refs, textRefs = [], name }) {
   const [rows, cols] = layout(panels.length);
-  const refLines = refs.map((r, i) => `${name(r.id)}: ${r.from === "sheet" ? `the same ${r.kind === "character" ? "person" : "object"} as image ${i + 2} (same face, hair, clothes and colours; its pose and plain background do not apply)` : `exactly as ${r.kind === "character" ? "they look" : "it looks"} in image ${i + 2} (take only ${name(r.id)} from it)`}`);
+  const refLines = textRefs.map((r) => `${name(r.id)}: ${r.spec || name(r.id)}`).concat(refs.map((r, i) => `${name(r.id)}: ${r.from === "sheet" ? `the same ${r.kind === "character" ? "person" : "object"} as image ${i + 2} (same face, hair, clothes and colours; its pose and plain background do not apply)` : `exactly as ${r.kind === "character" ? "they look" : "it looks"} in image ${i + 2} (take only ${name(r.id)} from it)`}`));
   const cells = panels.map((p, i) => {
     const enters = p.enters.map((e) => `${name(e.id)} ${e.where}${e.doing ? `, ${e.doing}` : ""}`).join("; ");
     const changes = p.changes.map((c) => `${name(c.id)}: ${c.now}`).join("; ");

@@ -9,7 +9,7 @@ import { jsonCall, S, usage } from "./src/llm.js";
 import { Jobs, CAP, IMAGE } from "./src/jobs.js";
 import { writeStory } from "./src/sequencer.js";
 import { reviewStory } from "./src/editor.js";
-import { assignIds, classifyIds, linkIds } from "./src/ids.js";
+import { assignIds, classifyIds, linkIds, mergeIds } from "./src/ids.js";
 import { seedPlan, makeSeed, frameStyle } from "./src/seed.js";
 import { specAssets, makeAssets } from "./src/assets.js";
 import { writeScreenplay, addSound, screenplayText } from "./src/screenplay.js";
@@ -36,7 +36,7 @@ try {
   if (!L.edit) { say("editor…"); const rv = await reviewStory(L.story.story); L.edit = { original: L.story.story, review: rv.holes, story: rv.story }; run.save(); }
   const text = L.edit.story;
   // 2. Ids.
-  if (!L.ids) { say("ids…"); const tg = await assignIds(text), table = await classifyIds(text, tg.table); L.ids = { table, chunks: tg.chunks, links: await linkIds(text, table) }; run.save(); }
+  if (!L.ids) { say("ids…"); const tg = await assignIds(text), cl = await classifyIds(text, tg.table), mg = await mergeIds(text, cl); L.ids = { table: mg.table, merged: mg.map, chunks: tg.chunks, links: await linkIds(text, mg.table) }; run.save(); }
   const T = L.ids.table, by = Object.fromEntries(T.map((t) => [t.id, t]));
   const assets = T.filter((t) => t.role === "asset" && t.kind !== "none").map((t) => {
     let c = t.kind !== "character" && t.inside && t.inside !== "none" ? by[t.inside] : null, inside = "";
@@ -64,11 +64,22 @@ try {
   }
   const board = L.board, ent = Object.fromEntries(assets.map((a) => [a.id, { ...a, ...(L.asset_specs.find((s) => s.id === a.id) || {}) }]));
   const nm = (id) => ent[id]?.name || id;
-  const scenes = board.map((b, i) => ({ k: i + 1, env: b.environment, heading: `${sp.scenes[i].inside ? "INT." : "EXT."} ${sp.scenes[i].place} — ${sp.scenes[i].time}`,
-    panels: b.panels.map((p, j) => ({ n: j + 1, action: p.action, elements: [...new Set(p.elements)].filter((id) => ent[id]), enters: (p.enters || []).filter((e) => ent[e.id]), changes: p.changes || [], leaves: (p.leaves || []).filter((id) => ent[id]), beats: p.beats })) }));
+  // A grid is one run of consecutive panels in one environment (a screenplay scene that cuts between places gives several).
+  const scenes = [];
+  board.forEach((b, i) => {
+    const heading = `${sp.scenes[i].inside ? "INT." : "EXT."} ${sp.scenes[i].place} — ${sp.scenes[i].time}`;
+    let cur = null;
+    b.panels.forEach((p) => {
+      const env = p.environment || b.environment;
+      if (!cur || cur.env !== env) { cur = { k: scenes.length + 1, scene: i + 1, env, heading, panels: [] }; scenes.push(cur); }
+      cur.panels.push({ n: cur.panels.length + 1, action: p.action, elements: [...new Set(p.elements)].filter((id) => ent[id]), enters: (p.enters || []).filter((e) => ent[e.id]), changes: p.changes || [], leaves: (p.leaves || []).filter((id) => ent[id]), beats: p.beats });
+    });
+  });
   say(`  ${scenes.reduce((n, s) => n + s.panels.length, 0)} panels in ${scenes.length} scenes (${scenes.map((s) => s.panels.length).join(", ")}) · hard rule: ${L.violations.length ? L.violations.join("; ") : "every element has a source"}`);
-  for (const s of scenes) { say(`  scene ${s.k} [${s.env}] ${s.heading}`); for (const p of s.panels) say(`    ${p.n}. ${p.action}`); }
-  const usedEnvs = envs.filter((e) => scenes.some((s) => s.env === e.id)), sheetIds = assets.filter((a) => !a.inside && scenes.some((s) => s.panels.some((p) => p.elements.includes(a.id)))).map((a) => a.id);
+  for (const s of scenes) { say(`  grid ${s.k} (scene ${s.scene}) [${s.env}] ${s.heading}`); for (const p of s.panels) say(`    ${p.n}. ${p.action}`); }
+  // Seed sheets only where the text cannot give a consistent reference: characters (later also user-specified or linked assets).
+  // Props are drawn into their first frame from their spec; a failed first appearance can earn a sheet later.
+  const usedEnvs = envs.filter((e) => scenes.some((s) => s.env === e.id)), sheetIds = assets.filter((a) => !a.inside && a.kind === "character" && scenes.some((s) => s.panels.some((p) => p.elements.includes(a.id)))).map((a) => a.id);
   say(`  to paint: ${sheetIds.length} sheets (${sheetIds.map(nm).join(", ")}), ${usedEnvs.length} plates (${usedEnvs.map((e) => e.id).join(", ")}), ${scenes.length} scene grids`);
   say(`  estimate on first tries: sheets ${sheetIds.length * 200} + plates ${usedEnvs.length * 200} + grids ${scenes.length * 400} ≈ ${sheetIds.length * 200 + usedEnvs.length * 200 + scenes.length * 400} credits`);
   if (L.violations.length && !force) throw Object.assign(new Error(`plan not clean: ${L.violations.join("; ")}`), { stop: true });
@@ -85,11 +96,11 @@ try {
     const { frame: base } = tracker.baseFor({ location: s.env, n: 100000 });
     const inScene = [...new Set(s.panels.flatMap((p) => p.elements))], entering = inScene.filter((id) => !base.present.includes(id) && !(ent[id].inside && inScene.includes(ent[id].inside)));
     const refs = [];
-    for (const id of entering) { const seen = tracker.lastSeen(id, 100000); if (seen) refs.push({ id, kind: ent[id].kind, file: seen.file, from: seen.id }); else if (tracker.roots[id]) refs.push({ id, kind: ent[id].kind, file: tracker.roots[id], from: "sheet" }); }
-    const gp = gridPrompt({ scene: s, panels: s.panels, env: s.heading, style: L.style_medium, refs: refs.slice(0, 9), name: nm });
+    for (const id of entering) { const seen = tracker.lastSeen(id, 100000); if (seen) refs.push({ id, kind: ent[id].kind, file: seen.file, from: seen.id }); else if (tracker.roots[id]) refs.push({ id, kind: ent[id].kind, file: tracker.roots[id], from: "sheet" }); else refs.push({ id, kind: ent[id].kind, spec: ent[id].spec, from: "text" }); }
+    const gp = gridPrompt({ scene: s, panels: s.panels, env: s.heading, style: L.style_medium, refs: refs.filter((r) => r.file).slice(0, 9), textRefs: refs.filter((r) => !r.file), name: nm });
     const gridFile = `grids/scene-${s.k}.png`;
     say(`scene ${s.k}: grid of ${s.panels.length} (${layout(s.panels.length).join("×")}) from ${base.id} · refs: ${refs.map((r) => `${nm(r.id)}←${r.from === "sheet" ? "sheet" : r.from}`).join(", ") || "none"}`);
-    await jobs.image(`grid-s${s.k}`, gridFile, gp, [base.file, ...new Set(refs.slice(0, 9).map((r) => r.file))], { ...IMAGE, resolution: "4k" });
+    await jobs.image(`grid-s${s.k}`, gridFile, gp, [base.file, ...new Set(refs.filter((r) => r.file).slice(0, 9).map((r) => r.file))], { ...IMAGE, resolution: "4k" });
     if (estimate) { slideN += s.panels.length; continue; }
     const gc = await checkGrid(run.path(gridFile), s.panels.length), [rows, cols] = layout(s.panels.length);
     say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);

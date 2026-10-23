@@ -112,6 +112,7 @@ export async function classifyIds(story, table) {
       place: S.enum([...places, "none"]), parent: S.enum([...ids, "none"]), inside: S.enum([...ids, "none"]) })]))) }),
     prompt: `Classify every id of this story.
 role: asset = a character or animal, or a thing that is moved, carried, worn or handed over in the story (tracked frame to frame);
+(steam, smoke, light, a glow, a sound, a smell, the sky: none; a sign, shelf, oven, counter, window, door: fixture of its place);
 fixture = a thing that stays where it is in one place (furniture, a door, a window, plants, a hearth); place = a setting where
 scenes happen; part = a part of another id (a dog's ears, a bed's head); none = not something to draw.
 kind (assets only): character (a person or animal that acts), group (several things that always appear together), prop; else none.
@@ -122,4 +123,21 @@ inside (props and groups only): the thing it is packed in, inside or on when it 
 Characters are never inside anything (a person in a bed is lying in it): none.
 Ids:\n${table.map((t) => `- ${t.id} (${t.kind}): ${t.name}; aliases: ${t.aliases.join(", ") || "none"}`).join("\n")}\n\nStory:\n${story}` });
   return table.map((t) => ({ ...t, tag_kind: t.tag_kind || t.kind, ...r.roles[t.id] }));
+}
+
+// Two ids for one thing (a "neighbourhood" and a "street" that are the same street): merge them. One cheap call lists pairs;
+// code keeps one id and folds the other's aliases into it. Returns the merged table and the id map.
+export async function mergeIds(story, table) {
+  const ids = table.map((t) => t.id);
+  if (ids.length < 2) return { table, map: {} };
+  const r = await jsonCall({ name: "ids-merge", effort: "low", schema: S.obj({ same: S.arr(S.obj({ keep: S.enum(ids), drop: S.enum(ids), why: S.str })) }),
+    prompt: `Which of these ids refer to the SAME physical thing or place (two names for one street, one shop, one person)? List pairs to
+merge: keep the more specific id, drop the other. Different things that merely relate (a shop and its street) are not the same.
+Return [] if none.\n${table.map((t) => `- ${t.id} (${t.role || t.kind}): ${t.name}; aliases: ${(t.aliases || []).join(", ") || "none"}`).join("\n")}\n\nStory:\n${story}` });
+  const map = {};
+  for (const m of r.same) if (m.keep !== m.drop && !map[m.keep]) map[m.drop] = map[m.drop] || m.keep;
+  const out = table.filter((t) => !map[t.id]).map((t) => ({ ...t, aliases: [...new Set([...(t.aliases || []), ...table.filter((x) => map[x.id] === t.id).flatMap((x) => [x.name, ...(x.aliases || [])])])] }));
+  const fix = (v) => (map[v] ? map[v] : v);
+  for (const t of out) { if (t.place) t.place = fix(t.place); if (t.parent) t.parent = fix(t.parent); if (t.inside) t.inside = fix(t.inside); }
+  return { table: out, map };
 }
