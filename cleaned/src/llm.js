@@ -33,7 +33,11 @@ async function openai({ model: MODEL, name, schema, prompt, jpgs, effort }) {
     try {
       res = await fetch("https://api.openai.com/v1/responses", { method: "POST", headers, body: JSON.stringify(body) });
       data = await res.json().catch(() => ({}));
+      // A background response that never completes would hang the run: cap the poll at 10 minutes, cancel it, and let the
+      // outer loop retry once more (custom-bakery-real: one cell check polled for 12+ minutes).
+      const t0 = Date.now();
       while (res.ok && (data.status === "queued" || data.status === "in_progress")) {
+        if (Date.now() - t0 > 600000) { await fetch(`https://api.openai.com/v1/responses/${data.id}/cancel`, { method: "POST", headers }).catch(() => {}); throw new Error(`OpenAI ${name} still ${data.status} after 10 min (cancelled)`); }
         await new Promise((r) => setTimeout(r, 3000));
         res = await fetch(`https://api.openai.com/v1/responses/${data.id}`, { headers });
         data = await res.json().catch(() => ({}));
