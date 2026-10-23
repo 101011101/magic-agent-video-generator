@@ -3,6 +3,7 @@
 // one call) → crop → check cells → state table rows. Nothing is painted until the plan is clean.
 // Usage: node cleaned/scenes.mjs --prompt "…" --label bakery1 [--plan-only] [--estimate] [--force]
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { RUNS } from "./src/env.js";
 import { jsonCall, S, usage } from "./src/llm.js";
@@ -124,7 +125,18 @@ try {
       if (estimate) break;
       gc = await checkGrid(run.path(gridFile), s.panels.length);
       say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
-      cells = cropCells(run.path(gridFile), s.panels.length, (i) => run.path(`frames/s${s.k}-p${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : null);
+      // Crop EVERY drawn cell, find the ones that hold the scene's characters, and take the first n of those in reading order:
+      // the model sometimes fills columns instead of rows and leaves gaps (realism grid 2).
+      const drawn = gc.rows && gc.cols && gc.rows * gc.cols >= s.panels.length ? [gc.rows, gc.cols] : layout(s.panels.length), total = drawn[0] * drawn[1];
+      const all = cropCells(run.path(gridFile), total, (i) => run.path(`grids/s${s.k}-cell${i}.png`), drawn);
+      const chars = [...new Set(s.panels.flatMap((p) => p.elements))].filter((id) => ent[id].kind === "character");
+      let order = [...Array(s.panels.length).keys()];
+      if (total > s.panels.length && chars.length) {
+        const occ = await Promise.all(all.map((f) => jsonCall({ name: "cell-occupied", effort: "low", images: [f], schema: S.obj({ anyone: S.bool }), prompt: `Is any person or animal visible in this picture? (A completely empty place → false.)` }).then((r) => r.anyone)));
+        const filled = occ.map((v, i) => (v ? i : -1)).filter((i) => i >= 0);
+        if (filled.length >= s.panels.length) { order = filled.slice(0, s.panels.length); if (order.some((v, i) => v !== i)) say(`  cells used (reading order, skipping empty ones): ${order.map((i) => i + 1).join(", ")}`); }
+      }
+      cells = order.map((ci, i) => { const f = run.path(`frames/s${s.k}-p${i + 1}.png`); execFileSync("cp", [all[ci], f]); return f; });
       room = await checkCellsRoom(cells, run.path(plate.file));
       const off = room.filter((c) => !c.same_room || !c.same_camera);
       say(`  room check: ${off.length ? off.map((c) => `cell ${c.cell}: ${!c.same_room ? "other room" : "other camera"} (${c.note})`).join("; ") : "every cell in the same room from the same camera"}`);
