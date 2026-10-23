@@ -20,12 +20,15 @@ import { gridPrompt, cropCells, checkGrid, layout } from "./src/grid.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const prompt = opt("--prompt", null), label = opt("--label", "v1"), planOnly = args.includes("--plan-only"), estimate = args.includes("--estimate"), force = args.includes("--force");
+const styleOverride = opt("--style", null), planFrom = opt("--plan-from", null);   // --plan-from: reuse another run's story, ids, specs, screenplay and storyboard; repaint only
 if (!prompt) throw new Error("--prompt is required");
 const name = `custom-${label}`, dir = join(RUNS, name);
 for (const d of ["", "roots", "frames", "grids"]) mkdirSync(join(dir, d), { recursive: true });
 const logFile = join(dir, "run.json");
 const run = { name, estimate, path: (f) => join(dir, f), log: existsSync(logFile) ? JSON.parse(readFileSync(logFile, "utf8")) : {} };
 run.save = () => { if (!estimate) writeFileSync(logFile, JSON.stringify(run.log, null, 2)); };
+if (planFrom && !run.log.board) { const src = JSON.parse(readFileSync(join(RUNS, planFrom, "run.json"), "utf8")); for (const k of ["story", "edit", "ids", "seed_plan", "asset_specs", "screenplay", "board", "violations"]) run.log[k] = src[k]; run.log.plan_from = planFrom; }
+if (styleOverride && run.log.story) { run.log.story.style = styleOverride; run.log.style_medium = null; }
 Object.assign(run.log, { name, prompt, models: { image: IMAGE }, cap: CAP, started_at: new Date().toISOString(), errors: [] });
 const jobs = new Jobs(run, { estimate }), tracker = new Tracker(run), t0 = Date.now();
 const L = run.log, say = (m) => console.log(m);
@@ -49,7 +52,7 @@ try {
   say(`  ${T.length} ids: ${assets.length} assets, ${fixtures.length} fixtures, ${world.locations.length} places, ${links.length} links`);
   // 3. Specs: environments (layouts) and assets.
   say("specs…"); L.seed_plan ??= await seedPlan(world, text, { fixtures, links }); L.asset_specs ??= await specAssets(world); run.save();
-  L.style_medium ??= (await jsonCall({ name: "style-medium", effort: "low", schema: S.obj({ medium: S.str }), prompt: `Reduce this illustration style line to the MEDIUM only (materials, line work, level of finish), one sentence, no lighting, no colours of specific things, no scene words:\n${world.style}` })).medium; run.save();
+  L.style_medium ||= (await jsonCall({ name: "style-medium", effort: "low", schema: S.obj({ medium: S.str }), prompt: `Reduce this visual style line to the MEDIUM only (photographic or illustrated; camera or materials, line work, level of finish), one sentence, no lighting, no colours of specific things, no scene words:\n${world.style}` })).medium; run.save();
   // 4. Screenplay with sound.
   if (!L.screenplay) { say("screenplay…"); const sp = await writeScreenplay(text, assets.filter((a) => a.kind === "character").map((a) => a.name)); L.screenplay = await addSound(sp); writeFileSync(join(dir, "screenplay.txt"), `${sp.title.toUpperCase()}\n\n${screenplayText(sp)}`); run.save(); }
   const sp = L.screenplay, envs = L.seed_plan.places;
@@ -108,11 +111,12 @@ try {
     const gc = await checkGrid(run.path(gridFile), s.panels.length), [rows, cols] = layout(s.panels.length);
     say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
     const cells = cropCells(run.path(gridFile), s.panels.length, (i) => run.path(`frames/s${s.k}-p${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : null);
+    // Cell checks run in parallel (they were a serial minute per grid).
+    const checks = await Promise.all(s.panels.map((p) => { const ids = p.elements.filter((id) => !(ent[id].inside && p.elements.includes(ent[id].inside))); return jsonCall({ name: "panel-check", effort: "low", images: [run.path(`frames/s${s.k}-p${p.n}.png`)], schema: S.obj({ counts: S.obj(Object.fromEntries(ids.map((id) => [id, S.int]))), impossible: S.bool, problems: S.str }),
+      prompt: `One frame of a story. counts: how many times each appears (0 if not visible):\n${ids.map((id) => `- ${id}: ${nm(id)}`).join("\n")}\nimpossible: true only if something is physically impossible. problems: short, or "".` }).then((r) => ({ ids, r })); }));
     for (const [j, p] of s.panels.entries()) {
       slideN++;
-      const file = `frames/s${s.k}-p${p.n}.png`, ids = p.elements.filter((id) => !(ent[id].inside && p.elements.includes(ent[id].inside)));
-      const r = await jsonCall({ name: "panel-check", effort: "low", images: [run.path(file)], schema: S.obj({ counts: S.obj(Object.fromEntries(ids.map((id) => [id, S.int]))), impossible: S.bool, problems: S.str }),
-        prompt: `One frame of an illustrated story. counts: how many times each appears (0 if not visible):\n${ids.map((id) => `- ${id}: ${nm(id)}`).join("\n")}\nimpossible: true only if something is physically impossible. problems: short, or "".` });
+      const file = `frames/s${s.k}-p${p.n}.png`, { ids, r } = checks[j];
       const faults = ids.flatMap((id) => (r.counts[id] === 0 ? [`${nm(id)}: missing`] : r.counts[id] > 1 && ent[id].kind === "character" ? [`${nm(id)}: duplicated`] : [])).concat(r.impossible ? [`impossible: ${r.problems}`] : []);
       say(`    cell ${p.n}: ${faults.length ? faults.join(", ") : "ok"} · ${p.action.slice(0, 80)}`);
       tracker.add({ slide: slideN, scene: s.k, panel: p.n, file, location: s.env, present: [...p.elements], observed: ids.filter((id) => r.counts[id] > 0), base: base.id, refs: refs.map((x) => ({ id: x.id, file: x.file, from: x.from })), op: "edit", hops: (base.hops || 0) + 1, accepted: true, forced: faults.length > 0, grid: gridFile, attempts: [{ a: 1, file, base: base.id, base_file: base.file, add: entering, remove: [], keep: [], change: "", refs: refs.map((x) => ({ id: x.id, file: x.file, from: x.from })), prompt: gp, obs: r, faults: faults.map((f) => ({ id: null, kind: f })), present: p.elements, hops: 1 }] });
