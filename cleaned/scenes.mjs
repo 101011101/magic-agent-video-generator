@@ -87,7 +87,10 @@ try {
 
   // 6. Sheets and plates.
   say("sheets…"); L.assets = await makeAssets(world, L.asset_specs.filter((a) => sheetIds.includes(a.id)), jobs, tracker, { estimate, keep: L.assets && !estimate ? Object.fromEntries(Object.entries(L.assets).filter(([id]) => sheetIds.includes(id))) : {} }); run.save();
-  say("plates…"); L.seed = await makeSeed({ style: world.style, locations: usedEnvs.map((e) => ({ id: e.id, name: e.id, look: e.look })), seed: L.seed_plan, initial: {}, specs: L.asset_specs, used: {} }, jobs, tracker, { estimate }); run.save();
+  // Plate checks: only the fixtures the story names (ids from the id pass) and doors are key; sub-parts (a handle, a sign's
+  // status, a counter top) are painted but never fail a plate.
+  const usedMarks = Object.fromEntries(usedEnvs.map((e) => [e.id, new Set(fixtures.filter((f) => f.place === e.id).map((f) => f.id))]));
+  say("plates…"); L.seed = await makeSeed({ style: world.style, locations: usedEnvs.map((e) => ({ id: e.id, name: e.id, look: e.look })), seed: L.seed_plan, initial: {}, specs: L.asset_specs, used: usedMarks }, jobs, tracker, { estimate }); run.save();
   for (const [id, p] of Object.entries(L.seed)) tracker.addPlate(id, p.plate, []);
 
   // 7. One grid per scene, in order.
