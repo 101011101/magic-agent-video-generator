@@ -113,7 +113,14 @@ try {
     // One retry when cells leave the room or change the camera.
     for (let attempt = 1; attempt <= 2; attempt++) {
       if (attempt === 2) gridFile = `grids/scene-${s.k}-a2.png`;
-      await jobs.image(`grid-s${s.k}${attempt === 2 ? "-a2" : ""}`, gridFile, gp, inputs, { ...IMAGE, resolution: "4k" });
+      // Heavy grids (many reference images at 4k) have timed out at Magic Hour; fall back once to 2k with at most two references.
+      try { await jobs.image(`grid-s${s.k}${attempt === 2 ? "-a2" : ""}`, gridFile, gp, inputs, { ...IMAGE, resolution: "4k" }); }
+      catch (e) {
+        if (!/timed out/.test(e.message)) throw e;
+        say(`  4k grid timed out; retrying at 2k with fewer references`);
+        const lite = [plate.file, ...(hasState ? [latest.file] : []), ...new Set(imgRefs.slice(0, 2).map((r) => r.file))];
+        await jobs.image(`grid-s${s.k}${attempt === 2 ? "-a2" : ""}-lite`, gridFile, gp, lite, { ...IMAGE, resolution: "2k" });
+      }
       if (estimate) break;
       gc = await checkGrid(run.path(gridFile), s.panels.length);
       say(`  grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal cells"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
