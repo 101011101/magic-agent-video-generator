@@ -10,6 +10,7 @@ const PANEL = S.obj({
   action: S.str,                                                   // what happens in this instant, plainly
   elements: S.arr(ID),
   beats: S.arr(S.int),
+  enters: S.arr(S.obj({ id: ID, where: S.str, doing: S.str })),   // elements new to the picture: where they are, what they do
   changes: S.arr(S.obj({ id: ID, now: S.str })),                   // elements that act or move: one phrase of what they do now
   leaves: S.arr(ID),                                               // elements that go out of the picture in this instant
   introductions: S.arr(S.obj({ id: ID, beat: S.int })),
@@ -32,6 +33,9 @@ For each panel:
   basket) stays listed while its container is. Fixed things of the environment (its bed, door, table) are not elements: name
   them in words.
 - beats: the beat numbers this panel covers.
+- enters: every element that is new to the picture in this panel (in the FIRST panel of a scene: all of them): where it is, as
+  a spot of the environment's layout in plain words ("on the path near us", "in the bed", "at the green door"), and doing: its
+  pose or activity in a few words ("standing, holding the basket on her arm"; "lying under the quilt, head on the pillow").
 - changes: elements that act or move in this instant: {id, now}, "now" one short phrase of what they do ("hands over the
   basket"; "lies down under the quilt"). Unchanged elements are not listed.
 - leaves: elements that go out of the picture in this instant (walks away, is swallowed, is carried out). Only these are removed;

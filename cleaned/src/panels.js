@@ -29,7 +29,7 @@ export class PanelRun {
     for (const [id, a] of Object.entries(src.assets)) { const to = this.run.path(a.file); if (!existsSync(to)) copyFileSync(join(RUNS, from, a.file), to); this.tracker.roots[id] = a.file; }
     for (const e of this.envs) { const p = src.seed[e.id], to = this.run.path(p.plate); if (!existsSync(to)) copyFileSync(join(RUNS, from, p.plate), to); this.tracker.addPlate(e.id, p.plate, p.contents || []); }
     this.sp = src.screenplay_sound || src.screenplay_approved;
-    this.style = frameStyle(src.world.style);
+    this.style = src.style_medium || frameStyle(src.world.style);
     Object.assign(this.run.log, { name: this.name, from, screenplay: this.sp });
     // Resume: frames already generated and accepted in an earlier session.
     const tf = join(this.dir, "tracker.json");
@@ -39,6 +39,10 @@ export class PanelRun {
 
   // Storyboard all scenes in parallel (cached per scene); scenes that break the hard rule are redone once with the violations.
   async storyboard() {
+    // The style for edits is the medium only (watercolour, line work): a story-wide style line carries lighting of other scenes.
+    this.run.log.style_medium ??= (await jsonCall({ name: "style-medium", effort: "low", schema: S.obj({ medium: S.str }),
+      prompt: `Reduce this illustration style line to the MEDIUM only (materials, line work, level of finish), one sentence, no lighting, no colours of specific things, no scene words:\n${this.src.world.style}` })).medium;
+    this.style = this.run.log.style_medium;
     const ctx = { assets: Object.values(this.ent).map((e) => ({ id: e.id, name: e.name })), envs: this.envs };
     let board = this.run.log.board ??= await Promise.all(this.sp.scenes.map((sc, i) => storyboardScene(sc, i + 1, ctx)));
     let bad = checkPanels(board);
@@ -53,7 +57,7 @@ export class PanelRun {
     const slides = [];
     board.forEach((b, i) => b.panels.forEach((p, j) => slides.push({
       n: slides.length + 1, scene: i + 1, first: j === 0, location: b.environment, present: [...new Set(p.elements)].filter((id) => this.ent[id]),
-      what: p.action || p.what_we_see, changes: p.changes || [], leaves: (p.leaves || []).filter((id) => this.ent[id]), intro: p.introductions || [],
+      what: p.action || p.what_we_see, changes: p.changes || [], enters: (p.enters || []).filter((e) => this.ent[e.id]), leaves: (p.leaves || []).filter((id) => this.ent[id]), intro: p.introductions || [],
       beats: p.beats.map((k) => this.sp.scenes[i].beats[k - 1]).filter(Boolean), ambience: this.sp.scenes[i].ambience || "", music: this.sp.scenes[i].music || "",
     })));
     this.slides = slides;
@@ -79,22 +83,34 @@ export class PanelRun {
   }
   packed(s, id) { const c = this.ent[id]?.inside; return c && s.present.includes(c); }
 
+  // The edit prompt. Image 1 is the base; one image per entering element (its latest frame, or its sheet). Each entering element
+  // gets where it is and what it does (from the panel's enters); elements already in the base get only their change.
   prompt(s, base, add, remove) {
     const imgs = [], lines = [];
     let k = 2;
+    const isChar = (id) => this.ent[id]?.kind === "character", place = (id) => { const e = s.enters.find((x) => x.id === id); return e ? `${e.where ? ` ${e.where}` : ""}${e.doing ? `, ${e.doing}` : ""}` : ""; };
     const byFrame = new Map(), fresh = [];
     for (const id of add) { if (this.packed(s, id)) continue; const seen = this.tracker.lastSeen(id, s.n); if (seen) byFrame.set(seen.id, [...(byFrame.get(seen.id) || []), id]); else fresh.push(id); }
-    for (const [fid, ids] of byFrame) { if (k > SLOTS) break; const f = this.tracker.get(fid), nm = ids.map((id) => this.name_(id)).join(" and "); for (const id of ids) imgs.push({ id, file: f.file, from: fid }); lines.push(`Add ${nm}: copy exactly how ${nm} look${ids.length > 1 ? "" : "s"} in image ${k}; use only ${nm} from image ${k++}.`); }
-    for (const id of fresh) {
-      if (this.tracker.roots[id] && k <= SLOTS) { imgs.push({ id, file: this.tracker.roots[id], from: "sheet" }); lines.push(`Add ${this.name_(id)}: they must look exactly like image ${k++} (ignore its plain background and pose).`); }
-      else lines.push(`Add ${this.name_(id)}: ${this.ent[id]?.spec || this.name_(id)}.`);
+    for (const [fid, ids] of byFrame) {
+      if (k > SLOTS) break;
+      const f = this.tracker.get(fid); for (const id of ids) imgs.push({ id, file: f.file, from: fid });
+      for (const id of ids) lines.push(`${this.name_(id)}${place(id)}: exactly as ${isChar(id) ? "they look" : "it looks"} in image ${k} (take only ${this.name_(id)} from it).`);
+      k++;
     }
-    for (const id of remove) lines.push(`${this.name_(id)} is no longer in the picture; show the place behind where they were.`);
+    for (const id of fresh) {
+      if (this.tracker.roots[id] && k <= SLOTS) { imgs.push({ id, file: this.tracker.roots[id], from: "sheet" }); lines.push(`${this.name_(id)}${place(id)}: ${isChar(id) ? `the same person as image ${k++} (same face, hair, clothes and colours; its pose and plain background do not apply)` : `the same object as image ${k++} (same shape, material and colours; its plain background does not apply)`}.`); }
+      else lines.push(`${this.name_(id)}${place(id)}: ${this.ent[id]?.spec || this.name_(id)}`);
+    }
+    for (const id of remove) lines.push(`${this.name_(id)} is no longer in the picture; show the place behind.`);
     for (const c of s.changes) if (base.present.includes(c.id) && !remove.includes(c.id) && c.now) lines.push(`${this.name_(c.id)} (already in image 1): ${c.now}. Exactly one ${this.name_(c.id)}.`);
-    const prompt = `Edit image 1. Change only what this moment needs; everything else stays exactly as in image 1 (place, objects, light, colours, framing).
-This moment: ${s.what}
+    const firstFrame = base.op === "plate";
+    const head = firstFrame
+      ? `Image 1 is the empty place. Put this moment in it, keeping the place, light, colours and framing of image 1 exactly:`
+      : `Edit image 1. Change only what this moment needs; everything else stays exactly as in image 1 (place, objects, light, colours, framing).`;
+    const prompt = `${head}
+${s.what}
 ${lines.join("\n")}
-Style: ${this.style}. One single frame, no text.`;
+Style: ${this.style} One single frame, no text.`;
     return { prompt, imgs };
   }
 
