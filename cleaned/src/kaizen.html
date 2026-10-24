@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kaizen keyframes</title>
+<style>
+/* Local tool: one panel at a time. Left: the screenplay and the plan; right: references and the prompt; below: the result. */
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--accent:#2d6a4f;--ok:#1f6f43;--ok-bg:#e2f3e8;--bad:#a3281f;--bad-bg:#fbe4e1;--warn:#946000;--warn-bg:#fbf0d8;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--accent:#7cc9a3;--ok:#6fd09a;--ok-bg:#173323;--bad:#ff8f85;--bad-bg:#3b1d1a;--warn:#f0b45c;--warn-bg:#3a2c14;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,sans-serif}
+main{max-width:1280px;margin:0 auto;padding:16px;display:grid;gap:14px}
+h1{font-size:18px;margin:0}.mut{color:var(--mut)}.mini{font-size:12px;color:var(--mut)}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.strip{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.strip b{font-size:11px;color:var(--mut);margin:0 4px 0 10px}
+.strip button{font:11px var(--mono);border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:4px;padding:2px 6px;cursor:pointer}
+.strip button.ok{border-color:var(--ok);color:var(--ok)}.strip button.bad{border-color:var(--bad);color:var(--bad)}.strip button.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:14px}@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;min-width:0}
+h2{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0}
+.beat{margin:0 0 4px}.beat.d{padding-left:18px;color:var(--mut)}.beat.d b{color:var(--fg)}
+.action{font-size:16px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font:12px var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.chip.add{border-color:var(--ok);color:var(--ok)}.chip.rm{border-color:var(--bad);color:var(--bad);text-decoration:line-through}.chip.txt{border-color:var(--warn);color:var(--warn)}
+.refs{display:flex;flex-wrap:wrap;gap:10px}.ref{width:200px;cursor:pointer;border:0;background:none;padding:0;text-align:left;color:var(--fg)}
+.ref img{width:100%;border-radius:6px;border:2px solid var(--line);display:block}.ref.base img{border-color:var(--accent)}.ref figcaption{font:12px var(--mono);color:var(--mut);margin-top:3px}
+textarea{width:100%;min-height:200px;font:12.5px/1.45 var(--mono);border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--bg);color:var(--fg);resize:vertical;box-sizing:border-box}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.b{font:600 13px system-ui;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:7px 14px;cursor:pointer}
+button.b.go{background:var(--accent);color:#fff;border-color:var(--accent)}button.b:disabled{opacity:.5;cursor:default}
+.result img{width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+.faults{display:grid;gap:3px}.f{font-size:13px;color:var(--bad)}.pass{color:var(--ok);font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;place-items:center;padding:20px;z-index:9}.modal.on{display:grid}
+.modal div{background:var(--panel);border-radius:10px;padding:12px;max-width:1100px;width:100%}.modal img{width:100%;border-radius:6px;display:block}
+.modal p{margin:8px 0 0;font:12px var(--mono);color:var(--mut)}
+.done{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.done figure{margin:0}.done img{width:100%;border-radius:4px;border:1px solid var(--line)}.done figcaption{font:11px var(--mono);color:var(--mut)}
+</style></head><body><main>
+<div class="top"><div><h1 id="title">Kaizen keyframes</h1><span class="mini" id="stat"></span></div><div class="btns"><button class="b" id="prev">← previous</button><button class="b" id="next">next →</button></div></div>
+<div class="strip" id="strip"></div>
+<div class="grid">
+  <section class="card">
+    <h2>Screenplay beats this panel covers</h2><div id="beats"></div>
+    <h2>This instant (the action)</h2><p class="action" id="action"></p>
+    <h2>Elements in the picture</h2><div class="chips" id="els"></div>
+    <p class="mini" id="legend">green = entering · red = leaving · amber = no picture reference, drawn from its text spec</p>
+    <p class="mini" id="amb"></p>
+  </section>
+  <section class="card">
+    <h2>References (click to view)</h2><div class="refs" id="refs"></div>
+    <h2>Prompt (editable)</h2><textarea id="prompt"></textarea>
+    <div class="btns"><button class="b go" id="gen">Approve &amp; generate (200 credits)</button><span class="mini" id="busy"></span></div>
+  </section>
+</div>
+<section class="card result" id="res" hidden>
+  <h2 id="restitle">Result</h2><img id="resimg" alt="Generated frame"><div class="faults" id="faults"></div>
+  <div class="btns"><button class="b go" id="accept">Accept → next panel</button><button class="b" id="retry">Retry with the prompt above</button></div>
+</section>
+<section class="card"><h2>Accepted so far</h2><div class="done" id="done"></div></section>
+</main>
+<div class="modal" id="modal"><div><img id="mimg" alt=""><p id="mcap"></p></div></div>
+<script>
+const $=(i)=>document.getElementById(i),esc=(s)=>String(s??"").replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const api=async(p,b)=>{const r=await fetch(p,b?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}:undefined);const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j};
+let ST,cur,PV,last=null;
+async function state(){ST=await api("/api/state");$("title").textContent=`${ST.name}: ${ST.done.length}/${ST.total} accepted`;$("stat").textContent=`${ST.spent} credits spent in this run${ST.violations.length?" · hard-rule violations: "+ST.violations.join("; "):""}`;
+ $("strip").innerHTML=ST.scenes.map(sc=>`<b>scene ${sc.n} · ${esc(sc.place)}</b>`+sc.panels.map(n=>{const d=ST.done.find(x=>x.n===n);return`<button data-n="${n}" class="${n===cur?"cur":d?(d.forced?"bad":"ok"):""}">${n}</button>`}).join("")).join("");
+ $("done").innerHTML=ST.done.map(d=>`<figure><img src="/files/${d.file}" alt=""><figcaption>panel ${d.n}${d.forced?" · kept with faults":""}</figcaption></figure>`).join("")}
+async function load(n){cur=n;PV=await api(`/api/preview/${n}`);last=null;await state();
+ $("beats").innerHTML=PV.beats.map(b=>b.kind==="dialogue"?`<p class="beat d"><b>${esc(b.who)}:</b> “${esc(b.text)}”</p>`:`<p class="beat">${esc(b.text)}</p>`).join("")||"<p class='mini'>—</p>";
+ $("action").textContent=PV.what;$("amb").textContent=PV.ambience?"background sound: "+PV.ambience:"";
+ $("els").innerHTML=PV.elements.map(e=>`<span class="chip ${PV.add.includes(e)?(PV.textOnly.includes(e)?"txt":"add"):""}">${esc(e)}</span>`).join("")+PV.remove.map(e=>`<span class="chip rm">${esc(e)}</span>`).join("");
+ $("refs").innerHTML=PV.refs.map((r,i)=>`<button class="ref ${r.role}" data-i="${i}"><img src="/files/${r.file}" alt=""><figcaption>${i===0?"image 1 (base): ":"image "+(i+1)+": "}${esc(r.label)}</figcaption></button>`).join("");
+ $("prompt").value=PV.prompt;$("gen").disabled=false;$("busy").textContent="";
+ if(PV.done){$("res").hidden=false;$("restitle").textContent=`Accepted frame (panel ${n})`;$("resimg").src="/files/"+PV.done.file;$("faults").innerHTML=PV.done.forced?PV.done.attempts.at(-1).faults.map(f=>`<div class="f">✕ ${esc(f)}</div>`).join(""):'<div class="pass">✓ passed every check</div>';$("accept").disabled=true;$("retry").disabled=false}
+ else{$("res").hidden=true;$("accept").disabled=true}
+ location.hash="p"+n}
+async function gen(){$("gen").disabled=true;$("retry").disabled=true;$("busy").textContent="generating… (about 40 s, then the check)";
+ try{last=await api(`/api/generate/${cur}`,{prompt:$("prompt").value});$("res").hidden=false;$("restitle").textContent=`Attempt ${last.attempt.a} of panel ${cur}`;$("resimg").src="/files/"+last.attempt.file+"?t="+Date.now();
+  $("faults").innerHTML=last.faults.length?last.faults.map(f=>`<div class="f">✕ ${esc(f)}</div>`).join("")+'<div class="mini">You can still accept it, or edit the prompt and retry.</div>':'<div class="pass">✓ passed every check</div>';$("accept").disabled=false;$("accept").textContent=last.faults.length?"Accept anyway → next panel":"Accept → next panel"}
+ catch(e){$("busy").textContent="error: "+e.message}
+ $("gen").disabled=false;$("retry").disabled=false;$("busy").textContent=last?`${last.attempt.a} attempt(s) · ${ST.spent+200*(last.attempt.a)} credits so far`:""}
+$("gen").onclick=gen;$("retry").onclick=gen;
+$("accept").onclick=async()=>{await api(`/api/accept/${cur}`,{a:last?.attempt.a});await load(Math.min(cur+1,ST.total))};
+$("next").onclick=()=>load(Math.min(cur+1,ST.total));$("prev").onclick=()=>load(Math.max(cur-1,1));
+$("strip").onclick=(e)=>{const b=e.target.closest("button[data-n]");if(b)load(+b.dataset.n)};
+$("refs").onclick=(e)=>{const b=e.target.closest(".ref");if(!b)return;const r=PV.refs[+b.dataset.i];$("mimg").src="/files/"+r.file;$("mcap").textContent=r.label+(r.why?" · "+r.why:"");$("modal").classList.add("on")};
+$("modal").onclick=()=>$("modal").classList.remove("on");
+state().then(()=>load(location.hash.match(/^#p(\d+)$/)?+RegExp.$1:ST.next));
+</script></body></html>

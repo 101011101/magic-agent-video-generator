@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Prompt Test Set</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-2: #f0f0ec;
+    --text: #1d1d1b;
+    --muted: #66665f;
+    --border: #deded8;
+    --accent: #2f5fd0;
+    --accent-soft: #e6edfb;
+    --prompt-bg: #fbfaf3;
+    --prompt-border: #c9b458;
+    --reddit: #c2410c;
+    --reddit-bg: #fdeee5;
+    --forum: #6d28d9;
+    --forum-bg: #efe8fc;
+    --gen: #3f6212;
+    --gen-bg: #ecf5dd;
+    --danger: #b42318;
+    --ok: #2e7d32;
+    --warn: #b26a00;
+    --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151515;
+      --surface: #1e1e1e;
+      --surface-2: #262626;
+      --text: #ececea;
+      --muted: #a3a39c;
+      --border: #333331;
+      --accent: #7aa2ff;
+      --accent-soft: #1f2a44;
+      --prompt-bg: #23221b;
+      --prompt-border: #8f7f33;
+      --reddit: #fb923c;
+      --reddit-bg: #3a2216;
+      --forum: #c4a5ff;
+      --forum-bg: #2c2240;
+      --gen: #a3d468;
+      --gen-bg: #24301a;
+      --danger: #ff7b6e;
+      --ok: #7bd389;
+      --warn: #f2b45a;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar { max-width: 1000px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; flex: 1 1 auto; }
+  .tabs { display: flex; gap: 4px; }
+  .tab {
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+    padding: 6px 14px; border-radius: 999px; cursor: pointer; font: inherit;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; margin-bottom: 8px; }
+  label.f { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 3px; }
+  select, input[type="search"], input[type="text"], textarea {
+    font: inherit; color: var(--text); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; width: 100%;
+  }
+  textarea { resize: vertical; }
+  select:focus, input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .count { font-size: 13px; color: var(--muted); margin: 4px 0 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 18px; margin: 0 0 10px; }
+  .meta { display: grid; gap: 6px; font-size: 14px; margin-bottom: 12px; }
+  .meta b { color: var(--muted); font-weight: 600; }
+  .meta ul { margin: 2px 0 0; padding-left: 20px; }
+  .chips { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 4px; }
+  .chip { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .prompt { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
+  .prompt-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-size: 13px; }
+  .pid { font-family: var(--mono); font-weight: 600; }
+  .badge { font-size: 12px; padding: 1px 8px; border-radius: 999px; font-weight: 600; }
+  .badge.reddit-derived { background: var(--reddit-bg); color: var(--reddit); }
+  .badge.forum-derived { background: var(--forum-bg); color: var(--forum); }
+  .badge.generated { background: var(--gen-bg); color: var(--gen); }
+  .src { color: var(--accent); font-size: 13px; word-break: break-all; }
+  .src-note { color: var(--muted); font-size: 12px; }
+  .ptext {
+    background: var(--prompt-bg); border-left: 4px solid var(--prompt-border);
+    padding: 10px 12px; border-radius: 6px; font-size: 16px; margin: 6px 0 8px; white-space: pre-wrap;
+  }
+  .pmeta { font-size: 14px; }
+  .pmeta ul { margin: 2px 0 0; padding-left: 20px; }
+  button.small, button.btn {
+    font: inherit; font-size: 13px; cursor: pointer; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 4px 10px;
+  }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 7px 14px; }
+  button.danger { color: var(--danger); }
+  .push { margin-left: auto; }
+  mark { background: #ffe58a; color: inherit; border-radius: 2px; }
+  @media (prefers-color-scheme: dark) { mark { background: #6b5a12; } }
+  .empty { color: var(--muted); padding: 24px; text-align: center; }
+  .err { color: var(--danger); }
+
+  /* My prompts */
+  .mp-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .status { font-size: 13px; color: var(--muted); }
+  .status.ok { color: var(--ok); }
+  .status.warn { color: var(--warn); }
+  .layout { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .starters { order: -1; } }
+  .starters { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; position: sticky; top: 70px; }
+  @media (max-width: 760px) { .starters { position: static; } }
+  .starters h3 { font-size: 14px; margin: 0 0 4px; }
+  .starters p { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .starter {
+    display: block; width: 100%; text-align: left; font: inherit; font-size: 13px; cursor: pointer;
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 9px; margin-bottom: 6px;
+  }
+  .starter:hover { border-color: var(--accent); }
+  .starter small { display: block; color: var(--muted); font-size: 11px; }
+  .entry .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .entry .row { grid-template-columns: 1fr; } }
+  .entry label.f { margin-bottom: 10px; }
+  .entry .ptextarea { min-height: 120px; font-size: 16px; }
+  .hint { background: var(--accent-soft); color: var(--text); border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-bottom: 10px; display: flex; gap: 8px; align-items: flex-start; }
+  .hint b { color: var(--accent); }
+  .entry-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Video Prompt Test Set</h1>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-set" aria-selected="true">Test set</button>
+      <button class="tab" role="tab" id="tab-mine" aria-selected="false">My prompts</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="view-set">
+    <div class="filters">
+      <label class="f">Group<select id="f-group"><option value="">All groups</option></select></label>
+      <label class="f">Subsystem<select id="f-sub">
+        <option value="">All subsystems</option>
+        <option value="splitter">Splitter</option>
+        <option value="context resolution">Context resolution</option>
+        <option value="proposition schema">Proposition schema</option>
+        <option value="solver">Solver</option>
+      </select></label>
+      <label class="f">Provenance<select id="f-prov">
+        <option value="">All provenance</option>
+        <option value="reddit-derived">reddit-derived</option>
+        <option value="forum-derived">forum-derived</option>
+        <option value="generated">generated</option>
+      </select></label>
+      <label class="f">Search<input type="search" id="f-q" placeholder="Text in any field"></label>
+    </div>
+    <div class="count" id="count"></div>
+    <div id="groups"></div>
+  </section>
+
+  <section id="view-mine" hidden>
+    <div class="mp-top">
+      <button class="btn primary" id="add">+ New prompt</button>
+      <span class="status" id="status">Loading…</span>
+      <span class="status push" id="mp-count"></span>
+    </div>
+    <div class="layout">
+      <div id="entries"></div>
+      <aside class="starters">
+        <h3>Prompt starters</h3>
+        <p>Click one to start a new entry with the hint. Write the prompt in your own words.</p>
+        <div id="starter-list"></div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const SUBSYSTEMS = ['splitter', 'context resolution', 'proposition schema', 'solver'];
+  const NEW_GROUP = 'New / other';
+
+  // ---------- Tabs ----------
+  function showTab(which) {
+    const mine = which === 'mine';
+    $('#tab-set').setAttribute('aria-selected', String(!mine));
+    $('#tab-mine').setAttribute('aria-selected', String(mine));
+    $('#view-set').hidden = mine;
+    $('#view-mine').hidden = !mine;
+    try { localStorage.setItem('tsv.tab', which); } catch (e) {}
+  }
+  $('#tab-set').onclick = () => showTab('set');
+  $('#tab-mine').onclick = () => showTab('mine');
+
+  // ---------- Parser ----------
+  // Shape: "## N. Group" -> group bullets (Tests, Edge-case challenges + nested, Subsystems stressed)
+  // -> "- **N.M** `tag` [— URL [note]]" -> "  - Prompt:", "  - Uploads:", "  - Expected handling:" + nested.
+  function stripQuotes(s) {
+    s = s.trim();
+    return s.length >= 2 && s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1) : s;
+  }
+  function parseMarkdown(md) {
+    const groups = [];
+    let g = null, p = null, mode = null;
+    for (const raw of md.split(/\r?\n/)) {
+      const line = raw.replace(/\s+$/, '');
+      let m;
+      if ((m = line.match(/^##\s+(\d+)\.\s+(.+)$/))) {
+        g = { n: +m[1], name: m[2].trim(), tests: '', edges: [], subsystems: '', prompts: [] };
+        groups.push(g); p = null; mode = null; continue;
+      }
+      if (!g) continue;
+      if ((m = line.match(/^- \*\*(\d+\.\d+)\*\*\s+`([^`]+)`(?:\s+[—-]+\s+(\S+)(?:\s+(.*))?)?$/))) {
+        p = { id: m[1], prov: m[2], url: m[3] || '', note: (m[4] || '').trim(), text: '', uploads: '', expected: [] };
+        g.prompts.push(p); mode = null; continue;
+      }
+      if (!p) {
+        if ((m = line.match(/^- \*\*Tests:\*\*\s*(.*)$/))) { g.tests = m[1]; mode = null; continue; }
+        if ((m = line.match(/^- \*\*Edge-case challenges:\*\*\s*(.*)$/))) { if (m[1]) g.edges.push(m[1]); mode = 'edges'; continue; }
+        if ((m = line.match(/^- \*\*Subsystems stressed:\*\*\s*(.*)$/))) { g.subsystems = m[1]; mode = null; continue; }
+        if (mode === 'edges' && (m = line.match(/^\s+-\s+(.*)$/))) { g.edges.push(m[1]); continue; }
+        continue;
+      }
+      if ((m = line.match(/^\s{2}- Prompt:\s*(.*)$/))) { p.text = stripQuotes(m[1]); mode = null; continue; }
+      if ((m = line.match(/^\s{2}- Uploads:\s*(.*)$/))) { p.uploads = m[1]; mode = null; continue; }
+      if ((m = line.match(/^\s{2}- Expected handling:\s*(.*)$/))) { if (m[1]) p.expected.push(m[1]); mode = 'exp'; continue; }
+      if (mode === 'exp' && (m = line.match(/^\s{4,}-\s+(.*)$/))) { p.expected.push(m[1]); continue; }
+    }
+    for (const gr of groups) {
+      const low = gr.subsystems.toLowerCase();
+      gr.subs = SUBSYSTEMS.filter((s) => low.includes(s));
+    }
+    return groups;
+  }
+
+  // ---------- Test set view ----------
+  let GROUPS = [];
+  const inline = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+  function hl(html, q) {
+    if (!q) return html;
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    // Highlight only in text nodes (outside tags).
+    return html.replace(/(^|>)([^<]*)/g, (all, a, b) => a + b.replace(re, '<mark>$1</mark>'));
+  }
+  function promptHay(p) { return [p.id, p.text, p.uploads, p.expected.join(' '), p.prov, p.url, p.note].join(' ').toLowerCase(); }
+  function groupHay(g) { return [g.name, g.tests, g.edges.join(' '), g.subsystems].join(' ').toLowerCase(); }
+
+  function renderSet() {
+    const fg = $('#f-group').value, fs = $('#f-sub').value, fp = $('#f-prov').value;
+    const q = $('#f-q').value.trim();
+    const ql = q.toLowerCase();
+    let shownGroups = 0, shownPrompts = 0;
+    const html = [];
+    for (const g of GROUPS) {
+      if (fg && String(g.n) !== fg) continue;
+      if (fs && !g.subs.includes(fs)) continue;
+      const gMatch = !ql || groupHay(g).includes(ql);
+      let prompts = g.prompts.filter((p) => !fp || p.prov === fp);
+      if (ql && !gMatch) prompts = prompts.filter((p) => promptHay(p).includes(ql));
+      if (!prompts.length) continue;
+      shownGroups++; shownPrompts += prompts.length;
+      html.push(`<article class="card">
+        <h2>${g.n}. ${esc(g.name)}</h2>
+        <div class="meta">
+          <div><b>Tests:</b> ${inline(g.tests)}</div>
+          <div><b>Edge-case challenges:</b><ul>${g.edges.map((e) => `<li>${inline(e)}</li>`).join('')}</ul></div>
+          <div><b>Subsystems stressed:</b> ${inline(g.subsystems)}
+            <span class="chips">${g.subs.map((s) => `<span class="chip">${esc(s)}</span>`).join('')}</span></div>
+        </div>
+        ${prompts.map((p) => `<div class="prompt">
+          <div class="prompt-head">
+            <span class="pid">${esc(p.id)}</span>
+            <span class="badge ${esc(p.prov)}">${esc(p.prov)}</span>
+            ${p.url ? `<a class="src" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">source ↗</a>` : ''}
+            ${p.note ? `<span class="src-note">${inline(p.note)}</span>` : ''}
+            <button class="small push" data-copy="${esc(p.id)}">Copy prompt</button>
+          </div>
+          <div class="ptext">${esc(p.text)}</div>
+          <div class="pmeta">
+            <div><b>Uploads:</b> ${inline(p.uploads)}</div>
+            <div><b>Expected handling:</b><ul>${p.expected.map((e) => `<li>${inline(e)}</li>`).join('')}</ul></div>
+          </div>
+        </div>`).join('')}
+      </article>`);
+    }
+    $('#groups').innerHTML = html.length ? hl(html.join(''), q) : '<div class="empty">No prompts match these filters.</div>';
+    const total = GROUPS.reduce((a, g) => a + g.prompts.length, 0);
+    $('#count').textContent = `Showing ${shownPrompts} of ${total} prompts in ${shownGroups} of ${GROUPS.length} groups.`;
+  }
+
+  $('#groups').addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('[data-copy]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-copy');
+    const p = GROUPS.flatMap((g) => g.prompts).find((x) => x.id === id);
+    if (!p) return;
+    try {
+      await navigator.clipboard.writeText(p.text);
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = p.text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e2) {}
+      ta.remove();
+    }
+    const old = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = old), 1200);
+  });
+  for (const id of ['#f-group', '#f-sub', '#f-prov']) $(id).addEventListener('change', renderSet);
+  $('#f-q').addEventListener('input', renderSet);
+
+  async function loadSet() {
+    try {
+      const r = await fetch('/data/video-prompts.md', { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      GROUPS = parseMarkdown(await r.text());
+      try { localStorage.setItem('tsv.groups', JSON.stringify(GROUPS.map((g) => `${g.n}. ${g.name}`))); } catch (e) {}
+      $('#f-group').innerHTML = '<option value="">All groups</option>' +
+        GROUPS.map((g) => `<option value="${g.n}">${g.n}. ${esc(g.name)}</option>`).join('');
+      renderSet();
+    } catch (err) {
+      $('#count').innerHTML = `<span class="err">Could not load the test set (${esc(err.message)}). Is the server running?</span>`;
+    }
+    renderEntries();
+  }
+
+  // ---------- My prompts ----------
+  const STARTERS = [
+    { g: 1, t: 'Length only implied', h: 'Write a request where the length is only implied (by a platform, an occasion or a song) and never stated in seconds.' },
+    { g: 16, t: 'Real person, no photo', h: 'Write a request that names a specific real person but gives no photo of them.' },
+    { g: 3, t: 'Facts need research', h: 'Write a request whose facts need research, ideally with a relative date like "yesterday" or "this season".' },
+    { g: 5, t: 'Edit one scene only', h: 'Write an edit that only changes one scene of an existing video and must leave all other scenes alone.' },
+    { g: 9, t: 'Two rigid constraints conflict', h: 'Write a request with two conflicting rigid constraints that cannot both hold.' },
+    { g: 10, t: 'Tricky exact text', h: 'Write a request with on-screen text that must be exact and is easy to break: dashes, accents, emoji, numbers, a non-Latin script or line breaks.' },
+    { g: 4, t: 'Two characters, features must not swap', h: 'Write a multi-shot request with two or more characters whose clothes, colours or props must stay with the right person.' },
+    { g: 8, t: 'Upload with an unclear role', h: 'Write a request where it is unclear if an upload is the subject, a style reference or b-roll.' },
+    { g: 15, t: 'Vague pointer to an earlier version', h: 'Write follow-up feedback that points at an earlier output vaguely ("the first one", "before you changed it") and keeps one part of the latest version.' },
+    { g: 12, t: 'Looks like video, is not', h: 'Write a request that sounds like a video job but really wants an answer, a cost, a still image or how-to help.' },
+    { g: 6, t: 'Hidden cross-scene dependency', h: 'Write a multi-scene request where a prop, location, time of day or injury must carry from one scene to a later one, without saying so explicitly.' },
+    { g: 11, t: 'Audio change, picture held', h: 'Write a request that changes only the audio (voice, music, timing of a sound) and must keep every video frame the same.' },
+    { g: 17, t: 'Batch with one odd item', h: 'Write a batch request (many items, one template) where one item breaks the template: a different length, language or missing input.' },
+    { g: 13, t: 'Reference that may not load', h: 'Write a "make it like this" request that depends on a link the system may not be able to open.' },
+    { g: 0, t: 'Mixed deterministic and generative', h: 'Write one sentence that mixes a plain edit (trim, crop, caption) with a new generated shot, so the system must choose the right tool per part.' },
+  ];
+
+  let entries = [];
+  let saveTimer = null, retryTimer = null, dirty = false, serverOk = false, lastSaved = null, saving = false;
+
+  function groupOptions() {
+    if (GROUPS.length) return GROUPS.map((g) => `${g.n}. ${g.name}`);
+    try { const s = JSON.parse(localStorage.getItem('tsv.groups') || '[]'); if (Array.isArray(s)) return s; } catch (e) {}
+    return [];
+  }
+  function starterGroup(n) {
+    if (!n) return NEW_GROUP;
+    return groupOptions().find((o) => o.startsWith(n + '. ')) || NEW_GROUP;
+  }
+
+  function persistLocal() {
+    try { localStorage.setItem('tsv.myPrompts', JSON.stringify({ entries, dirty, at: new Date().toISOString() })); } catch (e) {}
+  }
+  function readLocal() {
+    try { const d = JSON.parse(localStorage.getItem('tsv.myPrompts') || 'null'); if (d && Array.isArray(d.entries)) return d; } catch (e) {}
+    return null;
+  }
+  function setStatus(text, cls) { const el = $('#status'); el.textContent = text; el.className = 'status ' + (cls || ''); }
+  function fmtTime(d) { return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+
+  function changed() {
+    dirty = true;
+    persistLocal();
+    setStatus(serverOk ? 'Unsaved changes…' : 'Unsaved / server offline', serverOk ? '' : 'warn');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 800);
+  }
+
+  async function save() {
+    if (saving) { clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); return; }
+    saving = true;
+    const snapshot = JSON.stringify(entries);
+    try {
+      const r = await fetch('/api/my-prompts', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: snapshot });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      serverOk = true;
+      if (JSON.stringify(entries) === snapshot) dirty = false;
+      lastSaved = new Date();
+      persistLocal();
+      setStatus(dirty ? 'Unsaved changes…' : `Saved · ${fmtTime(lastSaved)}`, dirty ? '' : 'ok');
+      clearInterval(retryTimer); retryTimer = null;
+    } catch (err) {
+      serverOk = false;
+      setStatus('Unsaved / server offline', 'warn');
+      if (!retryTimer) retryTimer = setInterval(() => { if (dirty) save(); }, 10000);
+    } finally {
+      saving = false;
+    }
+  }
+
+  function newId() {
+    return (crypto.randomUUID ? crypto.randomUUID() : 'p-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+  }
+  function addEntry(starter) {
+    const now = new Date().toISOString();
+    const e = {
+      id: newId(), created: now, updated: now,
+      group: starter ? starterGroup(starter.g) : NEW_GROUP,
+      prompt: '', uploads: '', tests: '', expected_handling: '',
+    };
+    if (starter) e.starter = starter.h;
+    entries.unshift(e);
+    renderEntries();
+    changed();
+    const ta = document.querySelector(`[data-id="${e.id}"] .ptextarea`);
+    if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  }
+
+  function renderEntries() {
+    const opts = groupOptions();
+    const box = $('#entries');
+    if (!entries.length) {
+      box.innerHTML = '<div class="card empty">No prompts yet. Click "+ New prompt" or a starter.</div>';
+    } else {
+      box.innerHTML = entries.map((e, i) => {
+        const list = opts.includes(e.group) || e.group === NEW_GROUP || !e.group ? opts : [e.group, ...opts];
+        return `<div class="card entry" data-id="${esc(e.id)}">
+          <div class="entry-head">
+            <span>#${entries.length - i} · created ${esc(new Date(e.created).toLocaleString())}</span>
+            <button class="small danger push" data-del>Delete</button>
+          </div>
+          ${e.starter ? `<div class="hint"><b>Starter:</b><span>${esc(e.starter)}</span>
+            <button class="small push" data-hide-hint title="Hide hint">×</button></div>` : ''}
+          <label class="f">Prompt (as a user would type it)
+            <textarea class="ptextarea" data-field="prompt" placeholder="Write the request in plain natural language…">${esc(e.prompt)}</textarea></label>
+          <div class="row">
+            <label class="f">Group
+              <select data-field="group">
+                ${list.map((o) => `<option${o === e.group ? ' selected' : ''}>${esc(o)}</option>`).join('')}
+                <option${e.group === NEW_GROUP || !e.group ? ' selected' : ''}>${NEW_GROUP}</option>
+              </select></label>
+            <label class="f">Uploads assumed (optional)
+              <input type="text" data-field="uploads" value="${esc(e.uploads)}" placeholder="e.g. one product photo"></label>
+          </div>
+          <label class="f">What it tests / why it is hard (optional)
+            <textarea rows="2" data-field="tests">${esc(e.tests)}</textarea></label>
+          <label class="f">Expected handling (optional)
+            <textarea rows="3" data-field="expected_handling">${esc(e.expected_handling)}</textarea></label>
+        </div>`;
+      }).join('');
+    }
+    $('#mp-count').textContent = `${entries.length} prompt${entries.length === 1 ? '' : 's'}`;
+  }
+
+  $('#entries').addEventListener('input', (ev) => {
+    const field = ev.target.getAttribute('data-field');
+    if (!field) return;
+    const card = ev.target.closest('[data-id]');
+    const e = entries.find((x) => x.id === card.getAttribute('data-id'));
+    if (!e) return;
+    e[field] = ev.target.value;
+    e.updated = new Date().toISOString();
+    changed();
+  });
+  $('#entries').addEventListener('click', (ev) => {
+    const card = ev.target.closest('[data-id]');
+    if (!card) return;
+    const id = card.getAttribute('data-id');
+    if (ev.target.closest('[data-del]')) {
+      const e = entries.find((x) => x.id === id);
+      if (e && (e.prompt.trim() || e.tests.trim() || e.expected_handling.trim()) && !confirm('Delete this prompt?')) return;
+      entries = entries.filter((x) => x.id !== id);
+      renderEntries(); changed();
+    } else if (ev.target.closest('[data-hide-hint]')) {
+      const e = entries.find((x) => x.id === id);
+      if (e) { delete e.starter; renderEntries(); changed(); }
+    }
+  });
+  $('#add').onclick = () => addEntry(null);
+  $('#starter-list').innerHTML = STARTERS.map((s, i) =>
+    `<button class="starter" data-s="${i}">${esc(s.t)}<small>${esc(s.h)}</small></button>`).join('');
+  $('#starter-list').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-s]');
+    if (b) addEntry(STARTERS[+b.getAttribute('data-s')]);
+  });
+  window.addEventListener('beforeunload', (ev) => { if (dirty && serverOk) { ev.preventDefault(); ev.returnValue = ''; } });
+
+  async function loadMine() {
+    const local = readLocal();
+    try {
+      const r = await fetch('/api/my-prompts', { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const server = await r.json();
+      serverOk = true;
+      if (local && local.dirty) {
+        // Local edits never reached the server (it was offline). Keep them and push.
+        entries = local.entries;
+        setStatus('Restored unsynced local edits…', 'warn');
+        renderEntries();
+        changed();
+      } else {
+        entries = Array.isArray(server) ? server : [];
+        persistLocal();
+        setStatus('Saved · loaded from disk', 'ok');
+        renderEntries();
+      }
+    } catch (err) {
+      serverOk = false;
+      entries = local ? local.entries : [];
+      dirty = !!(local && local.dirty);
+      setStatus('Unsaved / server offline' + (local ? ' (restored from browser)' : ''), 'warn');
+      renderEntries();
+      if (!retryTimer) retryTimer = setInterval(() => { if (dirty) save(); }, 10000);
+    }
+  }
+
+  let startTab = 'set';
+  try { startTab = localStorage.getItem('tsv.tab') || 'set'; } catch (e) {}
+  showTab(startTab === 'mine' ? 'mine' : 'set');
+  loadMine().then(loadSet);
+})();
+</script>
+</body>
+</html>

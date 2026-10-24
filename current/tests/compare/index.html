@@ -1,0 +1,99 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pipeline A vs B</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--card:#fbf7ef;--ok:#4f7a3a;--bad:#a0402d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1813;--ink:#efe4d2;--soft:#b39b80;--line:#4a3d30;--card:#28211a;--ok:#8fbf6f;--bad:#e07a62}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,serif}main{max-width:1280px;margin:0 auto;padding:32px 16px 80px}
+h1,h2,h3{font-weight:normal}h2{font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}.soft{color:var(--soft)}a{color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+.col{background:var(--card);border:1px solid var(--line);padding:14px}video{width:100%;display:block;background:#000;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{font-weight:normal;color:var(--soft)}
+.strip{display:grid;grid-template-columns:60px repeat(9,1fr);gap:4px;align-items:center;overflow-x:auto}.strip img{width:100%;display:block}.strip b{font-weight:normal;color:var(--soft);font-size:13px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}ul{margin:6px 0;padding-left:18px}</style></head><body><main>
+<h1>Lighthouse · Pipeline A vs Pipeline B</h1>
+<p class="soft">Same request, same cap (9 clips, about 45 s), same models (nano-banana-pro images, wan-3.0 720p clips with audio). A = the user's state graph with seed-frame editing. B = a research-based design (StoryMem, VideoMemory, FilmWorld, Captain Cinema, Co-Director).</p>
+
+<div class="two">
+<div class="col"><h3>A · state graph + seed frames</h3><video controls preload="metadata" src="../pipeline-state-graph/runs/p4-lighthouse-v2/final.mp4"></video>
+<a href="../pipeline-state-graph/runs/p4-lighthouse-v2/index.html">Run page: lineage, decisions, cue sheet →</a></div>
+<div class="col"><h3>B · memory bank (research)</h3><video controls preload="metadata" src="../pipeline-memory/runs/p4-lighthouse-v1/final.mp4"></video>
+<a href="../pipeline-memory/runs/p4-lighthouse-v1/index.html">Run page: memory, keyframes, judge, cue sheet →</a></div>
+</div>
+
+<h2>One frame per clip (mid-clip)</h2>
+<div class="strip"><b>A</b><img src="media/A-1.jpg"><img src="media/A-2.jpg"><img src="media/A-3.jpg"><img src="media/A-4.jpg"><img src="media/A-5.jpg"><img src="media/A-6.jpg"><img src="media/A-7.jpg"><img src="media/A-8.jpg"><img src="media/A-9.jpg">
+<b>B</b><img src="media/B-1.jpg"><img src="media/B-2.jpg"><img src="media/B-3.jpg"><img src="media/B-4.jpg"><img src="media/B-5.jpg"><img src="media/B-6.jpg"><img src="media/B-7.jpg"><img src="media/B-8.jpg"><img src="media/B-9.jpg"></div>
+
+<h2>Numbers</h2>
+<table><tr><th></th><th>A · state graph</th><th>B · memory bank</th></tr>
+<tr><td>Credits (lighthouse run)</td><td>8,320</td><td>8,320 (+880 superseded probe jobs)</td></tr>
+<tr><td>Wall time</td><td>37.6 min</td><td>39 min</td></tr>
+<tr><td>Credits (all, incl. probe + grandma)</td><td>10,160</td><td>9,880</td></tr>
+<tr><td>Grandma (1 clip, upload)</td><td>480 credits · upload used directly as start</td><td>680 credits (200 on an unneeded anchor, rule fixed)</td></tr>
+<tr><td>Continuous seams</td><td>frame 0 dropped + luma offset; SSIM 0.992 on the clean join; edited starts broke seams (0.956, 0.434) → repairs now only for missing/identity faults</td><td>median jump 2.33 → 1.02; seam SSIM 0.988–0.998; no motion reset (judge)</td></tr>
+<tr><td>Self-check</td><td>verifier vs wanted state per frame; failed frames accepted <i>forced</i> with faults on record</td><td>gate per keyframe + vision judge on the cut: 72/100</td></tr>
+</table>
+
+<h2>What each kept, and what broke</h2>
+<div class="two">
+<div class="col"><h3>A</h3><ul>
+<li class="ok">Keeper identity held in all 9 beats.</li>
+<li class="ok">Same-place cuts come from old frames: the return to the beach (b8) was seeded from beat 2, so the lighthouse + cottage match the opening.</li>
+<li class="ok">Lamp is a person-sized Fresnel beacon, not a lantern; dark → lit as versions.</li>
+<li class="ok">Location versions carry forward (storm driftwood on the beach).</li>
+<li class="bad">Shell drawn 3–4× too large in every frame; flagged in all beats, never fixed after 3 tries, accepted forced.</li>
+<li class="bad">One of three ships missing in b7; lamp size flagged in b5/b7.</li>
+<li class="bad">Fixes made after the run are not in this video (re-run ≈ 8k credits).</li></ul></div>
+<div class="col"><h3>B</h3><ul>
+<li class="ok">Keeper identity held in all 9 shots.</li>
+<li class="ok">Shell palm-sized from shot 2 on: scale anchor = shell drawn in the keeper's palm, not alone.</li>
+<li class="ok">Room carries across the cut (table, window, lighthouse through the window).</li>
+<li class="ok">Smoothest continuous seams of any run so far.</li>
+<li class="bad">Shot 1 shell still too big (foreground of a wide shot).</li>
+<li class="bad">Lamp reads as a lantern; shot 5 keeper descends instead of climbing; lamp lit one shot early; lamp only dims in shot 4.</li>
+<li class="bad">Shell glow too strong throughout.</li></ul></div>
+</div>
+
+<h2>Audio (both)</h2>
+<ul><li>wan-3.0 clip sound (free) with ambience + effect cues in the prompt; one looped bed per location so the sound does not reset at each clip; final about −16 LUFS.</li>
+<li>Editable cue sheet (<code>cues.json</code>): beds, effects, music in/out/swell flags. B re-renders the mix with <code>--remix</code> at zero credits.</li>
+<li>Gap in both: no music or sound-effect endpoint on Magic Hour, so the score is a synthetic placeholder pad. Real score needs an outside provider key.</li></ul>
+
+<h2>Pipeline A · v3 rerun (fixes + palm anchor)</h2>
+<div class="two">
+<div class="col"><h3>A v3 · 9 clips, 45 s</h3><video controls preload="metadata" src="../pipeline-state-graph/runs/p4-lighthouse-v3/final.mp4"></video>
+<a href="../pipeline-state-graph/runs/p4-lighthouse-v3/index.html">Run page →</a></div>
+<div class="col"><ul>
+<li>7,920 credits · 41.7 min · same 9-beat timeline as v2, so it compares one to one.</li>
+<li class="ok">Shell first drawn in the keeper's palm and registered as the root of its state graph; size retries now re-source from that anchor.</li>
+<li class="ok">Shell size vs real: median 3.8× → 2.9×; hand-held beats about 2× (were 2.6–2.7×); within 2× in 4 of 13 frames (was 1 of 15).</li>
+<li class="ok">Continuous starts never edited: all three continuous seams SSIM 0.992–0.995 (v2: 0.956 and 0.434).</li>
+<li class="ok">Lens beacon, keeper and beach with lighthouse + cottage stay consistent.</li>
+<li class="bad">Shell still 4–7× in wide beach shots where it lies in the foreground away from the keeper.</li>
+<li class="bad">5 of 7 cuts accepted with soft faults (pose, position, grip) after 2 retries each: the main credit sink.</li>
+<li class="bad">A duplicate frame still sits at two continuous joins.</li></ul></div>
+</div>
+<div class="strip" style="margin-top:12px"><b>A v2</b><img src="media/A-1.jpg"><img src="media/A-2.jpg"><img src="media/A-3.jpg"><img src="media/A-4.jpg"><img src="media/A-5.jpg"><img src="media/A-6.jpg"><img src="media/A-7.jpg"><img src="media/A-8.jpg"><img src="media/A-9.jpg">
+<b>A v3</b><img src="media/A3-1.jpg"><img src="media/A3-2.jpg"><img src="media/A3-3.jpg"><img src="media/A3-4.jpg"><img src="media/A3-5.jpg"><img src="media/A3-6.jpg"><img src="media/A3-7.jpg"><img src="media/A3-8.jpg"><img src="media/A3-9.jpg"></div>
+
+<h2>Pipeline B · more versions (30 s each)</h2>
+<div class="two">
+<div class="col"><h3>Lighthouse v2 · 6 clips</h3><video controls preload="metadata" src="../pipeline-memory/runs/p4-lighthouse-v2-30s/final.mp4"></video>
+<a href="../pipeline-memory/runs/p4-lighthouse-v2-30s/index.html">Run page →</a>
+<ul><li>6,480 credits (two network failures; finished with <code>--resume</code>, only missing clips re-run). Judge 67.4/100 (re-scored on the full 30 s cut).</li>
+<li class="ok">Shell small (palm-sized glow) on the beach in every shot; beach, rocks and lighthouse match at the start and end.</li>
+<li class="ok">Storm and ships seen through the tower glass; lamp lit.</li>
+<li class="bad">Keeper looks younger with dark hair in the tower shots (3–4): identity drift after the cut.</li>
+<li class="bad">Lamp is a small lantern again (no person-sized beacon).</li>
+<li class="bad">Shots 4 and 6 started from a repaired (edited) frame because the shell / keeper left the last frame; the judge flags both continuous joins as a visible jump.</li><li class="bad">Judge: lamp small without its lens, shell oversized in shots 1 and 6, the blackout and the ships' turn not clearly shown.</li></ul></div>
+<div class="col"><h3>Desert → Tokyo car · 6 clips</h3><video controls preload="metadata" src="../pipeline-memory/runs/d1-desert-tokyo-v1-30s/final.mp4"></video>
+<a href="../pipeline-memory/runs/d1-desert-tokyo-v1-30s/index.html">Run page →</a>
+<ul><li>6,280 credits · judge 62.5/100.</li>
+<li class="ok">Grey coupe in both places; Tokyo street (rail bridge, konbini) consistent across the Tokyo shots.</li>
+<li class="bad">The Tokyo car is a slightly different model: darker multi-spoke wheels, different nose.</li>
+<li class="bad">Judge: emblems on an "unbranded" car, dust cloud too broad, camera drifts from the planned framing.</li>
+<li class="bad">Shots 4–5 barely move (continuous shot holds almost the same frame).</li></ul></div>
+</div>
+<div class="strip" style="grid-template-columns:60px repeat(6,1fr);margin-top:12px"><b>Lighthouse</b><img src="media/Blh-1.jpg"><img src="media/Blh-2.jpg"><img src="media/Blh-3.jpg"><img src="media/Blh-4.jpg"><img src="media/Blh-5.jpg"><img src="media/Blh-6.jpg">
+<b>Car</b><img src="media/Bcar-1.jpg"><img src="media/Bcar-2.jpg"><img src="media/Bcar-3.jpg"><img src="media/Bcar-4.jpg"><img src="media/Bcar-5.jpg"><img src="media/Bcar-6.jpg"></div>
+
+<p class="soft">Baseline for reference: <a href="../pipeline-v2/runs/p4-lighthouse-v1/final.mp4">pipeline v2 lighthouse v1 (120 s, silent)</a>.</p>
+</main></body></html>

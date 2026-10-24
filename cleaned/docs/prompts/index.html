@@ -1,0 +1,327 @@
+<title>Pipeline Prompts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--accent:#2d6a4f;--llm:#8a4b00;--llm-bg:#fbecd6;--img:#6b3fa0;--img-bg:#ece3f7;--vis:#1f5f6b;--vis-bg:#dcecef;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--accent:#7cc9a3;--llm:#f0b45c;--llm-bg:#3a2c14;--img:#c7a6f0;--img-bg:#2c2140;--vis:#7cc3cf;--vis-bg:#17303a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--accent:#7cc9a3;--llm:#f0b45c;--llm-bg:#3a2c14;--img:#c7a6f0;--img-bg:#2c2140;--vis:#7cc3cf;--vis-bg:#17303a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding-block:22px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+h1{font-size:22px;margin:0}h3{font-size:15px;margin:0}.mini{color:var(--mut);font-size:12.5px;margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:8px;min-width:0;scroll-margin-top:12px}
+.h{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.id{font:600 12px var(--mono);color:var(--accent)}
+.chip{font:600 11px var(--mono);padding:2px 8px;border-radius:999px}.k-LLM{color:var(--llm);background:var(--llm-bg)}.k-IMAGE,.k-VIDEO{color:var(--img);background:var(--img-bg)}.k-VISION{color:var(--vis);background:var(--vis-bg)}
+pre{white-space:pre-wrap;font:11.5px/1.5 var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;margin:0;max-height:420px;overflow:auto}
+details summary{cursor:pointer;font-size:12.5px;color:var(--mut)}.chart{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
+</style>
+<main>
+<header><h1>Pipeline prompts, stage by stage</h1><p class="mini">Each box in the diagram is one card below (click a box's id). Templates are extracted from the code; "exactly as sent" is the recorded prompt of a paid job in run custom-bakery1.</p></header>
+<div class="chart"><pre class="mermaid">
+flowchart TD
+  P([prompt]) --> S1[S1 Story] --> E1[E1 Editor review] --> I1[I1 ID tagging] --> I2[I2 ID coverage] --> I3[I3 ID classify] --> I4[I4 ID merge] --> I5[I5 Links]
+  I5 --> A1[A1 Environment specs] & A2[A2 Asset specs] & A3[A3 Style to medium]
+  E1 --> P1[P1 Screenplay] --> P2[P2 Sound notes]
+  A1 --> B1[B1 Storyboard per scene]
+  P2 --> B1
+  B1 --> SM{{State manager: code, no prompt}}
+  A2 --> G1[G1 Sheet image] --> G2[G2 Sheet checks]
+  A1 --> G3[G3 Plate image] --> G4[G4 Plate check]
+  SM --> G5[G5 Scene grid image]
+  G2 --> G5
+  G4 --> G5
+  G5 --> G6[G6 Grid checks] --> G7[G7 Cell check] --> V1[V1 Clip video]
+  click S1 "#S1"
+  click E1 "#E1"
+  click I1 "#I1"
+  click I2 "#I2"
+  click I3 "#I3"
+  click I4 "#I4"
+  click I5 "#I5"
+  click A1 "#A1"
+  click A2 "#A2"
+  click A3 "#A3"
+  click P1 "#P1"
+  click P2 "#P2"
+  click B1 "#B1"
+  click G1 "#G1"
+  click G2 "#G2"
+  click G3 "#G3"
+  click G4 "#G4"
+  click G5 "#G5"
+  click G6 "#G6"
+  click G7 "#G7"
+  click V1 "#V1"
+</pre></div>
+<section class="card" id="S1"><div class="h"><span class="id">S1</span><h3>Story</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, high</span></div><p class="mini">The creative director: title, style line, prose.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Write a short illustrated story for the request below.
+- style: one line of visual style for every image (medium, palette, light). Do not ask for full-bleed or &quot;film still&quot; framing.
+- story: the story in plain prose, 150-300 words, with every action in the order it happens. Name things concretely (what is on
+  the table, which door). For a well-known tale, follow its best-known version unless the request says otherwise, and show its
+  climax and its feelings on screen (fear, escape).
+
+The request:
+${prompt}</pre></details>
+</section>
+<section class="card" id="E1"><div class="h"><span class="id">E1</span><h3>Editor review</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, high</span></div><p class="mini">Logic holes only; minimal edits.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>You are the story editor of an illustrated film. Read this story for LOGIC holes only:
+- an object that is used but never placed anywhere or brought in (where do the stones come from?);
+- a character who is somewhere without arriving, or does something with nothing to do it with;
+- a pronoun or phrase where it is unclear who or what is meant;
+- a physically impossible action.
+holes: each hole found and the smallest fix (one sentence added or changed). story: the story with only those fixes made; every
+other word unchanged. Do not change the plot, the tone or the length beyond the fixes. If there are no holes, return it unchanged.
+
+Story:\n${story}</pre></details>
+</section>
+<section class="card" id="I1"><div class="h"><span class="id">I1</span><h3>ID tagging (per chunk)</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, medium</span></div><p class="mini">Every mention → one id, in context, carrying the table so far.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Give every PHYSICAL thing this story text mentions an id: characters, animals, objects, food, places, rooms, buildings, and
+parts of things (a door, a bed's head, a dog's tail). Every noun, alias and pronoun that refers to a thing gets the id of that
+thing. Mentions that mean the same thing get the same id (&quot;the old man&quot;, &quot;he&quot;, &quot;Grandpa&quot; → grandpa). A plural pronoun
+for several things gets all their ids (&quot;they&quot; → red, grandmother); never make a new id for a temporary set. Sounds, voices, light,
+feelings and other things you cannot draw as an object get no id. Reuse ids from the table; add a new id (short, lowercase,
+hyphens) only for a thing not in it; never rename or re-id a thing already in the table. A pronoun that refers to nothing
+(&quot;It's me!&quot;, &quot;It was raining&quot;) is not a mention. kind &quot;group&quot; only for things that always appear together (six stones).
+mentions: each mention in order, exactly as written, with its id(s). new_ids: things added to the table by this chunk.
+tagged: the text unchanged except that every mention is followed by {id} or {id,id}, e.g. &quot;They{red,grandmother} opened the door{cottage-door}.&quot;
+${note ? `\nThe last pass missed these; tag them too: ${note}\n` : &quot;&quot;}
+Id table so far:
+${tableText(table)}
+
+Text (chunk ${i + 1}):
+${chunk}</pre></details>
+</section>
+<section class="card" id="I2"><div class="h"><span class="id">I2</span><h3>ID coverage (leftovers only)</h3><span class="chip k-LLM">LLM after a parser</span><span class="mini">gpt-6.1-sol, low</span></div><p class="mini">A text parser lists untagged nouns first; the model decides which refer to things.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>A parser found these words in the text below without an {id} after them: ${left.map((x) =&gt; `&quot;${x}&quot;`).join(&quot;, &quot;)}.
+Return the ones that refer to a physical thing (a character, animal, object, food, place, room, building or part of one) and so
+need an id, exactly as listed. Abstract words (fear, time) and pronouns that refer to nothing (&quot;It's me!&quot;) do not. [] if none.\n\n${tagged}</pre></details>
+</section>
+<section class="card" id="I3"><div class="h"><span class="id">I3</span><h3>ID classify</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, medium</span></div><p class="mini">asset / fixture / place / part / none; inside-of.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Classify every id of this story.
+role: asset = a character or animal, or a thing that is moved, carried, worn or handed over in the story (tracked frame to frame);
+(steam, smoke, light, a glow, a sound, a smell, the sky: none; a sign, shelf, oven, counter, window, door: fixture of its place);
+fixture = a thing that stays where it is in one place (furniture, a door, a window, plants, a hearth); place = a setting where
+scenes happen; part = a part of another id (a dog's ears, a bed's head); none = not something to draw.
+kind (assets only): character (a person or animal that acts), group (several things that always appear together), prop; else none.
+place (fixtures only): the place it belongs to; else none. parent (parts only): the id it is part of; else none.
+Clothes a character wears all story long are a PART of that character (one part even if named twice: hood and cloak); clothes
+taken off, swapped or handed to someone else are assets.
+inside (props and groups only): the thing it is packed in, inside or on when it first appears (a cake in a basket); else none.
+Characters are never inside anything (a person in a bed is lying in it): none.
+Ids:\n${table.map((t) =&gt; `- ${t.id} (${t.kind}): ${t.name}; aliases: ${t.aliases.join(&quot;, &quot;) || &quot;none&quot;}`).join(&quot;\n&quot;)}\n\nStory:\n${story}</pre></details>
+</section>
+<section class="card" id="I4"><div class="h"><span class="id">I4</span><h3>ID merge</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, low</span></div><p class="mini">Two ids for one thing or place.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Which of these ids refer to the SAME physical thing or place (two names for one street, one shop, one person)? List pairs to
+merge: keep the more specific id, drop the other. Places: a broad area and the one spot in it the story shows (a &quot;neighbourhood&quot;
+and &quot;the street&quot; the bakery is on) are the same place when every scene set in the area happens on that spot. Different things that
+merely relate (a shop and its street) are not the same.
+Return [] if none.\n${table.map((t) =&gt; `- ${t.id} (${t.role || t.kind}): ${t.name}; aliases: ${(t.aliases || []).join(&quot;, &quot;) || &quot;none&quot;}`).join(&quot;\n&quot;)}\n\nStory:\n${story}</pre></details>
+</section>
+<section class="card" id="I5"><div class="h"><span class="id">I5</span><h3>Links: propose, then check</h3><span class="chip k-LLM">LLM ×2</span><span class="mini">gpt-6.1-sol</span></div><p class="mini">Physical connections (a door seen inside and out).</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Which of these PLACES and STRUCTURES are the same physical object, so pictures of them must agree spatially? Only: a room inside
+a building; a door, window or wall that belongs to a building and is seen from inside and outside; the same building seen from
+two places (a cottage seen from the woods and its inside). Never pair characters, their body parts or clothes, worn or carried
+items, plants or small objects: those are not spatial structures.
+Ids:\n${tableText(table)}\n\nStory:\n${story}
+
+— then, per pair —
+
+Does &quot;${name(p.a)}&quot; (${p.a}) physically belong to &quot;${name(p.b)}&quot; (${p.b}) as ${p.relation}, according to this story?
+belongs: true only if the text supports it. evidence: the words that show it, or &quot;&quot;. constraint: if true, one sentence on what their
+pictures must agree on (side, wall, colour, material, size), else &quot;&quot;.\n\nStory:\n${story}</pre></details>
+</section>
+<section class="card" id="A1"><div class="h"><span class="id">A1</span><h3>Environment specs (layout)</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, high</span></div><p class="mini">Marks, essentials, door swing, per place.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>${PLAN_RULES}
+- look: one or two sentences describing the place as a painter would (materials, mood, season), without layout.
+
+Places:\n${world.locations.map((l) =&gt; `- ${l.id}: ${l.name}. ${l.look || &quot;&quot;}${fx(l.id).length ? `\n  Its marks MUST include these story things with exactly these ids: ${fx(l.id).map((f) =&gt; `${f.id} (${f.name})`).join(&quot;, &quot;)}` : &quot;&quot;}`).join(&quot;\n&quot;)}
+Characters and props (never marks):\n${world.entities.map((e) =&gt; `- ${e.id} (${e.kind}): ${e.name}. ${e.look || &quot;&quot;}`).join(&quot;\n&quot;)}
+${links.length ? `\nPhysical links the places must respect (both sides):\n${links.map((l) =&gt; `- ${l.a} ${l.relation} ${l.b}: ${l.constraint}`).join(&quot;\n&quot;)}\n` : &quot;&quot;}
+The story (what the places must allow):\n${story}</pre></details>
+</section>
+<section class="card" id="A2"><div class="h"><span class="id">A2</span><h3>Asset specs</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, high</span></div><p class="mini">Each tracked asset described against the set.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Write the canonical reference spec of every tracked thing in this story, so all of them can be drawn as one consistent set.
+For each id below write:
+- spec: 2-4 sentences about the THING ONLY (never the art style, medium, light, background or composition) that a painter can follow exactly: build and proportions, face, hair (style, length, colour), clothes with colours,
+  distinctive details that must never change. For an animal say whether it is natural or stands and dresses like a person. For a
+  prop: shape, material, colour, size in hands.
+  Describe ONLY its normal look at the START of the story, on its own: never later states (a swollen belly, wearing someone
+  else's cap, torn, filled) and never other characters or their body parts (no &quot;the dog's ears&quot; in a hat's spec).
+- height: relative to a grown person (&quot;a small child, about half a grown person&quot;, &quot;a large dog standing on its hind legs, a head taller than a
+  grown man&quot;, &quot;fits in one hand&quot;).
+The set must agree with itself: one art style (below), consistent sizes, colours that suit the story's palette, and every detail
+the story mentions (a red hooded cape, a white nightcap…).
+Style: ${world.style}
+Things:
+${world.entities.filter((e) =&gt; !only || only.includes(e.id)).map((e) =&gt; { const inner = world.entities.filter((x) =&gt; x.inside === e.id).map((x) =&gt; x.name); return `- ${e.id} (${e.kind}): ${e.name}. ${e.look || &quot;&quot;}${inner.length ? ` At the start it holds: ${inner.join(&quot;, &quot;)} (draw them in it).` : &quot;&quot;}`; }).join(&quot;\n&quot;)}
+Story (for details it mentions):
+${world.story}</pre></details>
+</section>
+<section class="card" id="A3"><div class="h"><span class="id">A3</span><h3>Style → medium</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, low</span></div><p class="mini">The style line reduced to the medium for edits.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Reduce this illustration style line to the MEDIUM only (materials, line work, level of finish), one sentence, no lighting, no colours of specific things, no scene words:\n${this.src.world.style}</pre></details>
+</section>
+<section class="card" id="P1"><div class="h"><span class="id">P1</span><h3>Screenplay</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, high</span></div><p class="mini">Scenes of visual action lines and dialogue.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Adapt this story into a SCREENPLAY for an animated film, the way a screenwriter adapts a book.
+- Scenes: a scene is continuous in place and time. Start a new scene for a new place, or a cut (time passes, or we jump to
+  another view). place: where, in the story's words; inside: interior or exterior; time: DAY, NIGHT, LATER or CONTINUOUS;
+  cut: true when the scene starts after a jump in time or view rather than by following someone.
+- Action lines: present tense, only what the camera can SEE and HEAR. Write what it looks like, not what it means: &quot;The wolf's
+  belly splits. Light pours in. Red, curled inside, squints, then crawls out onto the quilt, gasping.&quot; Give direction of
+  movement relative to the viewer: toward us, away from us, left, right (&quot;The wolf races away from us around the far bend&quot;).
+  One beat per action line; things that happen one after another are separate beats; keep beats short and concrete.
+- Show where things come from on screen when it matters (someone carries the stones in), or start a new scene after a cut.
+- Dialogue: keep the story's lines, spoken by who says them.
+- Cover every event of the story in order; add nothing that changes the plot.
+- story_lines: the story sentences each scene covers, quoted exactly.
+${names.length ? `Names to use: ${names.join(&quot;, &quot;)}.\n` : &quot;&quot;}
+Story:\n${story}</pre></details>
+</section>
+<section class="card" id="P2"><div class="h"><span class="id">P2</span><h3>Sound notes</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, medium</span></div><p class="mini">Ambience, music, effects; text unchanged.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>Add SOUND notes to this screenplay for an animated storybook film. Do not change any line.
+For every scene: ambience = the background sound that runs under the whole scene (birdsong and wind in the trees; a crackling hearth
+and a ticking clock), short; music = a one-line music cue (mood, instruments) or &quot;&quot; if the scene should have none.
+For action beats that make a noise: effects = [{beat number, sfx}] with a short concrete sound (&quot;three knocks on a wooden door&quot;,
+&quot;snip of shears&quot;, &quot;heavy thud on the floorboards&quot;). Skip silent beats and all dialogue beats (those are voices).
+
+${listing}</pre></details>
+</section>
+<section class="card" id="B1"><div class="h"><span class="id">B1</span><h3>Storyboard (per scene, parallel)</h3><span class="chip k-LLM">LLM</span><span class="mini">gpt-6.1-sol, medium</span></div><p class="mini">Panels = keyframes: action, elements, enters, changes, leaves, introductions.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>You are the storyboard artist of an animated storybook film. Break this screenplay scene into PANELS. Each panel is one
+keyframe: ONE instant in time (several things may happen in it at once). Pick the moments a viewer must see for the scene to
+read, in order; a beat that only continues a motion needs no panel. Usually 2-6 panels per scene.
+For each panel:
+- action: ONE plain sentence of what happens in this instant: who does what, with what, to whom (&quot;Mother hands Red the basket&quot;;
+  &quot;The wolf knocks on the green door&quot;). No camera or composition words (no &quot;view&quot;, &quot;close&quot;, &quot;on the left&quot;); say a direction only
+  when the story needs it (toward us, away from us). The picture is edited from the previous panel, so describe the change, not
+  the whole picture.
+- elements: the ids of every tracked asset in the picture (from the list below). Something inside a container (bread in the
+  basket) stays listed while its container is. Fixed things of the environment (its bed, door, table) are not elements: name
+  them in words.
+- beats: the beat numbers this panel covers.
+- enters: every element that is new to the picture in this panel (in the FIRST panel of a scene: all of them): where it is, as
+  a spot of the environment's layout in plain words (&quot;on the path near us&quot;, &quot;in the bed&quot;, &quot;at the green door&quot;), and doing: its
+  pose or activity in a few words (&quot;standing, holding the basket on her arm&quot;; &quot;lying under the quilt, head on the pillow&quot;).
+- changes: elements that act or move in this instant: {id, now}, &quot;now&quot; one short phrase of what they do (&quot;hands over the
+  basket&quot;; &quot;lies down under the quilt&quot;). Unchanged elements are not listed.
+- leaves: elements that go out of the picture in this instant (walks away, is swallowed, is carried out). Only these are removed;
+  an element missing from &quot;elements&quot; by mistake is NOT removed.
+- introductions: an element in this panel that was not in the previous panel of this scene and does not walk, run or come in on
+  screen: the beat that introduces it. The first panel of a scene needs no introductions.
+environment: the environment the scene is mostly in; each panel also names its own environment (a scene that starts outside and
+cuts inside has panels in two environments). Use each environment's layout: where its furniture and doors really are.
+
+Environments:\n${envText}
+Tracked assets:\n${assets.map((a) =&gt; `- ${a.id}: ${a.name}`).join(&quot;\n&quot;)}
+
+Scene ${k}: ${scene.inside ? &quot;INT.&quot; : &quot;EXT.&quot;} ${scene.place} — ${scene.time}${scene.cut ? &quot; (after a cut)&quot; : &quot;&quot;}
+${beats}</pre></details>
+</section>
+<section class="card" id="G1"><div class="h"><span class="id">G1</span><h3>Sheet (image)</h3><span class="chip k-IMAGE">IMAGE</span><span class="mini">nano-banana-pro, 2k</span></div><p class="mini">One subject on a plain backdrop.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>${frameStyle(style)}. Reference sheet of ONE ${a.kind === &quot;prop&quot; ? &quot;object&quot; : a.kind === &quot;group&quot; ? &quot;group, all members side by side at their true relative sizes&quot; : &quot;character&quot;}: ${a.name}. ${a.spec}${a.height ? ` Height: ${a.height}.` : &quot;&quot;}
+${a.kind === &quot;prop&quot; ? &quot;The object alone, centred, whole, seen slightly from above.&quot; : &quot;Full body, front view, standing in a neutral pose, arms relaxed, whole figure visible head to feet.&quot;}
+Plain light-grey backdrop (seamless studio paper) and nothing else: no scenery, no plants, no buildings, no other characters or animals, no frame or border, no text or labels.${note ? `\nThe last try got this wrong; fix it: ${note}` : &quot;&quot;}</pre></details>
+<details><summary>Exactly as sent in run custom-bakery1</summary><pre>Image 1, 0–5s: Hand-painted gouache illustration; midnight blue, cream, and honey gold; warm bakery windows glowing against the predawn street.
+Image 2, 5–10s: Hand-painted gouache illustration; flour white, butter yellow, and natural wood; soft pendant light over the baker’s workbench.
+Image 3, 10–15s: Hand-painted gouache illustration; toasted brown, copper, and cream; radiant oven light catching rising steam.
+Image 4, 15–20s: Hand-painted gouache illustration; pale peach, sky blue, and warm oak; gentle sunrise spilling through the front door.
+Image 5, 20–25s: Hand-painted gouache illustration; golden pastry, terracotta, and cream; welcoming morning light across the counter.
+Image 6, 25–30s: Hand-painted gouache illustration; honey gold, soft blue, and deep brown; sunrise illuminating the bakery sign and doorway.. Reference sheet of ONE character: baker. A middle-aged man with warm tan skin, a broad face, brown eyes, a short brown moustache, and short, slightly wavy dark-brown hair. He wears a cream shirt with sleeves rolled to the elbows, midnight-blue trousers, dark-brown work shoes, and a honey-tan bib apron tied at the waist. Irregular flour-white dustings mark the apron’s chest and front, and faint lines beneath his eyes give him a gently tired appearance. Height: An average-height grown man with a broad, sturdy build..
+Full body, front view, standing in a neutral pose, arms relaxed, whole figure visible head to feet.
+Plain flat light-grey background and nothing else: no scenery, no ground, no plants, no buildings, no other characters or animals, no frame or border, no text or labels.</pre></details></section>
+<section class="card" id="G2"><div class="h"><span class="id">G2</span><h3>Sheet check / set check</h3><span class="chip k-VISION">VISION</span><span class="mini">gpt-6.1-sol</span></div><p class="mini">Single subject, backdrop, spec; then style and scale across the set.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>This should be a reference sheet of ONE ${a.kind}: ${a.name}. Spec: ${a.spec}${a.height ? ` Height: ${a.height}.` : &quot;&quot;}
+single_subject: only this one ${a.kind === &quot;group&quot; ? &quot;group&quot; : &quot;subject&quot;} is shown, ONCE (no second view or pose, no other characters, animals or
+objects besides what it wears or holds).
+plain_background: a plain backdrop with nothing in it (no scenery, trees, buildings, furniture, props or framing). A studio floor
+shadow, a soft gradient or seamless-paper look is fine, especially for photographs.
+matches_spec: every detail of the spec is right (hair, clothes, colours, build, species). misses: what is wrong, or &quot;&quot;.
+major: true if a miss changes who or what it is: species or build, main colours, a signature item missing or added (a hood, a
+cap, ears on a cap), a later story state (swollen belly, wearing another's clothes), extra subjects or views. Small differences in
+length, shade or footwear are not major.
+score: 1-5, how good a canonical reference this is (5 = exactly the spec, one subject, plain background).
+
+— set check —
+
+These ${ids.length} images are the reference sheets of one illustrated story, in this order: ${ids.map((id, k) =&gt; `image ${k + 1} = ${out[id].name} (height: ${out[id].height || &quot;n/a&quot;})`).join(&quot;; &quot;)}.
+For each: style_matches_set (same medium, line work, palette and level of detail as the majority, and ONE view of one subject like
+the others, not a sheet of several views), scale_ok (its drawn proportions fit its stated height next to the others; for props, true unless absurd). note: what differs, or &quot;&quot;.</pre></details>
+</section>
+<section class="card" id="G3"><div class="h"><span class="id">G3</span><h3>Plate (image)</h3><span class="chip k-IMAGE">IMAGE</span><span class="mini">nano-banana-pro, 2k</span></div><p class="mini">The empty place from its layout.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>${frameStyle(style)}. One single image, not a grid, collage or storyboard. No text or labels.
+Establishing view of ${loc.name}, empty of people and animals. ${gp.look || loc.look || &quot;&quot;}
+Camera: ${gp.camera}. A full, finished storybook painting of a lived-in place, with these facts:
+${objs.map((m) =&gt; `- ${m.name}: ${m.essential || m.where}`).join(&quot;\n&quot;)}
+${gp.doors.map((d) =&gt; `- ${gp.marks.find((m) =&gt; m.id === d.mark)?.name || d.mark}: ${d.swing || &quot;opens freely&quot;}; leads to ${d.leads_to}.`).join(&quot;\n&quot;)}
+${contents.length ? `Already in the place, each where it naturally belongs (they are used later in the story):\n${contents.map((a) =&gt; `- ${a.name}: ${a.spec}`).join(&quot;\n&quot;)}\n` : &quot;&quot;}${areas.length ? `Keep clear (open floor, nothing standing there): ${areas.map((m) =&gt; m.name).join(&quot;; &quot;)}.\n` : &quot;&quot;}Light: ${gp.light}${note ? `\nThe last try got this wrong; fix only this: ${note}` : &quot;&quot;}</pre></details>
+<details><summary>Exactly as sent in run custom-bakery1</summary><pre>Image 1, 0–5s: Hand-painted gouache illustration; midnight blue, cream, and honey gold; warm bakery windows glowing against the predawn street.
+Image 2, 5–10s: Hand-painted gouache illustration; flour white, butter yellow, and natural wood; soft pendant light over the baker’s workbench.
+Image 3, 10–15s: Hand-painted gouache illustration; toasted brown, copper, and cream; radiant oven light catching rising steam.
+Image 4, 15–20s: Hand-painted gouache illustration; pale peach, sky blue, and warm oak; gentle sunrise spilling through the front door.
+Image 5, 20–25s: Hand-painted gouache illustration; golden pastry, terracotta, and cream; welcoming morning light across the counter.
+Image 6, 25–30s: Hand-painted gouache illustration; honey gold, soft blue, and deep brown; sunrise illuminating the bakery sign and doorway.. One single image, not a grid, collage or storyboard. No text or labels.
+Establishing view of shop, empty of people and animals. A modest working bakery with cream plaster, honey-coloured timber, worn stone flooring, and dark metal baking equipment. Its surfaces are clean but comfortably used, with a warm, handmade character.
+Camera: Eye height in the rear customer-side corner, wide diagonal view toward the front wall. The blue door is far left, the window far right, and the right-wall equipment remains visible.. A full, finished storybook painting of a lived-in place, with these facts:
+- Blue shop front door: Blue glazed door at the far left.
+- Interior door handle: On the door's right free edge.
+- Door-mounted shop name sign: Far left at adult chest height.
+- Reversible OPEN and CLOSED strip: Captive turning strip along the sign's bottom edge.
+- Shop front window: Large clear window in the far-right front wall.
+- Wooden workbench: Far right, with its working edge toward the camera.
+- Workbench working surface: Flat upper surface at waist height.
+- Flour bowl: At the far-right end of the worktop.
+- Baking oven: Middle right against the right wall.
+- Drop-down oven door: Bottom-hinged door on the oven's centre-facing front.
+- Oven baking chamber: Waist-level chamber behind the oven's front door.
+- Wire cooling rack: Near right against the right wall.
+- Cooling surface: Upper wire surface at waist height.
+- Shop counter: Middle left, running from near to far.
+- Counter service surface: Clear upper surface at waist height.
+- Blue shop front door: Hinged on its left edge as seen here; opens inward toward the camera and rests flat against the left wall. Reserve the entire leaf sweep and keep the resting leaf clear of the counter and entry route.; leads to street.
+- Drop-down oven door: Hinged along its bottom edge; lowers toward the centre of the room to a horizontal stop. Its projection stays within the reserved oven working space, leaving a clear passage beside it.; leads to oven.chamber.
+Keep clear (open floor, nothing standing there): Workbench standing space; Customer standing side; Counter working side; Entrance and arrival space; Preparation and baking aisle.
+Light: Warm amber interior light, balanced by cool predawn light through the front glazing. No steam or airborne flour is present in the empty place.</pre></details></section>
+<section class="card" id="G4"><div class="h"><span class="id">G4</span><h3>Plate check</h3><span class="chip k-VISION">VISION</span><span class="mini">gpt-6.1-sol</span></div><p class="mini">One question per key mark; door swing; quality.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>This picture is meant to show an empty place from this camera (${gp.camera}). Answer from the picture only.
+For each mark: visible (it is clearly in the picture; for an open area: the floor there is visible and clear), holds (this fact is
+true in the picture), observed_where (where it really is, in camera terms; for a bed, which end has the headboard and pillow):
+${gp.marks.map((m) =&gt; `- ${m.id}: ${m.name} — ${m.essential || m.where}`).join(&quot;\n&quot;)}
+${contents.length ? `contents: is each of these clearly in the picture? ${contents.map((a) =&gt; `${a.id} (${a.name})`).join(&quot;, &quot;)}\n` : &quot;&quot;}doors_open_freely: every door could swing fully open and closed without hitting a fireplace, furniture or a wall it is not hinged on.
+quality: 1-5, how rich, finished and in-style the painting is (5 = a finished storybook page; 1 = a sparse sketch or diagram).
+problems: one short sentence on anything physically impossible (a blocked door, overlapping or floating furniture), or &quot;&quot;.</pre></details>
+</section>
+<section class="card" id="G5"><div class="h"><span class="id">G5</span><h3>Scene grid (image)</h3><span class="chip k-IMAGE">IMAGE</span><span class="mini">nano-banana-pro, 4k</span></div><p class="mini">All of a scene's panels as cells of one image.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>${i + 1}. ${p.action}${enters ? ` [${enters}]` : &quot;&quot;}${changes ? ` (${changes})` : &quot;&quot;}${p.leaves.length ? ` (${p.leaves.map(name).join(&quot;, &quot;)} no longer in the picture)` : &quot;&quot;}</pre></details>
+<details><summary>Exactly as sent in run custom-bakery1</summary><pre>One image that is a storyboard GRID of 5 panels in 3 rows × 3 columns, all cells the same size, filling the
+image edge to edge with no gutters, borders, numbers or text. Every cell is the same place from the same camera as image 1
+(INT. shop — LATER), with the same light and colours. The cells are consecutive moments of one continuous scene, in reading order
+(left to right, top to bottom); whatever is not said to change stays the same from one cell to the next.
+Who is who:
+baker's thick mitts: Two thick oven mitts made from cream quilted cotton, each with a rounded finger pocket and a separate broad thumb. Honey-ochre binding outlines the cuffs, and the quilting forms a regular diamond pattern. They are clean, padded, and undecorated.
+The 5 moments:
+1. Morning light brightens the shop's front window. [baker at the oven against the middle-right wall, standing ready to open the oven; flour dusting the apron on the baker's apron, dusting the baker's apron; baker's thick mitts on the baker's hands beside the oven, covering the baker's hands]
+2. Baker pulls the oven door down toward us as steam rolls out of the opening. (baker: pulls down the oven door; baker's thick mitts: grip the lowered oven door's handle)
+3. Baker draws a golden loaf and a tray of deeply browned croissants out of the oven with thick mitts. [loaf just outside the oven chamber, resting golden in one mittened hand; pastry tray just outside the oven chamber, supported by the baker's other mittened hand; croissants on the pastry tray outside the oven chamber, sitting deeply browned on the tray] (baker: holds the loaf and croissant tray clear of the oven; baker's thick mitts: support the loaf and pastry tray)
+4. Baker sets the croissant tray on the wooden workbench while keeping the loaf in one mitt. (baker: sets the tray on the workbench at the far right; baker's thick mitts: release the tray while supporting the loaf; pastry tray: rests on the workbench's working surface; croissants: rest on the tray on the workbench; loaf: remains supported beside the workbench)
+5. Baker lowers the loaf onto the wire cooling rack as tiny cracks open in its crust. (baker: finishes lowering the loaf onto the cooling rack near the right wall; baker's thick mitts: release the loaf onto the rack; loaf: rests on the cooling surface with its crust crackling)
+Leave the last 4 cell(s) as the empty place.
+Style: Hand-painted gouache illustration with soft brushwork, subtle paint texture, and a gently finished surface.</pre></details></section>
+<section class="card" id="G6"><div class="h"><span class="id">G6</span><h3>Grid checks</h3><span class="chip k-VISION">VISION</span><span class="mini">gpt-6.1-sol</span></div><p class="mini">Layout drawn; same room and camera per cell; occupied cells.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>This image should be a storyboard grid of ${rows} rows × ${cols} columns of equal cells with no gutters, borders, numbers or text.
+rows, cols: how many rows and columns of panels you see. equal_cells: all cells the same size and aligned. gutters_or_text: visible
+gaps, borders, numbers or captions between or on the cells. note: short.
+
+—
+
+Image 1 is an empty place (the plate). Images 2 to ${cellFiles.length + 1} are cells of a storyboard that must show this same place
+from the same fixed camera. For each cell (numbered 1 to ${cellFiles.length} in order): same_room: the same walls, furniture and layout as image 1
+(people and small objects may differ); same_camera: the same wide framing and angle (not a close-up, not another angle). note: short.
+
+—
+
+</pre></details>
+</section>
+<section class="card" id="G7"><div class="h"><span class="id">G7</span><h3>Cell check</h3><span class="chip k-VISION">VISION</span><span class="mini">gpt-6.1-sol, low</span></div><p class="mini">Counts per tracked element; impossible?</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>`One frame of a story. counts: how many times each appears (0 if not visible):\n${ids.map((id) =&gt; `</pre></details>
+</section>
+<section class="card" id="V1"><div class="h"><span class="id">V1</span><h3>Clip (video)</h3><span class="chip k-VIDEO">VIDEO</span><span class="mini">wan-3.0, 720p, audio on</span></div><p class="mini">Start frame → end frame, 5 s, sound from the screenplay.</p>
+<details open><summary>Instruction template (from the source; <code>${…}</code> are filled in by code)</summary><pre>`Image 1 is the first frame and image 2 the last frame of one continuous shot; the camera does not move. ${p.action || &quot;&quot;} ${(p.changes || []).map((c) =&gt; c.now).join(&quot;; &quot;)}. Natural motion only; nothing appears that is not in the frames. Sound: ${scene.ambience || &quot;room tone&quot;}${sfx ? `</pre></details>
+<details><summary>Exactly as sent in run custom-bakery1</summary><pre>Image 1 is the first frame and image 2 the last frame of one continuous shot; the camera does not move. Baker pulls the oven door down toward us as steam rolls out of the opening. pulls down the oven door; grip the lowered oven door's handle. Natural motion only; nothing appears that is not in the frames. Sound: Low oven hum and faint birdsong outside.; creak and click of the oven door opening, brief hiss of escaping steam; no voices; no music.</pre></details></section>
+</main>

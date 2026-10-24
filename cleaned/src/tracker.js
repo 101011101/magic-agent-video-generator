@@ -1,0 +1,34 @@
+// S3 Tracker (state manager): one row per frame: its place and the asset ids requested for it. Plain code, no model. An asset's
+// latest context is the latest row that contains its id; a place's latest state is its latest row. The pixels carry the rest.
+import { writeFileSync } from "node:fs";
+
+export class Tracker {
+  constructor(run) { this.run = run; this.roots = {}; this.frames = []; }
+  save() { if (!this.run.estimate) writeFileSync(this.run.path("tracker.json"), JSON.stringify({ roots: this.roots, frames: this.frames }, null, 2)); }
+  get(id) { return this.frames.find((f) => f.id === id) || null; }
+  // The latest accepted frame before slide n that shows this entity (any place): its look as the story last left it.
+  // An environment is an element too: a row "contains" its environment, so the latest frame of a place is lastSeen(place).
+  lastSeen(id, n) { return this.frames.filter((f) => f.accepted && (f.slide ?? 0) < n && (f.present.includes(id) || f.location === id)).at(-1) || null; }
+  bySlide(n) { return this.frames.find((f) => f.slide === n) || null; }
+
+  // A plate's row holds the place's initial contents (props that were always there), painted into it.
+  addPlate(location, file, present = []) {
+    if (!this.frames.some((f) => f.op === "plate" && f.location === location))
+      this.frames.push({ id: `plate-${location}`, file, slide: null, location, present: [...present], base: null, refs: [], op: "plate", hops: 0, accepted: true });
+  }
+  add(rec) {
+    const f = { id: `s${rec.slide}`, ...rec };
+    this.frames = this.frames.filter((x) => x.id !== f.id).concat(f);
+    this.save();
+    return f;
+  }
+
+  // Base for a slide: the previous slide's frame when it continues; else the LATEST accepted frame at the location, because it
+  // carries the latest state of the place (an older frame with more wanted entities would lose later changes; entities are
+  // cheap to add from their roots, a lost change is not). The plate is the floor (present = [], hops = 0).
+  baseFor(slide) {
+    if (slide.continues) { const prev = this.bySlide(slide.n - 1); if (prev) return { frame: prev, why: `continues slide ${slide.n - 1}` }; }
+    const frame = this.lastSeen(slide.location, slide.n);   // same lookup as any element
+    return { frame, why: frame ? (frame.op === "plate" ? `plate of ${slide.location} (first visit)` : `latest frame at ${slide.location} (${frame.id})`) : "no frame or plate for this location" };
+  }
+}

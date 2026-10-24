@@ -1,0 +1,141 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Two fixes: seam gate and retry stop rule</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--card:#fbf7ef;--ok:#4f7a3a;--bad:#a0402d}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1813;--ink:#efe4d2;--soft:#b39b80;--line:#4a3d30;--card:#28211a;--ok:#8fbf6f;--bad:#e07a62}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,serif}main{max-width:1280px;margin:0 auto;padding:32px 16px 80px}
+h1,h2,h3{font-weight:normal}h2{font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}.soft{color:var(--soft)}a{color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+.col{background:var(--card);border:1px solid var(--line);padding:14px}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{font-weight:normal;color:var(--soft)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}ul{margin:6px 0;padding-left:18px}
+code{font:13px/1.45 ui-monospace,Menlo,monospace;background:var(--card);border:1px solid var(--line);padding:1px 4px}
+.wrap{overflow-x:auto}.num{text-align:right;font-variant-numeric:tabular-nums}
+.note{border-left:3px solid var(--bad);padding:2px 0 2px 12px;margin:14px 0}
+.good{border-left:3px solid var(--ok);padding:2px 0 2px 12px;margin:14px 0}</style></head><body><main>
+
+<h1>Two fixes · the seam gate (A) and the retry stop rule (B)</h1>
+<p class="soft">Both were picked as the cheap, high-signal items out of the architecture review. One fix per settled pipeline: the seam gate in <code>pipeline-state-graph</code> (A), the keyframe retry stop rule in <code>pipeline-memory</code> (B). Both were implemented and calibrated <b>entirely offline against the recorded runs</b> &mdash; zero API calls, zero credits, nothing committed. 5 files changed, +174/&minus;24.</p>
+
+<div class="note"><b>Read this first.</b> The original diagnosis of the seam gate was wrong, and so was the brief written from it. The broken term was not <code>S</code>; it was <code>L</code>. Details in the first section. The honest version of each fix, including what is still unverified, is at the bottom of each half.</div>
+
+<h2>A &middot; the seam gate</h2>
+<p><code>current/prod/pipeline-state-graph/src/clips.js</code>, plus its readers in <code>src/page.js</code> and <code>run.mjs</code>.</p>
+
+<h3>What was actually wrong</h3>
+<p>The old gate was one opaque boolean ANDing three terms: <code>V</code> in band, <code>S/med &ge; 0.6</code>, <code>L &lt; 1.0</code>. Every continuous join in every run reported <code>pass: false</code>. Three separate defects, only one of which had been identified up front:</p>
+<ol>
+<li><b>Unsatisfiable <code>L</code> threshold.</b> <code>L &lt; 1.0</code> was never met by any join in any run &mdash; the measured floor is <b>1.26</b>. This single term vetoed all 7 continuous joins on its own, and is the whole reason <code>pass</code> was always false. The luma-offset fix in <code>seamFix</code> does work (L falls to 0.21&ndash;0.60&times; its raw value); the threshold was an aspiration written into the file header, never a measurement. <span class="soft">Not in the original diagnosis.</span></li>
+<li><b><code>S</code> had no upper bound.</b> It tested <code>S &ge; 0.6</code> only, so v1's <code>S = 16.631</code> and v2's <code>S = 2.852</code> &mdash; the two loudest failures in the dataset &mdash; <i>passed</i> the S check. The gate was structurally blind to jolts. <span class="soft">Not in the original diagnosis.</span></li>
+<li><b><code>seam_ssim</code> was recorded and never used.</b> It is the term that actually separates good joins (0.992&ndash;0.995) from bad (0.956 / 0.809 / 0.434). Its absence is exactly why the comparison page had to read SSIM by hand and concluded the seams were fine while the gate said they all failed.</li>
+</ol>
+<div class="note"><b>Correction to the review.</b> The review claimed the gate "fails a perfect seam" at <code>S = 0</code>. It does not. <code>S = 0</code> with <code>jump = 0</code> means the handoff frame is byte-identical across the join &mdash; the duplicate frame the comparison page lists as still unfixed. The gate was detecting a real defect there; the fix is to <i>name</i> it, not to loosen it.</div>
+
+<h3>What changed</h3>
+<ul>
+<li><code>SEAM</code> &mdash; the seven thresholds as one exported table, each with the measurement behind it as an inline comment.</li>
+<li><code>seamVerdict({link,S,V,L,seam_ssim})</code> &rarr; <code>{pass, faults, soft, terms}</code>. Continuous and cut joins are judged on <b>opposite</b> rules. Hard faults (handoff lost, duplicate, jolt, failed cut) set <code>pass:false</code>; V/L drift goes to <code>soft</code> and leaves <code>pass</code> true, because clean joins already span most of that range.</li>
+<li><code>headFit(prev, file, K=6)</code> &mdash; new. Per-frame grey 160&times;90 mean-abs-diff between the previous clip's last frame and frame <i>k</i> of this one. Deliberately separate from <code>analyze()</code>, whose results land in <code>run.json</code> and must not carry pixel buffers.</li>
+<li><code>seamFix(an, {fit, dup, tie})</code> &mdash; now drops a duplicated handoff frame, porting pipeline B's measured <code>trimPlan</code> rule. <code>fit</code> is optional; without it the behaviour is byte-identical to before.</li>
+<li>Cuts are judged instead of returning <code>null</code> &mdash; a cut whose two shots still look alike (<code>seam_ssim &ge; 0.5</code>) did not cut. 5 of 8 joins per run were previously unjudged.</li>
+<li><code>page.js</code> renders per-term faults; cell highlighting now reads <code>terms</code> rather than three hardcoded numbers.</li>
+</ul>
+
+<h3>Calibration &mdash; new verdict vs. the human read</h3>
+<div class="wrap"><table>
+<tr><th>run</th><th>join</th><th>link</th><th class="num">ssim</th><th class="num">S</th><th class="num">V</th><th class="num">L</th><th>old</th><th>new</th><th>human read</th></tr>
+<tr><td>v1</td><td>b1&rarr;b2</td><td>cont</td><td class="num">0.809</td><td class="num">16.631</td><td class="num">2.759</td><td class="num">5.528</td><td class="bad">fail</td><td class="bad">FAIL handoff lost + jolt</td><td>broken <span class="ok">&check;</span></td></tr>
+<tr><td>v2</td><td>b1&rarr;b2</td><td>cont</td><td class="num">0.956</td><td class="num">2.852</td><td class="num">1.549</td><td class="num">2.695</td><td class="bad">fail</td><td class="bad">FAIL handoff lost + jolt</td><td>broken <span class="ok">&check;</span></td></tr>
+<tr><td>v2</td><td>b5&rarr;b6</td><td>cont</td><td class="num">0.992</td><td class="num">0.599</td><td class="num">1.515</td><td class="num">2.577</td><td class="bad">fail</td><td class="bad">FAIL stall</td><td class="soft">&mdash;</td></tr>
+<tr><td>v2</td><td>b8&rarr;b9</td><td>cont</td><td class="num">0.434</td><td class="num">0.865</td><td class="num">0.842</td><td class="num">2.689</td><td class="bad">fail</td><td class="bad">FAIL handoff lost</td><td>broken <span class="ok">&check;</span></td></tr>
+<tr><td>v3</td><td>b1&rarr;b2</td><td>cont</td><td class="num">0.995</td><td class="num">0</td><td class="num">0.993</td><td class="num">2.545</td><td class="bad">fail</td><td class="bad">FAIL duplicate</td><td>duplicate <span class="ok">&check;</span></td></tr>
+<tr><td>v3</td><td>b5&rarr;b6</td><td>cont</td><td class="num">0.992</td><td class="num">0.939</td><td class="num">0.645</td><td class="num">2.360</td><td class="bad">fail</td><td class="ok">pass</td><td>clean <span class="ok">&check;</span></td></tr>
+<tr><td>v3</td><td>b8&rarr;b9</td><td>cont</td><td class="num">0.995</td><td class="num">0.198</td><td class="num">1.61</td><td class="num">1.260</td><td class="bad">fail</td><td class="bad">FAIL duplicate</td><td>duplicate <span class="ok">&check;</span></td></tr>
+<tr><td>v2/v3</td><td>10 cuts</td><td>cut</td><td class="num">.21&ndash;.37</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="num">&mdash;</td><td class="soft">null</td><td class="ok">pass &times;10</td><td class="soft">&mdash;</td></tr>
+</table></div>
+<div class="good"><b>6/6 agreement</b> with the human read recorded in <a href="../compare/index.html">compare/index.html</a>. v3 now reads as one clean seam plus two duplicates &mdash; exactly "all three continuous seams SSIM 0.992&ndash;0.995" <i>and</i> "a duplicate frame still sits at two continuous joins", which the old gate could not express at all.</div>
+
+<h3>Thresholds and their evidence</h3>
+<div class="wrap"><table>
+<tr><th>threshold</th><th>value</th><th>evidence on disk</th></tr>
+<tr><td>handoff</td><td class="num">0.98</td><td>joins that truly start from the handoff frame measure 0.992&ndash;0.995; edited starts drop to 0.956 / 0.809 / 0.434</td></tr>
+<tr><td>dup</td><td class="num">0.25</td><td>v3's two duplicates measure S = 0 (byte-identical) and S = 0.198; next value up is 0.599 &mdash; a wide gap</td></tr>
+<tr><td>stall</td><td class="num">0.6</td><td>clean joins sit 0.6&ndash;0.94</td></tr>
+<tr><td>jolt</td><td class="num">2.0</td><td>the two visible jolts measure 2.85 and 16.63</td></tr>
+<tr><td>V</td><td class="num">[0.6, 1.7]</td><td>clean joins measure 0.645&ndash;1.61</td></tr>
+<tr><td>L</td><td class="num">3.0</td><td>clean 1.26&ndash;2.70 (the old 1.0 was below the global floor)</td></tr>
+<tr><td>cut</td><td class="num">0.5</td><td>above every recorded cut (max 0.371), below the continuous floor (0.434)</td></tr>
+</table></div>
+
+<h3>Limits &mdash; what is <i>not</i> verified</h3>
+<ul>
+<li><b><code>seamFix</code>'s duplicate detection has never touched real pixels.</b> <code>ffmpeg</code> and <code>ffprobe</code> are not installed on this machine, and all run media is gitignored and absent (0 mp4, 0 png on disk). The logic was verified with injected <code>fit</code> arrays, 6/6. The <code>dup 0.25</code> and <code>tie 1.1</code> constants are inherited from pipeline B's measured <code>trimPlan</code>, not re-derived for A's 160&times;90 units. The first real run should check the new per-join <code>duplicate_fix</code> record and confirm <code>drop</code> lands where expected.</li>
+<li><b>The cut criterion is calibrated but unexercised.</b> No recorded A cut fails it; the "shots barely move" failure was observed in B. Confirmed to fire synthetically at <code>ssim &ge; 0.5</code>.</li>
+<li>The calibration table itself is solid: it comes from the <code>measures.joins</code> values recorded in each <code>run.json</code>, which are tracked and on disk.</li>
+</ul>
+
+<h2>B &middot; the keyframe retry stop rule</h2>
+<p><code>current/prod/pipeline-memory/src/keyframes.js</code>, plus <code>src/page.js</code>.</p>
+
+<h3>What was actually wrong</h3>
+<p>The gate fired a 200-credit retry whenever <code>corrections()</code> returned anything at all, including fault classes a re-prompt cannot move. Two recorded retries came back strictly worse and were discarded (<code>frame:06: retry worse (1.5 &lt; 3)</code>, <code>frame:02: retry worse (7 &lt; 8)</code>). But the replay found the more important defect:</p>
+<div class="note"><b>The defect was not over-eager retrying &mdash; it was <i>blind</i> retrying.</b> In 6 of the 7 no-help cases, the faulted entity's own anchor was not among the inputs. The gate re-prompted without ever showing the model the reference image that defines the thing it got wrong. Pure stop-rule tuning can only recover ~200 credits on this record; re-sourcing is where the value is.</div>
+
+<h3>What changed</h3>
+<ul>
+<li><code>faults(plan, entry, names)</code> &mdash; classifies each unstable entity as <code>missing</code> / <code>duplicate</code> / <code>size</code> / <code>look</code> / <code>state</code>, split into <b>REF</b> (<code>size</code>, <code>look</code> &mdash; the fault names what the thing <i>is</i>, so it comes from a reference) and <b>TEXT</b> (names what the frame <i>does</i>, so a prompt can move it).</li>
+<li><code>retryPlan(...)</code> &mdash; the stop rule, evaluated <b>before</b> any spend. Artifacts only &rarr; never retry. REF fault whose entity has an anchor not already an input &rarr; retry <b>with that anchor added</b>, mirroring A's v3 re-source fix. TEXT fault &rarr; retry. REF fault with every reference already shown, whose entity+class already <i>failed</i> a retry this run &rarr; stop.</li>
+<li><code>better(a1, a2, names)</code> &mdash; replaces <code>stableCount &minus; 0.5&middot;artifacts</code>. Compares per-entity transitions (<code>fixed</code> vs <code>broke</code>), counts a new image flaw as a regression, keeps attempt 2 only when <code>fixed &gt; broke</code>. Ties keep attempt 1 explicitly &mdash; it is already drawn and observed, nothing in the record prefers the later draw, and it makes replay deterministic. (The old code silently kept attempt 2 on a tie.)</li>
+<li>The retry now goes through <code>run.job</code> with the augmented input list, so the cache signature changes when a reference is added.</li>
+<li><code>run.log.keyframes[id].gate</code> records fault classes, artifacts, retry/no-retry, why, what was re-sourced and the comparison &mdash; auditable the way A records <code>forced</code>. Surfaced on the run page.</li>
+</ul>
+
+<h3>Replay over all four recorded runs</h3>
+<div class="wrap"><table>
+<tr><th>run</th><th>shot</th><th>faults</th><th>old</th><th>new</th><th>actual outcome</th></tr>
+<tr><td>lighthouse-v1</td><td>01</td><td>Shell:size</td><td>retry</td><td>retry + resource(Shell)</td><td class="soft">no help</td></tr>
+<tr><td>lighthouse-v1</td><td>03</td><td>Shell:size*</td><td>retry</td><td>retry + resource(Shell)</td><td class="ok">HELPED</td></tr>
+<tr><td>lighthouse-v1</td><td>04</td><td>Shell:size Lamp:look*</td><td>retry</td><td>retry + resource(Shell)</td><td class="ok">HELPED</td></tr>
+<tr><td>lighthouse-v1</td><td>05</td><td class="soft">&mdash;</td><td>skip</td><td>SKIP</td><td class="soft">not retried</td></tr>
+<tr><td>lighthouse-v1</td><td>06</td><td>Lamp:look*</td><td>retry</td><td>retry</td><td class="ok">HELPED</td></tr>
+<tr><td>lighthouse-v1</td><td>08</td><td>Shell:size</td><td>retry</td><td>retry + resource(Shell)</td><td class="soft">no help</td></tr>
+<tr><td>lighthouse-v2</td><td>01</td><td>Shell:size</td><td>retry</td><td>retry + resource(Shell)</td><td class="soft">not retried (cached)</td></tr>
+<tr><td>lighthouse-v2</td><td>02</td><td>Shell:size</td><td>retry</td><td>retry + resource(Shell)</td><td class="bad">no help &mdash; logged "worse"</td></tr>
+<tr><td>lighthouse-v2</td><td>03</td><td>Shell:size Lamp:look</td><td>retry</td><td>retry + resource(Shell)</td><td class="soft">attempt 2 not observed</td></tr>
+<tr><td>lighthouse-v2</td><td>05</td><td class="soft">&mdash;</td><td>skip</td><td>SKIP</td><td class="soft">not retried</td></tr>
+<tr><td>desert-tokyo</td><td>01</td><td>Wheel:missing Stop:missing</td><td>retry</td><td>retry</td><td class="soft">not retried (cached)</td></tr>
+<tr><td>desert-tokyo</td><td>03</td><td>Coupe:look Pedestrians:duplicate</td><td>retry</td><td>retry</td><td class="soft">no help</td></tr>
+<tr><td>desert-tokyo</td><td>04</td><td>Coupe:look Stop:missing</td><td>retry</td><td>retry</td><td class="soft">no help</td></tr>
+<tr><td>desert-tokyo</td><td>06</td><td>Coupe:look</td><td>retry</td><td class="ok"><b>SKIP</b></td><td class="bad">no help &mdash; logged "worse"</td></tr>
+</table></div>
+<p class="soft">* attempt 1's bank record was dropped when its retry won, so the fault class is inferred from the same entity's other records in that run. Stated as an inference, not a measurement.</p>
+
+<h3>Credits saved vs. help lost</h3>
+<div class="two">
+<div class="col"><h3 class="ok">Saved</h3><ul>
+<li><b>200 credits, 0 fixes lost.</b> One skip (desert-tokyo/06) &mdash; and it is one of the two logged "retry worse" cases.</li>
+<li>Both logged wastes are addressed: desert-tokyo/06 is skipped; lighthouse-v2/02 is re-sourced instead of repeated blind.</li>
+</ul></div>
+<div class="col"><h3>Changed, not yet quantified</h3><ul>
+<li><b>3 of 5 previously-blind retries now carry the missing reference.</b> 1,000 credits that were being spent on a re-prompt that could not work are now spent with the anchor attached.</li>
+<li>That is an expected-value change, <b>not a saving</b>, and it cannot be quantified without a paid run.</li>
+</ul></div>
+</div>
+
+<h3>The one judgement call</h3>
+<p>The third clause. <b>"Already retried this run"</b> is a wash &mdash; it saves desert-tokyo/06 but throws away lighthouse-v1/06, which genuinely fixed Lamp. <b>"Already <i>failed</i> a retry this run"</b> separates them: Lamp:look was retried at shot 04 and <i>succeeded</i>, so shot 06 is still allowed; Coupe:look was retried at 03 and failed, so 06 stops. Chose the second, which is also closer to what A's <code>controller.js:198</code> already tests &mdash; fault class <i>persisting</i>, not merely attempted.</p>
+
+<h3>Limits and corrections</h3>
+<ul>
+<li><b>"Size faults are never prompt-fixable" was too strong</b> &mdash; that premise came from the brief and the replay contradicts it. Shell:size retries went 2/5 and Lamp:look 2/4: poor base rates, not zero. A flat ban on REF classes would have cost 3 real fixes, which is why the rule re-sources instead of refusing. The only class that is 0-for-3 is <b>artifacts</b> (<code>Visible storefront text and logos</code> came back verbatim every time), so that is the sole unconditional refusal.</li>
+<li><b>Pre-existing bug, inherited not fixed:</b> <code>corrections()</code> treats <code>count &gt; 1</code> as a duplicate for every entity, so the plural <code>Pedestrians</code> entity with <code>count: 3</code> is flagged "drawn 3 times; it must appear once". The new classifier inherits it, but only in the permissive direction (<code>duplicate</code> &rarr; TEXT &rarr; retry), so it never causes a wrong skip.</li>
+<li><b>Fixed in passing:</b> <code>page.js</code> printed <code>undefined</code> for unstable entities &mdash; <code>c.unstable.map(u =&gt; u.name)</code> over an array of plain name strings.</li>
+</ul>
+
+<h2>Status</h2>
+<ul>
+<li>5 files changed, +174/&minus;24, all five parse clean under <code>node --check</code>. Nothing committed, nothing pushed &mdash; the changes sit in the working tree on <code>docs/readme-tree-and-vision</code>.</li>
+<li><b>Neither pipeline can be run on this machine</b> until <code>ffmpeg</code> is installed; both depend on it for every clip operation. That, not the fixes, is the blocker on confirming A's duplicate drop against real pixels.</li>
+<li>Next paid run should be a cheap probe (<code>--beats 2</code> on A, <code>--scenes 1</code> on B) to exercise <code>duplicate_fix</code> and the <code>gate</code> record, not a full 9-clip run at ~8,000 credits.</li>
+</ul>
+
+<p class="soft"><a href="../compare/index.html">&larr; Pipeline A vs B</a></p>
+</main></body></html>

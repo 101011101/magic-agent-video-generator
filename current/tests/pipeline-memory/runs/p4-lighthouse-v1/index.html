@@ -1,0 +1,884 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pipeline Memory Run</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--ok:#4f7a3a;--bad:#a0402d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1100px;margin:0 auto;padding:40px 16px 80px}h1{font-weight:normal;font-size:30px}h2{font-weight:normal;font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}h3{font-weight:normal;color:var(--soft);font-size:16px;margin:22px 0 6px}.soft{color:var(--soft)}.ok{color:var(--ok)}.bad{color:var(--bad)}.lab{font-variant:small-caps;color:var(--soft);margin:6px 0 0}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}img,video{width:100%;display:block;border:1px solid var(--line)}.refs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:12px}figure{margin:0}figcaption{font-size:13px;color:var(--soft)}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;font-weight:normal;vertical-align:top}tr.soft td{color:var(--soft)}pre{white-space:pre-wrap;font-size:12px}.scroll{overflow-x:auto;margin:12px 0}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}.card{flex:0 0 220px;background:#fbf7ef;border:1px solid var(--line);border-top:4px solid var(--ok);padding:8px;font-size:13px}.card.unst{border-top-color:var(--bad)}.card.ver{border-top-color:var(--soft)}.card.cur{border-top-color:var(--ink)}.card img{margin-bottom:6px}
+.ins{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.in{flex:0 0 120px}.ph{height:68px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--soft);text-align:center;padding:4px}td.res{width:200px}
+.tl{position:relative;height:80px;background:#fbf7ef;border:1px solid var(--line);margin:10px 0 4px;overflow:hidden}.tick{position:absolute;top:0;bottom:0;border-left:1px solid var(--line);font-size:11px;color:var(--soft);padding-left:3px}.cue{position:absolute;height:12px;border-radius:2px;opacity:.85}.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 8px}
+@media(max-width:760px){.two{grid-template-columns:1fr}td.res{width:120px}.in{flex-basis:96px}}</style></head><body><main>
+<h1>Lighthouse short film · pipeline memory</h1><p class="soft">A short film, 2 minutes. A lighthouse keeper finds a glowing shell on the beach at dawn. She brings it home. At night it hums and the lamp goes out. She climbs the tower in a storm and uses the shell to relight it. Ships are saved. Morning again, she puts the shell back on the beach. Melancholy, painterly, no dialogue, just score.</p>
+<p class="soft">Storyboard (typed entities, start/end state per shot) → anchors per entity version → cut keyframes conditioned on the memory bank and anchors, checked per entity → clips (wan-3.0) → carry check and repair at continuous joins → trim + crossfade stitch → cue-sheet audio mix → judge.</p>
+<p><b>8320 credits · 0 min · 9 clips · 6 scenes · reward 72.3 · LLM 0 calls (0 cached) · 0 in / 0 out tokens</b><br><span class="soft">style: Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.</span></p>
+<video src="final.mp4" controls playsinline></video>
+
+<h2>Judge</h2><p><b>Film 73</b> · best 09 · worst 04</p>
+    <p class="soft">coherence 14 · consistency 15 · transformations carried 11 · pacing 16 · overall quality 17</p><p>The shell’s discovery, use to rekindle the lamp, and return to the beach form a readable visual arc, supported by cohesive painterly textures and a well-staged final departure. However, the lighthouse never visibly goes dark in shot 04, the keeper appears to descend rather than climb the stairs, the ships’ escape is unclear, and the shell’s flame-like glow exceeds the intended restrained amber effect.</p>
+    <div class="scroll"><table><tr><th>Shot</th><th>action adherence</th><th>entity fidelity</th><th>scale and interaction</th><th>spatial continuity</th><th>visual quality</th><th>Total</th><th>Fault</th><th>End ok</th><th>Persist ok</th></tr><tr><td>01</td><td>19</td><td>18</td><td>9</td><td>18</td><td>19</td><td><b>83</b></td><td>keyframe</td><td><span class="ok">✓</span></td><td><span class="ok">✓</span></td></tr><tr><td>02</td><td>17</td><td>16</td><td>9</td><td>19</td><td>18</td><td><b>79</b></td><td>keyframe</td><td><span class="bad">✗</span></td><td><span class="ok">✓</span></td></tr><tr><td>03</td><td>17</td><td>14</td><td>10</td><td>18</td><td>16</td><td><b>75</b></td><td>video</td><td><span class="ok">✓</span></td><td><span class="ok">✓</span></td></tr><tr><td>04</td><td>7</td><td>17</td><td>12</td><td>18</td><td>18</td><td><b>72</b></td><td>video</td><td><span class="bad">✗</span></td><td><span class="bad">✗</span></td></tr><tr><td>05</td><td>4</td><td>16</td><td>14</td><td>12</td><td>18</td><td><b>64</b></td><td>video</td><td><span class="bad">✗</span></td><td><span class="ok">✓</span></td></tr><tr><td>06</td><td>9</td><td>14</td><td>13</td><td>17</td><td>15</td><td><b>68</b></td><td>video</td><td><span class="bad">✗</span></td><td><span class="ok">✓</span></td></tr><tr><td>07</td><td>9</td><td>13</td><td>12</td><td>11</td><td>16</td><td><b>61</b></td><td>keyframe</td><td><span class="bad">✗</span></td><td><span class="bad">✗</span></td></tr><tr><td>08</td><td>12</td><td>15</td><td>10</td><td>19</td><td>18</td><td><b>74</b></td><td>video</td><td><span class="bad">✗</span></td><td><span class="bad">✗</span></td></tr><tr><td>09</td><td>12</td><td>16</td><td>11</td><td>14</td><td>18</td><td><b>71</b></td><td>keyframe</td><td><span class="bad">✗</span></td><td><span class="ok">✓</span></td></tr></table></div>
+    <div class="scroll"><table><tr><th>Join</th><th>Link</th><th>Flags</th><th>Notes</th></tr><tr><td>01 → 02</td><td>continuous</td><td>same place <span class="ok">✓</span><br>same framing <span class="ok">✓</span><br>same state <span class="ok">✓</span><br>motion continues <span class="ok">✓</span><br>jump visible <span class="bad">✗</span></td><td></td></tr><tr><td>02 → 03</td><td>cut</td><td>world consistent <span class="ok">✓</span><br>state carried <span class="ok">✓</span><br>size consistent <span class="bad">✗</span></td><td>Shell is oversized in the beach frame and noticeably smaller in the interior frame, rather than consistently 5 cm across.</td></tr><tr><td>03 → 04</td><td>cut</td><td>world consistent <span class="ok">✓</span><br>state carried <span class="ok">✓</span><br>size consistent <span class="bad">✗</span></td><td>The shell is oversized relative to the Keeper’s hands and cup in both frames, rather than the specified 5 cm across.</td></tr><tr><td>04 → 05</td><td>cut</td><td>world consistent <span class="ok">✓</span><br>state carried <span class="bad">✗</span><br>size consistent <span class="ok">✓</span></td><td>Shot 04 visibly shows the lighthouse lamp still lit, contradicting its required persisted extinguished state.</td></tr><tr><td>05 → 06</td><td>cut</td><td>world consistent <span class="ok">✓</span><br>state carried <span class="ok">✓</span><br>size consistent <span class="ok">✓</span></td><td></td></tr><tr><td>06 → 07</td><td>continuous</td><td>same place <span class="ok">✓</span><br>same framing <span class="ok">✓</span><br>same state <span class="ok">✓</span><br>motion continues <span class="ok">✓</span><br>jump visible <span class="bad">✗</span></td><td></td></tr><tr><td>07 → 08</td><td>cut</td><td>world consistent <span class="ok">✓</span><br>state carried <span class="ok">✓</span><br>size consistent <span class="ok">✓</span></td><td></td></tr><tr><td>08 → 09</td><td>continuous</td><td>same place <span class="ok">✓</span><br>same framing <span class="ok">✓</span><br>same state <span class="ok">✓</span><br>motion continues <span class="ok">✓</span><br>jump visible <span class="bad">✗</span></td><td></td></tr></table></div><h2>Seams</h2><p class="soft">Before = hard concat of the raw clips. After = trimmed and crossfaded (0 frames) at continuous joins. Median jump at continuous joins: before 2.33 · after 1.02. Higher similarity, lower jump and dip = smoother.</p>
+    <div class="scroll"><table><tr><th>Join</th><th>Link</th><th>Seam similarity<br>before → after</th><th>Jump<br>before → after</th><th>Dip<br>before → after</th><th>Hold / settle frames</th><th>Duplicate</th><th>Trim head / tail</th></tr><tr class=""><td>01 → 02</td><td>continuous</td><td>0.997 → 0.997</td><td>2.33 → 1.02</td><td>0.43 → 0.4</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>1 / 0</td></tr><tr class="soft"><td>02 → 03</td><td>cut</td><td>0.215 → 0.215</td><td>74.77 → 74.77</td><td>0.05 → 0.05</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>0 / 0</td></tr><tr class="soft"><td>03 → 04</td><td>cut</td><td>0.315 → 0.315</td><td>44.05 → 44.05</td><td>0.12 → 0.12</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>0 / 0</td></tr><tr class="soft"><td>04 → 05</td><td>cut</td><td>0.322 → 0.322</td><td>31.85 → 31.85</td><td>0.14 → 0.14</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>0 / 0</td></tr><tr class="soft"><td>05 → 06</td><td>cut</td><td>0.263 → 0.263</td><td>36.63 → 36.63</td><td>0.17 → 0.17</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>0 / 0</td></tr><tr class=""><td>06 → 07</td><td>continuous</td><td>0.995 → 0.988</td><td>2.21 → 1.58</td><td>0.27 → 0.27</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>4 / 0</td></tr><tr class="soft"><td>07 → 08</td><td>cut</td><td>0.175 → 0.175</td><td>78.39 → 78.4</td><td>0.22 → 0.22</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>0 / 0</td></tr><tr class=""><td>08 → 09</td><td>continuous</td><td>0.997 → 0.998</td><td>2.35 → 0.83</td><td>0.44 → 0.26</td><td>0 / 0</td><td><span class="bad">✗</span></td><td>1 / 0</td></tr></table></div><h2>Anchors</h2><div class="refs"><figure><img src="refs/Keeper.png" loading="lazy"><figcaption><b>Keeper</b> (character) character sheet</figcaption></figure><figure><img src="refs/Beach.png" loading="lazy"><figcaption><b>Beach</b> (location) location plate with Reef drawn in</figcaption></figure><figure><img src="refs/Cottage.png" loading="lazy"><figcaption><b>Cottage</b> (location) location plate with Table drawn in</figcaption></figure><figure><figcaption><b>Cup</b> (context) context anchor: in Cottage for scale</figcaption></figure><figure><figcaption><b>Meal</b> (context) context anchor: in Cottage for scale</figcaption></figure><figure><img src="refs/TowerStairs.png" loading="lazy"><figcaption><b>TowerStairs</b> (location) location plate with Railing drawn in</figcaption></figure><figure><img src="refs/LanternRoom.png" loading="lazy"><figcaption><b>LanternRoom</b> (location) location plate with Lamp drawn in</figcaption></figure><figure><img src="refs/Ships.png" loading="lazy"><figcaption><b>Ships</b> (context) context anchor: in Cottage for scale</figcaption></figure><figure><img src="refs/Shell.png" loading="lazy"><figcaption><b>Shell</b> (scale-hand) scale anchor: in Keeper's palm</figcaption></figure><figure><figcaption><b>Spoon</b> (scale-hand) scale anchor: in Keeper's palm</figcaption></figure><figure><img src="refs/Ships-v2.png" loading="lazy"><figcaption><b>Ships-v2</b> (context) version 2: same Ships, now course = away from Reef, condition = safe</figcaption></figure><figure><img src="refs/Shell-v2.png" loading="lazy"><figcaption><b>Shell-v2</b> (scale-hand) version 2: same Shell, now condition = faint amber glow</figcaption></figure></div><h2>Scene 1 · Beach</h2><div class="shot"><h3>01 · cut · 5s · chunks 1, 2, 3</h3><div class="two">
+      <div><img src="01-start.png" loading="lazy"><p class="lab">Start frame (keyframe)</p><details><summary>first attempt</summary><img src="01-start-a1.png" loading="lazy"></details><div class="ins"><figure class="in"><img src="refs/Beach.png" loading="lazy"><figcaption><b>base</b> k28</figcaption></figure><figure class="in"><img src="refs/Shell.png" loading="lazy"><figcaption><b>extra</b> k2: Keeper<br><span class="soft">last stable Keeper (shot anchor, anchor)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure><figure class="in"><img src="refs/Shell.png" loading="lazy"><figcaption><b>anchor</b> Shell<br><span class="soft">scale and look of Shell: no earlier stable frame</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></div>
+      <div><video src="01.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper kneels beside Shell and lowers her open hand toward its amber glow. <span class="soft">Static camera. · in: still</span></p>
+      <p class="soft">changes: Keeper.posture standing → kneeling; Keeper.hand position beside her body → hovering above Shell</p></div></div>
+      <img src="01-strip.jpg" loading="lazy">
+      <details><summary>Keyframe prompt</summary><pre>Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A low medium-wide view places Shell in the lower-right foreground among broken shells and ribbons of kelp. Keeper stands just behind it, looking down with empty hands. Reflective rock pools extend toward Lighthouse on the upper-left bluff. Pearl-grey dawn light falls across the calm shoreline.
+Image 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.
+Image 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 3 is the character sheet of Keeper: identity only (face, hair, clothing).
+Image 4 shows Shell at its true size in a hand: keep that size exactly.
+State at this frame:
+Keeper (character, 1.65 m tall, an average-height adult woman): right mid-ground, standing beside Shell at the waterline; standing, empty hands, looking down.
+Shell (prop, 5 cm across, fits comfortably in Keeper's palm): lower-right foreground beside Keeper's boots; on Beach sand; soft amber glow.
+Real sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.
+Time and light: dawn, diffuse pearl-grey light.</pre></details>
+      <details><summary>Clip prompt</summary><pre>Keeper kneels beside Shell and lowers her open hand toward its amber glow. Static camera. Sound: gentle surf along the rocks; coat fabric folds as Keeper kneels at 2s. No music, no speech.</pre></details>
+      <p class="lab">Checks</p><p>attempt 1: <span class="ok">✓ 1</span> · <span class="bad">✗  ()</span></p><p>attempt 2: <span class="ok">✓ 1</span> · <span class="bad">✗  ()</span></p>
+      
+      <p class="lab">Judge</p><p><b>83</b> · action adherence 19 · entity fidelity 18 · scale and interaction 9 · spatial continuity 18 · visual quality 19 · fault: keyframe</p><ul><li>Shell is substantially larger than the specified 5 cm, already in the planned start frame and still oversized beside Keeper's hand.</li><li>Slight camera reframing occurs despite Keeper's movement being the only planned motion.</li></ul></div><div class="shot"><h3>02 · continuous · 5s · chunks 4, 5</h3><div class="two">
+      <div><img src="01-last.png" loading="lazy"><p class="lab">Start frame = last frame of 01</p></div>
+      <div><video src="02.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper lifts Shell into her palm, gently turns it, then holds it still. <span class="soft">Static camera. · in: hand already lowering toward Shell</span></p>
+      <p class="soft">changes: Keeper.holding none → Shell; Keeper.hand position hovering above sand → palm raised near chest; Shell.held_by none → Keeper; Shell.placed_on Beach sand → none; Shell.orientation spiral angled toward sand → spiral facing upward</p></div></div>
+      <img src="02-strip.jpg" loading="lazy">
+      
+      <details><summary>Clip prompt</summary><pre>Already in motion: hand already lowering toward Shell. Keeper lifts Shell into her palm, gently turns it, then holds it still. Static camera. Sound: gentle surf along the rocks; faint sand grains slipping from Shell at 1s. No music, no speech.</pre></details>
+      
+      <p class="lab">Carry</p><p>needed: Keeper, Shell · <span class="ok">missing: none</span></p>
+      <p class="lab">Judge</p><p><b>79</b> · action adherence 17 · entity fidelity 16 · scale and interaction 9 · spatial continuity 19 · visual quality 18 · fault: keyframe</p><ul><li>Shell is substantially larger than 5 cm, already in the start frame; it requires two-handed support rather than fitting comfortably in one palm.</li><li>Final shell orientation exposes the opening toward the camera rather than clearly showing the spiral facing upward.</li><li>Shell glow is strong yellow-orange rather than soft, restrained amber.</li></ul></div><h2>Scene 2 · Cottage</h2><div class="shot"><h3>03 · cut · 5s · chunks 6, 7, 8</h3><div class="two">
+      <div><img src="03-start.png" loading="lazy"><p class="lab">Start frame (keyframe)</p><details><summary>first attempt</summary><img src="03-start-a1.png" loading="lazy"></details><div class="ins"><figure class="in"><img src="refs/Cottage.png" loading="lazy"><figcaption><b>base</b> k26</figcaption></figure><figure class="in"><img src="02-last.png" loading="lazy"><figcaption><b>extra</b> k6: Keeper<br><span class="soft">last stable Keeper (shot 02, last)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure><figure class="in"><img src="refs/Shell.png" loading="lazy"><figcaption><b>anchor</b> Shell<br><span class="soft">scale and look of Shell: no earlier stable frame</span></figcaption></figure>
+      <figure class="in"><div class="ph">text</div><figcaption><b>fresh</b> Cup, Meal, Spoon</figcaption></figure></div><p class="soft">rule selection</p></div>
+      <div><video src="03.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper sets Shell beside Cup and leaves her fingers resting near it. <span class="soft">Static camera. · in: still</span></p>
+      <p class="soft">changes: Keeper.holding Shell → none; Keeper.hand position above Table → resting beside Shell; Shell.held_by Keeper → none; Shell.placed_on none → Table</p></div></div>
+      <img src="03-strip.jpg" loading="lazy">
+      <details><summary>Keyframe prompt</summary><pre>Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium view across Table shows Keeper seated alone on the left, holding Shell just above the tabletop beside Cup. Meal is partly eaten, and Spoon rests beside its bowl. Faded blue walls and the tall window frame a subdued dusk interior, with Shell providing a small amber warmth.
+Image 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.
+Image 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 3 is the character sheet of Keeper: identity only (face, hair, clothing).
+Image 4 shows Shell at its true size in a hand: keep that size exactly.
+New in this shot: Cup: a ceramic cup: a cream-glazed handled cup with a chipped rim; real size: 9 cm high, approximately the length of an adult palm.
+New in this shot: Meal: a simple meal: a shallow stoneware bowl containing bread and stew; real size: 20 cm across, about two hand widths.
+New in this shot: Spoon: an eating spoon: a plain dull-silver metal spoon; real size: 18 cm long, slightly longer than an adult hand.
+State at this frame:
+Keeper (character, 1.65 m tall, an average-height adult woman): left mid-ground, seated behind Table; holding Shell; on wet sand; seated, looking at Shell.
+Shell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, centre foreground, just above Table beside Cup; soft amber glow.
+Table (prop, 1.2 m long and 75 cm high, reaching Keeper's upper thigh): across the lower half of the frame; on Cottage floor; worn, dry.
+Cup (prop, 9 cm high, approximately the length of an adult palm): centre-right foreground; on Table; upright.
+Meal (prop, 20 cm across, about two hand widths): left foreground before Keeper; on Table; partly eaten.
+Spoon (prop, 18 cm long, slightly longer than an adult hand): beside Meal; on Table; unused at this moment.
+Real sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm; Cup is 9 cm high, approximately the length of an adult palm; Meal is 20 cm across, about two hand widths; Spoon is 18 cm long, slightly longer than an adult hand. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.
+Time and light: dusk, fading blue-grey window light.</pre></details>
+      <details><summary>Clip prompt</summary><pre>Keeper sets Shell beside Cup and leaves her fingers resting near it. Static camera. Sound: quiet cottage room tone; Shell softly touches the wooden tabletop at 2s. No music, no speech.</pre></details>
+      <p class="lab">Checks</p><p>attempt 1: <span class="ok">✓ 5</span> · <span class="bad">✗  ()</span></p><p>attempt 2: <span class="ok">✓ 6</span></p>
+      
+      <p class="lab">Judge</p><p><b>75</b> · action adherence 17 · entity fidelity 14 · scale and interaction 10 · spatial continuity 18 · visual quality 16 · fault: video</p><ul><li>Shell enlarges substantially during placement, ending roughly palm-length rather than 5 cm across.</li><li>Shell morphs from a compact rounded spiral into an elongated, pointed conch.</li><li>Spoon is no longer clearly visible at the end; the enlarged shell occupies its former position.</li></ul></div><h2>Scene 3 · Cottage</h2><div class="shot"><h3>04 · cut · 5s · chunks 9, 10, 11</h3><div class="two">
+      <div><img src="04-start.png" loading="lazy"><p class="lab">Start frame (keyframe)</p><details><summary>first attempt</summary><img src="04-start-a1.png" loading="lazy"></details><div class="ins"><figure class="in"><img src="03-start.png" loading="lazy"><figcaption><b>base</b> k8</figcaption></figure><figure class="in"><img src="refs/LanternRoom.png" loading="lazy"><figcaption><b>extra</b> k27: Lamp<br><span class="soft">last stable Lamp (shot anchor, anchor)</span></figcaption></figure><figure class="in"><img src="refs/Beach.png" loading="lazy"><figcaption><b>extra</b> k28: Reef<br><span class="soft">last stable Reef (shot anchor, anchor)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure><figure class="in"><img src="refs/Ships.png" loading="lazy"><figcaption><b>anchor</b> Ships<br><span class="soft">scale and look of Ships: no earlier stable frame</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></div>
+      <div><video src="04.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Lamp goes out while Ships drift closer to Reef; Keeper turns her gaze toward Shell. <span class="soft">Static camera. · in: rain already streaming down the window; Ships already drifting</span></p>
+      <p class="soft">changes: Lamp.condition lit → extinguished; Ships.position near Reef → closer to Reef; Keeper.attention window → Shell</p></div></div>
+      <img src="04-strip.jpg" loading="lazy">
+      <details><summary>Keyframe prompt</summary><pre>Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A wide night composition shows Keeper seated at Table on the left, Shell glowing beside Cup and the abandoned Meal and Spoon. The tall window fills the right half: rain streaks its glass, Lighthouse rises along its left edge, and Lamp shines at the top. Ships' navigation lights sit close to the dark offshore Reef beneath storm clouds.
+Image 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.
+Image 2 is an earlier frame showing Lamp: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 3 is an earlier frame showing Reef: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 4 is the character sheet of Keeper: identity only (face, hair, clothing).
+Image 5 shows Ships at its true size in its place: keep its look and that size exactly.
+State at this frame:
+Keeper (character, 1.65 m tall, an average-height adult woman): left mid-ground, seated at Table; on wooden chair; empty hands, watching the window.
+Shell (prop, 5 cm across, fits comfortably in Keeper's palm): left foreground beside Cup; on Table; glowing amber, ridged spiral.
+Table (prop, 1.2 m long and 75 cm high, reaching Keeper's upper thigh): lower-left foreground; on Cottage floor; dry.
+Cup (prop, 9 cm high, approximately the length of an adult palm): beside Shell; on Table; upright, dark irregular rim.
+Meal (prop, 20 cm across, about two hand widths): before Keeper; on Table; shallow bowl with stew and bread.
+Spoon (prop, 18 cm long, slightly longer than an adult hand): in front of shell; on Table; abandoned.
+Lamp (prop, 1.2 m high and 80 cm across, with its burner at Keeper's chest height): upper centre, distant through the window in Lighthouse; on LanternRoom pedestal; lit, housing closed.
+Ships (prop, each 35–50 m long, many times a person's height; distant silhouettes from shore): right background through the window, near Reef; on sea; navigation lights on, drifting toward Reef.
+Reef (prop, 100 m long, with exposed rocks up to a person's height): right background below Ships; on seabed; dark, wave-washed.
+Real sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm; Cup is 9 cm high, approximately the length of an adult palm; Meal is 20 cm across, about two hand widths; Spoon is 18 cm long, slightly longer than an adult hand. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.
+Time and light: night, amber interior glow and storm darkness.</pre></details>
+      <details><summary>Clip prompt</summary><pre>Lamp goes out while Ships drift closer to Reef; Keeper turns her gaze toward Shell. Static camera. Sound: wind and rain against the window. No music, no speech.</pre></details>
+      <p class="lab">Checks</p><p>attempt 1: <span class="ok">✓ 7</span> · <span class="bad">✗  ();  ()</span></p><p>attempt 2: <span class="ok">✓ 9</span></p>
+      
+      <p class="lab">Judge</p><p><b>72</b> · action adherence 7 · entity fidelity 17 · scale and interaction 12 · spatial continuity 18 · visual quality 18 · fault: video</p><ul><li>Keeper reaches for and lifts bread from the meal, inventing an eating action instead of only turning her gaze.</li><li>Keeper's final attention appears directed at the bread and bowl rather than clearly at Shell.</li><li>Lamp dims but retains a visibly luminous amber centre in the last frame; full extinction is not established.</li><li>Shell appears oversized relative to the cup and Keeper's hands.</li></ul></div><h2>Scene 4 · TowerStairs</h2><div class="shot"><h3>05 · cut · 5s · chunks 12, 13</h3><div class="two">
+      <div><img src="05-start.png" loading="lazy"><p class="lab">Start frame (keyframe)</p><div class="ins"><figure class="in"><img src="refs/TowerStairs.png" loading="lazy"><figcaption><b>base</b> k25</figcaption></figure><figure class="in"><img src="04-last.png" loading="lazy"><figcaption><b>extra</b> k12: Keeper, Shell<br><span class="soft">last stable Keeper, Shell (shot 04, last)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></div>
+      <div><video src="05.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper climbs the worn steps, sliding one hand along Railing and keeping Shell pressed against her chest. <span class="soft">Static camera. · in: already climbing mid-stride</span></p>
+      <p class="soft">changes: Keeper.position lower centre stairs → upper centre stairs; Shell.position lower centre against Keeper's chest → upper centre against Keeper's chest</p></div></div>
+      <img src="05-strip.jpg" loading="lazy">
+      <details><summary>Keyframe prompt</summary><pre>Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium view looks along the spiral of TowerStairs. Keeper occupies the lower centre, Shell held against her chest in one hand and her other hand gripping Railing. Rain enters through a slit window on the right. Amber light escapes between her fingers onto wet stone and iron.
+Image 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.
+Image 2 is an earlier frame showing Keeper, Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 3 is the character sheet of Keeper: identity only (face, hair, clothing).
+State at this frame:
+Keeper (character, 1.65 m tall, an average-height adult woman): lower centre, mid-stride on TowerStairs; holding Shell; on chair; coat damp, gripping Railing.
+Shell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, against Keeper's chest; soft amber glow.
+Railing (prop, 90 cm above the steps, at Keeper's waist): curving from lower left toward upper centre; on TowerStairs steps; wet.
+Real sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.
+Time and light: stormy night, shell-lit stairwell.</pre></details>
+      <details><summary>Clip prompt</summary><pre>Keeper climbs the worn steps, sliding one hand along Railing and keeping Shell pressed against her chest. Static camera. Sound: wind through narrow windows; bootstep on wet stone at 1s, another bootstep and a hand sliding over iron at 3s. No music, no speech.</pre></details>
+      <p class="lab">Checks</p><p>attempt 1: <span class="ok">✓ 3</span></p>
+      
+      <p class="lab">Judge</p><p><b>64</b> · action adherence 4 · entity fidelity 16 · scale and interaction 14 · spatial continuity 12 · visual quality 18 · fault: video</p><ul><li>Keeper descends toward the foreground instead of climbing the stairs.</li><li>Keeper ends in the lower right, not on the upper-centre stairs.</li><li>Shell appears oversized relative to her hand, especially at the end.</li><li>Shell is predominantly saturated amber rather than ivory with fine amber ridges and a translucent chamber.</li></ul></div><h2>Scene 5 · LanternRoom</h2><div class="shot"><h3>06 · cut · 5s · chunks 14</h3><div class="two">
+      <div><img src="06-start.png" loading="lazy"><p class="lab">Start frame (keyframe)</p><details><summary>first attempt</summary><img src="06-start-a1.png" loading="lazy"></details><div class="ins"><figure class="in"><img src="refs/LanternRoom.png" loading="lazy"><figcaption><b>base</b> k27</figcaption></figure><figure class="in"><img src="05-last.png" loading="lazy"><figcaption><b>extra</b> k14: Keeper<br><span class="soft">last stable Keeper (shot 05, last)</span></figcaption></figure><figure class="in"><img src="05-start.png" loading="lazy"><figcaption><b>extra</b> k13: Shell<br><span class="soft">last stable Shell (shot 05, start)</span></figcaption></figure><figure class="in"><img src="04-last.png" loading="lazy"><figcaption><b>extra</b> k12: Ships, Reef<br><span class="soft">last stable Ships, Reef (shot 04, last)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></div>
+      <div><video src="06.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper opens Lamp's glass housing and brings Shell close to the dark burner. <span class="soft">Static camera. · in: still</span></p>
+      <p class="soft">changes: Lamp.housing closed → open; Shell.position near Keeper's chest → beside Lamp burner; Keeper.hand position free hand on closed housing → free hand holding housing open</p></div></div>
+      <img src="06-strip.jpg" loading="lazy">
+      <details><summary>Keyframe prompt</summary><pre>Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium-wide view places Keeper on the left beside the dark Lamp at centre. Shell rests in her raised hand near her chest; her free hand touches the closed glass housing. Beyond the right-hand panes, Ships' navigation lights approach Reef through driving rain. Shell casts the only warm light inside LanternRoom.
+Image 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.
+Image 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 3 is an earlier frame showing Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 4 is an earlier frame showing Ships, Reef: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 5 is the character sheet of Keeper: identity only (face, hair, clothing).
+State at this frame:
+Keeper (character, 1.65 m tall, an average-height adult woman): left mid-ground beside Lamp; holding Shell and Railing; on TowerStairs steps; standing, damp coat, free hand on housing.
+Shell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, in Keeper's hand near her chest; soft amber glow.
+Lamp (prop, 1.2 m high and 80 cm across, with its burner at Keeper's chest height): centre mid-ground; on LanternRoom pedestal; extinguished.
+Ships (prop, each 35–50 m long, many times a person's height; distant silhouettes from shore): right background through the panes; on sea; navigation lights on, approaching Reef.
+Reef (prop, 100 m long, with exposed rocks up to a person's height): centre-right background below ships; on seabed; dark jagged rocks, wave-washed.
+In force since shot 04: Lamp is extinguished.
+Real sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.
+Time and light: stormy night, dim amber shell light.</pre></details>
+      <details><summary>Clip prompt</summary><pre>Keeper opens Lamp's glass housing and brings Shell close to the dark burner. Static camera. Sound: storm wind and rain on lantern glass; glass housing hinge creaks at 1.5s. No music, no speech.</pre></details>
+      <p class="lab">Checks</p><p>attempt 1: <span class="ok">✓ 4</span> · <span class="bad">✗  ()</span></p><p>attempt 2: <span class="ok">✓ 5</span></p>
+      
+      <p class="lab">Judge</p><p><b>68</b> · action adherence 9 · entity fidelity 14 · scale and interaction 13 · spatial continuity 17 · visual quality 15 · fault: video</p><ul><li>Lamp ignites with a large flame, although the planned action only brings Shell beside the dark burner.</li><li>Keeper's free hand ends on the pedestal rim rather than holding the housing open.</li><li>Lamp's concentric optic disappears as the housing opens, substantially changing its construction.</li><li>Shell appears oversized relative to the specified 5 cm width.</li><li>Multiple flame-like shapes appear across the background panes.</li></ul></div><div class="shot"><h3>07 · continuous · 5s · chunks 15, 16, 17</h3><div class="two">
+      <div><img src="06-last.png" loading="lazy"><p class="lab">Start frame = last frame of 06</p></div>
+      <div><video src="07.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Lamp catches and sweeps light across Ships; Ships turn away from Reef while Keeper watches. <span class="soft">Static camera. · in: Shell already approaching the burner; Ships already drifting</span></p>
+      <p class="soft">changes: Lamp.condition extinguished → lit, beam sweeping; Keeper.attention burner → Ships; Keeper.face illumination dim amber spill → bright warm light; Ships.course toward Reef → toward open sea; Ships.position dangerously close to Reef → clear of Reef</p></div></div>
+      <img src="07-strip.jpg" loading="lazy">
+      
+      <details><summary>Clip prompt</summary><pre>Already in motion: Shell already approaching the burner; Ships already drifting. Lamp catches and sweeps light across Ships; Ships turn away from Reef while Keeper watches. Static camera. Sound: storm wind and rain on lantern glass; soft ignition rush from the burner at 1.5s, lamp rotation mechanism resumes its steady ticking at 2.5s. No music, no speech.</pre></details>
+      
+      <p class="lab">Carry</p><p>needed: Keeper, Shell, Lamp, Ships, Reef · <span class="ok">missing: none</span></p>
+      <p class="lab">Judge</p><p><b>61</b> · action adherence 9 · entity fidelity 13 · scale and interaction 12 · spatial continuity 11 · visual quality 16 · fault: keyframe</p><ul><li>Lamp is already burning brightly in the planned start frame, so ignition is not shown.</li><li>Ships do not visibly turn toward open sea or finish clearly separated from the reef.</li><li>Housing door shifts from the right side of the lamp to the left during the clip.</li><li>Keeper lowers her hands and steps back, adding motion beyond the specified action.</li><li>Keeper's free hand supports the lamp rim rather than holding the housing open.</li><li>Lamp lacks the specified concentric prismatic optic and visible rotation mechanism.</li><li>Large flame-like lights appear outside near the ships, inconsistent with modest navigation lamps.</li><li>Keeper remains oriented toward the lamp; her attention shift to the ships is ambiguous.</li></ul></div><h2>Scene 6 · Beach</h2><div class="shot"><h3>08 · cut · 5s · chunks 18, 19, 20</h3><div class="two">
+      <div><img src="08-start.png" loading="lazy"><p class="lab">Start frame (keyframe)</p><details><summary>first attempt</summary><img src="08-start-a1.png" loading="lazy"></details><div class="ins"><figure class="in"><img src="02-last.png" loading="lazy"><figcaption><b>base</b> k6</figcaption></figure><figure class="in"><img src="06-last.png" loading="lazy"><figcaption><b>extra</b> k17: Shell<br><span class="soft">k17 explicitly shows Shell held in Keeper’s hand with amber illumination, supplying the Shell reference absent from k6’s stable-entity list.</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure>
+      </div><p class="soft">Use k6 for the Beach setting and kneeling Keeper, and k17 for Shell, then move Keeper to the right foreground, lower the hand just above sand, dampen the coat, and soften the glow and lighting to faint amber and dawn pearl-grey.</p></div>
+      <div><video src="08.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper settles Shell into the wet sand and leaves her hand lingering beside it. <span class="soft">Static camera. · in: hand already lowering Shell</span></p>
+      <p class="soft">changes: Keeper.holding Shell → none; Keeper.hand position holding Shell above sand → lingering beside Shell; Shell.held_by Keeper → none; Shell.placed_on none → Beach sand</p></div></div>
+      <img src="08-strip.jpg" loading="lazy">
+      <details><summary>Keyframe prompt</summary><pre>Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A low wide view places Keeper kneeling in the right foreground at the original finding spot. She holds the faintly glowing Shell just above wet sand. Scattered storm-cast weed and driftwood lie between the rocks. Lighthouse rises at upper left, and a thin edge of returning water lies below Shell under soft pearl-grey morning light.
+Image 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.
+Image 2 is an earlier frame showing Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.
+Image 3 is the character sheet of Keeper: identity only (face, hair, clothing).
+State at this frame:
+Keeper (character, 1.65 m tall, an average-height adult woman): right foreground, kneeling on wet sand; on LanternRoom floor; kneeling, coat damp.
+Shell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, in Keeper's lowered hand just above sand; faint amber glow.
+Real sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.
+Time and light: following dawn, soft pearl-grey light.</pre></details>
+      <details><summary>Clip prompt</summary><pre>Keeper settles Shell into the wet sand and leaves her hand lingering beside it. Static camera. Sound: soft returning surf; quiet contact of Shell with wet sand at 2s. No music, no speech.</pre></details>
+      <p class="lab">Checks</p><p>attempt 1: <span class="ok">✓ 1</span> · <span class="bad">✗  ()</span></p><p>attempt 2: <span class="ok">✓ 1</span> · <span class="bad">✗  ()</span></p>
+      
+      <p class="lab">Judge</p><p><b>74</b> · action adherence 12 · entity fidelity 15 · scale and interaction 10 · spatial continuity 19 · visual quality 18 · fault: video</p><ul><li>Keeper withdraws her placing hand to her lap instead of leaving it lingering beside Shell.</li><li>Shell appears oversized relative to the specified 5 cm, especially after placement.</li><li>Shell glows intensely orange-yellow rather than retaining a faint amber glow; this is already present in the planned start frame.</li><li>Shell's shape and apparent size change during placement, and its ivory ridges and translucent chamber are poorly resolved.</li></ul></div><div class="shot"><h3>09 · continuous · 5s · chunks 21, 22, 23</h3><div class="two">
+      <div><img src="08-last.png" loading="lazy"><p class="lab">Start frame = last frame of 08</p></div>
+      <div><video src="09.mp4" controls muted loop playsinline></video>
+      <p class="lab">Action</p><p>Keeper withdraws her hand, rises, and walks toward Lighthouse while a thin wash of water slides around Shell. <span class="soft">Static camera. · in: returning water already creeping toward Shell</span></p>
+      <p class="soft">changes: Keeper.posture kneeling → upright; Keeper.position right foreground beside Shell → mid-ground toward Lighthouse; Keeper.hand position lingering beside Shell → at her side; Shell.surface condition resting on wet sand → surrounded by shallow water</p></div></div>
+      <img src="09-strip.jpg" loading="lazy">
+      
+      <details><summary>Clip prompt</summary><pre>Already in motion: returning water already creeping toward Shell. Keeper withdraws her hand, rises, and walks toward Lighthouse while a thin wash of water slides around Shell. Static camera. Sound: gentle tide washing over sand; soft bootsteps departing across wet sand at 2s, thin wash of water around Shell at 4s. No music, no speech.</pre></details>
+      
+      <p class="lab">Carry</p><p>needed: Keeper, Shell · <span class="ok">missing: none</span></p>
+      <p class="lab">Judge</p><p><b>71</b> · action adherence 12 · entity fidelity 16 · scale and interaction 11 · spatial continuity 14 · visual quality 18 · fault: keyframe</p><ul><li>Keeper first reaches toward Shell rather than simply withdrawing an already lingering hand.</li><li>Start frame places both hands on Keeper's knees, not beside Shell.</li><li>Shell appears oversized relative to Keeper's hands and has a strong orange glow rather than faint amber.</li><li>Shell sits near the lower center rather than the lower-right foreground.</li><li>Keeper walks mostly toward the sea rather than clearly toward Lighthouse.</li><li>Last frame leaves Shell on an exposed sandy patch, not visibly surrounded by shallow water.</li></ul></div><h2>Audio</h2><div class="tl"><div class="tick" style="left:0%">01</div><div class="tick" style="left:11.160714285714286%">02</div><div class="tick" style="left:22.24776785714286%">03</div><div class="tick" style="left:33.408482142857146%">04</div><div class="tick" style="left:44.56919642857143%">05</div><div class="tick" style="left:55.729910714285715%">06</div><div class="tick" style="left:66.890625%">07</div><div class="tick" style="left:77.75223214285714%">08</div><div class="tick" style="left:88.91294642857143%">09</div>
+    <div class="cue" title="0s ambient: gentle surf along the rocks" style="left:0%;width:22.25446428571429%;top:22px;background:#4f7a3a"></div><div class="cue" title="9.97s ambient: quiet cottage room tone; wind and rain against the window" style="left:22.25446428571429%;width:22.32142857142857%;top:22px;background:#4f7a3a"></div><div class="cue" title="19.97s ambient: wind through narrow windows" style="left:44.57589285714286%;width:11.160714285714286%;top:22px;background:#4f7a3a"></div><div class="cue" title="24.97s ambient: storm wind and rain on lantern glass" style="left:55.736607142857146%;width:22.008928571428573%;top:22px;background:#4f7a3a"></div><div class="cue" title="34.83s ambient: soft returning surf; gentle tide washing over sand" style="left:77.74553571428572%;width:22.254464285714285%;top:22px;background:#4f7a3a"></div><div class="cue" title="0s music: in: Restrained melancholy score: sparse piano and soft low strings." style="left:0%;width:99.88839285714286%;top:40px;background:#a0402d"></div><div class="cue" title="6s music: motif: A delicate amber-toned harmonic accompanies Shell in Keeper's palm." style="left:13.392857142857144%;width:0.6%;top:40px;background:#a0402d"></div><div class="cue" title="14.97s music: motif: A low trembling instrumental hum emerges as Shell's musical voice, not a separate sound effect." style="left:33.41517857142858%;width:0.6%;top:40px;background:#a0402d"></div><div class="cue" title="19.97s music: swell: Muted strings gather tension beneath the shell motif during the ascent." style="left:44.57589285714286%;width:0.6%;top:40px;background:#a0402d"></div><div class="cue" title="30.97s music: swell: Warm restrained harmonic opening as Lamp catches and Ships turn to safety." style="left:69.12946428571429%;width:0.6%;top:40px;background:#a0402d"></div><div class="cue" title="34.83s music: motif: Sparse piano returns; the trembling shell motif is thin and diminished." style="left:77.74553571428572%;width:0.6%;top:40px;background:#a0402d"></div><div class="cue" title="44.75s music: out: Fade the complete score and shell motif across the final clip, reaching silence at the last frame." style="left:99.88839285714286%;width:0.6%;top:40px;background:#a0402d"></div><div class="cue" title="2s sfx: coat fabric folds as Keeper kneels" style="left:4.464285714285714%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="6s sfx: faint sand grains slipping from Shell" style="left:13.392857142857144%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="11.97s sfx: Shell softly touches the wooden tabletop" style="left:26.71875%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="20.97s sfx: bootstep on wet stone" style="left:46.808035714285715%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="22.97s sfx: another bootstep and a hand sliding over iron" style="left:51.27232142857143%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="26.47s sfx: glass housing hinge creaks" style="left:59.08482142857143%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="31.47s sfx: soft ignition rush from the burner" style="left:70.24553571428572%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="32.47s sfx: lamp rotation mechanism resumes its steady ticking" style="left:72.47767857142857%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="36.83s sfx: quiet contact of Shell with wet sand" style="left:82.20982142857143%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="41.83s sfx: soft bootsteps departing across wet sand" style="left:93.37053571428572%;width:0.6%;top:58px;background:#3d6a8a"></div><div class="cue" title="43.83s sfx: thin wash of water around Shell" style="left:97.83482142857143%;width:0.6%;top:58px;background:#3d6a8a"></div></div>
+    <p class="soft"><span class="sw" style="background:#4f7a3a"></span>ambient <span class="sw" style="background:#a0402d"></span>music <span class="sw" style="background:#3d6a8a"></span>sfx · 0 – 44.8 s</p><p class="soft">cues.json in the run folder is editable; run with <code>--remix</code> to re-render the mix without new API calls.</p>
+    <div class="scroll"><table><tr><th>#</th><th>t (s)</th><th>Type</th><th>Shot</th><th>Text</th><th>Source</th><th>Gain dB</th><th>Fade s</th><th>Until</th></tr><tr><td>1</td><td>0</td><td><span class="sw" style="background:#4f7a3a"></span>ambient</td><td>01</td><td>gentle surf along the rocks</td><td>bed:Beach</td><td>0</td><td>1</td><td>9.97</td></tr><tr><td>2</td><td>0</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>01</td><td>in: Restrained melancholy score: sparse piano and soft low strings.</td><td>synth placeholder: no music model on this API</td><td>0</td><td>2</td><td>44.75</td></tr><tr><td>3</td><td>2</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>01</td><td>coat fabric folds as Keeper kneels</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>4</td><td>6</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>02</td><td>motif: A delicate amber-toned harmonic accompanies Shell in Keeper's palm.</td><td>synth placeholder: no music model on this API</td><td>0</td><td>0</td><td></td></tr><tr><td>5</td><td>6</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>02</td><td>faint sand grains slipping from Shell</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>6</td><td>9.97</td><td><span class="sw" style="background:#4f7a3a"></span>ambient</td><td>03</td><td>quiet cottage room tone; wind and rain against the window</td><td>bed:Cottage</td><td>0</td><td>1</td><td>19.97</td></tr><tr><td>7</td><td>11.97</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>03</td><td>Shell softly touches the wooden tabletop</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>8</td><td>14.97</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>04</td><td>motif: A low trembling instrumental hum emerges as Shell's musical voice, not a separate sound effect.</td><td>synth placeholder: no music model on this API</td><td>0</td><td>0</td><td></td></tr><tr><td>9</td><td>19.97</td><td><span class="sw" style="background:#4f7a3a"></span>ambient</td><td>05</td><td>wind through narrow windows</td><td>bed:TowerStairs</td><td>0</td><td>1</td><td>24.97</td></tr><tr><td>10</td><td>19.97</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>05</td><td>swell: Muted strings gather tension beneath the shell motif during the ascent.</td><td>synth placeholder: no music model on this API</td><td>4</td><td>0</td><td></td></tr><tr><td>11</td><td>20.97</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>05</td><td>bootstep on wet stone</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>12</td><td>22.97</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>05</td><td>another bootstep and a hand sliding over iron</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>13</td><td>24.97</td><td><span class="sw" style="background:#4f7a3a"></span>ambient</td><td>06</td><td>storm wind and rain on lantern glass</td><td>bed:LanternRoom</td><td>0</td><td>1</td><td>34.83</td></tr><tr><td>14</td><td>26.47</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>06</td><td>glass housing hinge creaks</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>15</td><td>30.97</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>07</td><td>swell: Warm restrained harmonic opening as Lamp catches and Ships turn to safety.</td><td>synth placeholder: no music model on this API</td><td>4</td><td>0</td><td></td></tr><tr><td>16</td><td>31.47</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>07</td><td>soft ignition rush from the burner</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>17</td><td>32.47</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>07</td><td>lamp rotation mechanism resumes its steady ticking</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>18</td><td>34.83</td><td><span class="sw" style="background:#4f7a3a"></span>ambient</td><td>08</td><td>soft returning surf; gentle tide washing over sand</td><td>bed:Beach</td><td>0</td><td>1</td><td>44.8</td></tr><tr><td>19</td><td>34.83</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>08</td><td>motif: Sparse piano returns; the trembling shell motif is thin and diminished.</td><td>synth placeholder: no music model on this API</td><td>0</td><td>0</td><td></td></tr><tr><td>20</td><td>36.83</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>08</td><td>quiet contact of Shell with wet sand</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>21</td><td>41.83</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>09</td><td>soft bootsteps departing across wet sand</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>22</td><td>43.83</td><td><span class="sw" style="background:#3d6a8a"></span>sfx</td><td>09</td><td>thin wash of water around Shell</td><td>clip</td><td>0</td><td>0</td><td></td></tr><tr><td>23</td><td>44.75</td><td><span class="sw" style="background:#a0402d"></span>music</td><td>09</td><td>out: Fade the complete score and shell motif across the final clip, reaching silence at the last frame.</td><td>synth placeholder: no music model on this API</td><td>0</td><td>3</td><td></td></tr></table></div>
+    <p class="soft">beds: 0 · score: audio/score.wav · voiceovers: 0</p><p class="lab">Gaps</p><ul><li>No music or sound-effect endpoint on this API: the score is an ffmpeg-synthesised placeholder pad driven by the music cues; swap audio/score.wav for a real track and run --remix.</li><li>Sound effects are generated inside each clip by wan-3.0 from the clip prompt; the sfx cues mark where they were asked for, they are not separate tracks.</li><li>No narration in this story: the TTS path (ai-voice-generator) was not exercised.</li></ul><h2>Memory</h2><p class="soft">Each entity has versions (an anchor image per state) and instances (one per bank frame). Green = stable: present, look matches, same as its last stable instance (prev). source = the bank entry or anchor the frame was built from. Bank: 24 frames.</p><h3>Keeper <span class="soft">character · 17/17 stable</span></h3><p class="soft">a lighthouse keeper: a woman in her late fifties with narrow shoulders, a weathered face and hands, greying hair tied back, a heavy charcoal coat, neatly repaired muted clothing and dark boots · 1.65 m tall, an average-height adult woman</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><img src="refs/Keeper.png" loading="lazy"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/Keeper.png" loading="lazy"><b>k1</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> center, full body, facing forward<br><span class="soft">placed_on:</span> ground<br><span class="soft">condition:</span> standing, weathered, solemn<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="refs/Shell.png" loading="lazy"><b>k2</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → k1<br>source → text
+      <br><span class="soft">position:</span> left, hands extended toward right<br><span class="soft">holding:</span> Shell<br><span class="soft">condition:</span> weathered, grey hair tied back, charcoal coat<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="01-start.png" loading="lazy"><b>k4</b> · 01 start · v1<br>
+      ✓ stable · count 1<br>prev → k3<br>source → k2
+      <br><span class="soft">position:</span> right mid-ground at waterline<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> standing, empty hands, looking down<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="01-last.png" loading="lazy"><b>k5</b> · 01 last · v1<br>
+      ✓ stable · count 1<br>prev → k4<br>source → k4
+      <br><span class="soft">position:</span> right mid-ground at waterline<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> kneeling, looking down, empty hand hovering above Shell<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: kneeling rather than standing</span></div><div class="card"><img src="02-last.png" loading="lazy"><b>k6</b> · 02 last · v1<br>
+      ✓ stable · count 1<br>prev → k5<br>source → k5
+      <br><span class="soft">position:</span> right mid-ground<br><span class="soft">holding:</span> Shell<br><span class="soft">placed_on:</span> wet sand<br><span class="soft">condition:</span> kneeling, cradling shell with both hands<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: hands cradle shell rather than hover, palm not raised near chest</span></div><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → k7<br>source → k6
+      <br><span class="soft">position:</span> left mid-ground, seated at table<br><span class="soft">holding:</span> Shell<br><span class="soft">placed_on:</span> wooden chair<br><span class="soft">condition:</span> seated, looking at glowing shell<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> left mid-ground, behind table<br><span class="soft">placed_on:</span> wooden chair<br><span class="soft">condition:</span> seated, looking toward shell, hand beside it<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → k8
+      <br><span class="soft">position:</span> left mid-ground, seated at table<br><span class="soft">placed_on:</span> chair<br><span class="soft">condition:</span> empty hands, watching window<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> left mid-ground, seated at table<br><span class="soft">holding:</span> piece of bread<br><span class="soft">placed_on:</span> chair<br><span class="soft">condition:</span> looking down at meal<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: holding bread rather than empty hands, watching meal rather than window</span></div><div class="card"><img src="05-start.png" loading="lazy"><b>k13</b> · 05 start · v1<br>
+      ✓ stable · count 1<br>prev → k12<br>source → k12
+      <br><span class="soft">position:</span> lower centre-left, on stairs<br><span class="soft">holding:</span> Shell, Railing<br><span class="soft">placed_on:</span> TowerStairs steps<br><span class="soft">condition:</span> damp coat, mid-stride, gripping railing<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="05-last.png" loading="lazy"><b>k14</b> · 05 last · v1<br>
+      ✓ stable · count 1<br>prev → k13<br>source → k13
+      <br><span class="soft">position:</span> lower centre on stairs<br><span class="soft">holding:</span> Shell and Railing<br><span class="soft">placed_on:</span> TowerStairs steps<br><span class="soft">condition:</span> damp coat, gripping railing<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: lower centre, not upper centre</span></div><div class="card"><img src="06-start.png" loading="lazy"><b>k16</b> · 06 start · v1<br>
+      ✓ stable · count 1<br>prev → k15<br>source → k14
+      <br><span class="soft">position:</span> left mid-ground beside Lamp<br><span class="soft">holding:</span> Shell<br><span class="soft">condition:</span> standing, damp coat, free hand on housing<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-last.png" loading="lazy"><b>k17</b> · 06 last · v1<br>
+      ✓ stable · count 1<br>prev → k16<br>source → k16
+      <br><span class="soft">position:</span> left mid-ground beside Lamp<br><span class="soft">holding:</span> Shell<br><span class="soft">condition:</span> standing, dark coat, free hand under housing<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: free hand supports housing base rather than holding door open</span></div><div class="card"><img src="07-last.png" loading="lazy"><b>k18</b> · 07 last · v1<br>
+      ✓ stable · count 1<br>prev → k17<br>source → k17
+      <br><span class="soft">position:</span> left mid-ground beside Lamp<br><span class="soft">placed_on:</span> LanternRoom floor<br><span class="soft">condition:</span> standing, damp coat, warmly illuminated face<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: not visibly holding Shell, hands lowered, not holding housing open, looking toward Lamp rather than Ships</span></div><div class="card"><img src="08-start.png" loading="lazy"><b>k21</b> · 08 start · v1<br>
+      ✓ stable · count 1<br>prev → k20<br>source → k6
+      <br><span class="soft">position:</span> right foreground, kneeling on sand<br><span class="soft">holding:</span> Shell<br><span class="soft">placed_on:</span> wet sand<br><span class="soft">condition:</span> kneeling, coat damp<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="08-last.png" loading="lazy"><b>k22</b> · 08 last · v1<br>
+      ✓ stable · count 1<br>prev → k21<br>source → k21
+      <br><span class="soft">position:</span> right foreground, kneeling on sand<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> kneeling, damp charcoal coat<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: hands resting on knees, not beside Shell</span></div><div class="card"><img src="09-last.png" loading="lazy"><b>k24</b> · 09 last · v1<br>
+      ✓ stable · count 1<br>prev → k22<br>source → k22
+      <br><span class="soft">position:</span> center mid-ground, facing lighthouse<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> walking away, arms at sides<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: walking rather than kneeling, hand not lingering beside Shell</span></div></div><h3>Shell <span class="soft">prop · 6/17 stable</span></h3><p class="soft">a spiral seashell: an ivory shell with fine amber-coloured ridges and a translucent inner chamber · 5 cm across, fits comfortably in Keeper's palm</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver"><img src="refs/Shell.png" loading="lazy"><b>v1</b> · since <br>[object Object]<br><span class="soft">initial look</span></div><div class="card ver cur"><img src="refs/Shell-v2.png" loading="lazy"><b>v2</b> (current) · since 08<br>[object Object]<br><span class="soft">condition: faint amber glow</span></div></div><p class="lab">Instances</p><div class="row"><div class="card unst"><img src="refs/Shell.png" loading="lazy"><b>k2</b> · anchor anchor · v1<br>
+      ✗ unstable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> center-right, in outstretched hands<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> intact, open chamber visible<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: larger than 5 cm across</span></div><div class="card unst"><img src="01-start.png" loading="lazy"><b>k4</b> · 01 start · v1<br>
+      ✗ unstable · count 1<br>prev → none (first)<br>source → anchor:Shell
+      <br><span class="soft">position:</span> lower-right foreground, left of boots<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> soft amber glow<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: larger than palm-sized</span></div><div class="card unst"><img src="01-last.png" loading="lazy"><b>k5</b> · 01 last · v1<br>
+      ✗ unstable · count 1<br>prev → none (first)<br>source → k4
+      <br><span class="soft">position:</span> lower-right foreground before Keeper<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> ivory ridged spiral, amber-glowing interior<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: larger than palm-sized</span></div><div class="card unst"><img src="02-last.png" loading="lazy"><b>k6</b> · 02 last · v1<br>
+      ✗ unstable · count 1<br>prev → none (first)<br>source → k5
+      <br><span class="soft">position:</span> right mid-ground in Keeper's hands<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> bright amber glow, opening faces camera<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: larger than palm-sized, opening faces camera rather than spiral upward, held in hands rather than below hovering hand</span></div><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → anchor:Shell
+      <br><span class="soft">position:</span> centre, above table in palms<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> glowing amber, ridged spiral<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card unst"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✗ unstable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> centre-right, before cup<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> amber-lit open chamber<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: larger than palm-sized 5 cm shell</span></div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> table foreground, beside cup<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> glowing amber<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> table foreground, left of cup<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> soft amber glow<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="05-start.png" loading="lazy"><b>k13</b> · 05 start · v1<br>
+      ✓ stable · count 1<br>prev → k12<br>source → k12
+      <br><span class="soft">position:</span> against Keeper's chest<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> soft amber glow<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card unst"><img src="05-last.png" loading="lazy"><b>k14</b> · 05 last · v1<br>
+      ✗ unstable · count 1<br>prev → k13<br>source → k13
+      <br><span class="soft">position:</span> centre against Keeper's chest<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> bright amber glow<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: larger than palm-sized, strong orange colour rather than ivory, inner chamber not visibly translucent, centre, not upper centre</span></div><div class="card"><img src="06-start.png" loading="lazy"><b>k16</b> · 06 start · v1<br>
+      ✓ stable · count 1<br>prev → k15<br>source → k13
+      <br><span class="soft">position:</span> Keeper's hand near chest<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> bright amber glow<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-last.png" loading="lazy"><b>k17</b> · 06 last · v1<br>
+      ✓ stable · count 1<br>prev → k16<br>source → k16
+      <br><span class="soft">position:</span> in Keeper's hand beside burner<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> amber-lit ridged shell<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card unst"><img src="07-last.png" loading="lazy"><b>k18</b> · 07 last · v1<br>
+      ✗ missing · count 0<br>prev → k17<br>source → k17
+      <br><span class="soft">position:</span> not visible<br><span class="soft">condition:</span> not visible<br><span class="soft">size:</span> not visible<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: no visible glowing shell beside burner</span></div><div class="card unst"><img src="08-start.png" loading="lazy"><b>k21</b> · 08 start · v1<br>
+      ✗ unstable · count 1<br>prev → k17<br>source → k17
+      <br><span class="soft">position:</span> in lowered hand above sand<br><span class="soft">held_by:</span> Keeper<br><span class="soft">condition:</span> bright orange-amber glow<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: larger than palm-sized 5 cm, strong glow rather than faint, orange exterior rather than ivory</span></div><div class="card unst"><img src="08-last.png" loading="lazy"><b>k22</b> · 08 last · v1<br>
+      ✗ unstable · count 1<br>prev → k17<br>source → k21
+      <br><span class="soft">position:</span> lower foreground, left of Keeper<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> bright amber glow, open spiral chamber<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: larger than palm-sized, bright glow rather than faint, on sand, not in lowered hand</span></div><div class="card unst"><img src="refs/Shell-v2.png" loading="lazy"><b>k23</b> · anchor anchor · v2<br>
+      ✗ unstable · count 1<br>prev → k17<br>source → text
+      <br><span class="soft">position:</span> center-right, above open palms<br><span class="soft">held_by:</span> Keeper<br><span class="soft">placed_on:</span> Keeper's palm<br><span class="soft">condition:</span> ivory spiral shell with amber ridges and glowing inner chamber<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: larger than 5 cm across, held by Keeper rather than nobody, rests on a palm rather than nothing</span></div><div class="card unst"><img src="09-last.png" loading="lazy"><b>k24</b> · 09 last · v2<br>
+      ✗ unstable · count 1<br>prev → k17<br>source → k22
+      <br><span class="soft">position:</span> lower foreground, right of center<br><span class="soft">placed_on:</span> Beach sand<br><span class="soft">condition:</span> amber-ridged shell on wet sand<br><span class="soft">size:</span> too large<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: larger than palm-sized, no clear amber glow, not surrounded by shallow water</span></div></div><h3>Beach <span class="soft">location · 7/7 stable</span></h3><p class="soft">a rocky beach: pale sand between slate rocks, shallow tidal pools and a sloping shoreline beneath a coastal bluff · 300 m long, extending hundreds of walking paces</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><img src="refs/Beach.png" loading="lazy"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/Beach.png" loading="lazy"><b>k28</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> pale sand, slate rocks and tidal pools beneath bluff<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="01-start.png" loading="lazy"><b>k4</b> · 01 start · v1<br>
+      ✓ stable · count 1<br>prev → k3<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> diffuse pearl-grey light, rocky tidal pools<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="01-last.png" loading="lazy"><b>k5</b> · 01 last · v1<br>
+      ✓ stable · count 1<br>prev → k4<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> rocky pale sand, tidal pools, coastal bluff, diffuse pearl-grey light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="02-last.png" loading="lazy"><b>k6</b> · 02 last · v1<br>
+      ✓ stable · count 1<br>prev → k5<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> pearl-grey light, wet sand and rocky tidal pools<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="08-start.png" loading="lazy"><b>k21</b> · 08 start · v1<br>
+      ✓ stable · count 1<br>prev → k20<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> wet pale sand, rocky tidal pools, pearl-grey light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="08-last.png" loading="lazy"><b>k22</b> · 08 last · v1<br>
+      ✓ stable · count 1<br>prev → k21<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> wet pale sand, slate rocks, tidal pools, pearl-grey light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="09-last.png" loading="lazy"><b>k24</b> · 09 last · v1<br>
+      ✓ stable · count 1<br>prev → k22<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> wet pale sand, slate rocks, tidal pools, pearl-grey light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Lighthouse <span class="soft">location · 0/0 stable</span></h3><p class="soft">a coastal lighthouse: a cylindrical tower with weathered white masonry, salt stains and a glazed lantern crown, attached to a low keeper's cottage · 22 m tall, approximately thirteen times Keeper's height</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><h3>Cottage <span class="soft">location · 6/6 stable</span></h3><p class="soft">a lighthouse cottage kitchen: faded blue plaster walls, worn wooden flooring and a tall sea-facing window beside the tower · 4 m by 5 m, a small room for one resident</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><img src="refs/Cottage.png" loading="lazy"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/Cottage.png" loading="lazy"><b>k26</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> faded blue walls, worn flooring, tall sea-facing window<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="refs/Ships.png" loading="lazy"><b>k29</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> The setting<br><span class="soft">condition:</span> Weathered kitchen with faded blue walls and worn wooden floor<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → k7<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> faded blue walls, worn floor, grey sea light through tall window<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → text
+      <br><span class="soft">position:</span> whole setting<br><span class="soft">condition:</span> faded blue walls, worn floor, cool sea-facing window light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> weathered blue walls, amber glow, storm outside<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → text
+      <br><span class="soft">position:</span> interior setting<br><span class="soft">condition:</span> worn blue kitchen, amber light, storm outside<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Table <span class="soft">prop · 5/5 stable</span></h3><p class="soft">a kitchen table: a rectangular muted-brown wooden table with worn edges and visible grain · 1.2 m long and 75 cm high, reaching Keeper's upper thigh</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/Cottage.png" loading="lazy"><b>k26</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> center-right foreground<br><span class="soft">placed_on:</span> Cottage wooden floor<br><span class="soft">condition:</span> worn edges, visible wood grain<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → k7<br>source → k26
+      <br><span class="soft">position:</span> centre-right lower half<br><span class="soft">placed_on:</span> Cottage floor<br><span class="soft">condition:</span> worn, dry wooden surface<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> centre and lower-right<br><span class="soft">placed_on:</span> Cottage floor<br><span class="soft">condition:</span> worn, dry, visible wood grain<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → k8
+      <br><span class="soft">position:</span> lower-left foreground<br><span class="soft">placed_on:</span> Cottage floor<br><span class="soft">condition:</span> dry, worn wooden surface<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> lower-left foreground<br><span class="soft">placed_on:</span> Cottage floor<br><span class="soft">condition:</span> dry, worn wooden surface<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Cup <span class="soft">prop · 4/4 stable</span></h3><p class="soft">a ceramic cup: a cream-glazed handled cup with a chipped rim · 9 cm high, approximately the length of an adult palm</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → k7<br>source → fresh
+      <br><span class="soft">position:</span> centre-right on table<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> upright, cream glaze, dark rim<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> centre-right, behind shell<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> upright, dark irregular rim<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → k8
+      <br><span class="soft">position:</span> table, right of shell<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> upright<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> table, right of shell<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> upright<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Meal <span class="soft">prop · 4/4 stable</span></h3><p class="soft">a simple meal: a shallow stoneware bowl containing bread and stew · 20 cm across, about two hand widths</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → k7<br>source → fresh
+      <br><span class="soft">position:</span> centre on table before Keeper<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> shallow bowl with bread and stew<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> centre, before keeper<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> shallow bowl with stew and bread<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: not in left foreground</span></div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → k8
+      <br><span class="soft">position:</span> table, before keeper<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> bread and stew in shallow bowl<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> table before keeper<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> partly eaten in shallow bowl<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Spoon <span class="soft">prop · 4/4 stable</span></h3><p class="soft">an eating spoon: a plain dull-silver metal spoon · 18 cm long, slightly longer than an adult hand</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="03-start.png" loading="lazy"><b>k8</b> · 03 start · v1<br>
+      ✓ stable · count 1<br>prev → k7<br>source → fresh
+      <br><span class="soft">position:</span> on table beside bowl, toward front<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> resting unused, silver metal<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="03-last.png" loading="lazy"><b>k9</b> · 03 last · v1<br>
+      ✓ stable · count 1<br>prev → k8<br>source → k8
+      <br><span class="soft">position:</span> in front of shell<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> lying flat, unused<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: in front of shell rather than beside meal</span></div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → k8
+      <br><span class="soft">position:</span> table, beside meal<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> lying unused<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> table between meal and shell<br><span class="soft">placed_on:</span> Table<br><span class="soft">condition:</span> lying unused<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>TowerStairs <span class="soft">location · 3/3 stable</span></h3><p class="soft">a lighthouse stairwell: a narrow cylindrical masonry shaft with worn spiral stone steps and slit windows · 18 m high and 3 m across, wide enough for one person on each step</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><img src="refs/TowerStairs.png" loading="lazy"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/TowerStairs.png" loading="lazy"><b>k25</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> worn stone steps, weathered masonry<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="05-start.png" loading="lazy"><b>k13</b> · 05 start · v1<br>
+      ✓ stable · count 1<br>prev → k25<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> stormy, dim masonry stairwell with shell light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="05-last.png" loading="lazy"><b>k14</b> · 05 last · v1<br>
+      ✓ stable · count 1<br>prev → k13<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> worn masonry stairwell, cool window light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: bright windows rather than stormy night, window-lit rather than primarily shell-lit</span></div></div><h3>Railing <span class="soft">prop · 3/3 stable</span></h3><p class="soft">an iron stair railing: a dark, worn handrail following the spiral staircase · 90 cm above the steps, at Keeper's waist</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/TowerStairs.png" loading="lazy"><b>k25</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> curving along spiral steps<br><span class="soft">placed_on:</span> TowerStairs<br><span class="soft">condition:</span> dark, worn and rusted<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="05-start.png" loading="lazy"><b>k13</b> · 05 start · v1<br>
+      ✓ stable · count 1<br>prev → k25<br>source → k25
+      <br><span class="soft">position:</span> curving from lower left toward upper centre<br><span class="soft">held_by:</span> Keeper<br><span class="soft">placed_on:</span> TowerStairs steps<br><span class="soft">condition:</span> dark, worn, wet-looking iron<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="05-last.png" loading="lazy"><b>k14</b> · 05 last · v1<br>
+      ✓ stable · count 1<br>prev → k13<br>source → k13
+      <br><span class="soft">position:</span> lower left curving to upper centre<br><span class="soft">held_by:</span> Keeper<br><span class="soft">placed_on:</span> TowerStairs steps<br><span class="soft">condition:</span> worn, rust-streaked iron<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>LanternRoom <span class="soft">location · 4/4 stable</span></h3><p class="soft">a lighthouse lantern room: a circular chamber with tall segmented glass panes, iron mullions and a central lamp pedestal · 4 m across, approximately two Keeper heights</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><img src="refs/LanternRoom.png" loading="lazy"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/LanternRoom.png" loading="lazy"><b>k27</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> entire setting<br><span class="soft">condition:</span> daylit, weathered interior<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-start.png" loading="lazy"><b>k16</b> · 06 start · v1<br>
+      ✓ stable · count 1<br>prev → k15<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> stormy night, amber shell illumination<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-last.png" loading="lazy"><b>k17</b> · 06 last · v1<br>
+      ✓ stable · count 1<br>prev → k16<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> stormy night, illuminated by burner<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: bright burner light rather than dim shell light</span></div><div class="card"><img src="07-last.png" loading="lazy"><b>k18</b> · 07 last · v1<br>
+      ✓ stable · count 1<br>prev → k17<br>source → text
+      <br><span class="soft">position:</span> the setting<br><span class="soft">condition:</span> rain-streaked segmented windows, stormy darkness, bright amber lamp light<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: bright burner light rather than dim shell light</span></div></div><h3>Lamp <span class="soft">prop · 4/6 stable</span></h3><p class="soft">a lighthouse lamp: a brass burner within a hinged glass housing and a concentric prismatic optic on a rotation mechanism · 1.2 m high and 80 cm across, with its burner at Keeper's chest height</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver"><b>v1</b> · since <br>[object Object]<br><span class="soft">initial look</span></div><div class="card ver"><b>v2</b> · since 04<br>[object Object]<br><span class="soft">condition: lit → extinguished</span></div><div class="card ver"><b>v3</b> · since 06<br>[object Object]<br><span class="soft">housing: closed → open</span></div><div class="card ver cur"><b>v4</b> (current) · since 07<br>[object Object]<br><span class="soft">condition: extinguished → lit</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/LanternRoom.png" loading="lazy"><b>k27</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> center on pedestal<br><span class="soft">placed_on:</span> LanternRoom central pedestal<br><span class="soft">condition:</span> unlit, intact brass and glass<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k27<br>source → k27
+      <br><span class="soft">position:</span> upper centre-left, through window<br><span class="soft">placed_on:</span> LanternRoom pedestal<br><span class="soft">condition:</span> lit, enclosed in glass housing<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> upper centre-left, tower through window<br><span class="soft">placed_on:</span> LanternRoom pedestal<br><span class="soft">condition:</span> glowing amber<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: lit rather than extinguished</span></div><div class="card"><img src="06-start.png" loading="lazy"><b>k16</b> · 06 start · v2<br>
+      ✓ stable · count 1<br>prev → k12<br>source → k27
+      <br><span class="soft">position:</span> centre mid-ground<br><span class="soft">placed_on:</span> LanternRoom pedestal<br><span class="soft">condition:</span> extinguished, housing closed<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card unst"><img src="06-last.png" loading="lazy"><b>k17</b> · 06 last · v2<br>
+      ✗ unstable · count 1<br>prev → k16<br>source → k16
+      <br><span class="soft">position:</span> centre mid-ground<br><span class="soft">placed_on:</span> LanternRoom pedestal<br><span class="soft">condition:</span> burning brightly, glass door open<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: burner lit rather than extinguished, concentric prismatic optic absent</span></div><div class="card unst"><img src="07-last.png" loading="lazy"><b>k18</b> · 07 last · v3<br>
+      ✗ unstable · count 1<br>prev → k16<br>source → k17
+      <br><span class="soft">position:</span> centre mid-ground<br><span class="soft">placed_on:</span> LanternRoom pedestal<br><span class="soft">condition:</span> burning brightly, glass housing open, beam extending right<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: concentric prismatic optic absent, rotation mechanism not evident, lit rather than extinguished</span></div></div><h3>Ships <span class="soft">prop · 5/7 stable</span></h3><p class="soft">a group of three coastal ships: dark steel-hulled vessels with modest wheelhouses, masts and navigation lamps · each 35–50 m long, many times a person's height; distant silhouettes from shore</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver"><img src="refs/Ships.png" loading="lazy"><b>v1</b> · since <br>[object Object]<br><span class="soft">initial look</span></div><div class="card ver cur"><img src="refs/Ships-v2.png" loading="lazy"><b>v2</b> (current) · since 07<br>[object Object]<br><span class="soft">course: toward Reef → away from Reef; condition: safe</span></div></div><p class="lab">Instances</p><div class="row"><div class="card unst"><img src="refs/Ships.png" loading="lazy"><b>k29</b> · anchor anchor · v1<br>
+      ✗ unstable · count 4<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> At sea through the large window<br><span class="soft">condition:</span> Dark vessels afloat on choppy water<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: Four ships rather than three</span></div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 3<br>prev → k10<br>source → anchor:Ships
+      <br><span class="soft">position:</span> right background, through window<br><span class="soft">placed_on:</span> sea<br><span class="soft">condition:</span> navigation lights on, near reef<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 3<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> sea background beyond reef<br><span class="soft">placed_on:</span> sea<br><span class="soft">condition:</span> navigation lights on, amid rough waves<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-start.png" loading="lazy"><b>k16</b> · 06 start · v1<br>
+      ✓ stable · count 3<br>prev → k15<br>source → k12
+      <br><span class="soft">position:</span> right background through panes<br><span class="soft">placed_on:</span> sea<br><span class="soft">condition:</span> distant vessels, navigation lights on<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card unst"><img src="06-last.png" loading="lazy"><b>k17</b> · 06 last · v1<br>
+      ✗ unstable · count 3<br>prev → k16<br>source → k16
+      <br><span class="soft">position:</span> right background through panes<br><span class="soft">placed_on:</span> sea<br><span class="soft">condition:</span> navigation lights on near reef<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✗
+      <br><span class="bad">diffs: large flame-like lights on two ships</span></div><div class="card"><img src="07-last.png" loading="lazy"><b>k18</b> · 07 last · v1<br>
+      ✓ stable · count 3<br>prev → k16<br>source → k17
+      <br><span class="soft">position:</span> centre and right background at sea<br><span class="soft">placed_on:</span> sea<br><span class="soft">condition:</span> distant vessels with visible lights<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      <br><span class="bad">diffs: course toward open sea not discernible</span></div><div class="card"><img src="refs/Ships-v2.png" loading="lazy"><b>k19</b> · anchor anchor · v2<br>
+      ✓ stable · count 3<br>prev → k18<br>source → text
+      <br><span class="soft">position:</span> Sea outside the central window<br><span class="soft">condition:</span> Afloat and intact in rough seas<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Reef <span class="soft">prop · 6/6 stable</span></h3><p class="soft">a coastal rock reef: a jagged band of dark slate outcrops offshore · 100 m long, with exposed rocks up to a person's height</p>
+      <p class="lab">Versions</p><div class="row"><div class="card ver cur"><b>v1</b> (current) · since <br>[object Object]<br><span class="soft">initial look</span></div></div><p class="lab">Instances</p><div class="row"><div class="card"><img src="refs/Beach.png" loading="lazy"><b>k28</b> · anchor anchor · v1<br>
+      ✓ stable · count 1<br>prev → none (first)<br>source → text
+      <br><span class="soft">position:</span> offshore, upper left and center<br><span class="soft">placed_on:</span> Beach<br><span class="soft">condition:</span> jagged dark outcrops amid surf<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-start.png" loading="lazy"><b>k11</b> · 04 start · v1<br>
+      ✓ stable · count 1<br>prev → k10<br>source → k28
+      <br><span class="soft">position:</span> background, below ships<br><span class="soft">placed_on:</span> seabed<br><span class="soft">condition:</span> dark jagged rocks, wave-washed<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="04-last.png" loading="lazy"><b>k12</b> · 04 last · v1<br>
+      ✓ stable · count 1<br>prev → k11<br>source → k11
+      <br><span class="soft">position:</span> centre-right background below ships<br><span class="soft">placed_on:</span> seabed<br><span class="soft">condition:</span> dark jagged rocks, wave-washed<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-start.png" loading="lazy"><b>k16</b> · 06 start · v1<br>
+      ✓ stable · count 1<br>prev → k15<br>source → k12
+      <br><span class="soft">position:</span> right background below Ships<br><span class="soft">placed_on:</span> seabed<br><span class="soft">condition:</span> dark, jagged, wave-washed<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="06-last.png" loading="lazy"><b>k17</b> · 06 last · v1<br>
+      ✓ stable · count 1<br>prev → k16<br>source → k16
+      <br><span class="soft">position:</span> right background below ships<br><span class="soft">placed_on:</span> seabed<br><span class="soft">condition:</span> dark jagged rocks, wave-washed<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div><div class="card"><img src="07-last.png" loading="lazy"><b>k18</b> · 07 last · v1<br>
+      ✓ stable · count 1<br>prev → k17<br>source → k17
+      <br><span class="soft">position:</span> right background below Ships<br><span class="soft">placed_on:</span> seabed<br><span class="soft">condition:</span> jagged dark rocks, wave-washed<br><span class="soft">size:</span> as expected<br><span class="soft">look:</span> ✓
+      </div></div><h3>Keyframe lineage</h3><div class="scroll"><table><tr><th>Keyframe</th><th>Conditioned by</th><th>Result</th></tr><tr><td>01</td><td><div class="ins"><figure class="in"><img src="refs/Beach.png" loading="lazy"><figcaption><b>base</b> k28</figcaption></figure><figure class="in"><img src="refs/Shell.png" loading="lazy"><figcaption><b>extra</b> k2: Keeper<br><span class="soft">last stable Keeper (shot anchor, anchor)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure><figure class="in"><img src="refs/Shell.png" loading="lazy"><figcaption><b>anchor</b> Shell<br><span class="soft">scale and look of Shell: no earlier stable frame</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></td><td class="res"><img src="01-start.png" loading="lazy"></td></tr><tr><td>03</td><td><div class="ins"><figure class="in"><img src="refs/Cottage.png" loading="lazy"><figcaption><b>base</b> k26</figcaption></figure><figure class="in"><img src="02-last.png" loading="lazy"><figcaption><b>extra</b> k6: Keeper<br><span class="soft">last stable Keeper (shot 02, last)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure><figure class="in"><img src="refs/Shell.png" loading="lazy"><figcaption><b>anchor</b> Shell<br><span class="soft">scale and look of Shell: no earlier stable frame</span></figcaption></figure>
+      <figure class="in"><div class="ph">text</div><figcaption><b>fresh</b> Cup, Meal, Spoon</figcaption></figure></div><p class="soft">rule selection</p></td><td class="res"><img src="03-start.png" loading="lazy"></td></tr><tr><td>04</td><td><div class="ins"><figure class="in"><img src="03-start.png" loading="lazy"><figcaption><b>base</b> k8</figcaption></figure><figure class="in"><img src="refs/LanternRoom.png" loading="lazy"><figcaption><b>extra</b> k27: Lamp<br><span class="soft">last stable Lamp (shot anchor, anchor)</span></figcaption></figure><figure class="in"><img src="refs/Beach.png" loading="lazy"><figcaption><b>extra</b> k28: Reef<br><span class="soft">last stable Reef (shot anchor, anchor)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure><figure class="in"><img src="refs/Ships.png" loading="lazy"><figcaption><b>anchor</b> Ships<br><span class="soft">scale and look of Ships: no earlier stable frame</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></td><td class="res"><img src="04-start.png" loading="lazy"></td></tr><tr><td>05</td><td><div class="ins"><figure class="in"><img src="refs/TowerStairs.png" loading="lazy"><figcaption><b>base</b> k25</figcaption></figure><figure class="in"><img src="04-last.png" loading="lazy"><figcaption><b>extra</b> k12: Keeper, Shell<br><span class="soft">last stable Keeper, Shell (shot 04, last)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></td><td class="res"><img src="05-start.png" loading="lazy"></td></tr><tr><td>06</td><td><div class="ins"><figure class="in"><img src="refs/LanternRoom.png" loading="lazy"><figcaption><b>base</b> k27</figcaption></figure><figure class="in"><img src="05-last.png" loading="lazy"><figcaption><b>extra</b> k14: Keeper<br><span class="soft">last stable Keeper (shot 05, last)</span></figcaption></figure><figure class="in"><img src="05-start.png" loading="lazy"><figcaption><b>extra</b> k13: Shell<br><span class="soft">last stable Shell (shot 05, start)</span></figcaption></figure><figure class="in"><img src="04-last.png" loading="lazy"><figcaption><b>extra</b> k12: Ships, Reef<br><span class="soft">last stable Ships, Reef (shot 04, last)</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure>
+      </div><p class="soft">rule selection</p></td><td class="res"><img src="06-start.png" loading="lazy"></td></tr><tr><td>08</td><td><div class="ins"><figure class="in"><img src="02-last.png" loading="lazy"><figcaption><b>base</b> k6</figcaption></figure><figure class="in"><img src="06-last.png" loading="lazy"><figcaption><b>extra</b> k17: Shell<br><span class="soft">k17 explicitly shows Shell held in Keeper’s hand with amber illumination, supplying the Shell reference absent from k6’s stable-entity list.</span></figcaption></figure><figure class="in"><img src="refs/Keeper.png" loading="lazy"><figcaption><b>anchor</b> Keeper<br><span class="soft">identity of Keeper (v1)</span></figcaption></figure>
+      </div><p class="soft">Use k6 for the Beach setting and kneeling Keeper, and k17 for Shell, then move Keeper to the right foreground, lower the hand just above sand, dampen the coat, and soften the glow and lighting to faint amber and dawn pearl-grey.</p></td><td class="res"><img src="08-start.png" loading="lazy"></td></tr></table></div><h2>API calls (33)</h2><div class="scroll"><table><tr><th>Key</th><th>Endpoint</th><th>Model</th><th>Credits</th><th>Seconds</th><th>Request</th></tr><tr><td>anchor:TowerStairs</td><td>/v1/ai-image-generator</td><td>nano-banana-pro</td><td>200</td><td>30</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor TowerStairs&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Location plate of TowerStairs: a lighthouse stairwell: a narrow cylindrical masonry shaft with worn spiral stone steps and slit windows. It contains Railing: an iron stair railing: a dark, worn handrail following the spiral staircase; real size: 90 cm above the steps, at Keeper's waist. Draw each of them at its real size; a door, railing or chair in the place gives human scale. Wide establishing view, empty, no people.&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Cottage</td><td>/v1/ai-image-generator</td><td>nano-banana-pro</td><td>200</td><td>32</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Cottage&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Location plate of Cottage: a lighthouse cottage kitchen: faded blue plaster walls, worn wooden flooring and a tall sea-facing window beside the tower. It contains Table: a kitchen table: a rectangular muted-brown wooden table with worn edges and visible grain; real size: 1.2 m long and 75 cm high, reaching Keeper's upper thigh. Draw each of them at its real size; a door, railing or chair in the place gives human scale. Wide establishing view, empty, no people.&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Beach</td><td>/v1/ai-image-generator</td><td>nano-banana-pro</td><td>200</td><td>33</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Beach&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Location plate of Beach: a rocky beach: pale sand between slate rocks, shallow tidal pools and a sloping shoreline beneath a coastal bluff. It contains Reef: a coastal rock reef: a jagged band of dark slate outcrops offshore; real size: 100 m long, with exposed rocks up to a person's height. Draw each of them at its real size; a door, railing or chair in the place gives human scale. Wide establishing view, empty, no people.&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Keeper</td><td>/v1/ai-image-generator</td><td>nano-banana-pro</td><td>200</td><td>33</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Keeper&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Character reference of Keeper: a lighthouse keeper: a woman in her late fifties with narrow shoulders, a weathered face and hands, greying hair tied back, a heavy charcoal coat, neatly repaired muted clothing and dark boots. Full body, front view, standing, neutral pose, plain light grey background, even soft light.&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:LanternRoom</td><td>/v1/ai-image-generator</td><td>nano-banana-pro</td><td>200</td><td>35</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor LanternRoom&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Location plate of LanternRoom: a lighthouse lantern room: a circular chamber with tall segmented glass panes, iron mullions and a central lamp pedestal. It contains Lamp: a lighthouse lamp: a brass burner within a hinged glass housing and a concentric prismatic optic on a rotation mechanism; real size: 1.2 m high and 80 cm across, with its burner at Keeper's chest height. Draw each of them at its real size; a door, railing or chair in the place gives human scale. Wide establishing view, empty, no people.&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Ships</td><td>/v1/ai-image-generator</td><td>nano-banana-pro</td><td>200</td><td>37</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Ships&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Ships: a group of three coastal ships: dark steel-hulled vessels with modest wheelhouses, masts and navigation lamps; real size: each 35–50 m long, many times a person's height; distant silhouettes from shore. Shown in Cottage (a lighthouse cottage kitchen: faded blue plaster walls, worn wooden flooring and a tall sea-facing window beside the tower) at its true scale, with the scene for scale.&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Shell</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>35</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Shell&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Image 1 is the character sheet of Keeper: identity only (face, hair, clothing); do not copy its pose or framing. Keeper (a lighthouse keeper: a woman in her late fifties with narrow shoulders, a weathered face and hands, greying hair tied back, a heavy charcoal coat, neatly repaired muted clothing and dark boots) holds Shell (a spiral seashell: an ivory shell with fine amber-coloured ridges and a translucent inner chamber; real size: 5 cm across, fits comfortably in Keeper's palm) in an open palm, hand and forearm large in frame, Shell at its true size relative to the hand; plain light grey background, even soft light.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/50d639b0-00e1-4442-a26b-b74ec9113b53-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Keeper.png</p></details></td></tr><tr><td>frame:01</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>58</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 01 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A low medium-wide view places Shell in the lower-right foreground among broken shells and ribbons of kelp. Keeper stands just behind it, looking down with empty hands. Reflective rock pools extend toward Lighthouse on the upper-left bluff. Pearl-grey dawn light falls across the calm shoreline.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nImage 4 shows Shell at its true size in a hand: keep that size exactly.\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): right mid-ground, standing beside Shell at the waterline; standing, empty hands, looking down.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): lower-right foreground beside Keeper's boots; on Beach sand; soft amber glow.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: dawn, diffuse pearl-grey light.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/a4f25f79-e0c1-4523-966c-efb0d1968d97-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Beach.png, refs/Shell.png, refs/Keeper.png, refs/Shell.png</p></details></td></tr><tr><td>frame:01:retry</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>56</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 01 a2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A low medium-wide view places Shell in the lower-right foreground among broken shells and ribbons of kelp. Keeper stands just behind it, looking down with empty hands. Reflective rock pools extend toward Lighthouse on the upper-left bluff. Pearl-grey dawn light falls across the calm shoreline.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nImage 4 shows Shell at its true size in a hand: keep that size exactly.\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): right mid-ground, standing beside Shell at the waterline; standing, empty hands, looking down.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): lower-right foreground beside Keeper's boots; on Beach sand; soft amber glow.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: dawn, diffuse pearl-grey light.\nFix these problems from the previous attempt: Shell: much larger than palm-sized; real size: 5 cm across, fits comfortably in Keeper's palm.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/a4f25f79-e0c1-4523-966c-efb0d1968d97-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Beach.png, refs/Shell.png, refs/Keeper.png, refs/Shell.png</p></details></td></tr><tr><td>clip:01</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>115</td><td><details><summary>Keeper kneels beside Shell and lowers her open hand toward i…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 01&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Keeper kneels beside Shell and lowers her open hand toward its amber glow. Static camera. Sound: gentle surf along the rocks; coat fabric folds as Keeper kneels at 2s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/02854eea-4fa3-41fa-ba3c-80357349d4de-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>clip:02</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>101</td><td><details><summary>Already in motion: hand already lowering toward Shell. Keepe…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 02&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Already in motion: hand already lowering toward Shell. Keeper lifts Shell into her palm, gently turns it, then holds it still. Static camera. Sound: gentle surf along the rocks; faint sand grains slipping from Shell at 1s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/7a289b0d-266d-4ad1-8534-522f2f5c3351-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>frame:03</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>53</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 03 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium view across Table shows Keeper seated alone on the left, holding Shell just above the tabletop beside Cup. Meal is partly eaten, and Spoon rests beside its bowl. Faded blue walls and the tall window frame a subdued dusk interior, with Shell providing a small amber warmth.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nImage 4 shows Shell at its true size in a hand: keep that size exactly.\nNew in this shot: Cup: a ceramic cup: a cream-glazed handled cup with a chipped rim; real size: 9 cm high, approximately the length of an adult palm.\nNew in this shot: Meal: a simple meal: a shallow stoneware bowl containing bread and stew; real size: 20 cm across, about two hand widths.\nNew in this shot: Spoon: an eating spoon: a plain dull-silver metal spoon; real size: 18 cm long, slightly longer than an adult hand.\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): left mid-ground, seated behind Table; holding Shell; on wet sand; seated, looking at Shell.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, centre foreground, just above Table beside Cup; soft amber glow.\nTable (prop, 1.2 m long and 75 cm high, reaching Keeper's upper thigh): across the lower half of the frame; on Cottage floor; worn, dry.\nCup (prop, 9 cm high, approximately the length of an adult palm): centre-right foreground; on Table; upright.\nMeal (prop, 20 cm across, about two hand widths): left foreground before Keeper; on Table; partly eaten.\nSpoon (prop, 18 cm long, slightly longer than an adult hand): beside Meal; on Table; unused at this moment.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm; Cup is 9 cm high, approximately the length of an adult palm; Meal is 20 cm across, about two hand widths; Spoon is 18 cm long, slightly longer than an adult hand. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: dusk, fading blue-grey window light.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/54ebcf5f-1d78-45b8-b407-f34976cddf29-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/7213607b-1b2e-49c5-9c53-80e1b5695872-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Cottage.png, 02-last.png, refs/Keeper.png, refs/Shell.png</p></details></td></tr><tr><td>frame:03:retry</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>50</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 03 a2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium view across Table shows Keeper seated alone on the left, holding Shell just above the tabletop beside Cup. Meal is partly eaten, and Spoon rests beside its bowl. Faded blue walls and the tall window frame a subdued dusk interior, with Shell providing a small amber warmth.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nImage 4 shows Shell at its true size in a hand: keep that size exactly.\nNew in this shot: Cup: a ceramic cup: a cream-glazed handled cup with a chipped rim; real size: 9 cm high, approximately the length of an adult palm.\nNew in this shot: Meal: a simple meal: a shallow stoneware bowl containing bread and stew; real size: 20 cm across, about two hand widths.\nNew in this shot: Spoon: an eating spoon: a plain dull-silver metal spoon; real size: 18 cm long, slightly longer than an adult hand.\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): left mid-ground, seated behind Table; holding Shell; on wet sand; seated, looking at Shell.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, centre foreground, just above Table beside Cup; soft amber glow.\nTable (prop, 1.2 m long and 75 cm high, reaching Keeper's upper thigh): across the lower half of the frame; on Cottage floor; worn, dry.\nCup (prop, 9 cm high, approximately the length of an adult palm): centre-right foreground; on Table; upright.\nMeal (prop, 20 cm across, about two hand widths): left foreground before Keeper; on Table; partly eaten.\nSpoon (prop, 18 cm long, slightly longer than an adult hand): beside Meal; on Table; unused at this moment.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm; Cup is 9 cm high, approximately the length of an adult palm; Meal is 20 cm across, about two hand widths; Spoon is 18 cm long, slightly longer than an adult hand. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: dusk, fading blue-grey window light.\nFix these problems from the previous attempt: Shell: larger than palm-sized; bright rather than soft glow; right mid-ground rather than centre foreground; real size: 5 cm across, fits comfortably in Keeper's palm.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/54ebcf5f-1d78-45b8-b407-f34976cddf29-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/7213607b-1b2e-49c5-9c53-80e1b5695872-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Cottage.png, 02-last.png, refs/Keeper.png, refs/Shell.png</p></details></td></tr><tr><td>clip:03</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>102</td><td><details><summary>Keeper sets Shell beside Cup and leaves her fingers resting …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 03&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Keeper sets Shell beside Cup and leaves her fingers resting near it. Static camera. Sound: quiet cottage room tone; Shell softly touches the wooden tabletop at 2s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8c99a384-4d95-4a01-b5d7-461fe4eef327-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>frame:04</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>61</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 04 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A wide night composition shows Keeper seated at Table on the left, Shell glowing beside Cup and the abandoned Meal and Spoon. The tall window fills the right half: rain streaks its glass, Lighthouse rises along its left edge, and Lamp shines at the top. Ships' navigation lights sit close to the dark offshore Reef beneath storm clouds.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Lamp: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is an earlier frame showing Reef: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 4 is the character sheet of Keeper: identity only (face, hair, clothing).\nImage 5 shows Ships at its true size in its place: keep its look and that size exactly.\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): left mid-ground, seated at Table; on wooden chair; empty hands, watching the window.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): left foreground beside Cup; on Table; glowing amber, ridged spiral.\nTable (prop, 1.2 m long and 75 cm high, reaching Keeper's upper thigh): lower-left foreground; on Cottage floor; dry.\nCup (prop, 9 cm high, approximately the length of an adult palm): beside Shell; on Table; upright, dark irregular rim.\nMeal (prop, 20 cm across, about two hand widths): before Keeper; on Table; shallow bowl with stew and bread.\nSpoon (prop, 18 cm long, slightly longer than an adult hand): in front of shell; on Table; abandoned.\nLamp (prop, 1.2 m high and 80 cm across, with its burner at Keeper's chest height): upper centre, distant through the window in Lighthouse; on LanternRoom pedestal; lit, housing closed.\nShips (prop, each 35–50 m long, many times a person's height; distant silhouettes from shore): right background through the window, near Reef; on sea; navigation lights on, drifting toward Reef.\nReef (prop, 100 m long, with exposed rocks up to a person's height): right background below Ships; on seabed; dark, wave-washed.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm; Cup is 9 cm high, approximately the length of an adult palm; Meal is 20 cm across, about two hand widths; Spoon is 18 cm long, slightly longer than an adult hand. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: night, amber interior glow and storm darkness.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8c99a384-4d95-4a01-b5d7-461fe4eef327-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b09b7ad6-5304-4712-a050-24aa305eebbe-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/a4f25f79-e0c1-4523-966c-efb0d1968d97-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b53184ba-905a-4b3a-9c88-68ec34a21762-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: 03-start.png, refs/LanternRoom.png, refs/Beach.png, refs/Keeper.png, refs/Ships.png</p></details></td></tr><tr><td>frame:04:retry</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>67</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 04 a2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A wide night composition shows Keeper seated at Table on the left, Shell glowing beside Cup and the abandoned Meal and Spoon. The tall window fills the right half: rain streaks its glass, Lighthouse rises along its left edge, and Lamp shines at the top. Ships' navigation lights sit close to the dark offshore Reef beneath storm clouds.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Lamp: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is an earlier frame showing Reef: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 4 is the character sheet of Keeper: identity only (face, hair, clothing).\nImage 5 shows Ships at its true size in its place: keep its look and that size exactly.\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): left mid-ground, seated at Table; on wooden chair; empty hands, watching the window.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): left foreground beside Cup; on Table; glowing amber, ridged spiral.\nTable (prop, 1.2 m long and 75 cm high, reaching Keeper's upper thigh): lower-left foreground; on Cottage floor; dry.\nCup (prop, 9 cm high, approximately the length of an adult palm): beside Shell; on Table; upright, dark irregular rim.\nMeal (prop, 20 cm across, about two hand widths): before Keeper; on Table; shallow bowl with stew and bread.\nSpoon (prop, 18 cm long, slightly longer than an adult hand): in front of shell; on Table; abandoned.\nLamp (prop, 1.2 m high and 80 cm across, with its burner at Keeper's chest height): upper centre, distant through the window in Lighthouse; on LanternRoom pedestal; lit, housing closed.\nShips (prop, each 35–50 m long, many times a person's height; distant silhouettes from shore): right background through the window, near Reef; on sea; navigation lights on, drifting toward Reef.\nReef (prop, 100 m long, with exposed rocks up to a person's height): right background below Ships; on seabed; dark, wave-washed.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm; Cup is 9 cm high, approximately the length of an adult palm; Meal is 20 cm across, about two hand widths; Spoon is 18 cm long, slightly longer than an adult hand. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: night, amber interior glow and storm darkness.\nFix these problems from the previous attempt: Shell: much larger than palm; not beside Cup; real size: 5 cm across, fits comfortably in Keeper's palm; Lamp: simple lantern-like housing; concentric prismatic optic not evident; rotation mechanism not evident.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8c99a384-4d95-4a01-b5d7-461fe4eef327-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b09b7ad6-5304-4712-a050-24aa305eebbe-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/a4f25f79-e0c1-4523-966c-efb0d1968d97-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b53184ba-905a-4b3a-9c88-68ec34a21762-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: 03-start.png, refs/LanternRoom.png, refs/Beach.png, refs/Keeper.png, refs/Ships.png</p></details></td></tr><tr><td>clip:04</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>115</td><td><details><summary>Lamp goes out while Ships drift closer to Reef; Keeper turns…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 04&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Lamp goes out while Ships drift closer to Reef; Keeper turns her gaze toward Shell. Static camera. Sound: wind and rain against the window. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/2d7a476c-5dac-4a06-8e81-44ba190c765f-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>frame:05</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>46</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 05 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium view looks along the spiral of TowerStairs. Keeper occupies the lower centre, Shell held against her chest in one hand and her other hand gripping Railing. Rain enters through a slit window on the right. Amber light escapes between her fingers onto wet stone and iron.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper, Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): lower centre, mid-stride on TowerStairs; holding Shell; on chair; coat damp, gripping Railing.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, against Keeper's chest; soft amber glow.\nRailing (prop, 90 cm above the steps, at Keeper's waist): curving from lower left toward upper centre; on TowerStairs steps; wet.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: stormy night, shell-lit stairwell.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/210430b9-56cd-4eda-b93f-ef345e57f8a7-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/c830d31f-62d7-4df4-846b-edeb80dc2936-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/TowerStairs.png, 04-last.png, refs/Keeper.png</p></details></td></tr><tr><td>clip:05</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>166</td><td><details><summary>Keeper climbs the worn steps, sliding one hand along Railing…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 05&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Keeper climbs the worn steps, sliding one hand along Railing and keeping Shell pressed against her chest. Static camera. Sound: wind through narrow windows; bootstep on wet stone at 1s, another bootstep and a hand sliding over iron at 3s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8a8b94b3-48c6-4644-ac19-64e23cccc666-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>frame:06</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>65</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 06 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium-wide view places Keeper on the left beside the dark Lamp at centre. Shell rests in her raised hand near her chest; her free hand touches the closed glass housing. Beyond the right-hand panes, Ships' navigation lights approach Reef through driving rain. Shell casts the only warm light inside LanternRoom.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is an earlier frame showing Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 4 is an earlier frame showing Ships, Reef: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 5 is the character sheet of Keeper: identity only (face, hair, clothing).\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): left mid-ground beside Lamp; holding Shell and Railing; on TowerStairs steps; standing, damp coat, free hand on housing.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, in Keeper's hand near her chest; soft amber glow.\nLamp (prop, 1.2 m high and 80 cm across, with its burner at Keeper's chest height): centre mid-ground; on LanternRoom pedestal; extinguished.\nShips (prop, each 35–50 m long, many times a person's height; distant silhouettes from shore): right background through the panes; on sea; navigation lights on, approaching Reef.\nReef (prop, 100 m long, with exposed rocks up to a person's height): centre-right background below ships; on seabed; dark jagged rocks, wave-washed.\nIn force since shot 04: Lamp is extinguished.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: stormy night, dim amber shell light.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b09b7ad6-5304-4712-a050-24aa305eebbe-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/20422658-fb93-4ed4-b3d1-5efe2738c58a-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8a8b94b3-48c6-4644-ac19-64e23cccc666-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/c830d31f-62d7-4df4-846b-edeb80dc2936-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/LanternRoom.png, 05-last.png, 05-start.png, 04-last.png, refs/Keeper.png</p></details></td></tr><tr><td>frame:06:retry</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>50</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 06 a2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A medium-wide view places Keeper on the left beside the dark Lamp at centre. Shell rests in her raised hand near her chest; her free hand touches the closed glass housing. Beyond the right-hand panes, Ships' navigation lights approach Reef through driving rain. Shell casts the only warm light inside LanternRoom.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Keeper: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is an earlier frame showing Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 4 is an earlier frame showing Ships, Reef: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 5 is the character sheet of Keeper: identity only (face, hair, clothing).\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): left mid-ground beside Lamp; holding Shell and Railing; on TowerStairs steps; standing, damp coat, free hand on housing.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, in Keeper's hand near her chest; soft amber glow.\nLamp (prop, 1.2 m high and 80 cm across, with its burner at Keeper's chest height): centre mid-ground; on LanternRoom pedestal; extinguished.\nShips (prop, each 35–50 m long, many times a person's height; distant silhouettes from shore): right background through the panes; on sea; navigation lights on, approaching Reef.\nReef (prop, 100 m long, with exposed rocks up to a person's height): centre-right background below ships; on seabed; dark jagged rocks, wave-washed.\nIn force since shot 04: Lamp is extinguished.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: stormy night, dim amber shell light.\nFix these problems from the previous attempt: Lamp: lamp assembly taller than Keeper; burner below chest height.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b09b7ad6-5304-4712-a050-24aa305eebbe-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/20422658-fb93-4ed4-b3d1-5efe2738c58a-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8a8b94b3-48c6-4644-ac19-64e23cccc666-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/c830d31f-62d7-4df4-846b-edeb80dc2936-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/LanternRoom.png, 05-last.png, 05-start.png, 04-last.png, refs/Keeper.png</p></details></td></tr><tr><td>clip:06</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>147</td><td><details><summary>Keeper opens Lamp's glass housing and brings Shell close to …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 06&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Keeper opens Lamp's glass housing and brings Shell close to the dark burner. Static camera. Sound: storm wind and rain on lantern glass; glass housing hinge creaks at 1.5s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/26fd9d7c-20ec-4f17-9be4-ba14ae26e7b5-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>clip:07</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>169</td><td><details><summary>Already in motion: Shell already approaching the burner; Shi…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 07&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Already in motion: Shell already approaching the burner; Ships already drifting. Lamp catches and sweeps light across Ships; Ships turn away from Reef while Keeper watches. Static camera. Sound: storm wind and rain on lantern glass; soft ignition rush from the burner at 1.5s, lamp rotation mechanism resumes its steady ticking at 2.5s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/6faec988-0865-4ef2-b376-9fb82adcbf19-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Ships-v2</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>37</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Ships v2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Image 1 is the reference of Ships. Image 2 shows Ships after a change. Make a new clean reference of Ships, identical to image 1 except: same Ships, now course = away from Reef, condition = safe. Same framing and background as image 1.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/b53184ba-905a-4b3a-9c88-68ec34a21762-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/c0a1e182-15ff-4b34-a760-40e38f2a3c13-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Ships.png, 07-last.png</p></details></td></tr><tr><td>frame:08</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>49</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 08 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A low wide view places Keeper kneeling in the right foreground at the original finding spot. She holds the faintly glowing Shell just above wet sand. Scattered storm-cast weed and driftwood lie between the rocks. Lighthouse rises at upper left, and a thin edge of returning water lies below Shell under soft pearl-grey morning light.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): right foreground, kneeling on wet sand; on LanternRoom floor; kneeling, coat damp.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, in Keeper's lowered hand just above sand; faint amber glow.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: following dawn, soft pearl-grey light.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/7213607b-1b2e-49c5-9c53-80e1b5695872-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/6faec988-0865-4ef2-b376-9fb82adcbf19-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: 02-last.png, 06-last.png, refs/Keeper.png</p></details></td></tr><tr><td>frame:08:retry</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>39</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 08 a2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. 16:9 film frame. One single frame, not a grid, storyboard or collage; no text. New shot: A low wide view places Keeper kneeling in the right foreground at the original finding spot. She holds the faintly glowing Shell just above wet sand. Scattered storm-cast weed and driftwood lie between the rocks. Lighthouse rises at upper left, and a thin edge of returning water lies below Shell under soft pearl-grey morning light.\nImage 1 is an earlier frame of this same place. Transform it into the new shot. Keep the place, its objects and the real size of everything as in image 1; change only framing, positions, poses, light and time as described.\nImage 2 is an earlier frame showing Shell: take its exact look, state and real size from it and merge it into the new shot; do not copy its framing.\nImage 3 is the character sheet of Keeper: identity only (face, hair, clothing).\nState at this frame:\nKeeper (character, 1.65 m tall, an average-height adult woman): right foreground, kneeling on wet sand; on LanternRoom floor; kneeling, coat damp.\nShell (prop, 5 cm across, fits comfortably in Keeper's palm): held by Keeper, in Keeper's lowered hand just above sand; faint amber glow.\nReal sizes are absolute: Shell is 5 cm across, fits comfortably in Keeper's palm. Draw each at that size relative to the hands, feet and objects at the same depth, even if it becomes small in the frame; never enlarge it to make it visible.\nTime and light: following dawn, soft pearl-grey light.\nFix these problems from the previous attempt: Shell: larger than 5 cm across; bright rather than faint glow; held in both hands; real size: 5 cm across, fits comfortably in Keeper's palm.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/7213607b-1b2e-49c5-9c53-80e1b5695872-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/6faec988-0865-4ef2-b376-9fb82adcbf19-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/8f057ee3-f1b7-4948-8fc9-9ba7fc5b1509-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: 02-last.png, 06-last.png, refs/Keeper.png</p></details></td></tr><tr><td>clip:08</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>312</td><td><details><summary>Keeper settles Shell into the wet sand and leaves her hand l…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 08&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Keeper settles Shell into the wet sand and leaves her hand lingering beside it. Static camera. Sound: soft returning surf; quiet contact of Shell with wet sand at 2s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/54c24c3d-e356-4a8f-bf15-fbc6d1104be5-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>anchor:Shell-v2</td><td>/v1/ai-image-editor</td><td>nano-banana-pro</td><td>200</td><td>41</td><td><details><summary>Painterly 16:9 oil-paint imagery, pearl grey and slate blue …</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse anchor Shell v2&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly 16:9 oil-paint imagery, pearl grey and slate blue with restrained amber accents, textured surfaces, softly blended light and naturalistic proportions.. Single frame, not a grid. Image 1 is the reference of Shell. Image 2 shows Shell after a change. Make a new clean reference of Shell, identical to image 1 except: same Shell, now condition = faint amber glow. Same framing and background as image 1.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/5c43c8c5-4612-4c4e-9fb7-8f1a50f1c5d7-image-0.png&quot;,
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/eaa69d14-e728-48c6-ab5d-2ad4c6809bdf-image-0.png&quot;
+  ]
+ }
+}</pre><p class="soft">inputs: refs/Shell.png, 08-last.png</p></details></td></tr><tr><td>clip:09</td><td>/v1/image-to-video</td><td>wan-3.0</td><td>480</td><td>108</td><td><details><summary>Already in motion: returning water already creeping toward S…</summary><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse 09&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Already in motion: returning water already creeping toward Shell. Keeper withdraws her hand, rises, and walks toward Lighthouse while a thin wash of water slides around Shell. Static camera. Sound: gentle tide washing over sand; soft bootsteps departing across wet sand at 2s, thin wash of water around Shell at 4s. No music, no speech.&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/eaa69d14-e728-48c6-ab5d-2ad4c6809bdf-image-0.png&quot;
+ }
+}</pre></details></td></tr><tr><td>bed:Beach</td><td></td><td></td><td>0</td><td>0</td><td><details><summary>…</summary><pre></pre></details></td></tr><tr><td>bed:Cottage</td><td></td><td></td><td>0</td><td>0</td><td><details><summary>…</summary><pre></pre></details></td></tr><tr><td>bed:TowerStairs</td><td></td><td></td><td>0</td><td>0</td><td><details><summary>…</summary><pre></pre></details></td></tr><tr><td>bed:LanternRoom</td><td></td><td></td><td>0</td><td>0</td><td><details><summary>…</summary><pre></pre></details></td></tr></table></div>
+</main></body></html>
