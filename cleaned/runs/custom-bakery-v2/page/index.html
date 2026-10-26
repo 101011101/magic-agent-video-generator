@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bakery Seeds Regenerated</title>
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--ok:#1f7a4d;--bad:#b23a2f;--warn:#9a6b00;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d;--warn:#e0b45a}}
+:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d;--warn:#e0b45a}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1150px;margin:0 auto;padding:16px;display:grid;gap:18px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0}.mut{color:var(--mut);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+pre{margin:0;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font:12.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+ul{margin:0;padding-left:20px}li{margin:3px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line);vertical-align:top}th{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+details summary{cursor:pointer;color:var(--mut);font-size:13px}
+</style></head><body><main>
+<h1>Bakery: seeds and grids regenerated the minimal way</h1>
+<p class="mut"><code>cleaned/regrid.mjs --from custom-bakery-real --label bakery-v2</code>. Reuses the story, cast, specs, layout and storyboard; regenerates only the seed assets and the grids. One LLM call for the medium, one check per sheet and per plate, per grid one layout call and one room call. 4,000 credits: 4 sheets (800), 2 plates + 2 retries (800), 8 grid images (2,400). Stopped at the 90,000 cap before grid 5's retry and grid 6.</p>
+
+<section class="card"><h2>1. Sheets: four for four on the first try</h2>
+<img src="v2-sheets.jpg" alt="the four new sheets">
+<p>Prompt shape: <em>"A full-length live-action photograph of a real person, full length. The person: …spec… Standing, front view… Plain light-grey seamless studio backdrop…"</em>. The check asks <code>medium_ok</code> first. The previous run needed 17 images for these four (below: the neighbour's tries 1, 4, 6, 7, then the other three).</p>
+<img src="old-sheets.jpg" alt="the previous run's sheets" style="max-width:100%">
+</section>
+
+<section class="card"><h2>2. Plates</h2>
+<img src="v2-plates.jpg" alt="street plate (try 2), shop plate (try 1), shop plate (try 2)">
+<p>Street: try 2 kept (try 1 lacked the flour bowl in the window). Shop: try 1 kept; the check wanted the door sign and the cooling rack, try 2 answered with a door propped against the wall and lost the window, so the better first try stays. The plate prompt now lists top-level objects only (8 for the shop instead of 15 facts, 2 door swings and 5 keep-clear zones) and starts with the medium.</p>
+<details><summary>shop plate prompt as sent (try 2, with the fix line)</summary><pre>A live-action photograph of an empty place shop, empty of people and animals. A modest working bakery with cream plaster, honey-coloured timber, worn stone flooring, and dark metal baking equipment. Its surfaces are clean but comfortably used, with a warm, handmade character.
+Camera: Eye height in the rear customer-side corner, wide diagonal view toward the front wall. The blue door is far left, the window far right, and the right-wall equipment remains visible.
+- Blue shop front door: Blue glazed door at the far left.
+- Door-mounted shop name sign: Far left at adult chest height.
+- Shop front window: Large clear window in the far-right front wall.
+- Wooden workbench: Far right, with its working edge toward the camera.
+- Flour bowl: At the far-right end of the worktop.
+- Baking oven: Middle right against the right wall.
+- Wire cooling rack: Near right against the right wall.
+- Shop counter: Middle left, running from near to far.
+- Blue shop front door: Hinged on its left edge as seen here; opens inward toward the camera and rests flat against the left wall. …
+- Drop-down oven door: Hinged along its bottom edge; lowers toward the centre of the room to a horizontal stop. …
+Light: Warm amber interior light, balanced by cool predawn light through the front glazing. … No text or labels; one single image.
+The picture must show the shop name sign mounted on the blue door at adult chest height and a wire cooling rack near the camera against the right wall.</pre></details>
+</section>
+
+<section class="card"><h2>3. Grid 1, the street (2 cells + 2 empty)</h2>
+<img src="v2-scene-1.jpg" alt="grid 1">
+<p class="ok">Same camera in every cell; the baker from his sheet; the dough appears in cell 2 only. Room check: all cells same room and camera.</p>
+<details><summary>prompt as sent</summary><pre>A storyboard grid of 4 equal cells, 2 rows × 2 columns, edge to edge, no gutters, borders, numbers or text. Cells 1 to 2 are 2 consecutive moments of one continuous shot, in reading order; cells 3 to 4 are the empty place of image 1.
+Image 1 is quiet neighbourhood street (EXT. quiet neighbourhood street — NIGHT); every cell is this room from exactly this camera. Image 2 is baker: same face, hair and clothes in every cell; the pose and grey background of that image do not apply.
+Cell 1, in full: Baker stands behind the workbench inside the shop glowing along the quiet street beneath a blue, sunless sky. baker inside the glowing shop, behind the far-left front window, standing behind the workbench, wearing a flour-dusted apron; flour dusting the apron on the baker's apron, dusting the baker's apron. Nothing else is added: no extra people, animals, food or objects beyond those named; everything else is exactly as in image 1.
+New things, described once: flour dusting the apron: Fine, flour-white powder forming irregular, thin patches and scattered tiny specks. ball of dough: A plump, roughly spherical ball of pale cream dough with a slightly flattened base.
+Each later cell is the cell before it with ONLY the change named; everyone and everything else stays exactly where it was.
+2. Baker sets a ball of dough on the workbench nearest us. ball of dough enters on the near edge of the workbench inside the far-left front window, settling beneath the baker's hands.
+Live-action photographic footage, cinema camera, shallow depth of field.</pre></details>
+</section>
+
+<section class="card"><h2>4. Grid 2, kneading to oven (6 cells + 3 empty), second attempt</h2>
+<img src="v2-scene-2-a2.jpg" alt="grid 2">
+<ul>
+<li class="ok">One baker, from his sheet, in every cell; dough → shaped loaf → into the oven → tray in → door closed, in order; the empty cells are the plate's room from the plate's camera.</li>
+<li class="bad">The action cells are not the plate's camera: cells 1–3 move in on the workbench, cells 4–6 on the oven. Both attempts did this (room check: "other room / other camera" on all six). The model goes closer whenever hands do something at a bench. Same thing happened in the previous run's grid 2.</li>
+<li class="warn">The loaf is golden and scored before it is baked (cell 2): its text line is the spec's first sentence, which describes the baked loaf (the spec problem from the audit; the storyboard was not re-run).</li>
+<li class="bad">Image 3 was the street frame, sent as "shows flour dusting the apron and ball of dough as they are now": the state manager picked the last frame showing the dough, which was the exterior shot through the window. A reference frame from another environment is useless here; the rule must be same-environment only, else text.</li>
+</ul>
+<details><summary>prompt as sent</summary><pre>A storyboard grid of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Cells 1 to 6 are 6 consecutive moments of one continuous shot, in reading order; cells 7 to 9 are the empty place of image 1.
+Image 1 is shop (INT. shop — CONTINUOUS); every cell is this room from exactly this camera. Image 2 is baker: same face, hair and clothes in every cell; the pose and grey background of that image do not apply. Image 3 shows flour dusting the apron and ball of dough as they are now.
+Cell 1, in full: Baker presses the folded dough away from us with both palms. baker at the workbench, pressing the folded dough with both palms; flour dusting the apron on the baker's apron, dusting the baker's apron; ball of dough on the workbench working surface, folded over itself beneath the baker's palms. Nothing else is added: no extra people, animals, food or objects beyond those named; everything else is exactly as in image 1.
+New things, described once: loaf: A broad, oval loaf with rounded ends, a honey-gold crust, and three diagonal expansion marks across its domed top. pastry tray: A shallow rectangular tray of dull charcoal-grey metal, with rounded corners and a narrow raised rim on all four sides.
+Each later cell is the cell before it with ONLY the change named; everyone and everything else stays exactly where it was.
+2. Baker shapes the dough into a loaf beside a tray of plump croissants. loaf enters on the workbench working surface, resting beneath the baker's shaping hands. pastry tray enters on the far-right end of the worktop beside the flour bowl, holding plump croissants. croissants enters on the pastry tray beside the flour bowl, sitting on the pastry tray. ball of dough is no longer in the picture.
+3. Baker lifts the loaf from the workbench beside the open oven.
+4. Baker slides the loaf into the oven to the left of the workbench.
+5. Baker slides the pastry tray of croissants into the oven, away from us.
+6. Baker closes the oven door.
+Live-action photographic footage, cinema camera, shallow depth of field.
+Every cell shows the room of image 1 from the camera of image 1: the same walls, furniture and framing; no close-ups, no other angles.</pre></details>
+</section>
+
+<section class="card"><h2>5. Grid 3, the oven (5 cells + 4 empty), second attempt</h2>
+<img src="v2-scene-3-a2.jpg" alt="grid 3">
+<ul>
+<li class="ok">Steam, mitts, loaf and tray out together, tray onto the bench, loaf onto the rack; same baker; empty cells are the plate.</li>
+<li class="bad">Again the action cells are a closer framing than the plate (room check: "other camera" ×5, both attempts). Cell 5 has an extra loaf already on the rack.</li>
+</ul>
+</section>
+
+<section class="card"><h2>6. Grid 4, the door opens (4 cells), second attempt</h2>
+<img src="v2-scene-4-a2.jpg" alt="grid 4">
+<p class="ok">The plate's camera in all four cells (first attempt failed the room check, the retry passed). The neighbour is the woman from her sheet, with the canvas bag; parent and child from theirs; the bread from grid 3 sits on the workbench. This scene lost the neighbour entirely in the previous run.</p>
+</section>
+
+<section class="card"><h2>7. Grid 5, the counter (8 cells + 1 empty), first attempt</h2>
+<img src="v2-scene-5.jpg" alt="grid 5">
+<ul>
+<li class="bad">The whole grid came out as a drawing. The prompt opens "A storyboard grid …" and closes "Live-action photographic footage, cinema camera…": a storyboard <em>of</em> live-action footage is, to the model, drawn. Grids 1–4 survived the same wording; this one, with four people and eight cells, flipped. The medium has to name what each cell <em>is</em> ("each cell is a live-action photograph"), and the layout check needs a medium question so a drawn grid is retried.</li>
+<li class="ok">As a drawing it is consistent: the four people match their sheets, one loaf, one tray, the bag, the paper bag, the wrapped loaf handed to the parent; the room is the plate's room from the plate's camera in 7 of 9 cells (room check: cells 4 and 5 off).</li>
+</ul>
+<p>The previous run's grid 5, for comparison (different baker, two men for the neighbour and parent, bread everywhere):</p>
+<img src="old-scene-5.jpg" alt="previous run's grid 5 cells">
+</section>
+
+<section class="card"><h2>8. What this run settles</h2>
+<table><tr><th>question</th><th>answer</th></tr>
+<tr><td>Does the medium as the noun fix the sheets?</td><td class="ok">Yes: 4 of 4 first try, against 17 images last time.</td></tr>
+<tr><td>Does "cell 1 in full, then deltas" hold a scene together?</td><td class="ok">Yes for people and props in every grid; identity held across all five grids, including scene 4 where it failed before.</td></tr>
+<tr><td>Fixed camera</td><td class="warn">The model moves closer whenever the action is at a bench or oven (grids 2 and 3, both attempts, same as the old prompt). Either accept a per-scene framing chosen by the storyboard (a planned cut), or keep retrying wide shots.</td></tr>
+<tr><td>Medium drift on grids</td><td class="bad">"Storyboard" + "footage" produced a drawn grid once in five. Fix: name the cell medium, check it.</td></tr>
+<tr><td>References</td><td class="bad">A prop's last frame must be from the same environment (grid 2 got the street shot). Spec first sentences still carry state (golden loaf before baking).</td></tr>
+<tr><td>Calls</td><td class="ok">1 medium + 4 sheet checks + 4 plate checks + per grid 2 checks (16) = 25 LLM calls for seeds and grids, against ≈ 120 in the previous run's image half.</td></tr></table>
+<p>Left to do on this run: grid 5 again with the cell-medium line, and grid 6 (the street, closing sign). About 700–1,500 credits depending on retries; the cap is at 90,000 and the ledger at 89,880.</p>
+</section>
+</main></body></html>
