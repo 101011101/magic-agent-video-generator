@@ -60,6 +60,32 @@ Live-action photograph, cinema camera, shallow depth of field, warm practical li
   console.log(`G5: ${run.path(file)} and G5-cell*.png`);
 }
 
-const tests = { S1, G5 };
+// G5b: the same scene, inputs and moments, but ONE account of the cells: cell 1 in full, every later cell only its change.
+async function G5b() {
+  const neighbour = existsSync(run.path("S1-neighbour-photo.png")) ? "S1-neighbour-photo.png" : take("roots/neighbour-t7.png");
+  const inputs = [take("roots/shop.png"), take("roots/baker.png"), neighbour, take("roots/parent.png"), take("roots/child.png"), take("frames/s3-p5.png")];
+  const prompt = `A storyboard grid of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Cells 1 to 8 are eight consecutive moments of one continuous shot, in reading order; cell 9 is the empty shop.
+Image 1 is the shop; every cell is this room from exactly this camera. Image 2 is the baker, image 3 the neighbour, image 4 the parent, image 5 the child: same face, hair and clothes in every cell; their poses and grey backgrounds do not apply. Image 6 shows the bread as it is now.
+Cell 1, in full: the baker stands behind the counter and lifts one croissant from the tray of baked croissants on the workbench behind them. Across the counter stand three customers: the neighbour nearest the blue front door, a canvas shopping bag on her arm; the parent beside her; the child beside the parent. One baked loaf rests on the wire cooling rack. A small brown paper bag stands open on the counter. There is no other bread or pastry anywhere; the shelves are empty.
+Each later cell is the cell before it with ONLY the change named; everyone and everything else stays exactly where it was.
+2. The baker slips the croissant into the paper bag.
+3. The baker passes the paper bag across the counter; the neighbour takes it.
+4. The baker lifts the loaf from the cooling rack.
+5. The baker folds a sheet of plain paper around the loaf on the counter.
+6. The parent holds the wrapped loaf; the baker's shoulders droop.
+7. The neighbour and the parent smile at the baker.
+8. The baker lifts their head and smiles.
+Live-action photograph, cinema camera, shallow depth of field, warm practical light.`;
+  const file = "G5b-grid.png";
+  try { await jobs.image("G5b", file, prompt, inputs, { ...IMAGE, resolution: "4k" }); }
+  catch (e) { if (!/timed out/.test(e.message)) throw e; console.log("  4k timed out; 2k"); await jobs.image("G5b-2k", file, prompt, inputs, { ...IMAGE, resolution: "2k" }); }
+  const gc = await checkGrid(run.path(file), 8);
+  console.log(`G5b grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
+  const drawn = gc.rows && gc.cols ? [gc.rows, gc.cols] : [3, 3];
+  cropCells(run.path(file), drawn[0] * drawn[1], (i) => run.path(`G5b-cell${i}.png`), drawn);
+  console.log(`G5b: ${run.path(file)} and G5b-cell*.png`);
+}
+
+const tests = { S1, G5, G5b };
 for (const t of process.argv.slice(2)) { if (!tests[t]) throw new Error(`no test ${t}`); console.log(`== ${t}`); await tests[t](); }
 run.save();
