@@ -1,0 +1,130 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pipeline Call Audit</title>
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--ok:#1f7a4d;--bad:#b23a2f;--warn:#9a6b00;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d;--warn:#e0b45a}}
+:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d;--warn:#e0b45a}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1150px;margin:0 auto;padding:16px;display:grid;gap:18px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0}h3{font-size:15px;margin:8px 0 0}.mut{color:var(--mut);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line);vertical-align:top}th{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+code,pre{font:12.5px/1.45 var(--mono)}pre{margin:0;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+ul{margin:0;padding-left:20px}li{margin:3px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.tag{display:inline-block;font:600 10.5px var(--mono);padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--mut)}
+.wrap{overflow-x:auto}
+</style></head><body><main>
+<h1>Pipeline audit: model calls and prompts</h1>
+<p class="mut">Scope: the scene pipeline (<code>scenes.mjs</code> → <code>scene-video.mjs</code>) as run on the bakery ad, read from <code>src/*.js</code> and from the prompts recorded in <code>runs/custom-bakery-real/run.json</code>. The older per-slide path (<code>run.mjs</code>: blocking, verify-step, motion) is noted at the end. Counts are for one run of 6 scenes, 27 panels, a 208-word story, 4 characters, 2 places.</p>
+
+<section class="card"><h2>1. What one run spends</h2>
+<table><tr><th>run</th><th>LLM calls</th><th>of which vision checks on grids</th><th>paid images</th><th>credits</th><th>credits in retries</th><th>wall</th></tr>
+<tr><td>bakery, illustrated</td><td>47 live</td><td>≈ 25</td><td>19</td><td>4,400</td><td>1,400 (32%)</td><td>24 min</td></tr>
+<tr><td>bakery, photoreal (text stages cached)</td><td>38 live + 69 cached</td><td>≈ 90 over its resumes</td><td>29</td><td>8,200</td><td>4,100 (50%): 13 sheet retries, 3 plate retries, 3 grid retries</td><td>19 min (last resume)</td></tr></table>
+<p>A run makes about 150 model calls end to end. Roughly 90 of them look at grid cells, 49 of those only answer "is anyone in this cell?". Half the credits of the photoreal run went to retries, most of them on one character sheet.</p>
+</section>
+
+<section class="card"><h2>2. Every call, with a verdict</h2>
+<div class="wrap"><table>
+<tr><th>stage</th><th>call (file)</th><th>effort</th><th>per run</th><th>verdict</th></tr>
+<tr><td>story</td><td><code>story</code> (sequencer.js)</td><td>high</td><td>1</td><td class="warn">keep; prompt has no format, duration or medium (P11)</td></tr>
+<tr><td>editor</td><td><code>edit-review</code> (editor.js)</td><td>high</td><td>1</td><td class="ok">keep</td></tr>
+<tr><td>ids</td><td><code>ids-tag</code> per chunk, sequential (ids.js)</td><td>medium</td><td>6–12</td><td class="bad">replace: one rewrite call with a glossary (F3)</td></tr>
+<tr><td>ids</td><td><code>ids-coverage</code> per chunk</td><td>low</td><td>0–12</td><td class="bad">replace by a code check on the rewritten story</td></tr>
+<tr><td>ids</td><td><code>ids-classify</code></td><td>medium</td><td>1</td><td class="warn">merge into the glossary (role, part-of); drop <code>inside</code> (P4)</td></tr>
+<tr><td>ids</td><td><code>ids-merge</code></td><td>low</td><td>1</td><td class="bad">unnecessary once names are unique by construction</td></tr>
+<tr><td>ids</td><td><code>ids-link-propose</code> + <code>ids-link-check</code> per pair (sequential)</td><td>high + medium</td><td>1 + 2</td><td class="warn">one call that must quote evidence; high effort is wasted on it</td></tr>
+<tr><td>specs</td><td><code>seed-plan</code> (seed.js)</td><td>high</td><td>1</td><td class="bad">60% of its output is never read (F4); sub-part marks bloat three later prompts</td></tr>
+<tr><td>specs</td><td><code>asset-spec</code> (assets.js)</td><td>high</td><td>1</td><td class="warn">2–4 painter's sentences for 14 things, 4 of which get sheets; props need one line of invariants (F5, P4)</td></tr>
+<tr><td>specs</td><td><code>style-medium</code> (scenes.mjs and again in panels.js, different wording)</td><td>low</td><td>1</td><td class="warn">keep one; make it the medium object every stage uses (P3)</td></tr>
+<tr><td>screenplay</td><td><code>screenplay</code> (screenplay.js)</td><td>high</td><td>1</td><td class="warn">keep; it invents beats (P10)</td></tr>
+<tr><td>screenplay</td><td><code>screenplay-sound</code></td><td>medium</td><td>1</td><td class="ok">keep; its music cues are then ignored (P9)</td></tr>
+<tr><td>storyboard</td><td><code>storyboard</code> per scene, parallel (storyboard.js)</td><td>medium</td><td>6 + up to 6 fixes</td><td class="warn">keep; schema has three overlapping sources and is shaped for the old edit chain (P2); the fix pass injects a fake beat (P7)</td></tr>
+<tr><td>sheets</td><td><code>asset-check</code> per try</td><td>medium</td><td>4–17</td><td class="warn">no medium criterion (the figurine scored 5/5); add one and the retries drop</td></tr>
+<tr><td>sheets</td><td><code>asset-set</code></td><td>medium</td><td>1 (+1 per resume)</td><td class="warn">keep; its note is pasted back as the fix instruction (P6)</td></tr>
+<tr><td>plates</td><td><code>seed-observe</code> per try</td><td>medium</td><td>2–5</td><td class="warn">asks 20 marks per plate, 12 of which can never fail it; "storybook page" quality scale on a photo (P3)</td></tr>
+<tr><td>grids</td><td><code>grid-check</code> per attempt (grid.js)</td><td>low</td><td>6–9</td><td class="ok">keep; add <code>empty_cells</code> to it</td></tr>
+<tr><td>grids</td><td><code>cell-occupied</code> per cell of every 3×3 with spare cells</td><td>low</td><td>≈ 49</td><td class="bad">drop: the answer belongs in grid-check, or SSIM against the plate (F1)</td></tr>
+<tr><td>grids</td><td><code>grid-room-check</code> per attempt (plate + all cells)</td><td>low</td><td>6–9</td><td class="ok">keep (the only check that triggers a retry)</td></tr>
+<tr><td>grids</td><td><code>panel-check</code> per cell</td><td>low</td><td>27–45</td><td class="bad">its result changes nothing (F2); replace with one per-cell identity+count check that can</td></tr>
+<tr><td>video</td><td>none (templated prompt, scene-video.mjs)</td><td>—</td><td>0</td><td class="warn">good that it is code; the template is broken prose (P9)</td></tr>
+<tr><td>voice</td><td><code>voice-cast</code> (voice.js)</td><td>low</td><td>1</td><td class="ok">keep</td></tr>
+</table></div>
+<p>Image jobs: sheets 200 each (2k), plates 200, grids 300 (4k). Retries: sheets up to 3 tries plus one set retry; plates up to 3; grids one. In the photoreal run the sheet retries alone cost 2,600 credits.</p>
+</section>
+
+<section class="card"><h2>3. Inefficient calls</h2>
+<h3>F1. 49 calls to find empty cells</h3>
+<p>Every 3×3 grid with spare cells gets one vision call per cell (<code>cell-occupied</code>: "Is any person or animal visible?"), 9 per attempt, to skip the cells the model left empty. <code>grid-check</code> already looks at the whole grid once; an <code>empty_cells</code> field there costs nothing. (Code alternative: SSIM of each cell against the plate; the 49 cached answers can validate it for free.)</p>
+<h3>F2. 27–45 cell checks whose result is discarded</h3>
+<p><code>panel-check</code> counts every id in every cell (including "flour dusting the apron" and items packed in others). A missing or duplicated element only sets <code>forced: true</code> on the frame; the cell is kept regardless. Meanwhile the one check that would have caught scene 5's wrong baker and wrong customers, identity against the sheets, is not run in the grid path (it exists in <code>verify.js</code> for the old path). Replace with one call per cell that compares the cell with the sheets of the characters present (identity), counts only characters, and says same room / same camera against the plate; drop the separate room check. Fewer calls, and a result that can send a cell back.</p>
+<h3>F3. The ID section: 15–20 sequential calls</h3>
+<p>Six story chunks → six <code>ids-tag</code> calls in series (each carries the running table, so they cannot run in parallel), each followed by a coverage call and a re-tag when something was missed, then classify, merge, link-propose and one link-check per pair. About five minutes of wall time per solve. One call that rewrites the story with one unique name per thing and returns the glossary (name → id, role, part-of, count), checked by code for pronouns and unknown nouns, replaces tag, coverage and merge; classify and links fold into the glossary.</p>
+<h3>F4. The ground plan writes what nothing reads</h3>
+<p><code>seed-plan</code> (high effort, the longest call) returns for every mark <code>where, essential, area, size, faces, key</code> plus a <code>scale</code> list and <code>light</code>. The plate prompt reads <code>name</code> and <code>essential</code>; the storyboard reads <code>essential</code>; <code>key</code> is overwritten by code (<code>makeSeed</code>); <code>size</code>, <code>faces</code>, <code>scale</code> are read by nothing (only the report page shows <code>size</code>). For the shop it wrote 20 marks (9,100 characters), eight of them sub-parts: a door handle, the sign's status strip, the oven chamber, "Workbench working surface", "Cooling surface", "Counter service surface". Those sub-parts then appear in the plate prompt (15 facts), in every plate observation (20 questions, 12 of which cannot fail the plate) and in every storyboard prompt (15-item layout line per environment).</p>
+<h3>F5. Painter's specs for things that get one line of use</h3>
+<p><code>asset-spec</code> at high effort writes 2–4 sentences for all 14 tracked things. Only the 4 characters get sheets; each prop spec is used once, as a text reference the first time the prop appears, and never again. The detail invites invention (the loaf's "three diagonal expansion marks", "darker toasted-brown lower edge"). A prop needs one line: shape, size, material, colour.</p>
+<h3>F6. Serialised retries</h3>
+<p>Sheet first tries run in parallel, but every retry runs in a sequential loop per asset (<code>makeAssets</code>): the neighbour's six retries (≈ 45 s each plus a check) held the run for about ten minutes. Link checks run one pair at a time. Both are trivially parallel.</p>
+<h3>F7. Half the credits are retries, and the retry prompts cannot work</h3>
+<p>Every retry sends a fresh generation with a note about a previous attempt the model never sees: "The last try got this wrong; fix it: plain flat light-grey background", "The last attempt broke the rule in these cells; fix them: cell 1 changed the camera". The generator has no memory; the note must restate the rule in positive terms, not refer to history. Two of the baker's three tries and two of the neighbour's were spent on a floor shadow the check later learned to accept.</p>
+<h3>F8. The old path is still in the tree</h3>
+<p><code>run.mjs</code>, <code>block</code>/<code>block-fix</code>/<code>block-patch</code>, <code>verify-step</code> (one call per slide with up to 8 sheet images at medium effort), <code>motion</code>, <code>world</code>, the question loop. Most entries in <code>.cache</code> are from it, the PRD still describes it, and two stages (<code>style-medium</code>, <code>panel-check</code>) exist twice with different prompts. Quarantine or delete it.</p>
+</section>
+
+<section class="card"><h2>4. Badly made prompts (quoted as sent)</h2>
+<h3>P1. Two or three accounts of every cell</h3>
+<pre>4. Baker lifts the loaf from the cooling rack. (baker: lifts the loaf from the cooling rack; loaf: rises from the rack in baker's hands)
+1. Baker lifts a croissant from the workbench tray while neighbour, parent and child wait across the counter. [baker between the counter and the workbench, lifting a croissant from the pastry tray; flour dusting the apron on the baker's apron, dusting the baker's apron; neighbour at the counter nearer the blue front door, standing across the counter from the baker; canvas shopping bag at the neighbour's side, hanging from the neighbour's arm; … loaf on the cooling rack near the right wall, resting on the cooling surface] (baker: lifts a croissant from the tray; croissant handed to the neighbour: rises from the tray in baker's hand)</pre>
+<p>The action sentence, the bracketed placement list and the parenthesised change list say the same thing three ways with different wording. Tested on scene 5: one account (cell 1 in full, later cells only their change) kept the customers in 7 of 8 cells against 3 of 8. Deltas should be the resulting state, which is what the state table holds.</p>
+<h3>P2. The storyboard is shaped for the edit chain</h3>
+<p>Its instruction says "The picture is edited from the previous panel, so describe the change, not the whole picture", and its schema gives an element three ways to be sourced (<code>enters</code> with where/doing, <code>changes</code> with now, <code>introductions</code> with a beat), all three accepted by the hard rule. Grids draw every cell from the plate; cell 1 needs the full state, every later cell one delta. The schema should be: panel 1 = full state (every element, where, doing); panels 2+ = <code>now</code> per changed element, <code>leaves</code>, and the beat each panel covers.</p>
+<h3>P3. "Storybook" in every stage, whatever the medium</h3>
+<pre>Live-action photographic footage like a real television commercial … no illustration, no painting.. One single image …
+Camera: … A full, finished storybook painting of a lived-in place, with these facts:</pre>
+<p>That is the shop plate prompt of the photoreal run: it forbids painting and asks for a painting in the same breath. Also: sheets ("Reference sheet of ONE character", which produced a figurine seven times), <code>seed-observe</code> ("quality: 5 = a finished storybook page", with a retry note "paint a full, finished storybook page, not a sparse sketch"), <code>asset-set</code> ("reference sheets of one illustrated story"), storyboard and sound ("animated storybook film"), screenplay ("for an animated film"), story ("Write a short illustrated story"), checks ("a frame from an illustrated story"). The test on the neighbour showed the medium word decides the result when it is the noun of the sentence. One medium object, derived once ("a studio photograph of a real person" / "a 3D-rendered character design" / "a watercolour illustration of"), should be the noun in sheets, plates, grids and checks.</p>
+<h3>P4. Story state written into identity</h3>
+<pre>loaf: A broad, oval loaf with rounded ends, a honey-gold crust, and three diagonal expansion marks … Plain cream wrapping paper cups its base …
+pastry tray: … It holds six plump, unbaked butter-yellow croissants …
+paper bag: … It contains one plump honey-gold croissant …
+shop-sign: … reads "The Corner Oven", with "Come in. Your morning starts here." beneath it
+shop-sign.status: Initially OPEN toward the camera</pre>
+<p>The spec call is told "never later states" and then told, for every container, "At the start it holds: … (draw them in it)" (from the ID pass's <code>inside</code> field). The loaf got its wrapping paper that way, the tray its raw croissants, the bag its croissant. The ground plan put the final tagline on the sign from the first frame and set the status strip to OPEN before the baker turns it. Specs and plans must describe invariants; state belongs to panels.</p>
+<h3>P5. References numbered per element, images sent per file</h3>
+<pre>pastry tray: exactly as it looks in image 3 (take only pastry tray from it)
+loaf: exactly as it looks in image 4 (take only loaf from it)          ← inputs: 3 images</pre>
+<h3>P6. Retry notes that instruct the wrong thing</h3>
+<pre>The last try got this wrong; fix it: ; match the other sheets: Stylized 3D cartoon rendering with an enlarged head, oversized eyes and simplified textures, unlike the photorealistic majority.</pre>
+<p>The set check's <code>note</code> describes the offender; the code pastes it after "match the other sheets:", so four tries were told to draw a cartoon. The check should return what the sheet must become.</p>
+<h3>P7. The storyboard fix pass is a fake beat</h3>
+<pre>  12. (Storyboard note: fix these: scene 4 panel 3: parent has no source …)</pre>
+<p>Violations are appended to the scene's beat list as an action beat; the model is asked to storyboard a note. They belong in the instruction.</p>
+<h3>P8. ID noise reaches every prompt</h3>
+<pre>flour dusting the apron on the baker's apron, dusting the baker's apron
+croissant handed to the neighbour: rises from the tray in baker's hand</pre>
+<p>"Flour dusting the apron" was classified as an asset, so it is an element of every panel with its own where/doing, counted in every cell, and specified ("Fine, flour-white powder forming irregular, thin patches…"). "Croissant handed to the neighbour" is an id name used as a noun. The glossary rewrite fixes both (a name is a noun phrase; surface detail is not a thing).</p>
+<h3>P9. The clip prompt</h3>
+<pre>Baker pulls the oven door down toward us as steam rolls out of the opening. pulls down the oven door; grip the lowered oven door's handle. Natural motion only; … Sound: Low oven hum and faint birdsong outside.; creak and click of the oven door opening, brief hiss of escaping steam; no voices; no music.</pre>
+<p><code>changes[].now</code> phrases are glued on without subjects; the sfx of every beat the panel covers are joined; "no music" is hard-coded although <code>screenplay-sound</code> wrote a music cue per scene; "no voices" even for dialogue panels (the dialogue branch exists but has not been exercised). A clip prompt is: the start state in one clause, the one action, the sound of that action, and the scene's ambience.</p>
+<h3>P10. The screenplay adds actions</h3>
+<p>Three story sentences for the counter scene became eleven beats, including "lifts a croissant from the tray", "lifts the loaf from the cooling rack", "shoulders droop", "lifts their head, eyes opening wider". "Add nothing that changes the plot" permits it. Each beat should quote the story words it comes from; a beat with no source is not allowed. The headings also contradict themselves: "INT. counter — CONTINUOUS (after a cut)".</p>
+<h3>P11. The story call does not know what it is writing</h3>
+<p>"Write a short illustrated story … 150–300 words" is the whole brief, for a request that said "a 30-second video ad". It gets no medium, format, length in seconds or number of scenes; its style line is then overwritten by <code>--style</code>. The brief should carry the deliverable (ad, 30 s, ends on the name and a line) and the medium.</p>
+<h3>P12. Checks that cannot be answered as asked</h3>
+<p><code>seed-observe</code> asks "visible / holds / observed_where" for sub-part marks ("Counter service surface: Clear upper surface at waist height"); <code>panel-check</code> asks for a count of flour and of croissants inside a tray; <code>asset-check</code> has no "is it a photograph" question although that was the only thing wrong.</p>
+</section>
+
+<section class="card"><h2>5. What the call map looks like after</h2>
+<table><tr><th>stage</th><th>now</th><th>after</th></tr>
+<tr><td>story + editor</td><td>2</td><td>2 (brief carries deliverable and medium)</td></tr>
+<tr><td>ids</td><td>15–20, sequential</td><td>1–2 (rewrite + glossary; code checks)</td></tr>
+<tr><td>specs + layout + medium</td><td>3 at high</td><td>3: layout with name/essential/area/doors only; one-line prop invariants; medium object</td></tr>
+<tr><td>screenplay + sound</td><td>2</td><td>2 (beats must quote their source)</td></tr>
+<tr><td>storyboard</td><td>6–12</td><td>6–12 (state + deltas schema; fixes in the instruction)</td></tr>
+<tr><td>sheet checks</td><td>4–17 + set</td><td>4–8 + set (medium criterion; positive retry wording; parallel retries)</td></tr>
+<tr><td>plate checks</td><td>2–5 × 20 questions</td><td>2–3 × key marks only</td></tr>
+<tr><td>per grid</td><td>grid-check + 9 cell-occupied + room-check + n panel-checks ≈ 12–20</td><td>grid-check (with empty cells) + n cell checks (identity + counts + room) ≈ 6–9, and the result can send a cell back</td></tr>
+<tr><td><strong>total</strong></td><td><strong>≈ 150</strong></td><td><strong>≈ 50–60</strong></td></tr>
+</table>
+<p>Credits: the retry share (32–50%) comes down mainly through the medium criterion on sheets, the relaxed background rule already in place, and plates checked on key marks only. Nothing above changes the state manager; it changes what the models are asked and how often.</p>
+</section>
+</main></body></html>
