@@ -88,6 +88,20 @@ Live-action photograph, cinema camera, shallow depth of field, warm practical li
 <p>Same shape of result as 2b: identity and camera hold; what the model cannot do over eight steps is keep counts and hand-offs straight. Those are exactly the facts the state table knows per cell, so a per-cell check against it is the right place to catch them.</p>
 </section>
 
+<section class="card"><h2>2d. First and last frame: both at once (V1) against first-then-last (V2, control)</h2>
+<p>Prompts: <a href="f1-prompts.txt">f1-prompts.txt</a>. V1: one 4k image, top row = first frame | last frame, bottom row the empty room (300 credits). V2: cell 1 of that grid sent as image 1, the last frame generated from it (200 credits).</p>
+<img src="f1-grid.jpg" alt="V1: 2 by 2 grid, first and last frame on the top row">
+<p class="mut">Left to right: V1 first frame (cell 1), V1 last frame (cell 2), V2 last frame made from cell 1.</p>
+<img src="f1-pair.jpg" alt="first frame, V1 last frame, V2 last frame">
+<ul>
+<li class="ok">V1 pair: same room, same camera, same three adults between first and last; rack empty, both women hold wrapped loaves, baker smiling.</li>
+<li class="bad">V1 last frame drops the child and gives the baker a third loaf. The model wrote "Cell 1…4" labels on the image although the prompt forbids text (the layout line named the cells; the 8-cell prompts, which named them the same way, did not get labels). Cells 3–4, the empty room, are from a lower, closer camera than cells 1–2.</li>
+<li class="ok">V2 last frame: every end-state fact holds: rack empty, neighbour and parent each hold a wrapped loaf, child present and looking up, baker upright and smiling, no extra bread. Room and camera identical to the first frame (it is an edit of it). It inherited the "Cell 1" label from the crop, and the canvas bag became a brown shoulder bag.</li>
+<li class="warn">Both share V1's first frame, and that frame is further from the character specs than the 9-cell text grid was: no glasses on the neighbour, a floral blouse, the parent's hair down, a blond child instead of dark curls and medium-brown skin, no visible moustache. One long prompt describing two frames spent less of its attention on the faces than the 9-cell prompt, where the people were named in every cell.</li>
+</ul>
+<p>Two frames at once works for continuity (same room, camera, adults) and fails on bookkeeping again (a missing child, an extra loaf). Making the last frame from the first is exact on the end state. For a grid that fills in between, the pair to feed it is V1-cell-1 + V2-last.</p>
+</section>
+
 <section class="card"><h2>3. The pipeline's scene 5, for comparison</h2>
 <img src="s5.jpg" alt="pipeline scene 5 cells">
 <p>Inputs were the plate, the state frame (s4-p4, people a few pixels tall) and s3-p5. The prompt's reference lines said <code>pastry tray: exactly as it looks in image 3</code> and <code>loaf: exactly as it looks in image 4</code>, with only three images sent. The people got no line at all (they were "already present" in image 2). Result: a different baker, two men instead of the neighbour and parent, round loaves everywhere (the counts check saw 6 to 48 loaves per cell), another room.</p>

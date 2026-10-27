@@ -111,6 +111,32 @@ Each later cell is the cell before it with only the change listed; everyone and 
   console.log(`T1: ${run.path(file)} and T1-cell*.png`);
 }
 
-const tests = { S1, G5, G5b, T1 };
+// F1: first and last frame of the counter scene. V1: both at once, top row of a 2×2 grid (bottom row the empty room).
+// V2 (control): cell 1 of that grid as image 1, the last frame generated from it. Loaves only; same slug as T1.
+const SLUG = `A live-action photograph, cinema camera, shallow depth of field, warm practical light. Inside a small neighbourhood bakery at opening time, from one fixed wide camera in the rear customer-side corner: a blue glazed front door at the far left with a chest-height shop sign on it, a wooden sales counter on the left running from near to far, a wooden workbench with a cream flour bowl at the far right under a large front window, a black baking oven and a wire cooling rack against the right wall, cream plaster walls, honey-coloured timber, worn stone floor. Behind the counter stands the baker: a middle-aged man with warm tan skin, a short brown moustache, short wavy dark-brown hair, a cream shirt with the sleeves rolled up, a honey-tan bib apron dusted with flour, midnight-blue trousers. Across the counter stand three customers: nearest the door, the neighbour, an older woman with a chin-length silver-grey bob, small round brown-framed glasses, a soft-blue cardigan over a cream blouse, a calf-length terracotta skirt, a plain cream canvas shopping bag on her arm; beside her the parent, a young woman with medium-brown skin and dark curly hair in a low bun, a terracotta hip-length jacket over a butter-yellow shirt, deep-blue trousers; beside the parent the child, about five, medium-brown skin, short springy dark curls, a sky-blue jumper over a cream shirt, honey-ochre trousers. Two baked oval loaves with scored tops rest side by side on the cooling rack; a stack of plain cream wrapping paper lies on the counter in front of the baker. Nothing else: no other bread or pastries, no other people.`;
+const SCENE = `At the counter, the baker wraps a warm loaf in paper and hands it to the neighbour, then wraps the second loaf for the parent. The baker's tired face brightens at their grateful smiles.`;
+const END = `the cooling rack is empty; the neighbour holds a paper-wrapped loaf against her bag; the parent holds a paper-wrapped loaf in both hands; the child looks up at the baker; the baker stands upright, head up, smiling with wide eyes; the neighbour and the parent smile back at him. Nothing else changes.`;
+async function F1() {
+  const v1 = `One image made of 4 equal cells, 2 rows × 2 columns, edge to edge, no gutters, borders, numbers or text. Every cell is a live-action photograph. Cell 1 (top left) is the FIRST frame of a scene and cell 2 (top right) its LAST frame, both from the same fixed camera; cells 3 and 4 are the empty room.
+
+The scene: ${SCENE}
+
+Cell 1, the first frame: ${SLUG}
+
+Cell 2, the last frame: the same room from the same camera, the same four people in the same clothes, standing where they stand. The cooling rack is empty; the neighbour holds a paper-wrapped loaf against her bag; the parent holds a paper-wrapped loaf in both hands; the child looks up at the baker; the baker stands upright, head up, smiling with wide eyes; the neighbour and the parent smile back at him. Nothing else changes.`;
+  await jobs.image("F1-v1", "F1-v1-grid.png", v1, [], { ...IMAGE, resolution: "4k" });
+  const gc = await checkGrid(run.path("F1-v1-grid.png"), 2);
+  console.log(`F1 v1 grid check: ${gc.rows}×${gc.cols} · ${gc.note}`);
+  cropCells(run.path("F1-v1-grid.png"), 4, (i) => run.path(`F1-v1-cell${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : [2, 2]);
+  const v2 = `Image 1 is the first frame of a scene. Make its last frame: the same room from the same camera, the same four people in the same clothes, standing where they stand.
+The scene: ${SCENE}
+What has changed by the last frame: ${END}
+Live-action photograph, cinema camera, shallow depth of field. One single frame, no text.`;
+  await jobs.image("F1-v2", "F1-v2-last.png", v2, ["F1-v1-cell1.png"]);
+  writeFileSync(run.path("F1-prompts.txt"), `V1 (grid)\n${v1}\n\nV2 (image 1 = F1-v1-cell1.png)\n${v2}\n`);
+  console.log(`F1: ${run.path("F1-v1-grid.png")}, F1-v1-cell1/2.png, F1-v2-last.png`);
+}
+
+const tests = { S1, G5, G5b, T1, F1 };
 for (const t of process.argv.slice(2)) { if (!tests[t]) throw new Error(`no test ${t}`); console.log(`== ${t}`); await tests[t](); }
 run.save();
