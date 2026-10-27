@@ -86,6 +86,31 @@ Live-action photograph, cinema camera, shallow depth of field, warm practical li
   console.log(`G5b: ${run.path(file)} and G5b-cell*.png`);
 }
 
-const tests = { S1, G5, G5b };
+// T1: text only, no reference images. A slug describing cell 1 in full, then one bullet of change per cell. Loaves only.
+async function T1() {
+  const prompt = `One image made of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Every cell is a live-action photograph. Cells 1 to 8 are eight consecutive moments of one continuous shot from one fixed camera, in reading order; cell 9 is the empty bakery.
+
+Cell 1: A live-action photograph, cinema camera, shallow depth of field, warm practical light. Inside a small neighbourhood bakery at opening time, from one fixed wide camera in the rear customer-side corner: a blue glazed front door at the far left with a chest-height shop sign on it, a wooden sales counter on the left running from near to far, a wooden workbench with a cream flour bowl at the far right under a large front window, a black baking oven and a wire cooling rack against the right wall, cream plaster walls, honey-coloured timber, worn stone floor. Behind the counter stands the baker: a middle-aged man with warm tan skin, a short brown moustache, short wavy dark-brown hair, a cream shirt with the sleeves rolled up, a honey-tan bib apron dusted with flour, midnight-blue trousers. Across the counter stand three customers: nearest the door, the neighbour, an older woman with a chin-length silver-grey bob, small round brown-framed glasses, a soft-blue cardigan over a cream blouse, a calf-length terracotta skirt, a plain cream canvas shopping bag on her arm; beside her the parent, a young woman with medium-brown skin and dark curly hair in a low bun, a terracotta hip-length jacket over a butter-yellow shirt, deep-blue trousers; beside the parent the child, about five, medium-brown skin, short springy dark curls, a sky-blue jumper over a cream shirt, honey-ochre trousers. Two baked oval loaves with scored tops rest side by side on the cooling rack; a stack of plain cream wrapping paper lies on the counter in front of the baker. Nothing else: no other bread or pastries, no other people.
+
+Each later cell is the cell before it with only the change listed; everyone and everything else stays exactly where it was, seen from the same camera.
+- Cell 2: the baker holds one loaf, lifted from the cooling rack; one loaf remains on the rack.
+- Cell 3: the loaf lies on a sheet of the wrapping paper on the counter; the baker's hands fold the paper around it.
+- Cell 4: the baker holds the paper-wrapped loaf out across the counter; the neighbour's hands take it.
+- Cell 5: the neighbour holds the wrapped loaf against her bag; the baker holds the second loaf, lifted from the rack, which is now empty.
+- Cell 6: the second loaf lies on a sheet of the wrapping paper on the counter; the baker's hands fold the paper around it.
+- Cell 7: the parent holds the second wrapped loaf in both hands; the baker's shoulders droop and his head is lowered.
+- Cell 8: the baker's head is up, smiling with wide eyes; the neighbour and the parent smile back at him; each still holds her wrapped loaf.
+- Cell 9: the empty bakery, nobody in it, nothing on the counter but the stack of paper.`;
+  const file = "T1-grid.png";
+  await jobs.image("T1", file, prompt, [], { ...IMAGE, resolution: "4k" });
+  const gc = await checkGrid(run.path(file), 8);
+  console.log(`T1 grid check: ${gc.rows}×${gc.cols}${gc.equal_cells ? "" : ", unequal"}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
+  const drawn = gc.rows && gc.cols ? [gc.rows, gc.cols] : [3, 3];
+  cropCells(run.path(file), drawn[0] * drawn[1], (i) => run.path(`T1-cell${i}.png`), drawn);
+  writeFileSync(run.path("T1-prompt.txt"), prompt);
+  console.log(`T1: ${run.path(file)} and T1-cell*.png`);
+}
+
+const tests = { S1, G5, G5b, T1 };
 for (const t of process.argv.slice(2)) { if (!tests[t]) throw new Error(`no test ${t}`); console.log(`== ${t}`); await tests[t](); }
 run.save();

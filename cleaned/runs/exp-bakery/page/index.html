@@ -76,6 +76,18 @@ Live-action photograph, cinema camera, shallow depth of field, warm practical li
 <p>So: one account is right, and it fixed the vanishing. The remaining errors are in what a delta says. Written as the resulting state ("the wrapped loaf is in the parent's hands; the baker's hands are empty; the neighbour holds the paper bag"), which is what the state table holds (<code>changes[{id, now}]</code>), each cell can be checked against it, and a cell that drifts can be caught by the counts/identity check rather than inferred from the chain.</p>
 </section>
 
+<section class="card"><h2>2c. Text only: a slug for cell 1, one bullet of change per cell, no reference images (300 credits)</h2>
+<img src="t1-grid.jpg" alt="text-only grid, loaves only">
+<p>The prompt as sent: <a href="t1-prompt.txt">t1-prompt.txt</a> (header line; cell 1 in full: room, camera, the four people, two loaves on the rack, a stack of wrapping paper; then cells 2–9 as single changes). Loaves only.</p>
+<ul>
+<li class="ok">The same four people in every cell they appear in, from text alone; the same camera in all nine cells; photographic throughout; cell 9 empty with the paper stack.</li>
+<li class="ok">Cells 2, 3, 4, 6, 9 are exactly their bullet: loaf lifted, wrapped, handed to the neighbour, second loaf wrapped, empty room.</li>
+<li class="bad">Bookkeeping drifts from cell 5: two loaves still on the rack in cell 2 (one was lifted); the baker holds two loaves in cell 5; cell 7 drops the neighbour and the parent's loaf is unwrapped; two loaves are back on the counter in cell 8.</li>
+<li class="warn">The room is a plainer room than described (no far-right window, rack on the counter rather than the right wall); the camera is closer than "wide, rear corner". Without a plate there is nothing to hold it to.</li>
+</ul>
+<p>Same shape of result as 2b: identity and camera hold; what the model cannot do over eight steps is keep counts and hand-offs straight. Those are exactly the facts the state table knows per cell, so a per-cell check against it is the right place to catch them.</p>
+</section>
+
 <section class="card"><h2>3. The pipeline's scene 5, for comparison</h2>
 <img src="s5.jpg" alt="pipeline scene 5 cells">
 <p>Inputs were the plate, the state frame (s4-p4, people a few pixels tall) and s3-p5. The prompt's reference lines said <code>pastry tray: exactly as it looks in image 3</code> and <code>loaf: exactly as it looks in image 4</code>, with only three images sent. The people got no line at all (they were "already present" in image 2). Result: a different baker, two men instead of the neighbour and parent, round loaves everywhere (the counts check saw 6 to 48 loaves per cell), another room.</p>
