@@ -9,9 +9,9 @@ import { Jobs } from "../src/jobs.js";
 import { framing } from "../src/clips.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
-const k = Number(opt("--scene", 1));
+const k = Number(opt("--scene", 1)), max = Number(opt("--max", 0));   // --max N: use the breakdown made with keyframes.mjs --max N
 const src = JSON.parse(readFileSync(join(RUNS, "custom-bakery-real", "run.json"), "utf8"));
-const kf = JSON.parse(readFileSync(join(RUNS, "exp-bakery", `keyframes-s${k}-beats.json`), "utf8"));
+const kf = JSON.parse(readFileSync(join(RUNS, "exp-bakery", `keyframes-s${k}-beats${max ? `-max${max}` : ""}.json`), "utf8"));
 const v2 = JSON.parse(readFileSync(join(RUNS, "custom-bakery-v2", "run.json"), "utf8"));
 const OUT = join(RUNS, "exp-bakery"); mkdirSync(join(OUT, "in"), { recursive: true });
 const run = { name: "exp-bakery", path: (f) => join(OUT, f), log: JSON.parse(readFileSync(join(OUT, "run.json"), "utf8")) };
