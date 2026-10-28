@@ -207,6 +207,18 @@ Cell 9: The baker's head is up, smiling with wide eyes; the neighbour and the pa
   console.log("X3: X3-A-grid.png, X3-B-grid.png, X3-C-grid.png and cells");
 }
 
-const tests = { S1, G5, G5b, T1, F1, F2, G9, X3 };
+// X4: only the scene description (the story's own lines), no slug of room or people, and "make a grid of 9".
+async function X4() {
+  const prompt = `Turn this scene into a grid of 9 consecutive frames: 3 rows × 3 columns, equal cells, edge to edge, no gutters, borders, numbers or text, each cell a live-action photograph from one fixed camera, in reading order.
+The scene: At the counter of a small neighbourhood bakery at opening time, the baker wraps a warm loaf in paper and hands it to an older neighbour, then wraps the second loaf for a young parent whose small child watches. The baker's tired face brightens at their grateful smiles.`;
+  await jobs.image("X4", "X4-grid.png", prompt, [], { ...IMAGE, resolution: "4k" });
+  const gc = await checkGrid(run.path("X4-grid.png"), 9);
+  console.log(`X4 grid check: ${gc.rows}×${gc.cols}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
+  cropCells(run.path("X4-grid.png"), 9, (i) => run.path(`X4-cell${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : [3, 3]);
+  writeFileSync(run.path("X4-prompt.txt"), prompt);
+  console.log("X4: X4-grid.png and cells");
+}
+
+const tests = { S1, G5, G5b, T1, F1, F2, G9, X3, X4 };
 for (const t of process.argv.slice(2)) { if (!tests[t]) throw new Error(`no test ${t}`); console.log(`== ${t}`); await tests[t](); }
 run.save();
