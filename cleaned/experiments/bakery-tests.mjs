@@ -6,6 +6,7 @@
 //       as it is now, no spec text. What a grid prompt needs. (300 credits at 4k)
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
+import { execFileSync } from "node:child_process";
 import { RUNS } from "../src/env.js";
 import { Jobs, IMAGE } from "../src/jobs.js";
 import { checkGrid, cropCells } from "../src/grid.js";
@@ -163,6 +164,49 @@ The scene: ${SCENE}`;
   console.log(`G9: ${run.path("G9-grid.png")} and G9-cell*.png`);
 }
 
-const tests = { S1, G5, G5b, T1, F1, F2, G9 };
+// X3: three grid prompts, same scene, one 4k image each.
+//   A  text direct to grid: the scene (setting, people, what happens) and "turn it into a grid of 9".
+//   B  the scene prompt as cell 1, then one slug per later cell stating that frame in full (who holds what, rack count).
+//   C  the first frame given as image 1 (cell 1 = image 1), then eight change instructions; all else the same.
+const GRID9 = `One image made of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Every cell is a live-action photograph from one fixed camera; the nine cells are consecutive moments of one continuous shot, in reading order.`;
+async function X3() {
+  const A = `Turn this scene into a grid of 9 consecutive frames: 3 rows × 3 columns, equal cells, edge to edge, no gutters, borders, numbers or text, each cell a live-action photograph from one fixed camera, in reading order.
+The scene: ${SLUG} ${SCENE}`;
+  const B = `${GRID9}
+Cell 1: ${SLUG}
+Cell 2: The baker holds one loaf, lifted from the rack; one loaf remains on the rack; the three customers stand across the counter as before.
+Cell 3: The loaf lies on a sheet of paper on the counter and the baker folds the paper around it; one loaf on the rack; the customers wait.
+Cell 4: The baker holds the wrapped loaf out across the counter and the neighbour takes it with both hands; one loaf on the rack.
+Cell 5: The neighbour holds her wrapped loaf against her bag; the baker holds the second loaf, lifted from the rack; the rack is empty.
+Cell 6: The second loaf lies on a sheet of paper on the counter and the baker folds the paper around it; the neighbour holds her wrapped loaf; the rack is empty.
+Cell 7: The baker holds the second wrapped loaf out across the counter and the parent takes it with both hands; the neighbour holds hers; the rack is empty.
+Cell 8: The parent holds her wrapped loaf in both hands; the neighbour holds hers; the baker's shoulders droop and his head is lowered; the rack is empty.
+Cell 9: The baker's head is up, smiling with wide eyes; the neighbour and the parent smile back at him, each holding her wrapped loaf; the child looks up at the baker; the rack is empty.`;
+  const C = `Image 1 is the first frame of a scene. One image made of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text; every cell is a live-action photograph from the camera of image 1. Cell 1 is image 1 exactly. Cells 2 to 9 are the next eight keyframes, in reading order. Everything stays exactly the same as image 1 (the room, the camera, the four people, their clothes and their places) except for these changes:
+2. The baker has lifted one loaf from the rack and holds it; one loaf remains on the rack.
+3. That loaf lies on a sheet of paper on the counter and the baker's hands fold the paper around it.
+4. The baker holds the wrapped loaf out across the counter and the neighbour takes it.
+5. The neighbour holds her wrapped loaf against her bag; the baker holds the second loaf, lifted from the rack, which is now empty.
+6. The second loaf lies on a sheet of paper on the counter and the baker's hands fold the paper around it.
+7. The baker holds the second wrapped loaf out across the counter and the parent takes it.
+8. The parent holds her wrapped loaf in both hands; the baker's shoulders droop and his head is lowered.
+9. The baker's head is up, smiling with wide eyes; the neighbour and the parent smile back at him; the child looks up at him.`;
+  // C's first frame: the V2 first frame with the grid's "Cell 1" label cropped off (top 7%, sides 3.5%; still 16:9).
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", run.path("F1-v1-cell1.png"), "-vf", "crop=iw*0.93:ih*0.93:iw*0.035:ih*0.07", run.path("X3-C-first.png")]);
+  await Promise.all([
+    jobs.image("X3-A", "X3-A-grid.png", A, [], { ...IMAGE, resolution: "4k" }),
+    jobs.image("X3-B", "X3-B-grid.png", B, [], { ...IMAGE, resolution: "4k" }),
+    jobs.image("X3-C", "X3-C-grid.png", C, ["X3-C-first.png"], { ...IMAGE, resolution: "4k" }),
+  ]);
+  for (const t of ["A", "B", "C"]) {
+    const gc = await checkGrid(run.path(`X3-${t}-grid.png`), 9);
+    console.log(`X3 ${t} grid check: ${gc.rows}×${gc.cols}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
+    cropCells(run.path(`X3-${t}-grid.png`), 9, (i) => run.path(`X3-${t}-cell${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : [3, 3]);
+  }
+  writeFileSync(run.path("X3-prompts.txt"), `A (text direct to grid, no inputs)\n${A}\n\nB (scene prompt as cell 1, one slug per cell, no inputs)\n${B}\n\nC (image 1 = X3-C-first.png)\n${C}\n`);
+  console.log("X3: X3-A-grid.png, X3-B-grid.png, X3-C-grid.png and cells");
+}
+
+const tests = { S1, G5, G5b, T1, F1, F2, G9, X3 };
 for (const t of process.argv.slice(2)) { if (!tests[t]) throw new Error(`no test ${t}`); console.log(`== ${t}`); await tests[t](); }
 run.save();
