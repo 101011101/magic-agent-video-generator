@@ -137,6 +137,32 @@ Live-action photograph, cinema camera, shallow depth of field. One single frame,
   console.log(`F1: ${run.path("F1-v1-grid.png")}, F1-v1-cell1/2.png, F1-v2-last.png`);
 }
 
-const tests = { S1, G5, G5b, T1, F1 };
+// F2: the control on its own. First frame as one single image from the slug; last frame as an edit of it with the end state.
+async function F2() {
+  const first = `${SLUG} One single frame, no text or labels.`;
+  await jobs.image("F2-first", "F2-first.png", first);
+  const last = `Image 1 is the first frame of a scene. Make its last frame: the same room from the same camera, the same four people in the same clothes, standing where they stand.
+The scene: ${SCENE}
+What has changed by the last frame: ${END}
+Live-action photograph, cinema camera, shallow depth of field. One single frame, no text.`;
+  await jobs.image("F2-last", "F2-last.png", last, ["F2-first.png"]);
+  writeFileSync(run.path("F2-prompts.txt"), `FIRST (generator, no inputs)\n${first}\n\nLAST (editor, image 1 = F2-first.png)\n${last}\n`);
+  console.log(`F2: ${run.path("F2-first.png")}, F2-last.png`);
+}
+
+// G9: the grid fills in between the V2 first and last frames (image 1, image 2); scene text, no bullets.
+async function G9() {
+  const prompt = `Image 1 is the first frame of a scene and image 2 its last frame: the same room, the same camera, the same four people.
+One image made of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Every cell is a live-action photograph from the camera of image 1. Cell 1 is image 1 as it is. Cell 9 is image 2 as it is. Cells 2 to 8 are seven moments between them, in order, evenly spaced through the scene, each one step on from the cell before it; the people, their clothes, the room and the camera never change. Nothing appears that is not in image 1 or image 2 except the paper being folded.
+The scene: ${SCENE}`;
+  await jobs.image("G9", "G9-grid.png", prompt, ["F1-v1-cell1.png", "F1-v2-last.png"], { ...IMAGE, resolution: "4k" });
+  const gc = await checkGrid(run.path("G9-grid.png"), 9);
+  console.log(`G9 grid check: ${gc.rows}×${gc.cols}${gc.gutters_or_text ? ", gutters or text" : ""} · ${gc.note}`);
+  cropCells(run.path("G9-grid.png"), 9, (i) => run.path(`G9-cell${i}.png`), gc.rows && gc.cols ? [gc.rows, gc.cols] : [3, 3]);
+  writeFileSync(run.path("G9-prompt.txt"), prompt);
+  console.log(`G9: ${run.path("G9-grid.png")} and G9-cell*.png`);
+}
+
+const tests = { S1, G5, G5b, T1, F1, F2, G9 };
 for (const t of process.argv.slice(2)) { if (!tests[t]) throw new Error(`no test ${t}`); console.log(`== ${t}`); await tests[t](); }
 run.save();

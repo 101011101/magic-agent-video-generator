@@ -102,6 +102,25 @@ Live-action photograph, cinema camera, shallow depth of field, warm practical li
 <p>Two frames at once works for continuity (same room, camera, adults) and fails on bookkeeping again (a missing child, an extra loaf). Making the last frame from the first is exact on the end state. For a grid that fills in between, the pair to feed it is V1-cell-1 + V2-last.</p>
 </section>
 
+<section class="card"><h2>2e. V2 on its own: first frame, then the last frame made from it</h2>
+<p class="mut">First frame: cell 1 of the V1 grid (the "Cell 1" label is the grid's). Last frame: generated with that image as image 1 and the end state in words (prompt in <a href="f1-prompts.txt">f1-prompts.txt</a>, "V2").</p>
+<p><strong>First frame</strong></p>
+<img src="v2-first.jpg" alt="V2 first frame">
+<p><strong>Last frame</strong></p>
+<img src="v2-last.jpg" alt="V2 last frame, an edit of the first">
+</section>
+
+<section class="card"><h2>2f. The grid fills in between the first and last frame (images 1 and 2, scene text, no bullets)</h2>
+<p>Prompt: <a href="g9-prompt.txt">g9-prompt.txt</a>. Inputs: the V2 first frame and V2 last frame. One 4k image, 300 credits.</p>
+<img src="g9-grid.jpg" alt="grid filled in between the first and last frame">
+<ul>
+<li class="ok">Room, camera and the four people are identical across all nine cells: the two anchor images hold everything that text could not in 2c.</li>
+<li class="bad">Cell 1 is not image 1 as it is: the neighbour already holds a wrapped loaf and has the shoulder bag from image 2; the model blended the two anchors from the start. Cell 9 is close to image 2.</li>
+<li class="bad">The seven cells between are not a sequence: the loaf is wrapped in cells 3, 6 and again handed over in 4 and 7, both women hold loaves from cell 5 while the baker keeps wrapping more, cell 8 drops the neighbour and the child. Without a per-cell statement of what happens, "evenly spaced moments" becomes variations on the same hand-over.</li>
+</ul>
+<p>So the three pieces separate cleanly: anchor images fix room, camera and identity (2f); one line per cell fixes what happens in it (2b, 2c); and nothing so far fixes counts and hand-offs over eight steps, which only a per-cell check against the known state can. The combination to try is anchors + one line per cell.</p>
+</section>
+
 <section class="card"><h2>3. The pipeline's scene 5, for comparison</h2>
 <img src="s5.jpg" alt="pipeline scene 5 cells">
 <p>Inputs were the plate, the state frame (s4-p4, people a few pixels tall) and s3-p5. The prompt's reference lines said <code>pastry tray: exactly as it looks in image 3</code> and <code>loaf: exactly as it looks in image 4</code>, with only three images sent. The people got no line at all (they were "already present" in image 2). Result: a different baker, two men instead of the neighbour and parent, round loaves everywhere (the counts check saw 6 to 48 loaves per cell), another room.</p>
