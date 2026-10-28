@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Adventure Chain</title>
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--ok:#1f7a4d;--bad:#b23a2f;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d}}
+:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:18px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0}.mut{color:var(--mut);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+img,video{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+pre{margin:0;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font:12.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+ul{margin:0;padding-left:20px}li{margin:2px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.cap,.cap2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font:12px var(--mono);color:var(--mut);text-align:center}.cap2{grid-template-columns:1fr 1fr}
+img,video{width:100%;border-radius:6px;border:1px solid var(--line);display:block}.cap2{display:grid;grid-template-columns:1fr 1fr;gap:6px;font:12px var(--mono);color:var(--mut);text-align:center}
+</style></head><body><main>
+<h1>exp-adventure: one start frame, then each clip from the last frame of the one before</h1>
+<p class="mut">Model seedance-2.0, 480p, 8 s per clip, no end frames. Start frame from the image generator (nano-banana-pro, 2k, 16:9). Hand-off: frame N−3 of each clip (before the end snap) becomes the next clip's only input. 3 of 3 clips so far, 2504 credits. Script: <code>cleaned/experiments/i2v-chain.mjs</code>, spec and outputs in <code>runs/exp-adventure/</code>.</p>
+<section class="card"><h2>0. First start frame, rejected by the video model</h2>
+<img src="start-rejected-likeness.jpg" alt="rejected start frame">
+<p>The image generator read "1930s pulp adventurer, fedora, leather jacket" as one specific actor. Seedance refused the clip with code <code>nsfw</code> ("content policy"), which here means a real-person likeness. The failed job was refunded. Rule: describe an original character in the start-frame prompt and say so; the video filter is stricter than the image one.</p></section>
+<section class="card"><h2>1. The start frame (200 credits)</h2>
+<img src="start.jpg" alt="start frame">
+<pre>A live-action film still, 1930s pulp adventure, full-frame 16:9 with no letterbox bars. Inside a torch-lit ancient stone temple chamber: carved sandstone walls, a low stone pedestal in the centre holding a small jade mask, dust in the air, two burning wall torches, a dark doorway at the back. In the foreground stands an adventurer: an original fictional character who does not resemble any real actor. A Black man in his early thirties, deep brown skin, close-cropped hair, a short neat beard, a broad friendly face, wearing a weathered tan fedora, a dusty olive canvas field jacket over a cream shirt, and a leather satchel across his chest. He faces the pedestal from a few steps away, seen from a fixed wide camera at eye height. Warm torchlight, deep shadows, light film grain. No text.</pre></section>
+<section class="card"><h2>2. Clip 1 (768 credits, 252 s to render, 864×496, 193 frames)</h2>
+<p class="mut">Input: the start frame.</p>
+<pre>Fixed wide camera, no camera movement. The adventurer walks up to the pedestal, studies the jade mask for a moment, then carefully lifts it off the pedestal with both hands. The pedestal sinks a few inches with a grinding sound and dust trickles from the ceiling. He looks up, alarmed, and slips the mask into his satchel.</pre>
+<video src="clip1.mp4" controls muted playsinline preload="metadata"></video>
+<img src="clip1-strip.jpg" alt="clip 1, one frame every half second">
+<p class="mut">One frame every half second, reading order.</p>
+<img src="clip1-handoff.jpg" alt="hand-off into clip 1">
+<div class="cap2"><span>start frame</span><span>clip 1, first frame</span></div>
+</section>
+<section class="card"><h2>3. Clip 2 (768 credits, 165 s to render, 864×496, 193 frames)</h2>
+<p class="mut">Input: frame 190 of clip 1.</p>
+<pre>The chamber begins to shake. Dust and small stones fall from the ceiling, the torches flicker. The adventurer turns and runs toward the dark doorway at the back of the chamber, hat held on with one hand, as a large stone block drops from above and crashes behind him. Camera holds steady.</pre>
+<video src="clip2.mp4" controls muted playsinline preload="metadata"></video>
+<img src="clip2-strip.jpg" alt="clip 2, one frame every half second">
+<p class="mut">One frame every half second, reading order.</p>
+<img src="clip2-handoff.jpg" alt="hand-off into clip 2">
+<div class="cap2"><span>clip 1, hand-off frame</span><span>clip 2, first frame (SSIM 0.957)</span></div>
+</section>
+<section class="card"><h2>4. Clip 3 (768 credits, 171 s to render, 864×496, 193 frames)</h2>
+<p class="mut">Input: frame 190 of clip 2.</p>
+<pre>The adventurer sprints out of the dark doorway into bright jungle daylight, dives forward and rolls through the dirt as the stone door slams shut behind him. He gets to his feet, dusts off his fedora, puts it back on, opens his satchel and looks at the jade mask with a tired grin. Camera holds steady.</pre>
+<video src="clip3.mp4" controls muted playsinline preload="metadata"></video>
+<img src="clip3-strip.jpg" alt="clip 3, one frame every half second">
+<p class="mut">One frame every half second, reading order.</p>
+<img src="clip3-handoff.jpg" alt="hand-off into clip 3">
+<div class="cap2"><span>clip 2, hand-off frame</span><span>clip 3, first frame (SSIM 0.966)</span></div>
+</section>
+<section class="card"><h2>5. All clips, hard cut, no re-timing</h2><video src="joined.mp4" controls muted playsinline preload="metadata"></video></section>
+<section class="card"><h2>What happened</h2>
+<ul>
+<li class="ok">Clip 1 is every beat of its prompt: walks up, studies the mask, lifts it with both hands, the pedestal sinks, dust pours, he stows the mask and looks up alarmed. Same man, same clothes, fixed camera, 8 s.</li>
+<li class="ok">Join 1→2 is clean (SSIM 0.957): clip 2 opens on clip 1's hand-off frame and carries the dust, the torches and the man's pose. Clip 2 does its prompt: the chamber shakes, he turns and runs for the doorway, a block crashes down behind him.</li>
+<li class="ok">Join 2→3 is pixel-clean too (SSIM 0.966): clip 3 opens on the empty dusty chamber with the fallen block.</li>
+<li class="bad">Clip 3 recasts the lead. The hand-off frame from clip 2 has nobody in it: he had already run out of the doorway and the block hides the exit. Clip 3 had to invent the adventurer from its prompt alone, and it drew a different man: white, dark hair, tan shirt with no jacket, a different hat. The jade mask became a glowing green head. The run, dive, roll, hat-dusting and grin all happen, to the wrong person.</li>
+<li class="warn">Clip 3 also changes camera twice inside one call (chamber, then doorway from outside, then a jungle close-up). Seedance treats a prompt with a location change as a multi-shot scene. That is a feature when wanted and a continuity risk when not.</li>
+<li class="warn">Letterbox bars: the start frame came with thin black bars and every clip kept them. Ask the image generator for full-frame or crop before upload.</li>
+</ul>
+<p>Last-frame chaining carries everything that is visible in the hand-off frame and nothing that is not. The chain held identity for exactly as long as the character stayed in shot. Fixes to test next, in order of cost: (1) write each clip so the lead is in frame at its end (never let him exit the frame at a join); (2) pass the character as a named reference on every call, which Magic Hour supports on text-to-video but not on image-to-video, so a continuation would become text-to-video with the hand-off frame and the character sheet both as references; (3) give clip 3 an end frame so the model has a target that already contains the right man.</p>
+<p class="mut">Costs: start frame 200, clips 768 each (seedance-2.0, 480p, 96 credits per second), 2504 in all. Render time 165–252 s per clip. The first attempt's rejected clip was refunded.</p>
+</section>
+
+</main></body></html>

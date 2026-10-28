@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bakery Video Tests</title>
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--ok:#1f7a4d;--bad:#b23a2f;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d}}
+:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:18px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0}.mut{color:var(--mut);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+img,video{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+pre{margin:0;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font:12.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+ul{margin:0;padding-left:20px}li{margin:2px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.cap,.cap2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font:12px var(--mono);color:var(--mut);text-align:center}.cap2{grid-template-columns:1fr 1fr}
+</style></head><body><main>
+</head><body><main>
+<h1>Bakery video tests: one scene, one image-to-video call</h1>
+<p class="mut">Magic Hour image-to-video from a single still, no end frame, no grid. Script: <code>cleaned/experiments/i2v-single.mjs</code>, outputs in <code>runs/exp-bakery/i2v/</code>. Grid tests are on the <a href="../page/index.html">grid page</a>.</p>
+
+<section class="card"><h2>The input: one image</h2>
+<img src="start.jpg" alt="the start frame given to the video model">
+<p>This is the only image the model received, 1800×1005. It is V2's first frame from the grid page (cut from cell 1 of the 2 by 2 in test 2d) with the "Cell 1" label painted out. Four people at the counter, two loaves on the rack, baker tired. No sheets, no plate, no grid.</p>
+</section>
+
+<section class="card"><h2>1. ltx-2.5, 480p, 10 s, no end frame (240 credits)</h2>
+<p class="mut">Prompt: <a href="prompt.txt">prompt.txt</a>, the scene in prose, fixed camera. Output 856×478, 24 fps, 241 frames; 32 s wall time. ltx-2.5 is the model the free tier is allowed, not a free model: 24 credits per second at 480p, 48 at 720p, 72 at 1080p.</p>
+<pre>Live-action, fixed wide camera, no camera movement. Inside a small bakery, the baker behind the counter picks up the first loaf from the cooling rack, wraps it in a sheet of cream paper, and hands it across the counter to the older woman in the blue cardigan, who takes it and holds it against her bag. He then lifts the second loaf, wraps it in paper, and hands it to the young woman in the terracotta jacket, who takes it in both hands. The child watches and looks up at the baker. The baker's tired face brightens into a smile as the two women smile back at him. The cooling rack is empty at the end. Everyone stays where they stand. Natural, unhurried movement.</pre>
+<video src="ltx-480p-10s.mp4" controls muted playsinline preload="metadata"></video>
+<img src="ltx-480p-10s-strip2.jpg" alt="the clip, one frame every half second, reading order">
+<p class="mut">One frame every half second, reading order, 0 to 9.5 s.</p>
+<img src="ltx-480p-10s-pair.jpg" alt="first and last frame of the clip">
+<div class="cap2"><span>clip first frame (SSIM 0.95 against the input)</span><span>clip last frame</span></div>
+<ul>
+<li class="ok">The clip starts on the input: same room, same camera, same four people, same clothes, and all of it holds for the full 10 seconds. No face drifts.</li>
+<li class="ok">The beat lands: baker tired at 0 s, upright and smiling at the end; both women smile back; the child looks up at him; the rack is empty.</li>
+<li class="ok">Motion is unhurried and the camera does not move, as asked. About the first second is the usual ease-in from a still.</li>
+<li class="bad">Both loaves go to the neighbour. Loaf one is handed to her at about 2 s; the baker lifts loaf two at 5 s and hands it to her again at 7 s. The parent never receives anything. "A to X, then B to Y" collapsed into "A to X, B to X", the same drift as the late grid cells.</li>
+<li class="bad">One loaf vanishes. By the last frame the neighbour holds a single bare loaf and the parent's hands are empty.</li>
+<li class="bad">No wrapping. Both hand-offs are bare loaves: the input has no paper stack on the counter, so there was nothing to pick up. A prop the clip must use has to be in the frame it starts from.</li>
+</ul>
+<p>The cheapest video model already holds what the grids held (room, camera, identity) and fails where the grids failed (who holds what, how many). Spending more per clip will not fix the bookkeeping. Next: the same call with V2's last frame as <code>end_image_file_path</code>, so the model has a target state; and the scene as two 5 s calls split at the hand-off.</p>
+</section>
+</main></body></html>
