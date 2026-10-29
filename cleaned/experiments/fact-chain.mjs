@@ -17,11 +17,16 @@ run.save = () => writeFileSync(join(dir, "run.json"), JSON.stringify(run.log, nu
 const L = run.log, jobs = new Jobs(run), byId = Object.fromEntries(L.elements.map((e) => [e.id, e]));
 const rows = L.state_table.filter((r) => r.scene === k), kf = L.keyframes[k];
 const isOverlay = (r) => /\b(title|caption)\b/i.test(r.source || "") && !/\b(stands?|holds?|walks?|sits?)\b/i.test(r.source || "");
+// A keyframe whose only change is who is speaking is not a new picture: the line is folded into the previous frame's spoken
+// lines for the audio stage (TTS + lip sync, or a dialogue clip).
+const isSpeech = (r) => /^\s*\d+\.\s*[A-Z][A-Z .'-]+:\s*"/.test(r.source || "") && /\bspeaker\b|\baddress(es|ing)\b|\bsays\b/i.test(r.prompt.split("Change ONLY this: ")[1] || "");
+const lineOf = (r) => { const m = (r.source || "").match(/^\s*\d+\.\s*([A-Z][A-Z .'-]+):\s*"([^"]+)"/); return m ? { who: m[1].trim(), text: m[2] } : null; };
 
 const made = [], skipped = [];
 let prevFile = null;
 for (const r of rows) {
   if (r.frame > 1 && isOverlay(r)) { skipped.push({ frame: r.frame, source: r.source }); console.log(`  frame ${r.frame}: overlay (${r.source.slice(0, 60)}), skipped`); continue; }
+  if (r.frame > 1 && isSpeech(r) && made.length) { const l = lineOf(r); (made.at(-1).spoken ??= []).push(l); skipped.push({ frame: r.frame, source: r.source, spoken: true }); console.log(`  frame ${r.frame}: speech only (${l?.who}: "${l?.text.slice(0, 50)}…"), folded into frame ${made.at(-1).frame}`); continue; }
   const inputs = r.inputs.map((i) => (i.role === "previous frame" ? prevFile : i.file)).filter(Boolean);
   if (r.frame > 1 && !prevFile) throw new Error("no previous frame");
   const file = `frames/s${k}-f${r.frame}.png`;
@@ -39,7 +44,7 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
 const jpg = (f) => { const out = `page-s${k}/${f.replace(/\//g, "-").replace(/\.(png|jpg)$/, ".jpg")}`; if (!existsSync(run.path(out))) execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", run.path(f), "-vf", "scale='min(1400,iw)':-1", "-q:v", "5", run.path(out)]); return out.split("/")[1]; };
 const refs = [...new Set(rows.flatMap((r) => r.inputs.filter((i) => i.file).map((i) => i.file)))];
 const refHtml = refs.map((f) => { const id = Object.keys(L.bank).find((x) => L.bank[x].file === f), b = L.bank[id] || {}; return `<div><p class="mut">${esc(byId[id]?.name || id)} · ${b.source === "commons" ? `Commons: <a href="${b.page}">${esc(b.title)}</a>` : b.source}</p><img src="${jpg(f)}" alt="${esc(id)}"></div>`; }).join("");
-const frameHtml = made.map((m) => `<section class="card"><h2>Frame ${m.frame}${m.framing ? ` <span class="mut">SSIM to previous ${m.framing.ssim}, corner shift ${m.framing.corner_shift}</span>` : ""}</h2><p class="mut">inputs: ${m.inputs.map(esc).join(", ")} · from: ${esc(m.source)}</p><img src="${jpg(m.file)}" alt="frame ${m.frame}"><details><summary>prompt as sent</summary><pre>${esc(m.prompt)}</pre></details></section>`).join("");
+const frameHtml = made.map((m) => `<section class="card"><h2>Frame ${m.frame}${m.framing ? ` <span class="mut">SSIM to previous ${m.framing.ssim}, corner shift ${m.framing.corner_shift}</span>` : ""}</h2><p class="mut">inputs: ${m.inputs.map(esc).join(", ")} · from: ${esc(m.source)}</p><img src="${jpg(m.file)}" alt="frame ${m.frame}">${m.spoken?.length ? `<p class="mut">spoken over this frame (audio stage): ${m.spoken.map((l) => `<strong>${esc(l.who)}</strong>: “${esc(l.text)}”`).join(" · ")}</p>` : ""}<details><summary>prompt as sent</summary><pre>${esc(m.prompt)}</pre></details></section>`).join("");
 const sc = L.screenplay.scenes[k - 1];
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(L.story.title)} S${k}</title>
 <style>:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--mono:ui-monospace,Menlo,monospace}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e}}:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e}
