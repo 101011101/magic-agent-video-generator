@@ -58,6 +58,23 @@ photograph of a real person", "A live-action photograph of an empty place"), one
   between them: <the action paragraphs this gap covers>. Natural motion only; nothing appears that is not in the frames.
   Sound: <ambience>; <sfx>; no voices; no music.`
 
+## 4b. Style is state (added 2026-10-29)
+
+The Vanderbilt run painted scene 1 as a sepia period photograph and scene 2 as a colour interior: each plate was generated
+on its own from "a photograph of <place>" and the period, and nothing tied them together. Rules:
+- The medium sentence is global and explicit about **colour or monochrome**, grain and finish; the story's style line is
+  reduced to it once (`medium` call) and every image prompt (sheets, plates, first frames, grids) starts with it.
+- The state manager carries a **`style_ref`**: the first accepted plate (or, when the user supplies one, that image). Every
+  later plate and every first frame of a place gets it as an extra input with the line "match the colour treatment, grain and
+  contrast of image N; the place and people come from the other images". Later frames inherit it through the previous frame.
+- Plates are generated in one batch against the same `style_ref` and checked together for medium and treatment before any
+  frame is painted (the set check that sheets already have).
+- Per-scene light comes only from the slug line (DAY / NIGHT / LATER) and the scene's own text; it is the one legitimate
+  difference between scenes, and it is stated, never inferred from a stray plate.
+- Blocking continuity belongs in the keyframe text: each state names where every character stands relative to the others and
+  which way they face; nobody crosses anyone unless the line says so (Vanderbilt walked around Lincoln for the handshake
+  because the state line said only "together at right").
+
 ## 5. Checks
 
 - Framing gate per frame (code): SSIM to the previous frame; the corner-shift metric false-alarmed on a photo (scene 2 frame 3) and
