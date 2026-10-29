@@ -46,6 +46,15 @@ export class Jobs {
     });
   }
 
+  // Text-to-video with named references (Magic Hour /v1/text-to-video): up to 10 images (some models also videos and audio),
+  // named in the prompt as @name. No start frame is pinned; the whole scene goes in the text. refs: [{ name, file }].
+  async tvideo(key, file, prompt, refs, seconds, video = VIDEO) {
+    return this.paid(key, file, { endpoint: "/v1/text-to-video", ...video, prompt, seconds, names: refs.map((r) => r.name) }, refs.map((r) => r.file), COST.video(seconds, video.model), async (paths) => {
+      const body = { name: `${this.run.name} ${key}`, ...video, end_seconds: seconds, style: { prompt }, references: refs.map((r, i) => ({ name: r.name, file_path: paths[i] })) };
+      return runJob("/v1/text-to-video", body, { kind: "video" });
+    });
+  }
+
   // Lip sync (Magic Hour): a clip and a voice track → the clip with the mouth moving to the voice. 1 credit per frame (lite).
   async lipsync(key, file, video, audio, seconds, mode = "lite") {
     return this.paid(key, file, { endpoint: "/v1/lip-sync", mode, seconds }, [video, audio], Math.ceil(seconds * 30), async ([v, a]) => {

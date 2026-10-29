@@ -81,10 +81,13 @@ const els = L.elements, byId = Object.fromEntries(els.map((e) => [e.id, e]));
 say(`elements: ${els.length} (${els.filter((e) => e.real).length} real)`);
 
 // 6. Asset bank. Real things: Wikimedia Commons search → candidates → one vision pick. Others: generated (characters, places) or text.
-L.medium ??= await jsonCall({ name: "medium", effort: "low", schema: S.obj({ person: S.str, object: S.str, place: S.str, cell: S.str, frame: S.str }),
+// Style is state (PRD §4b): the treatment names colour or monochrome once, so plates made apart cannot drift to sepia. A run whose
+// cached medium predates it keeps its wording (every frame prompt hashes on it) and only gains the treatment.
+if (!L.medium?.treatment) L.medium = { ...(await jsonCall({ name: "medium", effort: "low", schema: S.obj({ person: S.str, object: S.str, place: S.str, cell: S.str, frame: S.str, treatment: S.str }),
   prompt: `From this visual style line, write the MEDIUM as noun phrases a prompt can start with, nothing about scenes, colours or light:
 person: a full-length picture of one person in this medium ("A studio photograph of a real person"); object: the same for one object; place: the same for an empty place, ending in "of"; cell: what one still frame of the story IS, as a noun phrase, never "footage"; frame: one closing sentence for a story frame naming the medium and camera.
-Style: ${L.story.style}` });
+treatment: the one line that does name colour: one sentence, ending in a full stop, stating explicitly colour or monochrome, grain, contrast and finish, which every image prompt of the film begins with ("Full colour, fine film grain, natural contrast, no sepia or black-and-white."); when the style line is silent, a live-action film is full colour.
+Style: ${L.story.style}` })), ...L.medium };
 const UA = "magic-agent-video-generator/0.1 (research pipeline; contact via repository)";
 async function commons(q, n = 6) {
   const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrnamespace=6&gsrlimit=${n}&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=1024`;
@@ -99,7 +102,13 @@ const year = facts.map((f) => (String(f.when).match(/\b1[5-9]\d\d\b|\b20\d\d\b/)
 const searches = (e) => { const names = [...new Set([e.aka, plain(e)].filter(Boolean))]; return [...new Set([...(e.searches || [e.search]).filter(Boolean), ...names.flatMap((n) => (e.kind === "character" ? [`${n} portrait`, `${n} photograph`] : [`${n} ${decade}`, `${n} photograph`, `${n} ${decade} photograph`])), ...names])]; };
 async function download(url, file) { const r = await fetch(url, { headers: { "user-agent": UA } }); if (!r.ok) throw new Error(`download ${r.status}`); writeFileSync(file, Buffer.from(await r.arrayBuffer())); return file; }
 L.bank ??= {};
-for (const e of els) {
+// Style is state (PRD §4b): places go first, in scene order, and the first generated plate becomes the style reference every later
+// plate is edited against (a Commons photo is a record of the place, not the film's treatment). Kept once set, so a resumed run
+// matches the same plate; null when no plate is generated.
+const order = [...els.filter((e) => e.kind === "place").sort((a, b) => Math.min(...a.scenes, 99) - Math.min(...b.scenes, 99)), ...els.filter((e) => e.kind !== "place")];
+L.style_ref ??= null;
+for (const e of order) {
+  if (e.kind === "place" && L.bank[e.id]?.source === "generated") L.style_ref ??= L.bank[e.id].file;   // a plate kept from an earlier run still sets it
   if (L.bank[e.id] && !(e.real && L.bank[e.id].source !== "commons")) continue;   // a real thing that had to be generated is retried on Commons
   if (e.real) {
     // Pool candidates across the search strings (deduplicated by title) up to 10, so one vision call sees them all.
@@ -118,17 +127,19 @@ pick: the number of the best one, a clear depiction of this exact thing itself (
     if (L.bank[e.id]) { say(`  ${e.id}: keeping the generated one`); continue; }
   }
   if (e.kind === "character" || e.kind === "place") {
-    const file = `roots/${e.id}.png`;
+    const file = `roots/${e.id}.png`, ref = e.kind === "place" && L.style_ref ? [L.style_ref] : [];   // a later plate is an edit against the style reference
     const prompt = e.kind === "character"
-      ? `${L.medium.person}, full length. The person: ${e.look}\nStanding, front view, neutral pose, arms relaxed, whole figure visible head to feet.\nPlain light-grey seamless studio backdrop, soft even light, nothing else in the picture; no text.`
-      : `${L.medium.place} ${e.name}, empty of people, one single image. ${e.look} Period-accurate in every detail. No text or labels.`;
-    await jobs.image(`root-${e.id}`, file, prompt);
-    L.bank[e.id] = { source: "generated", file, prompt }; say(`  ${e.id}: generated (${e.kind})`); run.save();
+      ? `${L.medium.treatment} ${L.medium.person}, full length. The person: ${e.look}\nStanding, front view, neutral pose, arms relaxed, whole figure visible head to feet.\nPlain light-grey seamless studio backdrop, soft even light, nothing else in the picture; no text.`
+      : `${L.medium.treatment} ${ref.length ? "Match the colour treatment, grain and contrast of image 1 exactly; the place itself is described below, not taken from image 1.\n" : ""}${L.medium.place} ${e.name}, empty of people, one single image. ${e.look} Period-accurate in every detail. No text or labels.`;
+    await jobs.image(`root-${e.id}`, file, prompt, ref);
+    L.bank[e.id] = { source: "generated", file, prompt, ...(ref.length ? { style_ref: ref[0] } : {}) }; say(`  ${e.id}: generated (${e.kind}${ref.length ? ", against the style reference" : ""})`);
+    if (e.kind === "place") L.style_ref ??= file;
+    run.save();
   } else { L.bank[e.id] = { source: "text", look: e.look }; say(`  ${e.id}: text only`); run.save(); }
 }
 
 // 7. Keyframes for the first scenes: first frame = what goes into the plate; one resting state per action, quoting its line.
-const KEY = S.obj({ n: S.int, source: S.str, state: S.str, enters: S.arr(S.str), leaves: S.arr(S.str) });
+const KEY = S.obj({ n: S.int, source: S.str, state: S.str, positions: S.str, enters: S.arr(S.str), leaves: S.arr(S.str) });
 L.keyframes ??= {};
 for (let k = 1; k <= Math.min(nScenes, sp.scenes.length); k++) {
   if (L.keyframes[k]) continue;
@@ -137,10 +148,11 @@ for (let k = 1; k <= Math.min(nScenes, sp.scenes.length); k++) {
   L.keyframes[k] = await jsonCall({ name: "keyframes", effort: "medium", schema: S.obj({ present: S.arr(S.str), first: S.str, keyframes: S.arr(KEY) }),
     prompt: `You are the storyboard artist. Turn ONE scene of a live-action film into keyframes for an image editor that makes each frame by editing the frame before it. Image 1 of the first frame is a picture of the empty place; the people's looks come from their reference pictures.
 The scene is continuous: one place, one fixed camera, no cuts. Nothing enters or leaves unless the text says so.
+Blocking is continuous too: every state says where each character stands relative to the others and which way they face, and nobody crosses anyone unless the line says so.
 Write:
 - present: the ids of the characters and props in the first frame.
 - first: ONLY what is put into the empty place for the first frame: each character by id, where they stand and what they do; each prop and its state. Do not describe the place itself.
-- keyframes: ONE keyframe per action line, never several frames for one action, none for a line that only describes the state. Each is the RESTING state that results, in one or two sentences (who holds what, what lies where, who looks where, counts); nothing mid-air unless the text says so; no verbs of motion. Only what the text contains. source: the line it comes from, quoted. enters / leaves: ids that come into or go out of the picture.
+- keyframes: ONE keyframe per action line, never several frames for one action, none for a line that only describes the state. Each is the RESTING state that results, in one or two sentences (who holds what, what lies where, who looks where, counts); nothing mid-air unless the text says so; no verbs of motion. Only what the text contains. source: the line it comes from, quoted. positions: one clause per character: where they stand relative to the others and facing which way. enters / leaves: ids that come into or go out of the picture.
 Place: ${place?.name || sc.place}: ${place?.look || ""}
 Characters (ids): ${chars.map((c) => `${c.id} = ${c.name}`).join(", ")}
 Props and fixtures (ids): ${props.map((p) => `${p.id} = ${p.name}`).join(", ")}
@@ -159,16 +171,19 @@ for (let k = 1; k <= Math.min(nScenes, sp.scenes.length); k++) {
   const base = last[place?.id] ? { role: "previous frame of this place", ...last[place.id] } : { role: "place reference", id: place?.id, ...(pic(place?.id) || {}) };
   const present = new Set(kf.present.filter((id) => byId[id]));
   const chars = [...present].filter((id) => byId[id].kind === "character").map(pic).filter(Boolean);
-  const named = chars.map((c, i) => `Image ${i + 2} is ${byId[c.id].name}: the same person, same face and clothes of the period; the pose and background of that picture do not apply.`).join(" ");
+  // Style is state (PRD §4b): a first frame painted onto a plate that is not the style reference gets the reference as its last
+  // image; the reference plate itself, and a previous frame, already carry the treatment, and later frames inherit it.
+  const style = base.role === "place reference" && L.style_ref && base.file !== L.style_ref ? { role: "style reference", id: els.find((e) => L.bank[e.id]?.file === L.style_ref)?.id, file: L.style_ref } : null;
+  const named = [...chars.map((c, i) => `Image ${i + 2} is ${byId[c.id].name}: the same person, same face and clothes of the period; the pose and background of that picture do not apply.`), ...(style ? [`Image ${chars.length + 2} matches the colour treatment, grain and contrast every frame must have.`] : [])].join(" ");
   const first = `Image 1 is ${base.role === "place reference" ? `the empty place, ${place?.name}` : "this place as it was last seen"}. ${named} ${base.role === "place reference" ? "Put this moment into image 1, keeping its place, camera, light and colours exactly:" : "Edit image 1 into this moment; the place, camera, light and colours stay exactly as in image 1:"}\n${kf.first}\n${L.medium.frame} One single frame, no text.`;
-  rows.push({ scene: k, frame: 1, place: place?.id, present: [...present], inputs: [{ role: base.role, id: base.id, file: base.file, source: base.source }, ...chars.map((c) => ({ role: "character reference", ...c }))], prompt: first, source: "scene opening" });
+  rows.push({ scene: k, frame: 1, place: place?.id, present: [...present], inputs: [{ role: base.role, id: base.id, file: base.file, source: base.source }, ...chars.map((c) => ({ role: "character reference", ...c })), ...(style ? [style] : [])], prompt: first, source: "scene opening" });
   let prevId = `s${k}-f1`;
   kf.keyframes.forEach((f, i) => {
     for (const id of f.leaves || []) present.delete(id);
     const entering = (f.enters || []).filter((id) => byId[id]); for (const id of entering) present.add(id);
     const refs = entering.filter((id) => byId[id].kind === "character").map(pic).filter(Boolean);
     const add = refs.map((c, j) => ` Image ${j + 2} is ${byId[c.id].name}, entering: the same person, same face and clothes.`).join("");
-    rows.push({ scene: k, frame: i + 2, place: place?.id, present: [...present], inputs: [{ role: "previous frame", id: prevId }, ...refs.map((c) => ({ role: "character reference", ...c }))], prompt: `Edit image 1. Change ONLY this: ${f.state}${add} Everything not named stays as in image 1.\n${L.medium.frame} One single frame, no text.`, source: f.source });
+    rows.push({ scene: k, frame: i + 2, place: place?.id, present: [...present], inputs: [{ role: "previous frame", id: prevId }, ...refs.map((c) => ({ role: "character reference", ...c }))], prompt: `Edit image 1. Change ONLY this: ${f.state}${f.positions ? ` ${f.positions}` : ""}${add} Everything not named stays as in image 1.\n${L.medium.frame} One single frame, no text.`, source: f.source });   // keyframes cached before `positions` existed have none
     prevId = `s${k}-f${i + 2}`;
   });
   if (place) last[place.id] = { id: prevId };

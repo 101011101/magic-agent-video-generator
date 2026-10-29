@@ -19,14 +19,24 @@ const rows = L.state_table.filter((r) => r.scene === k), kf = L.keyframes[k];
 const isOverlay = (r) => /\b(title|caption)\b/i.test(r.source || "") && !/\b(stands?|holds?|walks?|sits?)\b/i.test(r.source || "");
 // A keyframe whose only change is who is speaking is not a new picture: the line is folded into the previous frame's spoken
 // lines for the audio stage (TTS + lip sync, or a dialogue clip).
-const isSpeech = (r) => /^\s*\d+\.\s*[A-Z][A-Z .'-]+:\s*"/.test(r.source || "") && /\bspeaker\b|\baddress(es|ing)\b|\bsays\b/i.test(r.prompt.split("Change ONLY this: ")[1] || "");
-const lineOf = (r) => { const m = (r.source || "").match(/^\s*\d+\.\s*([A-Z][A-Z .'-]+):\s*"([^"]+)"/); return m ? { who: m[1].trim(), text: m[2] } : null; };
+// A dialogue line is its own keyframe only if the text makes something visible happen; "X addresses Y" is speech. The beat number
+// is optional: the keyframe call quoted lines without it in vanderbilt2 and five speech frames were painted.
+const isSpeech = (r) => /^\s*(\d+\.\s*)?[A-Z][A-Z .'-]+:\s*["“]/.test(r.source || "") && /\bspeaker\b|\baddress(es|ing)\b|\bsays\b|\basks\b|\banswers\b|\breplies\b/i.test(r.prompt.split("Change ONLY this: ")[1] || "");
+const lineOf = (r) => { const m = (r.source || "").match(/^\s*(?:\d+\.\s*)?([A-Z][A-Z .'-]+):\s*["“]([^"”]+)["”]/); return m ? { who: m[1].trim(), text: m[2] } : null; };
 
 const made = [], skipped = [];
 let prevFile = null;
 for (const r of rows) {
   if (r.frame > 1 && isOverlay(r)) { skipped.push({ frame: r.frame, source: r.source }); console.log(`  frame ${r.frame}: overlay (${r.source.slice(0, 60)}), skipped`); continue; }
   if (r.frame > 1 && isSpeech(r) && made.length) { const l = lineOf(r); (made.at(-1).spoken ??= []).push(l); skipped.push({ frame: r.frame, source: r.source, spoken: true }); console.log(`  frame ${r.frame}: speech only (${l?.who}: "${l?.text.slice(0, 50)}…"), folded into frame ${made.at(-1).frame}`); continue; }
+  // Style is state (PRD §4b): a state table written before style_ref existed (or a style_ref set by hand in run.json) still gets the
+  // reference as the last image of frame 1 when its plate is not the reference itself; the row is patched so the record matches
+  // what was sent. Later frames inherit the treatment through the previous frame.
+  if (r.frame === 1 && L.style_ref && r.inputs[0]?.role === "place reference" && r.inputs[0].file !== L.style_ref && !r.inputs.some((i) => i.role === "style reference")) {
+    r.inputs.push({ role: "style reference", id: Object.keys(L.bank).find((x) => L.bank[x].file === L.style_ref), file: L.style_ref });
+    const line = `Image ${r.inputs.length} matches the colour treatment, grain and contrast every frame must have.`, at = " Put this moment into image 1";
+    r.prompt = r.prompt.includes(at) ? r.prompt.replace(at, ` ${line}${at}`) : `${line}\n${r.prompt}`;
+  }
   const inputs = r.inputs.map((i) => (i.role === "previous frame" ? prevFile : i.file)).filter(Boolean);
   if (r.frame > 1 && !prevFile) throw new Error("no previous frame");
   const file = `frames/s${k}-f${r.frame}.png`;
