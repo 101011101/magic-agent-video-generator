@@ -60,3 +60,6 @@ S1. **Is a very specific screenplay adaptation useful?** Test a screenplay call 
     screenplay itself (shot-level: time, framing, who is where, what the camera sees) against the current three-document
     split (screenplay → shot list → still prompts). Measure on the same story: fewer undeclared mentions, fewer side swaps,
     fewer still retries, and whether the film reads the same. Decide only after the vanderbilt3 end-to-end run is reviewed.
+    **In test (29 Oct):** vanderbilt4 (`fact-script.mjs`, v1: states per element, camera as prose; 11 s shots off the grid)
+    and vanderbilt5 (`fact-film3.mjs` + `src/script.js` + `src/prompts.js`, v2: line and blocking per scene, structured
+    camera, every element in every frame, seconds on the grid, prompts by code). Compare against vanderbilt3 on the measures.

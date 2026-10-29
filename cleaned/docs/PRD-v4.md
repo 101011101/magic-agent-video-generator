@@ -75,6 +75,16 @@ on its own from "a photograph of <place>" and the period, and nothing tied them 
   which way they face; nobody crosses anyone unless the line says so (Vanderbilt walked around Lincoln for the handshake
   because the state line said only "together at right").
 
+## 4c. The shooting script replaces screenplay + keyframe text (draft, 2026-10-29)
+
+For the shots approach (`docs/approach-shots/PRD.md` §1b) the SCREENPLAY and KEYFRAMES calls above become one call that
+writes a shooting script: scenes with the place, the 180-degree line and the blocking; shots with the camera, seconds on the
+clip model's grid, and a START and END frame for every element (third, depth, facing, distance, pose, hands; props: where,
+condition). The frame prompts of §4 are then templates filled from those frames by code (`src/prompts.js`), the state manager's
+rules unchanged (identity from the bank, environment from the plate or the latest still of the place, style as state), and the
+checks of §5 run on the script itself before any image is paid (`src/script.js`). Whether the chain approach keeps its own
+screenplay call or adopts the same document is open until the vanderbilt5 run is reviewed.
+
 ## 5. Checks
 
 - Framing gate per frame (code): SSIM to the previous frame; the corner-shift metric false-alarmed on a photo (scene 2 frame 3) and
