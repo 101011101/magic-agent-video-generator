@@ -11,22 +11,23 @@ export const usage = { calls: 0, cached: 0, input_tokens: 0, output_tokens: 0 };
 
 const toJpg = (file) => execFileSync("ffmpeg", ["-loglevel", "error", "-i", file, "-vf", "scale=1024:-2", "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "4", "-"]);
 
-export async function jsonCall({ name, schema, prompt, images = [], effort = "medium", model = MODEL }) {
+// tools: OpenAI hosted tools for the call, e.g. [{ type: "web_search" }] for a research round; part of the cache key.
+export async function jsonCall({ name, schema, prompt, images = [], effort = "medium", model = MODEL, tools = [] }) {
   const jpgs = images.map(toJpg);
-  const h = createHash("sha256").update(JSON.stringify({ MODEL: model, name, schema, prompt, effort }));
+  const h = createHash("sha256").update(JSON.stringify({ MODEL: model, name, schema, prompt, effort, tools }));
   for (const j of jpgs) h.update(j);
   mkdirSync(CACHE, { recursive: true });
   const file = join(CACHE, `${name}-${h.digest("hex").slice(0, 24)}.json`);
   if (existsSync(file)) { usage.cached++; return JSON.parse(readFileSync(file, "utf8")); }
-  const out = await openai({ model, name, schema, prompt, jpgs, effort });
+  const out = await openai({ model, name, schema, prompt, jpgs, effort, tools });
   writeFileSync(file, JSON.stringify(out, null, 2));
   return out;
 }
 
-async function openai({ model: MODEL, name, schema, prompt, jpgs, effort }) {
+async function openai({ model: MODEL, name, schema, prompt, jpgs, effort, tools = [] }) {
   const content = [{ type: "input_text", text: prompt }, ...jpgs.map((j) => ({ type: "input_image", image_url: `data:image/jpeg;base64,${j.toString("base64")}` }))];
   // Background mode: create, then poll. A long high-effort call would otherwise outlive fetch's 300 s headers timeout.
-  const body = { model: MODEL, reasoning: { effort }, background: true, store: true, input: [{ role: "user", content }], text: { format: { type: "json_schema", name, schema, strict: true } } };
+  const body = { model: MODEL, reasoning: { effort }, background: true, store: true, input: [{ role: "user", content }], text: { format: { type: "json_schema", name, schema, strict: true } }, ...(tools.length ? { tools } : {}) };
   const headers = { authorization: `Bearer ${key("OPENAI_API_KEY")}`, "content-type": "application/json" };
   for (let attempt = 1; ; attempt++) {
     let res, data;
