@@ -50,7 +50,8 @@ export class Jobs {
   // named in the prompt as @name. No start frame is pinned; the whole scene goes in the text. refs: [{ name, file }].
   async tvideo(key, file, prompt, refs, seconds, video = VIDEO) {
     return this.paid(key, file, { endpoint: "/v1/text-to-video", ...video, prompt, seconds, names: refs.map((r) => r.name) }, refs.map((r) => r.file), COST.video(seconds, video.model), async (paths) => {
-      const body = { name: `${this.run.name} ${key}`, ...video, end_seconds: seconds, style: { prompt }, references: refs.map((r, i) => ({ name: r.name, file_path: paths[i] })) };
+      // text-to-video has no start frame to take the aspect from: it must be given (HTTP 422 "Must provide aspect_ratio" otherwise).
+      const body = { name: `${this.run.name} ${key}`, aspect_ratio: "16:9", ...video, end_seconds: seconds, style: { prompt }, references: refs.map((r, i) => ({ name: r.name, file_path: paths[i] })) };
       return runJob("/v1/text-to-video", body, { kind: "video" });
     });
   }
