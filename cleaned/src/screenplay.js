@@ -13,9 +13,10 @@ const SCENE = S.obj({
   story_lines: S.arr(S.str),     // the story sentences this scene covers, quoted exactly
 });
 
-export async function writeScreenplay(story, names = []) {
-  return jsonCall({ name: "screenplay", effort: "high", schema: S.obj({ title: S.str, scenes: S.arr(SCENE) }),
-    prompt: `Adapt this story into a SCREENPLAY for an animated film, the way a screenwriter adapts a book.
+// opts.salt: mixed into the cache key so a run can remake the screenplay fresh.
+export async function writeScreenplay(story, names = [], { salt = "" } = {}) {
+  return jsonCall({ name: "screenplay", effort: "high", salt, schema: S.obj({ title: S.str, scenes: S.arr(SCENE) }),
+    prompt: `Adapt this story into a SCREENPLAY for a film, the way a screenwriter adapts a book.
 - Scenes: a scene is continuous in place and time. Start a new scene for a new place, or a cut (time passes, or we jump to
   another view). place: where, in the story's words; inside: interior or exterior; time: DAY, NIGHT, LATER or CONTINUOUS;
   cut: true when the scene starts after a jump in time or view rather than by following someone.

@@ -12,9 +12,10 @@ export const usage = { calls: 0, cached: 0, input_tokens: 0, output_tokens: 0 };
 const toJpg = (file) => execFileSync("ffmpeg", ["-loglevel", "error", "-i", file, "-vf", "scale=1024:-2", "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "4", "-"]);
 
 // tools: OpenAI hosted tools for the call, e.g. [{ type: "web_search" }] for a research round; part of the cache key.
-export async function jsonCall({ name, schema, prompt, images = [], effort = "medium", model = MODEL, tools = [] }) {
+// salt: a string mixed into the cache key (a run label) so a stage can be remade fresh instead of read back from the cache.
+export async function jsonCall({ name, schema, prompt, images = [], effort = "medium", model = MODEL, tools = [], salt = "" }) {
   const jpgs = images.map(toJpg);
-  const h = createHash("sha256").update(JSON.stringify({ MODEL: model, name, schema, prompt, effort, tools }));
+  const h = createHash("sha256").update(JSON.stringify({ MODEL: model, name, schema, prompt, effort, tools, salt }));
   for (const j of jpgs) h.update(j);
   mkdirSync(CACHE, { recursive: true });
   const file = join(CACHE, `${name}-${h.digest("hex").slice(0, 24)}.json`);
