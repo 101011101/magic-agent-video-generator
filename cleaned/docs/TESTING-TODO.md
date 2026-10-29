@@ -53,3 +53,10 @@ B5. **Burned-in text.** Add "no captions, no titles, no text" to every frame pro
   a pinned keyframe (B2), and the keyframe is the reference.
 - So the state manager keeps, per element: bank reference (fixed), current state (text, updated per transformation), last
   scene it appeared in; per place: plate, last frame of its latest scene. That is the whole table.
+
+## Reminder (asked 2026-10-29, not to be done mid-run)
+
+S1. **Is a very specific screenplay adaptation useful?** Test a screenplay call that writes the operational detail into the
+    screenplay itself (shot-level: time, framing, who is where, what the camera sees) against the current three-document
+    split (screenplay → shot list → still prompts). Measure on the same story: fewer undeclared mentions, fewer side swaps,
+    fewer still retries, and whether the film reads the same. Decide only after the vanderbilt3 end-to-end run is reviewed.
