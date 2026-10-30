@@ -1,0 +1,65 @@
+# V2 — the film pipeline, rebuilt clean
+
+Natural language → story → assets → screenplay → state tables → keyframes → clips → film. The design is in `prd/`, one file
+per subsystem, starting with `prd/00-overview.md`; the decisions behind it are in `prd/10-decisions.md`. Everything before V2 (`cleaned/`, `current/`) is archived and carries an `ARCHIVED.md`;
+it is reference material, nothing in it is run.
+
+## Layout
+
+| folder | what is in it |
+|---|---|
+| `prd/` | the product requirements: `00-overview.md` for how the subsystems work together, then one file per subsystem, costs, what is built, decisions (`PRD.md` is a pointer) |
+| `src/` | the pipeline code: one folder per subsystem, a shared `lib/`, the CLI `pipeline.mjs`, the page writer `results.js` |
+| `tests/` | small runnable test scripts (`state`, `edit`, `audit`) and the fixtures they use (a real run record from vanderbilt6; synthetic scripts for the audit cases) |
+| `runs/` | raw results, one folder per run label: `run.json`, `state.json`, references, stills, clips; never edited by hand |
+| `results/` | organised results: one HTML page per run, regenerated from `runs/` by `src/results.js` |
+| `drafts/` | draft code and draft design material: `CASES.md`, the archived PRDs, sketches not yet in `prd/` |
+| `tickets/` | one file per ticket; the open tickets are the to-do list |
+
+Each folder has its own `README.md` saying what belongs there.
+
+## Running
+
+```
+cd /Users/arviny/Downloads/Code/magic-agent-video-generator
+CLEANED_CAP=<ledger total + what you approve> node V2/src/pipeline.mjs \
+  --brief "An interesting true fact about Cornelius Vanderbilt, as a 30-second live-action film." \
+  --label vanderbilt7 \
+  --until keyframes
+```
+
+Flags:
+
+- `--brief "…"` the natural-language brief; `--label <name>` the run folder under `runs/`.
+- `--reuse <old run dir>` import an earlier run's asset bank when the element ids match, so plates are not paid for twice.
+- `--until story | assets | screenplay | state | keyframes | paint | film` where to stop. `keyframes` writes every keyframe
+  prompt and the state tables and stops before the first still is painted; `paint` paints the stills and stops before the
+  first clip; `film` makes the clips and the stitch.
+- `--retry s1-3,clip-2` remake the named items (every earlier attempt stays on disk; anything built on a retried still is
+  forgotten); `--accept s1-3,clip-2` keep flagged items as they are; `--recheck s1-3` run the gates again on a still as
+  painted, after a gate's criterion changed; `--dry` sends no paid call and lists each job a real run would send with its
+  cost (the text and vision calls still run); `--clips pinned|start|t2v|seq` picks how shots become clips, with
+  `--seq-across`, `--max-seq`, `--speed-up`, `--voice-refs`, `--only clip-N`; `--parallel N` limits the clips sent at once
+  (all by default).
+
+Keys come from the environment or the repository's `.env` (`OPENAI_API_KEY`, `MAGIC_HOUR_API_KEY`). The `.env` is never
+committed.
+
+## Rules of the house
+
+- **Gates flag only.** A failed check marks the item and stops the next stage. Nothing is remade automatically; the user
+  looks at the item in the results page and says retry or accept.
+- **Nothing paid without an explicit go.** The pipeline stops before the first still and before the first clip unless told
+  to continue, and `CLEANED_CAP` bounds the ledger.
+- **Never edit a generated prompt by hand.** Prompts are transcriptions of the screenplay and the state tables. A wrong
+  prompt is fixed in the schema, the rule, the template or the query that produced it.
+- **The reference carries the look.** Prompt text says what the moment is, where people are relative to each other and what
+  changed; the images say what things look like.
+- **Raw results are never hand-edited.** `runs/` is written by the pipeline only; `results/` is regenerated from it.
+
+## Where the old work is
+
+- `cleaned/`: the October 2026 experiments this V2 is ported from (`cleaned/src/`, `cleaned/experiments/`, the runs
+  `cleaned/runs/exp-*`, the PRDs under `cleaned/docs/`). See `cleaned/ARCHIVED.md`.
+- `current/`: the earlier pipeline. See `current/ARCHIVED.md`.
+- `CASES.md` at the repository root, copied into `drafts/`: the media cases and the v3 schema sketch.
