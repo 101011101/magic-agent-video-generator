@@ -1,6 +1,6 @@
 # Cases: what different kinds of video demand of the shooting script and the frame prompts
 
-Written 2026-10-30 after the Vanderbilt v2 run (`cleaned/runs/exp-vanderbilt5`). Purpose: decide whether ONE shooting-script
+Written 2026-10-30 after the Vanderbilt v2 run (`V1/runs/exp-vanderbilt5`). Purpose: decide whether ONE shooting-script
 prompt and ONE frame-prompt scheme can serve every kind of video we want to make, and what has to change in them. Sources
 are listed at the end; conventions marked (general) are standard practice not tied to one source.
 
@@ -87,7 +87,7 @@ line optional, blocking, tone, ambience, music) → SHOT rules (kind: live / to-
 camera_first; motion; camera_last; moment; first and last frames for every element, each person with a `doing` line; beats:
 action, lines, vo, sfx, overlays; changes) → the continuity and vocabulary rules → the story. The interpretive layer
 (`tone`, `moment`, `doing`) is already built (2026-10-30, run vanderbilt6): it is what gives a keyframe its feel without
-pasting events into it; see `cleaned/docs/approach-shots/PRD.md` §1b. Checks in code: timing on the model's grid; every element in every frame; thirds
+pasting events into it; see `V1/docs/approach-shots/PRD.md` §1b. Checks in code: timing on the model's grid; every element in every frame; thirds
 move only with an action or a camera move; static shots have camera_last = camera_first; the line never crossed; beats inside
 their shots; overlays inside safe margins on 9:16; a hook in shot 1 when the header asks for one; no undeclared fixtures.
 

@@ -1,6 +1,6 @@
 // RUN-001 arms. One variable moves: the model. Everything else — prompt text, aspect, resolution, image_count, and for the
 // editor the source frame bytes — is identical across every arm of a group, so a difference in the result is a difference
-// between models and nothing else. Rates and ids are read off current/research/sources/magic-hour-openapi.json (see RATES);
+// between models and nothing else. Rates and ids are read off V0/research/sources/magic-hour-openapi.json (see RATES);
 // a model is only listed here if it is in that endpoint's live enum AND supports HOLD.resolution.
 // Resolution note: 1k, not the 2k both pipelines run. 1k is the ONLY resolution all six generator models share — krea-2
 // tops out at 1k and nano-banana-pro starts at 1k. Holding resolution constant is worth more than matching production,
@@ -12,7 +12,7 @@ export const RATES = {
   "z-image-turbo": 5, "flux-2-klein": 5, "flux-schnell": 5, "krea-2": 10, "qwen-edit": 10,
   "seedream-v4": 40, "gpt-image-2": 50, "seedream-v4.5": 50, "nano-banana-pro": 150,
 };
-// What nano-banana-pro actually charged at 2k in current/tests/pipeline-memory/ledger.json. Used for the pessimistic total.
+// What nano-banana-pro actually charged at 2k in V0/tests/pipeline-memory/ledger.json. Used for the pessimistic total.
 export const OBSERVED = { "nano-banana-pro": 200 };
 
 export const HOLD = { aspect_ratio: "16:9", resolution: "1k", image_count: 1 };
@@ -52,7 +52,7 @@ export const EDIT = {
 };
 
 // The source frame for the editor arms, generated once so all four editors edit identical bytes. Generated rather than
-// taken from current/tests/compare/media/ because those are 480x270 thumbnails: every editor would be upscaling 2x+ and
+// taken from V0/tests/compare/media/ because those are 480x270 thumbnails: every editor would be upscaling 2x+ and
 // that, not the model, could decide the result. --editor-source <file> overrides and costs nothing.
 export const SOURCE = {
   model: "nano-banana-pro",

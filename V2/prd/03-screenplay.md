@@ -11,7 +11,7 @@ the duration `GRID` per clip model.
 clip model's duration grid, the maximum shot length.
 
 **Call.** One text call, effort high, strict schema, salted with the run label so a run makes its screenplay fresh
-(ported from `cleaned/src/script.js`).
+(ported from `V1/src/script.js`).
 
 **Schema, as built.**
 

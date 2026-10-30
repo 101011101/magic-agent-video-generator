@@ -9,7 +9,7 @@
 The graph is deleted and rebuilt on every non-estimate run; `log.jobs` survives in `run.json`. The two halves of a run's memory have different lifetimes. In practice the rebuild is complete enough to stay self-consistent, but a resume re-pays LLM verification for frames it will not regenerate, and frame ids are positional, so ids recorded in an earlier log do not necessarily denote the same frames after a resume that skips differently.
 
 ## Evidence
-`current/prod/pipeline-state-graph/run.mjs:58` — `if (!estimate) rmSync(join(runDir, "state.json"), { force: true });`
+`V0/prod/pipeline-state-graph/run.mjs:58` — `if (!estimate) rmSync(join(runDir, "state.json"), { force: true });`
 `run.mjs:39` also resets `beats: {}` and `errors: []` each run, while `log.jobs` and `log.calls` are append-only (`jobs.js:24`).
 Frame ids are assigned positionally in `graph.addFrame` (`graph.js:122`).
 

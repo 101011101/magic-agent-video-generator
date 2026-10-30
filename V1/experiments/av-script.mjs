@@ -1,5 +1,5 @@
 // The screenplay as a timed AV script: one LLM call assigns seconds to every scene and every beat within a total running time,
-// without changing a word of the beats. Prints Time | Video | Audio per row. Usage: node cleaned/experiments/av-script.mjs --from custom-bakery-real --seconds 30
+// without changing a word of the beats. Prints Time | Video | Audio per row. Usage: node V1/experiments/av-script.mjs --from custom-bakery-real --seconds 30
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

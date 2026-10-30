@@ -2,7 +2,7 @@
 // Stops at --until (default: keyframes, i.e. every keyframe prompt assembled, nothing painted). Gates flag and never
 // remake: a flagged still stops the build before clips, a flagged clip before the stitch; --retry ids remakes named items
 // (and what was built on a retried still), --accept ids keeps them, --recheck ids runs the gates again on them.
-// Usage: CLEANED_CAP=… node V2/src/pipeline.mjs --brief "…" --label vanderbilt [--reuse cleaned/runs/exp-vanderbilt2]
+// Usage: CLEANED_CAP=… node V2/src/pipeline.mjs --brief "…" --label vanderbilt [--reuse V1/runs/exp-vanderbilt2]
 //        [--until story|assets|screenplay|state|keyframes|paint|film] [--total 30] [--max 15] [--model wan-3.0]
 //        [--still nano-banana-pro] [--map new-id=old-id,…] [--no-generate] [--crop-direct 0.5] [--retry s1-3,clip-2] [--accept s1-3] [--recheck s1-3] [--dry: no paid call, each would-be job listed with its cost] [--clips pinned|start|t2v|seq] [--max-seq 15: seconds per sequence] [--seq-across: a sequence may run across scenes] [--speed-up 1.4: fast sequences rendered longer and played faster] [--voice-refs: t2v and seq speak in the bank voices] [--only clip-7,clip-8] [--retry root-<id> | --accept root-<id> for a flagged sheet] [--reactions] [--parallel N: clips at a time, default all at once] [--no-subtitles]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "node:fs";

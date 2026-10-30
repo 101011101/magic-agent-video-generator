@@ -1,6 +1,6 @@
 // Proof for SM-100: the selector returns, for every operation the recorded runs actually performed, the same tool the
 // hardcoded literal returned — and changes its answer when a tracked property changes. No API calls, no credits.
-// Run: node current/prod/state-manager/test/select.test.mjs
+// Run: node V0/prod/state-manager/test/select.test.mjs
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { REPO } from "../src/paths.js";
@@ -32,7 +32,7 @@ for (const [name, op] of Object.entries(OPS)) {
 
 h("2. The recorded runs contain only these operations (so the table above is complete)");
 const seen = new Set();
-for (const root of ["current/tests/pipeline-state-graph/runs", "current/tests/pipeline-memory/runs"]) {
+for (const root of ["V0/tests/pipeline-state-graph/runs", "V0/tests/pipeline-memory/runs"]) {
   const dir = join(REPO, root);
   if (!existsSync(dir)) continue;
   for (const d of readdirSync(dir)) {

@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { REPO } from "../../state-manager/src/paths.js";
 
-export const LEDGER = join(REPO, "current/tests/sweeps/ledger.json");
+export const LEDGER = join(REPO, "V0/tests/sweeps/ledger.json");
 export const CAP = Number(process.env.MH_CAP || 2000);
 
 export function ledger() { return existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, "utf8")) : { spent: 0, jobs: [] }; }

@@ -1,7 +1,7 @@
 // Scene pipeline (batched by scene): prompt → story → editor → ids → specs (assets + environment layouts) → screenplay (+ sound)
 // → storyboard per scene (parallel) → hard rule (code) → gate → sheets + plates → one GRID image per scene (all its panels in
 // one call) → crop → check cells → state table rows. Nothing is painted until the plan is clean.
-// Usage: node cleaned/scenes.mjs --prompt "…" --label bakery1 [--plan-only] [--estimate] [--force]
+// Usage: node V1/scenes.mjs --prompt "…" --label bakery1 [--plan-only] [--estimate] [--force]
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";

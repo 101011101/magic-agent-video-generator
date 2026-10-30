@@ -1,5 +1,5 @@
 // Re-runs the continuity check (SSIM) on an executed run folder. No Magic Hour calls.
-// Usage: node current/prod/state-manager/check.mjs <run folder name> [--write]
+// Usage: node V0/prod/state-manager/check.mjs <run folder name> [--write]
 //   --write   store the result in that run's run.json and index.html (default: print only)
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";

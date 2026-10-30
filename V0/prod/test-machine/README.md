@@ -4,8 +4,8 @@
 
 **Run a supervised pipeline:**
 ```
-node current/prod/pipeline-state-graph/run.mjs --case p4-lighthouse --label s1 --supervised
-node current/prod/pipeline-memory/run.mjs      --case p4-lighthouse --label s1 --supervised
+node V0/prod/pipeline-state-graph/run.mjs --case p4-lighthouse --label s1 --supervised
+node V0/prod/pipeline-memory/run.mjs      --case p4-lighthouse --label s1 --supervised
 ```
 The URL is printed at startup (default `http://localhost:4478`, override with `TM_PORT`). Open it and approve each step. Add `--auto` to approve everything from the start (useful for an unattended run that you still want to watch).
 
@@ -13,9 +13,9 @@ The URL is printed at startup (default `http://localhost:4478`, override with `T
 
 **Replay, without credits, network or ffmpeg:**
 ```
-node current/prod/test-machine/replay.mjs --pipeline a --label v3   # drive the handshake from a recorded run
-node current/prod/test-machine/replay.mjs --pipeline b --label v1
-node current/prod/test-machine/replay.mjs --selftest                # automated: approve / stop / approve-all, 12 checks
+node V0/prod/test-machine/replay.mjs --pipeline a --label v3   # drive the handshake from a recorded run
+node V0/prod/test-machine/replay.mjs --pipeline b --label v1
+node V0/prod/test-machine/replay.mjs --selftest                # automated: approve / stop / approve-all, 12 checks
 ```
 Replay issues the same gates through the same `Supervisor` API the live pipelines use; only the work behind each gate is replayed from `run.json` instead of generated. This is how the harness is verified on a machine with no ffmpeg and no budget.
 

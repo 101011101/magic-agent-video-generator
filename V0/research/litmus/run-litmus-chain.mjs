@@ -1,6 +1,6 @@
 // Litmus C: 4 continuous clips (each from the real last frame of the one before), then a cut to a new place.
 // Clips 1-2 are reused from test A (same method). Hard-cut join at native 30 fps, no trims, no end frames.
-// Usage: node current/research/litmus/run-litmus-chain.mjs
+// Usage: node V0/research/litmus/run-litmus-chain.mjs
 import { writeFileSync, mkdirSync, existsSync, copyFileSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

@@ -7,7 +7,7 @@
 The thesis (the frame is the state; edits carry changes forward) has not been tested end to end.
 
 ## Done when
-`node cleaned/run.mjs --case goldilocks --label v1` finishes, and the result is recorded here: slides passed on first or second attempt, forced slides, changes that persisted or were lost, max hops, credits.
+`node V1/run.mjs --case goldilocks --label v1` finishes, and the result is recorded here: slides passed on first or second attempt, forced slides, changes that persisted or were lost, max hops, credits.
 
 ## Result (goldilocks-v1, 4,000 credits, 12.5 min)
 - 12/12 slides passed verification; 11 on the first try. 13 edits + 7 roots = 20 images. 0 forced.

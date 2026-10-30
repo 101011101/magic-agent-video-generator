@@ -9,7 +9,7 @@
 Nine open gaps sit at the bottom of the vision doc. Several are load-bearing for the MVP: which tools are in scope, which fields are rigid by default, and how the goal is parsed. "JEV", the named selection method, is undefined.
 
 ## Evidence
-- `current/docs/vision.md:105-114` — the nine gaps.
+- `V0/docs/vision.md:105-114` — the nine gaps.
 - `vision.md:111` — "Selection method: 'JEV' is not defined yet."
 - `vision.md:108` — "Which fields are rigid by default when the user does not mention them?" This is unanswered while both pipelines already treat values as rigid or fluid in practice.
 

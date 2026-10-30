@@ -78,7 +78,7 @@ generations of painting.
 
 **Portrait rule** (`needsPortrait`). A portrait is attached only for a person who is not in image 1, or who is framed two
 sizes closer than image 1 shows him (medium-close from a wide, close from a medium-wide), so the face must be re-rendered at a
-size image 1 cannot supply; and for every person when image 1 is the empty plate. The `cleaned/` build sent every in-frame
+size image 1 cannot supply; and for every person when image 1 is the empty plate. The `V1/` build sent every in-frame
 portrait every time, which was the earlier "identity from the bank, always" rule written after a chain carried an identity
 swap; the user's rule, and PRD v4's, is this one. **built, not yet exercised** (ticket T-002). On the vanderbilt6 fixture:
 the Lincoln single gets the master and Lincoln's portrait; the three-shot gets the master and no portraits.

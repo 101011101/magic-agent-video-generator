@@ -2,7 +2,7 @@
 // the prompt), then, for a frame that carries spoken lines, a veo3.1 dialogue clip from that frame (audio on, voice descriptors,
 // transcribed to check the words); all stitched with sound. --long adds the comparison: ONE long veo3.1 clip from the scene's
 // first frame with every change and line in the text ("just do these changes"), kept as its own file.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-video.mjs --label vanderbilt2 --scene 2 [--seconds 5] [--long]
+// Usage: CLEANED_CAP=… node V1/experiments/fact-video.mjs --label vanderbilt2 --scene 2 [--seconds 5] [--long]
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

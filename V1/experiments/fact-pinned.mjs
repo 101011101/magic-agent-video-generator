@@ -1,7 +1,7 @@
 // Pinned shots: every clip's START and END are painted keyframes, and the cut between two clips is the same moment reframed
 // (the second clip's start frame is painted FROM the first clip's end frame as a new framing). Clips are image-to-video with
 // both frames pinned, so each shot begins and ends exactly where the stills say. Scene 2 of the Vanderbilt film as two clips.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-pinned.mjs --label vanderbilt2
+// Usage: CLEANED_CAP=… node V1/experiments/fact-pinned.mjs --label vanderbilt2
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

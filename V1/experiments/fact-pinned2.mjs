@@ -1,7 +1,7 @@
 // Pinned shots, done by the rule: IDENTITY FROM THE BANK, ENVIRONMENT FROM THE PLATE OR THE LAST FRAME. Every keyframe is painted
 // with the portraits attached and the identities spelled out, then checked against the portraits (one retry) before anything
 // is built on it. Clips are image-to-video pinned at both ends. Scene 2 of the Vanderbilt film as two clips with one cut.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-pinned2.mjs --label vanderbilt2
+// Usage: CLEANED_CAP=… node V1/experiments/fact-pinned2.mjs --label vanderbilt2
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

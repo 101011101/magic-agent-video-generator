@@ -1,7 +1,7 @@
 # PRD — Stage 2: clips between keyframes
 
 > The slideshow (stage 1) holds every frame's content. Stage 2 adds motion. Code: `src/links.js`, `src/motion.js`,
-> `src/film.js`, `src/clips.js`. Run: `node cleaned/run.mjs --case <id> --label <l> --video [--clips 2,8]`. Tickets: `tickets/V-*`.
+> `src/film.js`, `src/clips.js`. Run: `node V1/run.mjs --case <id> --label <l> --video [--clips 2,8]`. Tickets: `tickets/V-*`.
 
 ## 1. Thesis
 
@@ -43,7 +43,7 @@ stitch: clips in order; drop frame 0 of a clip that follows a connected seam →
 - A **gap check** before a connected clip: two frames that are too far apart (big pose or framing change) make a model
   morph instead of move. Then split the gap with a mid keyframe, or cut.
 - **Retake rule**: when QA fails (SSIM under a threshold), retry with a stricter prompt or another model.
-- **Model per clip**: choose by need (end frame, length, action fidelity) instead of one model for all (RUN-003 in `current/`).
+- **Model per clip**: choose by need (end frame, length, action fidelity) instead of one model for all (RUN-003 in `V0/`).
 - **Longer connected runs**: one 10–15 s clip through several connected slides (wan-3.0 allows 2–10, 15, 20, 25, 30 s).
 - **Cut grammar**: hard cut by default; a crossfade for time jumps.
 

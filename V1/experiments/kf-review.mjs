@@ -1,6 +1,6 @@
 // Review slideshow: one slide per keyframe (then per clip). Left: the keyframe (or the clip), with every attempt on disk
 // below it. Right: the references that were sent, as thumbnails in image order, and the prompt exactly as sent, chunk by
-// chunk. Keys: ← → flip, 1 / 2 switch variant, A cycle attempts. Usage: node cleaned/experiments/kf-review.mjs --label vanderbilt6 --kf kf2[,kf1]
+// chunk. Keys: ← → flip, 1 / 2 switch variant, A cycle attempts. Usage: node V1/experiments/kf-review.mjs --label vanderbilt6 --kf kf2[,kf1]
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

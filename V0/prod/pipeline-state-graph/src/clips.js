@@ -6,7 +6,7 @@
 // Seam metrics on brightness-compensated jumps (c): V = head speed / tail speed, S = seam step / median,
 // L = |luma step| + |luma ramp|, plus seam_ssim between the handoff frames.
 // Gate thresholds (SEAM) are PROVISIONAL. They are fitted to 7 continuous and 10 cut joins from a single case
-// (current/tests/pipeline-state-graph/runs/p4-lighthouse-v{1,2,3}/run.json) read against tests/compare/index.html, and
+// (V0/tests/pipeline-state-graph/runs/p4-lighthouse-v{1,2,3}/run.json) read against tests/compare/index.html, and
 // exactly ONE of those 7 continuous joins is clean (v3 b5→b6). One example cannot establish a band: treat a pass outside
 // p4-lighthouse as unproven until a second case is measured.
 //   ssim  the best-evidenced term. Joins that really start from the handoff frame measure 0.992–0.995 (v3, unedited

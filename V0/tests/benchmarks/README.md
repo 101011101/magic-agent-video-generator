@@ -16,7 +16,7 @@
 
 | Key | System | Kind |
 |---|---|---|
-| `magic-agent` | Magic Agent (`current/`) | system under test |
+| `magic-agent` | Magic Agent (`V0/`) | system under test |
 | `archived` | Archived agent (`archived/`) | baseline |
 | `focalml` | https://focalml.com/ | one-shot video generator |
 | `invideo` | https://invideo.io | one-shot video generator |
@@ -67,7 +67,7 @@
 - Paste the prompt verbatim. Attach only the listed uploads.
 - If a system asks a question, answer from the prompt's expected handling. Count each answer in `user_turns`.
 - Use default settings. Record any non-default setting in `notes`.
-- Run `node current/tests/benchmarks/probe.mjs <file>` and paste the output into the spec columns.
+- Run `node V0/tests/benchmarks/probe.mjs <file>` and paste the output into the spec columns.
 
 **Open gaps:**
 - `assets/` pack: dad photo (2.1), blue and red bottle photos (2.3), energy drink can (4.2), grandma photo (8.1), dog photo (9.2), portrait (11.3), competitor ad and product photo (13.3), plus P2 footage.

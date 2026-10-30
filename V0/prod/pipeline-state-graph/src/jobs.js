@@ -12,7 +12,7 @@ export const COST = { image: 200, video_per_s: 96 }; // nano-banana-pro 2k; wan-
 // Lifetime credit guard. The default stays the granted figure; MH_CAP raises it for a run the user has approved,
 // so the guard is never loosened in source. 10160 = ledger after v2; 9000 = the grant for v3.
 export const CAP = Number(process.env.MH_CAP || 10160 + 9000);
-const LEDGER = join(REPO, "current/tests/pipeline-state-graph/credits.json");
+const LEDGER = join(REPO, "V0/tests/pipeline-state-graph/credits.json");
 
 export class StopError extends Error {}
 

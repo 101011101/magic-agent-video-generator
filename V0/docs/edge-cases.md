@@ -1,6 +1,6 @@
 # Edge cases: what the system does when reality does not match its assumptions
 
-> Traced read-only against `current/prod/` on 2026-10-15. Every recorded run is one of four happy paths
+> Traced read-only against `V0/prod/` on 2026-10-15. Every recorded run is one of four happy paths
 > (p4-lighthouse, d1-desert-tokyo, p1-grandma, f1-red-riding-hood). The system has essentially never met an
 > awkward input. Severity is likelihood × damage: silently wrong film > wasted credits > clear crash.
 
@@ -16,7 +16,7 @@
 | 6 | Resuming any run whose link was downgraded | The downgrade mutates the live timeline object, which is `log.timeline`, which is saved. `fixed30` now persists `b4.link: "cut"` with `link_planned: "continuous"`. A resume **never re-attempts continuous**. | run is not reproducible | Keep the plan immutable; record the downgrade beside it |
 | 7 | A prop whose `size` string does not parse | `isSmall` requires `cm(e.size) > 0`, so the prop is silently excluded from anchoring. | silently wrong scale | Treat an unparseable size as an error, not as "not small" |
 | 8 | A story with no characters | `anchor()` needs a character scale partner (`controller.js:127`); with none it returns `null` and **no prop is ever anchored**. | silently wrong scale on every prop | A non-character scale reference |
-| 9 | Two runs of the same label at once | No lockfile anywhere in `current/prod`. Both hold `log` in memory and `writeFileSync` the whole of `run.json`; last writer wins. | lost job records → **re-paying for work already done** | A lock, or an append-only job log |
+| 9 | Two runs of the same label at once | No lockfile anywhere in `V0/prod`. Both hold `log` in memory and `writeFileSync` the whole of `run.json`; last writer wins. | lost job records → **re-paying for work already done** | A lock, or an append-only job log |
 | 10 | A filename rewritten within one run, then used as an input | `jobs.js:29` `forget()` clears `hashes` but **not `upCache`**, so the stale uploaded URL is reused. `pipeline-memory/src/common.js:56` `touch()` clears both — pipeline A is the one missing it. | latent: no current filename collides | Clear `upCache` in `forget()` |
 
 ## Handled well

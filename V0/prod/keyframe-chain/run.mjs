@@ -2,7 +2,7 @@
 // refers back to an earlier one folds the references in pairwise (prev + ref1 → r1, r1 + ref2 → r2, …) → slideshow for
 // approval → only when approved, a video (one start/end-frame clip per consecutive pair, concatenated).
 // Each frame is checked against the previous one by a vision call; unplanned changes get one corrective re-edit.
-// Usage: node current/prod/keyframe-chain/run.mjs --case f1-red-riding-hood-anime [--label v1] [--from v1] [plan|images|check|show|video]
+// Usage: node V0/prod/keyframe-chain/run.mjs --case f1-red-riding-hood-anime [--label v1] [--from v1] [plan|images|check|show|video]
 //   no phase = plan + images + show. `check` only reports on the frames that exist. `video` refuses to run until approval.json says approved.
 //   --from <label>: start from that run's raw plan, and copy any of its frames whose signature (prompt + input hashes) matches.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
@@ -22,15 +22,15 @@ const caseId = opt("--case", "f1-red-riding-hood-anime"), label = opt("--label",
 const phase = args.find((a) => ["plan", "images", "check", "show", "video"].includes(a));
 const RETRIES = Number(opt("--retries", 1));
 const PORT = Number(process.env.PORT || 4481);
-const DIR = join(REPO, "current/tests/keyframe-chain/runs", `${caseId}-${label}`);
-const LEDGER = join(REPO, "current/tests/keyframe-chain/ledger.json");
+const DIR = join(REPO, "V0/tests/keyframe-chain/runs", `${caseId}-${label}`);
+const LEDGER = join(REPO, "V0/tests/keyframe-chain/ledger.json");
 const CAP = Number(process.env.KC_CAP || 8000);
 const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9" };
 const VIDEO = { model: "wan-3.0", resolution: "720p", audio: false };
 const COST = { image: 200, video_s: 96 };
 mkdirSync(DIR, { recursive: true });
 const p = (f) => join(DIR, f);
-const FROM = from && join(REPO, "current/tests/keyframe-chain/runs", `${caseId}-${from}`);
+const FROM = from && join(REPO, "V0/tests/keyframe-chain/runs", `${caseId}-${from}`);
 const fromLog = FROM && existsSync(join(FROM, "run.json")) ? JSON.parse(readFileSync(join(FROM, "run.json"), "utf8")) : null;
 const logPath = p("run.json");
 const log = existsSync(logPath) ? JSON.parse(readFileSync(logPath, "utf8")) : {};

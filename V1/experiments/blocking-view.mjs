@@ -2,7 +2,7 @@
 // its transformation, and where its reference comes from. State rows are the REQUESTED ids per slide; the base of a slide is the
 // latest row at its place (else the place's plate); an entering asset comes from the latest row that has it, else the asset bank
 // (first appearance), else it is generated from text (never seen, not banked). Fixtures come with the place's environment.
-// Usage: node cleaned/experiments/blocking-view.mjs custom-rrh2 → <run>/blocking/data.json
+// Usage: node V1/experiments/blocking-view.mjs custom-rrh2 → <run>/blocking/data.json
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

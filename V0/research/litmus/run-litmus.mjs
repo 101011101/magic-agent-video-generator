@@ -1,5 +1,5 @@
 // Litmus test, outside the pipeline: start frame → clip 1 → real last frame → clip 2. Hand-written prompts, direct API calls.
-// Usage: node current/research/litmus/run-litmus.mjs [--only A|B]
+// Usage: node V0/research/litmus/run-litmus.mjs [--only A|B]
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -83,4 +83,4 @@ const sections = TESTS.filter((t) => existsSync(join(DIR, `test-${t.id}`, "resul
 writeFileSync(join(DIR, "index.html"), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Litmus: Clip Then Last-Frame Clip</title>
 <style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1100px;margin:0 auto;padding:40px 16px 80px}h1{font-weight:normal;font-size:30px}h2{font-weight:normal;font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}h3{font-weight:normal;color:var(--soft);font-size:17px;margin:20px 0 6px}.soft{color:var(--soft)}.lab{font-variant:small-caps;color:var(--soft);margin:0}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}img,video{width:100%;display:block;border:1px solid var(--line)}pre{white-space:pre-wrap;font-size:12px;background:#fbf7ef;padding:10px;border:1px solid var(--line)}@media(max-width:760px){.two{grid-template-columns:1fr}}</style></head><body><main>
 <h1>Litmus: clip, then a clip from its last frame</h1><p class="soft">Outside the pipeline: hand-written prompts, direct Magic Hour calls. Start frame (text-to-image) → clip 1 (image-to-video, start frame only) → extract clip 1's real last frame → clip 2 from that frame → hard-cut join. Similarity: SSIM, grayscale 640×360, 1.0 = identical.</p>${sections}</main></body></html>`);
-console.log("page: current/research/litmus/index.html");
+console.log("page: V0/research/litmus/index.html");

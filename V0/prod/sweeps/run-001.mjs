@@ -3,7 +3,7 @@
 // properties both pipelines currently buy at 150-200.
 // Two phases on purpose: `generate` spends and needs no ffmpeg; `score` needs ffmpeg (vision.js pipes images through it)
 // and spends nothing. Paid frames land on disk before anything can fail, so scoring never loses work that was paid for.
-// Usage: node current/prod/sweeps/run-001.mjs [--execute] [--phase generate|score|all] [--only <arm id>] [--editor-source <file>] [--label <name>]
+// Usage: node V0/prod/sweeps/run-001.mjs [--execute] [--phase generate|score|all] [--only <arm id>] [--editor-source <file>] [--label <name>]
 //   Default is a DRY RUN: it prints every request body and the exact cost and sends nothing. --execute spends.
 //   --only takes an arm id as printed (e.g. scale:krea-2, edit:qwen-edit, source) and runs just that one.
 import { writeFileSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
@@ -25,7 +25,7 @@ const PHASE = opt("--phase", "all"), ONLY = opt("--only", null), SRC_OVERRIDE = 
 const LABEL = opt("--label", null);
 const hasFfmpeg = (() => { try { execFileSync("ffprobe", ["-version"], { stdio: "ignore" }); return true; } catch { return false; } })();
 
-const dir = join(REPO, "current/tests/sweeps", LABEL ? `run-001-${LABEL}` : "run-001");
+const dir = join(REPO, "V0/tests/sweeps", LABEL ? `run-001-${LABEL}` : "run-001");
 mkdirSync(dir, { recursive: true });
 const logPath = join(dir, "results.json");
 const log = existsSync(logPath) ? JSON.parse(readFileSync(logPath, "utf8")) : { arms: [] };
@@ -75,7 +75,7 @@ if (!EXECUTE) {
   console.log(`sweep ledger:         ${l.spent} spent, cap ${CAP}`);
   console.log(`cap verdict:          ${l.spent + pessimistic <= CAP ? `OK — ${l.spent + pessimistic} <= ${CAP}` : `BLOCKED — needs MH_CAP >= ${l.spent + pessimistic}`}`);
   console.log(`ffprobe present:      ${hasFfmpeg} ${hasFfmpeg ? "" : "(scoring phase will be skipped; generation is unaffected)"}`);
-  console.log(`\nTo spend: node current/prod/sweeps/run-001.mjs --execute --phase generate`);
+  console.log(`\nTo spend: node V0/prod/sweeps/run-001.mjs --execute --phase generate`);
   process.exit(0);
 }
 

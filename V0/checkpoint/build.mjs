@@ -1,12 +1,12 @@
-// Builds the checkpoint site (static, for Vercel): current/checkpoint/site/index.html + media/.
+// Builds the checkpoint site (static, for Vercel): V0/checkpoint/site/index.html + media/.
 // Content comes from the run logs: lighthouse v1, grandma v1, bakery v1 (pipeline v2).
-// Usage: node current/checkpoint/build.mjs   then deploy current/checkpoint/site/
+// Usage: node V0/checkpoint/build.mjs   then deploy V0/checkpoint/site/
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
-const DIR = dirname(fileURLToPath(import.meta.url)), REPO = join(DIR, "../.."), RUNS = join(REPO, "current/tests/pipeline-v2/runs");
+const DIR = dirname(fileURLToPath(import.meta.url)), REPO = join(DIR, "../.."), RUNS = join(REPO, "V0/tests/pipeline-v2/runs");
 const SITE = join(DIR, "site"), MEDIA = join(SITE, "media");
 mkdirSync(MEDIA, { recursive: true });
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -44,7 +44,7 @@ const cards = RUN.map((r) => {
   const media = web(join(RUNS, r.dir, "final.mp4"), r.key);
   const ids = l.scenes.flat(), shots = l.plan.shots.filter((s) => ids.includes(s.id));
   const jobs = Object.entries(l.jobs).filter(([k]) => ids.some((id) => k.endsWith(`:${id}`)) || k.startsWith("ref:") && existsSync(join(RUNS, r.dir, `refs/${k.slice(4)}.png`)));
-  const upload = existsSync(join(REPO, `current/tests/pipeline-v2/uploads/${l.case.id}/u1.json`)) ? JSON.parse(readFileSync(join(REPO, `current/tests/pipeline-v2/uploads/${l.case.id}/u1.json`), "utf8")) : null;
+  const upload = existsSync(join(REPO, `V0/tests/pipeline-v2/uploads/${l.case.id}/u1.json`)) ? JSON.parse(readFileSync(join(REPO, `V0/tests/pipeline-v2/uploads/${l.case.id}/u1.json`), "utf8")) : null;
   const credits = jobs.reduce((s, [, j]) => s + (j.credits || 0), 0) + (upload?.credits || 0);
   const compute = jobs.reduce((s, [, j]) => s + (j.seconds || 0), 0);
   const kind = (k) => ({ ref: "Reference image", frame: "Cut start frame", clip: "Video clip", repair: "Repaired frame" }[k.split(":")[0]] || k);
@@ -65,7 +65,7 @@ const cards = RUN.map((r) => {
   ].map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join("");
   const shotRows = shots.map((s) => `<tr><td>${esc(s.id)}</td><td>${s.link}${s.start_upload ? " · upload" : ""}</td><td>${esc(s.location)}</td><td>${esc(s.action)} ${esc(s.camera)}</td></tr>`).join("");
   return { r, l, html: `<section id="${r.key}"><h2>${esc(l.case.title)}</h2><blockquote>“${esc(l.case.request)}”</blockquote>
-  ${upload ? `<div class="upload"><img src="${image(join(REPO, `current/tests/pipeline-v2/uploads/${l.case.id}/u1.png`), `${r.key}-upload`)}" alt="Uploaded photo (stand-in)"><p class="soft">Upload u1 is a stand-in, generated from the test case's description of the photo (no real photo in the test set yet). The clip starts on this exact image.</p></div>` : ""}
+  ${upload ? `<div class="upload"><img src="${image(join(REPO, `V0/tests/pipeline-v2/uploads/${l.case.id}/u1.png`), `${r.key}-upload`)}" alt="Uploaded photo (stand-in)"><p class="soft">Upload u1 is a stand-in, generated from the test case's description of the photo (no real photo in the test set yet). The clip starts on this exact image.</p></div>` : ""}
   <video src="${media.video}" poster="${media.poster}" controls playsinline preload="none"></video>
   <table class="stats">${stats}</table>
   <details><summary>Shot list (${shots.length})</summary><table class="list">${shotRows}</table></details>
@@ -116,4 +116,4 @@ ${cards.map((c) => c.html).join("")}
 <li>Next: build each cut by transforming the earlier frame that already holds the most of its elements, and merge missing ones from the frames where they last appeared (in test).</li>
 </ul></section>
 </main></body></html>`);
-console.log("wrote current/checkpoint/site/index.html");
+console.log("wrote V0/checkpoint/site/index.html");

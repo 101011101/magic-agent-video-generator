@@ -1,7 +1,7 @@
 // The hyper-specific screenplay (a shooting script): one call turns the story into timed scenes and shots where every shot
 // states its camera, and a START state and an END state for every element in it: third of frame, depth, facing, distance
 // to whom, pose, hands. Keyframe prompts become a transcription of these states; clips take the beats and lines.
-// Only declared elements (the bank) may appear. Text only. Usage: node cleaned/experiments/fact-script.mjs --from vanderbilt2 --label vanderbilt4 [--total 30] [--max 15]
+// Only declared elements (the bank) may appear. Text only. Usage: node V1/experiments/fact-script.mjs --from vanderbilt2 --label vanderbilt4 [--total 30] [--max 15]
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

@@ -3,7 +3,7 @@
 > Thesis under test: if the minimal sub-cases pass, the full-length video should pass. The job is to find *which* sub-cases fail.
 > Nothing here has been run. Costs are estimates: image 200 credits (nano-banana-pro 2k, as the pipelines use), video 96 credits/second (wan-3.0 720p). Written 2026-10-14. No credits spent producing this document.
 
-**The most important finding before any new test runs:** a large part of this matrix has *already been answered* by `current/research/litmus/` (tests A–G, CAR) and by the recorded judge output in `current/tests/pipeline-memory/runs/*/run.json`. Section 4 separates what is already known from what genuinely needs generation. Roughly a third of the matrix needs no spend at all.
+**The most important finding before any new test runs:** a large part of this matrix has *already been answered* by `V0/research/litmus/` (tests A–G, CAR) and by the recorded judge output in `V0/tests/pipeline-memory/runs/*/run.json`. Section 4 separates what is already known from what genuinely needs generation. Roughly a third of the matrix needs no spend at all.
 
 ---
 
@@ -270,7 +270,7 @@ The variable under test here is **the question asked of a fixed clip**, not the 
 
 ### 6.1 What is actually callable
 
-From `current/research/sources/magic-hour-openapi.json` — the enum on `/v1/image-to-video` and `/v1/text-to-video` carries **22 values**, but only **14** have documented duration, audio and end-frame support. Treat the rest as legacy.
+From `V0/research/sources/magic-hour-openapi.json` — the enum on `/v1/image-to-video` and `/v1/text-to-video` carries **22 values**, but only **14** have documented duration, audio and end-frame support. Treat the rest as legacy.
 
 **Documented and safe to design around:**
 
@@ -292,7 +292,7 @@ From `current/research/sources/magic-hour-openapi.json` — the enum on `/v1/ima
 
 **In the enum but undocumented — do not design around:** `sora-2`, `kling-2.5`, `kling-1.6`, `ltx-2`, `ltx-2.3`, `seedance`, and the deprecated `kling-2.5-audio` / `veo3.1-audio` aliases (the spec states a `-audio` suffix is just `audio:true`).
 
-⚠ **`sora-2` contradiction.** It is in the live enum, but `current/research/multishot-video-practice.md` records "Sora 2: discontinued (API closed 2026-09-24) [E] — do not design around it." Either the spec is stale or Magic Hour proxies it. Resolve with one 480-credit probe before trusting it; excluded from the tests below.
+⚠ **`sora-2` contradiction.** It is in the live enum, but `V0/research/multishot-video-practice.md` records "Sora 2: discontinued (API closed 2026-09-24) [E] — do not design around it." Either the spec is stale or Magic Hour proxies it. Resolve with one 480-credit probe before trusting it; excluded from the tests below.
 
 ### 6.2 The hypothesis this raises on its own
 
@@ -366,7 +366,7 @@ Three qualifications that matter:
 
 **There is no crop/fit step in either production pipeline.** `--fit-frames` (centre-crop a video input image to the output aspect before upload) exists **only** in the legacy `state-manager/execute.mjs:11,35,170-173`. Neither A nor B has any equivalent: an input image of arbitrary aspect goes to `image-to-video` as-is and the model decides what to do with it. For generated keyframes this is harmless — they are produced at 16:9. For an external image it is the single most likely breakage, and it is the reason X05 is worth running even though T08 looks similar: T08 asks what the *model* does with a 4:3 input, X05 asks what *our pipeline* does when it has no fit path at all.
 
-**The upload-anchor waste is fixed; upload *quality* is ungated.** `pipeline-memory/src/keyframes.js` `anchors()` now short-circuits for uploads — `if (e.upload) { copy(...); memory.setAnchor(...); return file; }` — with no paid job. The 200-credit waste the compare page flagged is genuinely gone. But the upload is copied **verbatim** as the entity's anchor: no resize, no crop, no validation, and no quality gate. `memory.record()` observes it but nothing rejects it. Magic Hour exposes `/v1/face-detection`, and **neither pipeline calls it** (grep across `current/prod`: zero hits). So a full-body shot with a 40-pixel face becomes the identity sheet for the whole film, and nothing notices. That is what X07–X11 probe.
+**The upload-anchor waste is fixed; upload *quality* is ungated.** `pipeline-memory/src/keyframes.js` `anchors()` now short-circuits for uploads — `if (e.upload) { copy(...); memory.setAnchor(...); return file; }` — with no paid job. The 200-credit waste the compare page flagged is genuinely gone. But the upload is copied **verbatim** as the entity's anchor: no resize, no crop, no validation, and no quality gate. `memory.record()` observes it but nothing rejects it. Magic Hour exposes `/v1/face-detection`, and **neither pipeline calls it** (grep across `V0/prod`: zero hits). So a full-body shot with a 40-pixel face becomes the identity sheet for the whole film, and nothing notices. That is what X07–X11 probe.
 
 *Noted in passing, outside my scope:* `anchors()` now uses `Promise.allSettled` with an explanatory comment, so the "one rejection abandons paid siblings" half of that defect is handled — but the function still `throw`s at the end and `run.mjs:79` still calls it as a bare `await`, so an anchor failure still escapes uncaught. The second half is unfixed.
 

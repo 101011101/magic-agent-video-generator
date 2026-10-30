@@ -1,6 +1,6 @@
 # Diagnosis: state-manager pipeline (2026-10-07)
 
-> Read-only code review by a subagent: code, plan (out/p4-lighthouse.json, re-solved offline to the same 132 nodes) and real prompts/requests in run.json files. No API calls, no edits. Paths relative to current/prod/state-manager/.
+> Read-only code review by a subagent: code, plan (out/p4-lighthouse.json, re-solved offline to the same 132 nodes) and real prompts/requests in run.json files. No API calls, no edits. Paths relative to V0/prod/state-manager/.
 
 **Confirmed defects (priority order):**
 1. **Cuts treated as continuous** — `src/solver.js:273-284`, `execute.mjs:91-105` never read `segment.type`. Segments 2–4 are `cut` but get `exact` handoffs; shot 3 morphs wide → close-up inside one clip. Fix: a cut never shares a frame; fresh start frame in the "to" state; previous frame only as a look/identity reference.
@@ -25,4 +25,4 @@
 
 **Suspicions:** choiceMemo/memo keys ignore boundAt and restore() does not roll back choiceMemo/cleanRefs; POST retried on 5xx may duplicate a paid job; signed URLs expire after 24 h; frame shape 2752×1536 vs 1280×720 last frames; clean references isolated from frames where the entity is small.
 
-**Evidence frames:** current/tests/state-manager/runs/p4-lighthouse-frames-v4-frames-2k/ — n101.png (man), n113.png (glass booth on the beach), n33.png (kitchen items outdoors).
+**Evidence frames:** V0/tests/state-manager/runs/p4-lighthouse-frames-v4-frames-2k/ — n101.png (man), n113.png (glass booth on the beach), n33.png (kitchen items outdoors).

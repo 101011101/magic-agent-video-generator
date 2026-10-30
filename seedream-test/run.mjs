@@ -5,13 +5,13 @@
 //   3. clips   (video)  text-to-video (seedance-2.0) per clip, references = that clip's elements only; clip 2 also gets clip 1's
 //                       hand-off frame as @last_frame.
 // Usage: node seedream-test/run.mjs --label <name> [--step script|sheets|clips|all] [--model seedance-2.0] [--res 480p] [--seconds 8]
-// Resumable: anything already in runs/<label>/run.json is reused. Does not touch cleaned/ (imports only).
+// Resumable: anything already in runs/<label>/run.json is reused. Does not touch V1/ (imports only).
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { jsonCall, S } from "../cleaned/src/llm.js";
-import { runJob, download, upload } from "../cleaned/src/magichour.js";
+import { jsonCall, S } from "../V1/src/llm.js";
+import { runJob, download, upload } from "../V1/src/magichour.js";
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ? process.argv[i + 1] : d; };
 const label = arg("label", "t1"), step = arg("step", "all");

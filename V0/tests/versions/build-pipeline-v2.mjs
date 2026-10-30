@@ -1,5 +1,5 @@
 // Builds pipeline-v2.html: every pipeline-v2 run (one card per run, newest case first) and the scene-state litmus tests.
-// Usage: node current/tests/versions/build-pipeline-v2.mjs
+// Usage: node V0/tests/versions/build-pipeline-v2.mjs
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -64,4 +64,4 @@ writeFileSync(join(DIR, "pipeline-v2.html"), `<!doctype html><html lang="en"><he
 <style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--card:#fbf7ef}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1000px;margin:0 auto;padding:40px 16px 80px}h1{font-weight:normal;font-size:32px;margin:0 0 8px}h2{font-weight:normal;font-size:24px;border-top:1px solid var(--line);padding-top:22px;margin-top:44px}h3{font-weight:normal;font-size:18px;margin:0 0 10px}.req{font-size:18px;background:var(--card);border-left:3px solid var(--soft);padding:12px 16px;margin:14px 0}section{background:var(--card);border:1px solid var(--line);padding:16px;margin:16px 0}video{width:100%;display:block;background:#000}.soft,.meta{color:var(--soft);font-size:14px}a{color:var(--soft)}table{border-collapse:collapse;width:100%;font-size:13px}td{border-bottom:1px solid var(--line);padding:4px 6px;vertical-align:top}</style></head><body><main>
 <h1>Pipeline v2 · results</h1><p class="soft">Shot planner → bible (relook, fixtures) → references → cut frames with a vision check → clips from start frames only (wan-3.0) → continuous shots from the real last frame → native 30 fps stitch → exact text layers. <a href="lighthouse.html">All lighthouse versions</a></p>
 ${cases}<h2>Scene-state litmus tests</h2>${litmus}</main></body></html>`);
-console.log("wrote current/tests/versions/pipeline-v2.html");
+console.log("wrote V0/tests/versions/pipeline-v2.html");

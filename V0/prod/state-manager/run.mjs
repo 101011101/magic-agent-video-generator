@@ -1,5 +1,5 @@
 // Runs the full pipeline on the test cases and writes JSON results plus the HTML report.
-// Usage: node current/prod/state-manager/run.mjs [--only <case id>]
+// Usage: node V0/prod/state-manager/run.mjs [--only <case id>]
 // Steps: 1 creative director story · 2 change-based operational chunks · 3 state spec (atoms, bindings, groupings)
 //        4 solver epochs · 5 final tool-call plan (execution order + tree).
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -43,6 +43,6 @@ for (const c of cases) {
 
 if (!only) {
   writeFileSync(join(TESTS, "state-manager.html"), renderReport(results, sigs));
-  console.log(`Wrote current/tests/state-manager/state-manager.html`);
+  console.log(`Wrote V0/tests/state-manager/state-manager.html`);
 }
 console.log("LLM usage:", usage);

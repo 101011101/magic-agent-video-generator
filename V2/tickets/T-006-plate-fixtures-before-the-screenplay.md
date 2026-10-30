@@ -7,7 +7,7 @@ subsystem:  assets, screenplay
 what:
 The plate description (walls, floor, light, every fixture with side and depth) is produced right after a plate exists and
 handed to the screenplay call in the places line ("as seen in its picture: …"), so blocking, camera placement and the
-`behind` field are written around the real furniture. Built in `cleaned/src/state.js` and `cleaned/src/script.js` on
+`behind` field are written around the real furniture. Built in `V1/src/state.js` and `V1/src/script.js` on
 2026-10-30 but not yet exercised: the vanderbilt6 screenplay was written before it existed.
 
 why:

@@ -11,7 +11,7 @@ B's audio agent implements TTS end to end: `storyboard.js` emits an `audio.voice
 This corrects an earlier claim that `ai-voice-generator` is "unused while the storyboard emits a voiceover array that is never rendered". The renderer exists and is correct as far as can be told; the **planner** never asks for voiceover.
 
 ## Evidence
-`plan.audio.voiceover` has length **0** in all four recorded runs (`p4-lighthouse-v1`, `p4-lighthouse-v2-30s`, `d1-desert-tokyo-v1-30s`, `p1-grandma-v1`). `current/tests/pipeline-memory/ledger.json` contains **0** jobs against `/v1/ai-voice-generator` out of 81 total.
+`plan.audio.voiceover` has length **0** in all four recorded runs (`p4-lighthouse-v1`, `p4-lighthouse-v2-30s`, `d1-desert-tokyo-v1-30s`, `p1-grandma-v1`). `V0/tests/pipeline-memory/ledger.json` contains **0** jobs against `/v1/ai-voice-generator` out of 81 total.
 
 ## Done when
 Either the storyboard prompt is changed so voiceover is produced when the story calls for it and one run exercises the path end to end, or the schema field is removed. An entire paid code path that has never executed is untested code, not a feature.

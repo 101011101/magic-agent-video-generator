@@ -9,7 +9,7 @@ function apiKey() {
   if (process.env.MAGIC_HOUR_API_KEY) return process.env.MAGIC_HOUR_API_KEY.trim();
   const f = join(TESTS, ".env");
   if (existsSync(f)) { const m = readFileSync(f, "utf8").match(/^MAGIC_HOUR_API_KEY=(.+)$/m); if (m) return m[1].trim(); }
-  throw new Error("MAGIC_HOUR_API_KEY not set (env or current/tests/state-manager/.env)");
+  throw new Error("MAGIC_HOUR_API_KEY not set (env or V0/tests/state-manager/.env)");
 }
 
 // Only a GET is ever retried. A POST is not retried on a network error (it may have created a paid job) and — the part that

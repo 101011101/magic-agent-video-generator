@@ -13,7 +13,7 @@ The one recorded run that follows the intended model end to end — original pas
 `upload-direct` fires only under a very narrow guard (`pipeline-state-graph/src/controller.js:162`): the seed must be an upload, have no merges, no fresh entities, and already show every wanted entity at the right version. Any deviation falls through to a paid regeneration.
 
 ## Evidence
-Op histogram, `current/tests/pipeline-state-graph/runs/p1-grandma-v1/state.json`: `{upload: 2, upload-direct: 1, clip-last: 1}` — no `edit`, `merge`, `generate` or `anchor`. Judge: `current/tests/pipeline-memory/runs/p1-grandma-v1/run.json` → `reward: 94.4`, shot total 96. Ledger: `current/tests/pipeline-memory/ledger.json` → 680 credits, versus 9,200 for `p4-lighthouse-v1`.
+Op histogram, `V0/tests/pipeline-state-graph/runs/p1-grandma-v1/state.json`: `{upload: 2, upload-direct: 1, clip-last: 1}` — no `edit`, `merge`, `generate` or `anchor`. Judge: `V0/tests/pipeline-memory/runs/p1-grandma-v1/run.json` → `reward: 94.4`, shot total 96. Ledger: `V0/tests/pipeline-memory/ledger.json` → 680 credits, versus 9,200 for `p4-lighthouse-v1`.
 
 Caveat, stated plainly: grandma is a single 5-second clip with one entity and no cut, so it is the easiest case in the set. It is evidence that the pass-through path is cheap and faithful where it applies, not proof that it scales to nine shots.
 

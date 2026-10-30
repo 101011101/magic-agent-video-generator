@@ -11,7 +11,7 @@ The verifier records `forced: true` on a frame it accepted despite unresolved fa
 Once PRD-030 defines quarantine this becomes implementable: `pickSeed` should at minimum prefer clean frames, and should refuse a frame whose recorded fault is on an entity the new frame must preserve.
 
 ## Evidence
-`current/prod/pipeline-state-graph/src/graph.js:66` — `.filter(({ f }) => f.accepted && !exclude.includes(f.id))`; `:75` and `:91` filter the same way for merge sources and roots. `grep -c forced current/prod/pipeline-state-graph/src/graph.js` → **0**; the only consumer is `src/page.js`.
+`V0/prod/pipeline-state-graph/src/graph.js:66` — `.filter(({ f }) => f.accepted && !exclude.includes(f.id))`; `:75` and `:91` filter the same way for merge sources and roots. `grep -c forced V0/prod/pipeline-state-graph/src/graph.js` → **0**; the only consumer is `src/page.js`.
 
 18 of 26 acceptances are forced across all recorded runs (69%). In `p4-lighthouse-fixed30`, b4 was seeded from f9 (b3's start frame) while b3 itself was forced-accepted carrying `beacon identity differs: Opaque cylinder lacks large circular optical lens`; b4 then recorded `beacon identity differs: Missing large optical lens`.
 

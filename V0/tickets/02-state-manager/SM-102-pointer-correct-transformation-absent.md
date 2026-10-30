@@ -8,12 +8,12 @@
 ## Problem
 The intended model is: the original source is **passed and transformed, never regenerated**; state is a pointer to where the authoritative source lives. Both pipelines get the pointer half right and the transformation half wrong.
 
-Pointers are correct. A's frames carry `seed`, `merged[]` and `op` lineage (`pipeline-state-graph/src/graph.js` `addFrame`); B's bank entries carry `file` (e.g. `refs/TowerStairs.png`) and each entity version carries an `anchor` path (`current/tests/pipeline-memory/runs/p4-lighthouse-v1/memory.json`).
+Pointers are correct. A's frames carry `seed`, `merged[]` and `op` lineage (`pipeline-state-graph/src/graph.js` `addFrame`); B's bank entries carry `file` (e.g. `refs/TowerStairs.png`) and each entity version carries an `anchor` path (`V0/tests/pipeline-memory/runs/p4-lighthouse-v1/memory.json`).
 
-What happens next contradicts the model. The pointer is handed to `/v1/ai-image-editor` as a reference, and an instruction editor **regenerates every pixel** — the original is consulted, not carried. `current/research/multishot-video-practice.md` records this as measured behaviour ("instruction editors regenerate every pixel; 'keep everything else' is soft; chained edits compound drift — FLUX Kontext measured it") and recommends mask inpainting plus paste-back of original pixels, which neither pipeline does.
+What happens next contradicts the model. The pointer is handed to `/v1/ai-image-editor` as a reference, and an instruction editor **regenerates every pixel** — the original is consulted, not carried. `V0/research/multishot-video-practice.md` records this as measured behaviour ("instruction editors regenerate every pixel; 'keep everything else' is soft; chained edits compound drift — FLUX Kontext measured it") and recommends mask inpainting plus paste-back of original pixels, which neither pipeline does.
 
 ## Evidence
-Frame-op histogram across all four recorded A runs (`current/tests/pipeline-state-graph/runs/*/state.json`):
+Frame-op histogram across all four recorded A runs (`V0/tests/pipeline-state-graph/runs/*/state.json`):
 
 | op | kind | count |
 |---|---|---|

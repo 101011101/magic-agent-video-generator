@@ -13,7 +13,7 @@ In a continuous beat, `start.description` is written to mean "carry straight on 
 This is the real cause of the repeated shot in `p4-lighthouse-fixed30`, and it is **not** a planner fault: the planner emitted `continuous`, which was correct.
 
 ## Evidence
-`current/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/run.json`:
+`V0/tests/pipeline-state-graph/runs/p4-lighthouse-fixed30/run.json`:
 - `timeline.beats[3]` carries `link: "cut"` **and** `link_planned: "continuous"` — the downgrade fired.
 - `beats[2].end.description` and `beats[3].start.description` are byte-identical: *"The keeper holds the beacon's glass door open while the shell glows against her chest and the ships remain close to the reef."*
 - `measures.joins` b3→b4: `seam_ssim 0.787`, `pass: false`, fault `"cut did not cut (0.787 ≥ 0.5): the two shots still look alike"`.

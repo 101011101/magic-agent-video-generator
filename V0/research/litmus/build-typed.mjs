@@ -1,5 +1,5 @@
 // Builds typed.html: the typed-state litmus runs (F, CAR, G) with video, credits, per-scene frames and state verdicts.
-// Usage: node current/research/litmus/build-typed.mjs
+// Usage: node V0/research/litmus/build-typed.mjs
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

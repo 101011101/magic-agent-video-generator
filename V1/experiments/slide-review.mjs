@@ -1,5 +1,5 @@
 // Slide review data for a run: every slide with its kept frame, its base, the sheets passed, who should be in it, and every
-// attempt with its faults. Writes <run>/review/{img/*.jpg, data.json}. Usage: node cleaned/experiments/slide-review.mjs custom-rrh2
+// attempt with its faults. Writes <run>/review/{img/*.jpg, data.json}. Usage: node V1/experiments/slide-review.mjs custom-rrh2
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

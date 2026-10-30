@@ -234,7 +234,7 @@ Other contradictions to track: Physion-Arc #1 is claimed by Runway, InVideo and 
 
 ## 8. Sources (deduplicated, grouped)
 
-**Local measurement:** `current/tests/state-manager/runs/p4-lighthouse-test2-chain/` (n1, n2, n7, n11, n15, n19, n31, n45, *-fit.png); `current/prod/state-manager/execute.mjs` (L170-180, L283); `src/continuity.js` (L14).
+**Local measurement:** `V0/tests/state-manager/runs/p4-lighthouse-test2-chain/` (n1, n2, n7, n11, n15, n19, n31, n45, *-fit.png); `V0/prod/state-manager/execute.mjs` (L170-180, L283); `src/continuity.js` (L14).
 
 **Products:**
 - InVideo: https://invideo.io/faq/what-is-invideo-agent-one-and-what-makes-it-stand-out-as/ , https://invideo.io/faq/how-many-frames-do-you-need-to-storyboard-for-ai-video/ , https://invideo.io/faq/why-is-cutting-on-a-still-frame-between-ai-generated/ , https://invideo.io/faq/how-do-you-generate-a-shotreverse-shot-pair-with/ , https://invideo.io/news/introducing-invideo-editor/ , https://kingy.ai/invideo-agent-one-review-the-ai-filmmaker-that-finally-remembers-what-youre-making/

@@ -1,4 +1,4 @@
-// I0 test on a run's story: id table, coverage, id'd copy, physical links. LLM only. Usage: node cleaned/experiments/ids-test.mjs custom-rrh3
+// I0 test on a run's story: id table, coverage, id'd copy, physical links. LLM only. Usage: node V1/experiments/ids-test.mjs custom-rrh3
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

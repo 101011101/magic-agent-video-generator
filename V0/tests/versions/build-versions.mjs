@@ -1,5 +1,5 @@
 // Builds lighthouse.html: the request, then every lighthouse version in order, with its method, cost and what we measured.
-// Usage: node current/tests/versions/build-versions.mjs
+// Usage: node V0/tests/versions/build-versions.mjs
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -83,4 +83,4 @@ writeFileSync(join(DIR, "lighthouse.html"), `<!doctype html><html lang="en"><hea
 <div class="req">“${esc(c.request)}”</div>
 <details><summary>Story written by the creative director (v3a)</summary><pre>${esc(story)}</pre></details>
 ${cards}</main></body></html>`);
-console.log("wrote current/tests/versions/lighthouse.html");
+console.log("wrote V0/tests/versions/lighthouse.html");

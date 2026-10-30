@@ -3,7 +3,7 @@
 // Commons picture for the first shot there; the previous shot's last frame after that, so the environment carries its state),
 // one @id per character present (the bank, so identity never comes from a video), and the shot's text (framing, action, lines).
 // The state manager checks that every element a shot names is declared in the bank; undeclared ones are reported.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-shots.mjs --label vanderbilt2 [--max 10] [--total 30] [--model wan-3.0] [--plan-only]
+// Usage: CLEANED_CAP=… node V1/experiments/fact-shots.mjs --label vanderbilt2 [--max 10] [--total 30] [--model wan-3.0] [--plan-only]
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

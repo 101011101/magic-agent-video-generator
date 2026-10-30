@@ -1,7 +1,7 @@
 # Sub-case results — zero-cost replay pass
 
 > Run 2026-10-14 against recorded data only. **0 Magic Hour credits, 0 API calls, nothing generated.**
-> Sources: `current/research/litmus/test-*/state.json`, `current/tests/pipeline-memory/runs/*/run.json`, `current/tests/pipeline-state-graph/runs/*/run.json`.
+> Sources: `V0/research/litmus/test-*/state.json`, `V0/tests/pipeline-memory/runs/*/run.json`, `V0/tests/pipeline-state-graph/runs/*/run.json`.
 > Labels: **PASS** / **FAIL (model)** — the generator did the wrong thing · **FAIL (ours)** — our code or our documentation is wrong · **INCONCLUSIVE** — the record cannot decide it.
 
 ## Results table

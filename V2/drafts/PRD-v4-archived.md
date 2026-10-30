@@ -1,7 +1,7 @@
 # PRD v4 — story → screenplay → keyframes → chain → clips (draft, 2026-10-28)
 
 > Replaces the grid design of PRD-draft-v3 §6b and the per-slide blocking of PRD.md §S1/S4. Written from what was run on the
-> bakery ad on 26–28 Oct (`cleaned/experiments/keyframes.mjs`, `chain-prompts.mjs`, `chain-run.mjs`, `chain-video.mjs`,
+> bakery ad on 26–28 Oct (`V1/experiments/keyframes.mjs`, `chain-prompts.mjs`, `chain-run.mjs`, `chain-video.mjs`,
 > `av-script.mjs`; results in `runs/exp-bakery/page-chain`). Not yet productised: the scripts are experiments, the pipeline
 > (`scenes.mjs`) still runs the grid path.
 

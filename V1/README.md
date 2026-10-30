@@ -5,14 +5,14 @@
 
 **Run:**
 ```
-node cleaned/run.mjs --case goldilocks --label v1 --estimate   # plan + job list, no image credits
-node cleaned/run.mjs --case goldilocks --label v1              # paid run
-node cleaned/run.mjs --prompt "a fox steals a pie" --label t1  # any prompt (case id "custom")
-node cleaned/run.mjs --prompt "…" --label t2 --entities-from custom-t1 --first-frames  # reuse sheets; seed + first frame per place
-node cleaned/run.mjs --case goldilocks --label v1 --video [--clips 2,8]  # stage 2: clips (+ final.mp4 when all exist)
+node V1/run.mjs --case goldilocks --label v1 --estimate   # plan + job list, no image credits
+node V1/run.mjs --case goldilocks --label v1              # paid run
+node V1/run.mjs --prompt "a fox steals a pie" --label t1  # any prompt (case id "custom")
+node V1/run.mjs --prompt "…" --label t2 --entities-from custom-t1 --first-frames  # reuse sheets; seed + first frame per place
+node V1/run.mjs --case goldilocks --label v1 --video [--clips 2,8]  # stage 2: clips (+ final.mp4 when all exist)
 ```
 - Keys: `OPENAI_API_KEY`, `MAGIC_HOUR_API_KEY` from the env or the repository root `.env`.
-- Output: `cleaned/runs/<case>-<label>/index.html` (slideshow + lineage + presence matrix), `run.json`, `tracker.json`, `roots/`, `frames/`.
+- Output: `V1/runs/<case>-<label>/index.html` (slideshow + lineage + presence matrix), `run.json`, `tracker.json`, `roots/`, `frames/`.
 - Re-running the same label reuses every finished job (signature = spec + input hashes) and the cached plan, so a stopped run resumes.
 - `--slides N` builds the first N slides only. `CLEANED_CAP` (default 8000) caps lifetime credits in `runs/ledger.json`. `CLEANED_MODEL` overrides the LLM.
 

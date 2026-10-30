@@ -1,10 +1,10 @@
 # The Litmus Ledger
 
-Nine pivotal findings from `current/research/litmus/` and the recorded pipeline runs, each stated as **question → method → result**, with a TRUE / FALSE / NOT SURE control and a free-text note.
+Nine pivotal findings from `V0/research/litmus/` and the recorded pipeline runs, each stated as **question → method → result**, with a TRUE / FALSE / NOT SURE control and a free-text note.
 
-**Start:** `node current/tests/litmus-review/server.mjs` → http://localhost:4479 (`PORT` overridable).
+**Start:** `node V0/tests/litmus-review/server.mjs` → http://localhost:4479 (`PORT` overridable).
 
-**Verdicts:** `current/tests/litmus-review/verdicts.json`, written on every click and 500 ms after you stop typing. No save button; closing the tab loses nothing; reload restores what you entered.
+**Verdicts:** `V0/tests/litmus-review/verdicts.json`, written on every click and 500 ms after you stop typing. No save button; closing the tab loses nothing; reload restores what you entered.
 
 ```json
 { "verdicts": { "F6": { "verdict": "true", "note": "...", "at": "ISO" } }, "updated_at": "ISO" }

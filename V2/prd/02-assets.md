@@ -17,7 +17,7 @@ the facts about those references that later stages query: the cast lines, the vo
    `look` is what never changes (build, face, clothing of the period, material, style), never a state. `searches` are 2–4
    Wikimedia Commons search strings from specific to plain. Fixtures are the fixed things of a place the action uses (a
    doorway, a counter, a fireplace). In fiction mode every element is forced to `real: false` with no searches. **built**.
-   (The `scenes` list of the `cleaned/` schema is gone: the screenplay, not the element table, says who is in which scene.)
+   (The `scenes` list of the `V1/` schema is gone: the screenplay, not the element table, says who is in which scene.)
 2. *Medium* (text, effort low). Schema `{ person, object, place, cell, frame, treatment }`: the medium as the noun of every
    image prompt ("A studio photograph of a real person", "A period-accurate live-action documentary photograph of"), a closing
    sentence for a frame, and the treatment line that names colour or monochrome, grain and finish once. The medium must be
@@ -68,7 +68,7 @@ the facts about those references that later stages query: the cast lines, the vo
    named by name alone. **built**.
 5. *Voice descriptors* (text, effort low, one call): one performable line per character (pitch, pace, accent, timbre) from
    the record where it says anything, else plausible for the person's age and origin; the V2 call asks for no commentary about
-   sources, because the `cleaned/` lines carried phrases like "plausible rather than documented" into the clip prompts.
+   sources, because the `V1/` lines carried phrases like "plausible rather than documented" into the clip prompts.
    **built**.
 6. *The voice bank* (text, effort low, one call; then one TTS call per voice). From the descriptors, a model picks a
    ready-made OpenAI TTS preset for each character and one for the narrator, from `alloy`, `ash`, `ballad`, `coral`, `echo`,
@@ -94,7 +94,7 @@ with a beat grid.
 
 **Rules.** Identity references are fixed for the whole film; a person's face and clothes never come from a previous frame.
 A plate is an empty photograph of the place. Reject stereograph cards, mounts, two-up images and text pages in the pick
-(ticket T-012: the exterior plate chosen for Vanderbilt in `cleaned/` was a stereograph, "two near-identical side-by-side
+(ticket T-012: the exterior plate chosen for Vanderbilt in `V1/` was a stereograph, "two near-identical side-by-side
 views"; the V2 pick prompt names two-up and stereograph cards as rejections, not yet exercised on that case).
 
 **Checks.** The vision pick; the plate check; the medium set check from the bakery work (medium, single subject, major miss)

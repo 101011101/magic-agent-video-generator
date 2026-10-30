@@ -1,6 +1,6 @@
 # Tool Signatures
 
-- Machine-readable twin: `current/tests/fixtures/tool-signatures.json`. Source: `magic-hour-tools.json` maintains/mutates. Accessed 2026-10-05.
+- Machine-readable twin: `V0/tests/fixtures/tool-signatures.json`. Source: `magic-hour-tools.json` maintains/mutates. Accessed 2026-10-05.
 - `atom ← slot`: the output atom comes from that input slot. `makes true`: the tool sets the atom. `drops`: input atom with no output guarantee; the solver gives no credit.
 - `?` = optional slot. Entity atoms apply per entity. "all other atoms" = every in-scope atom not listed elsewhere on the line.
 - Atoms the prompt names win over pass-through for AI Image Editor and AI Video Editor.

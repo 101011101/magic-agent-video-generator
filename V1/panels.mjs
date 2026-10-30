@@ -4,7 +4,7 @@
 // Retries only for real breaks: missing or duplicated character, element not removed, impossible picture, not a single frame,
 // re-painted frame (framing gate, code). Pose and expression are notes, never retries.
 // Reuses the source run's ids, environments, sheets and plates (no repaint).
-// Usage: node cleaned/panels.mjs --from custom-rrh4 --label rrh5 [--estimate] [--panels N]
+// Usage: node V1/panels.mjs --from custom-rrh4 --label rrh5 [--estimate] [--panels N]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "./src/env.js";

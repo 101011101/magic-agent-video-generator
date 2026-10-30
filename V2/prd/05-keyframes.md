@@ -115,7 +115,7 @@ bars gate on every still (`04-state.md`); a flagged still stops its chain, at pa
 **Cost.** 200 credits per painted still at 2k; a crop used directly costs nothing. Vanderbilt6 needed five distinct stills
 for six shots; the first V2 run plans five stills for four shots, two of them crops of the walk-in's end frame.
 
-**Status.** KF1 and KF2 built and compared in `cleaned/` (no visible difference on the one shot where both were painted; KF2's
+**Status.** KF1 and KF2 built and compared in `V1/` (no visible difference on the one shot where both were painted; KF2's
 order kept, KF1 archived, ticket T-011); the PRD-aligned template, the portrait rule and the crop branch are built in V2 and
 pass the tests on the vanderbilt6 fixture and the audit cases (`V2/tests/audit.test.mjs`). Painted in V2: the five
 Vanderbilt stills (one two-shot flagged for an edge figure, undecided) and ten Top Gun stills (the three cockpit frames

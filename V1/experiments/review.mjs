@@ -1,5 +1,5 @@
 // Review page for a run's asset bank and seed plates (works mid-run): every sheet with all its tries and checks, every plate
-// try with the plate-check lines from the log. Usage: node cleaned/experiments/review.mjs custom-rrh3
+// try with the plate-check lines from the log. Usage: node V1/experiments/review.mjs custom-rrh3
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

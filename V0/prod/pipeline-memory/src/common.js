@@ -9,8 +9,8 @@ import { runJob, download, uploadFile } from "../../state-manager/src/magichour.
 import { chooseImageTool, chooseVideoModel } from "../../state-manager/src/choose.js";
 
 export { REPO, download };
-export const RUNS = join(REPO, "current/tests/pipeline-memory/runs");
-export const LEDGER = join(REPO, "current/tests/pipeline-memory/ledger.json");
+export const RUNS = join(REPO, "V0/tests/pipeline-memory/runs");
+export const LEDGER = join(REPO, "V0/tests/pipeline-memory/ledger.json");
 export const CAP = Number(process.env.MH_CAP || 15000);
 export const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9" };
 export const VIDEO = { model: "wan-3.0", resolution: "720p", audio: true };
@@ -111,7 +111,7 @@ export class Run {
 // Audio jobs poll /v1/audio-projects (the shared runJob only knows image and video projects).
 function mhKey() {
   if (process.env.MAGIC_HOUR_API_KEY) return process.env.MAGIC_HOUR_API_KEY.trim();
-  const m = readFileSync(join(REPO, "current/tests/state-manager/.env"), "utf8").match(/^MAGIC_HOUR_API_KEY=(.+)$/m);
+  const m = readFileSync(join(REPO, "V0/tests/state-manager/.env"), "utf8").match(/^MAGIC_HOUR_API_KEY=(.+)$/m);
   if (!m) throw new Error("MAGIC_HOUR_API_KEY not set"); return m[1].trim();
 }
 async function audioJob(endpoint, body) {
@@ -130,8 +130,8 @@ async function audioJob(endpoint, body) {
 
 // Case loading.
 export function loadCase(caseId) {
-  const c = JSON.parse(readFileSync(join(REPO, "current/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
+  const c = JSON.parse(readFileSync(join(REPO, "V0/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
   if (!c) throw new Error(`no case ${caseId}`);
   const read = (p) => readFileSync(join(REPO, p), "utf8");
-  return { ...c, story: read(c.story_path), chunks: read(c.chunks_path), uploadDir: join(REPO, "current/tests/pipeline-v2/uploads", caseId) };
+  return { ...c, story: read(c.story_path), chunks: read(c.chunks_path), uploadDir: join(REPO, "V0/tests/pipeline-v2/uploads", caseId) };
 }

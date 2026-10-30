@@ -1,6 +1,6 @@
 // Litmus verdict server: serves the ledger page and persists the user's ruling on every change.
 // Each finding gets TRUE / FALSE / NOT SURE plus a note; a POST per keystroke-debounced change rewrites verdicts.json.
-// Run: node current/tests/litmus-review/server.mjs  →  http://localhost:4479
+// Run: node V0/tests/litmus-review/server.mjs  →  http://localhost:4479
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync, existsSync, createReadStream } from "node:fs";
 import { join, dirname, extname, resolve } from "node:path";

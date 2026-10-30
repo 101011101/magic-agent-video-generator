@@ -7,7 +7,7 @@
 
 - Video and image models are stateless. Between two calls, the only shared context is what goes into the conditioning.
 - Pixels carry far more context than words: layout, scale, light, identity, and every small object in a room.
-- Earlier pipelines in `current/` tracked many attributes per entity (pose, position, relations). That is expensive, often wrong,
+- Earlier pipelines in `V0/` tracked many attributes per entity (pose, position, relations). That is expensive, often wrong,
   and duplicates what the reference image already holds.
 
 ## 2. Thesis
@@ -117,8 +117,8 @@ in its frame); vision checks only accept or retry an image.
 
 ### 4.3 Stages and fixtures (planned, T-001)
 - Each stage reads and writes one JSON file in the run directory (`story.json`, `ids.json`, `specs.json`, `blocking.json`,
-  `states.json`, `assets.json`, `plates.json`, `frames/`). `node cleaned/stage.mjs <stage> --run <dir>` runs one stage.
-- `cleaned/tests/fixtures/` holds hand-checked inputs (a perfect text blocking, a story with a known hole); a stage run on a
+  `states.json`, `assets.json`, `plates.json`, `frames/`). `node V1/stage.mjs <stage> --run <dir>` runs one stage.
+- `V1/tests/fixtures/` holds hand-checked inputs (a perfect text blocking, a story with a known hole); a stage run on a
   fixture tests that stage alone. The full script on any prompt runs every stage in order.
 
 ## 5. Subsystems

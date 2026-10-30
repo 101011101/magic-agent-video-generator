@@ -36,7 +36,7 @@ is where invention happens, so that the screenplay can keep its rule of adding n
 
 **Cost.** Three text calls; no credits.
 
-**Status.** Built for nonfiction. On the Vanderbilt brief the gate asked for research both times it was run: in `cleaned/`
+**Status.** Built for nonfiction. On the Vanderbilt brief the gate asked for research both times it was run: in `V1/`
 the round returned seven facts and the documented looks and the story "I Accept Her" used them (dialogue-led); in the first V2
 run (`vanderbilt`, 2026-10-30) a fresh round returned eight facts and nine looks and the story "Instead of a Price" told the
 same episode in narration, which is why the screenplay needed a narration field (`03-screenplay.md`). Fiction mode is not

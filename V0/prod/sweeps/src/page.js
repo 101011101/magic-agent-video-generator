@@ -1,5 +1,5 @@
 // The RUN-001 result page: a variable table that describes itself — every arm states what was held and what changed, so
-// the table can be read without the ticket. House palette, matching current/tests/compare/index.html.
+// the table can be read without the ticket. House palette, matching V0/tests/compare/index.html.
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const verdict = (p) => (p === true ? '<span class="ok">PASS</span>' : p === false ? '<span class="bad">FAIL</span>' : '<span class="soft">not scored</span>');
 
@@ -60,6 +60,6 @@ ${groups.map(table).join("\n")}
 <li><b>est.</b> is the spec's &ldquo;from N credits/image&rdquo; floor; <b>charged</b> is what Magic Hour actually billed. They differ: the ledger shows <code>nano-banana-pro</code> billing 200 at 2k against a documented 150.</li>
 <li>A <span class="soft">not scored</span> verdict means the frame exists but the vision judge did not run or failed &mdash; the credits were still spent. It is not a pass.</li>
 </ul>
-<p class="soft"><a href="../../compare/index.html">&larr; Pipeline A vs B</a> &middot; ticket <code>current/tickets/06-runs/RUN-001-image-model-cost-sweep.md</code></p>
+<p class="soft"><a href="../../compare/index.html">&larr; Pipeline A vs B</a> &middot; ticket <code>V0/tickets/06-runs/RUN-001-image-model-cost-sweep.md</code></p>
 </main></body></html>`;
 }

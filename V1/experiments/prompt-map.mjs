@@ -1,6 +1,6 @@
 // Prompt map: every LLM instruction template extracted from the source (by the call's name), plus the exact prompts that were
 // sent for paid image and video jobs in a run (recorded in run.json). Writes docs/prompts/index.html with a diagram and one
-// expandable card per stage. Usage: node cleaned/experiments/prompt-map.mjs custom-bakery1
+// expandable card per stage. Usage: node V1/experiments/prompt-map.mjs custom-bakery1
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, RUNS } from "../src/env.js";

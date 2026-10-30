@@ -1,6 +1,6 @@
 // One scene → video: a clip between each pair of consecutive keyframes (start frame → end frame), prompt = the moment's action,
 // background sound and effects from the screenplay (wan-3.0 generates audio at no extra cost), then stitched into scene-k.mp4.
-// Usage: CLEANED_CAP=… node cleaned/scene-video.mjs --run custom-bakery1 --scene 3 [--model wan-3.0] [--seconds 5]
+// Usage: CLEANED_CAP=… node V1/scene-video.mjs --run custom-bakery1 --scene 3 [--model wan-3.0] [--seconds 5]
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "./src/env.js";

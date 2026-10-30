@@ -22,7 +22,7 @@ Production reaches four Magic Hour generation endpoints: `/v1/ai-image-generator
 | `/v1/photo-colorizer`, `/v1/ai-meme-generator`, `/v1/ai-qr-code-generator`, `/v1/ai-gif-generator`, `/v1/ai-headshot-generator`, `/v1/body-swap`, `/v1/animation`, `/v1/audio-to-video`, `/v1/auto-subtitle-generator`, `/v1/lip-sync`, `/v1/ai-talking-photo`, `/v1/ai-video-editor`, `/v1/ai-video-translator`, `/v1/ai-voice-cloner`, `/v1/text-to-video`, `/v1/face-swap` | — | — | **no recorded fault** — listed for completeness, not advocacy |
 
 ## Evidence
-`grep -rnE "/v1/[a-z0-9/-]+" current/prod` — the complete set of endpoints appearing anywhere in production code is the four above plus `files/upload-urls` and the two status-poll paths. Fault counts from A's `checks.hard`/`checks.soft` across `current/tests/pipeline-state-graph/runs/*/run.json`: position 43, size 24, pose 24, identity 11, interaction 6, place 4, condition 3, wardrobe 1.
+`grep -rnE "/v1/[a-z0-9/-]+" V0/prod` — the complete set of endpoints appearing anywhere in production code is the four above plus `files/upload-urls` and the two status-poll paths. Fault counts from A's `checks.hard`/`checks.soft` across `V0/tests/pipeline-state-graph/runs/*/run.json`: position 43, size 24, pose 24, identity 11, interaction 6, place 4, condition 3, wardrobe 1.
 
 ## Done when
 Each tool in the top half of the table is either wired behind a state-driven selection (SM-100) or has a one-line note in the tool spec saying why it is rejected. A tool is not "unused" — it is either selected or explicitly ruled out.

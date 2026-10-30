@@ -6,7 +6,7 @@
 **Blocked by:** RUN-002
 
 ## Problem
-`current/tests/subcases/MATRIX.md` §6.2 raises the hypothesis that the production model was selected on the wrong axis: `wan-3.0` was chosen for end-frame SSIM and free audio, but the vendor positions it for neither logic nor action fidelity — `wan-2.2` is "best for physical motion, action", `kling-2.6` is "best for action, motion blur", `veo3.1` is "expressive action". The dominant measured failure class across production runs is action/logic adherence (MATRIX.md Part 5), which pipeline A cannot even detect (RESULTS.md R08) and pipeline B only scores after paying for the clip. This run tests whether a different model removes those failures.
+`V0/tests/subcases/MATRIX.md` §6.2 raises the hypothesis that the production model was selected on the wrong axis: `wan-3.0` was chosen for end-frame SSIM and free audio, but the vendor positions it for neither logic nor action fidelity — `wan-2.2` is "best for physical motion, action", `kling-2.6` is "best for action, motion blur", `veo3.1` is "expressive action". The dominant measured failure class across production runs is action/logic adherence (MATRIX.md Part 5), which pipeline A cannot even detect (RESULTS.md R08) and pipeline B only scores after paying for the clip. This run tests whether a different model removes those failures.
 
 This run executes M01: the same G1 start frame and prompt (held constant), 5s, 720p, audio off, swept across `wan-2.2`, `kling-2.6`, `seedance-2.5` and `veo3.1` (the `wan-3.0` arm is G1 itself, already paid under RUN-002). M02–M05 (invented-action rate, form stability, camera obedience, relation retention) score the same four clips at zero additional cost.
 

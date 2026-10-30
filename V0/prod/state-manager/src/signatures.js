@@ -1,11 +1,11 @@
 // Loads the atom vocabulary and tool signatures, and normalizes them for the solver.
-// Source: current/tests/fixtures/tool-signatures.json, plus proposed fixes from current/docs/solver-traces.md.
+// Source: V0/tests/fixtures/tool-signatures.json, plus proposed fixes from V0/docs/solver-traces.md.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO } from "./paths.js";
 
-const FIXTURE = join(REPO, "current/tests/fixtures/tool-signatures.json");
-const CATALOG = join(REPO, "current/tests/fixtures/magic-hour-tools.json");
+const FIXTURE = join(REPO, "V0/tests/fixtures/tool-signatures.json");
+const CATALOG = join(REPO, "V0/tests/fixtures/magic-hour-tools.json");
 
 // Proposed fixes from the solver traces (not yet in the fixture). Marked "proposed" everywhere they show up.
 const PROPOSED_ATOMS = [

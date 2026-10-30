@@ -7,7 +7,7 @@
 The full film has not been made.
 
 ## Done when
-`node cleaned/run.mjs --case goldilocks --label v1 --video` with `CLEANED_CAP≈11000` produces `final.mp4`; QA per clip is recorded here.
+`node V1/run.mjs --case goldilocks --label v1 --video` with `CLEANED_CAP≈11000` produces `final.mp4`; QA per clip is recorded here.
 
 ## Result (goldilocks-v1, 4,800 new credits; 9,760 total with slides; 25 min)
 - `runs/goldilocks-v1/final.mp4`: 12 clips, 59.8 s, 1280×720, no audio. Page: `runs/goldilocks-v1/film.html`.

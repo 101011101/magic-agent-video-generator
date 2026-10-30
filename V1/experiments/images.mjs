@@ -5,7 +5,7 @@
 //   E4 local edit: only a crop around the change goes to the editor; the result is pasted back with a feathered edge.
 //   E5 grounded position: slide 9's edit with the wolf's place written from what the plate shows (vs s9-a1..a3).
 // Metrics (deterministic): SSIM of the region that must not change vs the base, and whether the white painted border survives.
-// Usage: CLEANED_CAP=… node cleaned/experiments/images.mjs [--only E2,E4] [--estimate]
+// Usage: CLEANED_CAP=… node V1/experiments/images.mjs [--only E2,E4] [--estimate]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

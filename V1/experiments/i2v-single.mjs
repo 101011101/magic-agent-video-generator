@@ -1,5 +1,5 @@
 // One scene, one video call: a start frame → image-to-video, no end frame. Cheap model first.
-// Usage: node cleaned/experiments/i2v-single.mjs [--model ltx-2.5] [--res 480p] [--seconds 10] [--label ltx-10s]
+// Usage: node V1/experiments/i2v-single.mjs [--model ltx-2.5] [--res 480p] [--seconds 10] [--label ltx-10s]
 import { writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

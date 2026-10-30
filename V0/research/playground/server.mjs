@@ -1,6 +1,6 @@
 // Magic Hour playground: local server that runs any Magic Hour tool, stores every call as a node,
 // and records which node outputs feed which later calls (lineage).
-// Run: node current/research/playground/server.mjs  →  http://localhost:4477
+// Run: node V0/research/playground/server.mjs  →  http://localhost:4477
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync, createReadStream } from "node:fs";
 import { join, dirname, extname, basename } from "node:path";
@@ -32,7 +32,7 @@ function apiKey() {
   if (process.env.MAGIC_HOUR_API_KEY) return process.env.MAGIC_HOUR_API_KEY.trim();
   const m = existsSync(ENV_FILE) && readFileSync(ENV_FILE, "utf8").match(/^MAGIC_HOUR_API_KEY=(.+)$/m);
   if (m) return m[1].trim();
-  throw new Error("MAGIC_HOUR_API_KEY not set (env or current/tests/state-manager/.env)");
+  throw new Error("MAGIC_HOUR_API_KEY not set (env or V0/tests/state-manager/.env)");
 }
 async function mh(method, path, body) {
   for (let attempt = 1; attempt <= 3; attempt++) {

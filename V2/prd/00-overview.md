@@ -1,6 +1,6 @@
 # V2 — Product requirements, overview: natural language → story → screenplay → keyframes → clips → film
 
-Written 2026-10-30 from the `cleaned/` work of 26–30 October (the bakery ad, the Vanderbilt runs vanderbilt2 to vanderbilt6)
+Written 2026-10-30 from the `V1/` work of 26–30 October (the bakery ad, the Vanderbilt runs vanderbilt2 to vanderbilt6)
 and the decisions taken with the user in that period; restructured into one file per subsystem the same day. Everything
 marked **built** exists in `V2/src` and has run; **built, not yet exercised** means the code is in `V2/src` and passes the
 tests but no paid run has gone through it; **design** has not been coded. Numbers are measured ones; where there is no

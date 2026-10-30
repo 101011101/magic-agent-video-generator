@@ -6,7 +6,7 @@
 **Blocked by:** none
 
 ## Problem
-`current/tests/subcases/MATRIX.md` Part 5 establishes that neither production pipeline has a logic/motion check (RESULTS.md R08, PASS-as-confirmed-defect: pipeline A's fault histogram has zero motion/action faults across 110 recorded faults, because no check exists that could raise one). Eleven logic failure modes (L01–L11, e.g. inverted vector, null action, invented action, state-arrives-early, uncommanded change, count violation under motion) are documented from recorded judge text but have never been probed with a dedicated, isolated generation. L00 (RESULTS.md, PARTIAL) confirmed 10 of the 11 modes are scoreable from text; this run produces the four video clips needed to score them for real.
+`V0/tests/subcases/MATRIX.md` Part 5 establishes that neither production pipeline has a logic/motion check (RESULTS.md R08, PASS-as-confirmed-defect: pipeline A's fault histogram has zero motion/action faults across 110 recorded faults, because no check exists that could raise one). Eleven logic failure modes (L01–L11, e.g. inverted vector, null action, invented action, state-arrives-early, uncommanded change, count violation under motion) are documented from recorded judge text but have never been probed with a dedicated, isolated generation. L00 (RESULTS.md, PARTIAL) confirmed 10 of the 11 modes are scoreable from text; this run produces the four video clips needed to score them for real.
 
 This run generates the four MATRIX.md generation units: G1 (staircase climb, 680 cr: 200 start frame + 480 clip), G2 (lantern ignition, 680 cr), G3 (reuses G2's last frame, 480 cr clip only), G4 (street corner, 680 cr). All at wan-3.0, 720p, 5s, `audio:false`, nano-banana-pro 2k start frames — matching production exactly.
 

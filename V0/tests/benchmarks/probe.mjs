@@ -1,5 +1,5 @@
 // Reads a video file with ffprobe and prints spec metrics for runs.csv.
-// Usage: node current/tests/benchmarks/probe.mjs <video> [requested_seconds]
+// Usage: node V0/tests/benchmarks/probe.mjs <video> [requested_seconds]
 // Prints: header line, then value line (duration_s,width,height,aspect,fps,has_audio,size_mb,duration_err_pct)
 import { execFileSync } from "node:child_process";
 import { statSync } from "node:fs";

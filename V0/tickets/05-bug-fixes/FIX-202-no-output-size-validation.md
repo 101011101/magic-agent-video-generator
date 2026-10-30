@@ -10,10 +10,10 @@
 
 `pipeline-state-graph/src/jobs.js:43` decides a job is cached on `existsSync(join(this.runDir, file)) && j?.sig === sig`. A 0-byte file satisfies `existsSync`, so the job is never retried — the empty output is cached for the life of the run directory. ffmpeg then fails downstream with an error that names neither the job nor the cause, and the only recovery is deleting the file by hand.
 
-There is no file-size or validity check anywhere in `current/prod`.
+There is no file-size or validity check anywhere in `V0/prod`.
 
 ## Evidence
-Read from the code. `grep` for `statSync|byteLength|\.size` across `current/prod` returns only `Set.size` uses in `solver.js`, `render.js` and `judge.js` — no output validation anywhere.
+Read from the code. `grep` for `statSync|byteLength|\.size` across `V0/prod` returns only `Set.size` uses in `solver.js`, `render.js` and `judge.js` — no output validation anywhere.
 
 ## Done when
 An output of zero bytes, or one that the relevant decoder rejects, is treated as a failed job rather than a cached success, and `jobs.js` will re-run it.

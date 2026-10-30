@@ -2,7 +2,7 @@
 // (one sheet per character, one plate per place) with the medium as the noun of the prompt, then one grid per scene whose prompt
 // is: the images named, cell 1 in full, every later cell only its change. The state manager (code) picks the images: the plate,
 // the latest frame of the place, a sheet for anyone not in that frame, the last frame showing a prop the state frame lacks.
-// Usage: CLEANED_CAP=… node cleaned/regrid.mjs --from custom-bakery-real --label bakery-v2
+// Usage: CLEANED_CAP=… node V1/regrid.mjs --from custom-bakery-real --label bakery-v2
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";

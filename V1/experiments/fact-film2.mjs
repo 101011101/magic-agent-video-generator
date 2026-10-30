@@ -3,7 +3,7 @@
 //   screenplay (fresh) → shot list with time (fresh) → cast-features (one vision call per portrait) → per shot: shot-stills call
 //   (start and end prompts with geometry continuity) → stills painted with the portraits attached and checked by feature →
 //   image-to-video pinned on both stills → stitch → page.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-film2.mjs --from vanderbilt2 --label vanderbilt3 [--total 30] [--max 15] [--model wan-3.0] [--still nano-banana-pro]
+// Usage: CLEANED_CAP=… node V1/experiments/fact-film2.mjs --from vanderbilt2 --label vanderbilt3 [--total 30] [--max 15] [--model wan-3.0] [--still nano-banana-pro]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

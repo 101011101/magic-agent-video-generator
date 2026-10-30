@@ -1,5 +1,5 @@
 // Executes a solved plan with real Magic Hour calls and ffmpeg joins.
-// Usage: node current/prod/state-manager/execute.mjs --case <id> [--segments N] [--standin-uploads] [--dry-run]
+// Usage: node V0/prod/state-manager/execute.mjs --case <id> [--segments N] [--standin-uploads] [--dry-run]
 //   --segments N        keep only the first N segment groups (stitch inputs)
 //   --standin-uploads   generate a synthetic stand-in image for each "given" upload from its text description
 //   --dry-run           write prompts and estimated credits; make no Magic Hour calls
@@ -56,7 +56,7 @@ function fitSeconds(model, s) {
 
 const result = JSON.parse(readFileSync(join(TESTS, "out", `${caseId}.json`), "utf8"));
 const sigs = loadSignatures();
-const requests = [...JSON.parse(readFileSync(join(REPO, "current/tests/creative-director/requests.json"), "utf8")), ...JSON.parse(readFileSync(join(REPO, "current/tests/creative-director/requests-logo.json"), "utf8"))];
+const requests = [...JSON.parse(readFileSync(join(REPO, "V0/tests/creative-director/requests.json"), "utf8")), ...JSON.parse(readFileSync(join(REPO, "V0/tests/creative-director/requests-logo.json"), "utf8"))];
 const request = requests.find((r) => r.id === caseId);
 // Every run gets its own folder, so a dry run never overwrites a real one.
 const label = opt("--label") || new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);

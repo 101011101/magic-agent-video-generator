@@ -5,7 +5,7 @@
 **Modules.** `src/edit/edit.js` (`clipPrompt`, `policySafe`, `makeClips`, `stitchFilm`), `src/lib/media.js` (frames, SSIM,
 the stitch), `src/lib/captions.js`, `src/sound/sound.js` (the narration mix), `src/lib/jobs.js`.
 
-**The clip prompt** (`clipPrompt`, ported from `cleaned/src/prompts.js`), assembled by code:
+**The clip prompt** (`clipPrompt`, ported from `V1/src/prompts.js`), assembled by code:
 
 ```
 FRAMES   Image 1 is the first frame and image 2 the last frame of one continuous N-second shot; the camera holds still.
@@ -106,6 +106,6 @@ a one-pass text-to-video clip with references for B-roll with nobody in it; dial
 
 **Cost.** 96 credits a second on wan-3.0 at 720p (4 s = 384, 5 s = 480, 7 s = 672, 8 s = 768, 2 s = 192, all measured).
 
-**Status.** Built for the static case and used to make the vanderbilt6 film in `cleaned/`; the V2 port with the narration mix,
+**Status.** Built for the static case and used to make the vanderbilt6 film in `V1/`; the V2 port with the narration mix,
 the guarded clip loop, the resumption of pending jobs and the stitch rules has not yet made a clip (the audit cases pass in
 `V2/tests/audit.test.mjs`); the design items are not started.

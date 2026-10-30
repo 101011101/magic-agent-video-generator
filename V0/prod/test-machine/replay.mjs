@@ -1,15 +1,15 @@
 // Replay harness: drives the supervisor from an already-recorded run, so the approve/stop handshake can be exercised with
 // no credits, no network and no ffmpeg. The steps and gates are issued through the same Supervisor API the real pipelines
 // use, so what is verified here is the real handshake — only the work behind each gate is replayed instead of generated.
-// Usage: node current/prod/test-machine/replay.mjs --pipeline a|b [--label v3]    (interactive, open the printed URL)
-//        node current/prod/test-machine/replay.mjs --selftest                     (automated: asserts approve / stop / auto)
+// Usage: node V0/prod/test-machine/replay.mjs --pipeline a|b [--label v3]    (interactive, open the printed URL)
+//        node V0/prod/test-machine/replay.mjs --selftest                     (automated: asserts approve / stop / auto)
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { REPO } from "../state-manager/src/paths.js";
 import { Supervisor, StopRun } from "./supervisor.js";
 
 const args = process.argv.slice(2), opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
-const RUNS = { a: "current/tests/pipeline-state-graph/runs", b: "current/tests/pipeline-memory/runs" };
+const RUNS = { a: "V0/tests/pipeline-state-graph/runs", b: "V0/tests/pipeline-memory/runs" };
 
 // A recorded run → the step/gate sequence the live pipeline would have issued, in order.
 export function planOf(which, dir) {

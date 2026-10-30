@@ -15,7 +15,7 @@
 //   source pointers. Cuts pick their base with store.rank; an unstable frame is retried once with its differences.
 //   Writes state.json and state.html (asset lineage).
 // --test X · --request "…" (story = request) · --seconds N --count K · --doc-from test-E (reuse that doc)
-// Usage: node current/research/litmus/run-litmus-states.mjs [--context] [--chain generated] [--test F] [--doc-only]
+// Usage: node V0/research/litmus/run-litmus-states.mjs [--context] [--chain generated] [--test F] [--doc-only]
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,7 +38,7 @@ mkdirSync(join(out, "refs"), { recursive: true });
 const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9" };
 const VIDEO = { model: "wan-3.0", resolution: "720p", audio: false, end_seconds: 5 };
 const TRIM = 3;
-const c = JSON.parse(readFileSync(join(REPO, "current/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === "p4-lighthouse");
+const c = JSON.parse(readFileSync(join(REPO, "V0/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === "p4-lighthouse");
 const request = REQUEST || c.request, story = REQUEST || readFileSync(join(REPO, c.story_path), "utf8");
 const logPath = join(out, "result.json");
 const log = existsSync(logPath) ? JSON.parse(readFileSync(logPath, "utf8")) : { jobs: {} };
@@ -62,7 +62,7 @@ const schema = { type: "object", additionalProperties: false, required: ["style"
     same_as: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "scene"], properties: { label: str, scene: { type: "integer" } } } },
   } } },
 } };
-const TEMPLATE = TYPED ? "current/tests/creative-director/templates/v8-scene-states-typed.md" : "current/tests/creative-director/templates/v7-scene-states.md";
+const TEMPLATE = TYPED ? "V0/tests/creative-director/templates/v8-scene-states-typed.md" : "V0/tests/creative-director/templates/v7-scene-states.md";
 const prompt = readFileSync(join(REPO, TEMPLATE), "utf8").replace("{{seconds}}", SECONDS).replace("{{count}}", COUNT)
   .replace("{{request}}", () => request).replace("{{story}}", () => story);
 const doc = DOC_FROM ? JSON.parse(readFileSync(join(DIR, DOC_FROM, "result.json"), "utf8")).doc : await jsonCall({ name: TYPED ? "scenestatestyped" : "scenestates", schema, prompt, effort: "medium" });

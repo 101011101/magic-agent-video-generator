@@ -1,7 +1,7 @@
 // Run the chain for one scene: frame 1 from the plate + sheets, every later frame from the one before, using the prompts that
 // chain-prompts.mjs prints. Tool: Magic Hour /v1/ai-image-editor (nano-banana-pro, 2k, 200 credits per frame). One attempt per
 // frame (no retries); the framing gate (SSIM to the previous frame) is measured and reported, not enforced.
-// Usage: CLEANED_CAP=… node cleaned/experiments/chain-run.mjs --scene 1
+// Usage: CLEANED_CAP=… node V1/experiments/chain-run.mjs --scene 1
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

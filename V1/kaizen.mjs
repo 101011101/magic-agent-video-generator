@@ -2,7 +2,7 @@
 // action, every reference (the base frame and each entering element's source, each clickable to see that frame), the elements
 // added and removed, and the exact prompt (editable). Approve generates one attempt; the result and its checks are shown; accept
 // it, retry (with an edited prompt), or go to the next panel. Nothing is generated without a click.
-// Usage: CLEANED_CAP=… node cleaned/kaizen.mjs --from custom-rrh4 --label rrh6 [--port 4870]
+// Usage: CLEANED_CAP=… node V1/kaizen.mjs --from custom-rrh4 --label rrh6 [--port 4870]
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";

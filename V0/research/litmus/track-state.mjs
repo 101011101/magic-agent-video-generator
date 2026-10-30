@@ -1,6 +1,6 @@
 // Rebuilds the state store of a finished litmus test from its frames (vision calls only, no generation).
 // Order per scene: start frame, generated end frame, real last kept frame. Sources come from the run's context log.
-// Usage: node current/research/litmus/track-state.mjs test-E
+// Usage: node V0/research/litmus/track-state.mjs test-E
 import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

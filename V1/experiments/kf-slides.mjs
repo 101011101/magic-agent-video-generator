@@ -1,6 +1,6 @@
 // Keyframes as a slideshow: one slide per keyframe in script order, each showing the KF variants side by side (painted still,
 // or a placeholder until it is painted), then one slide per clip with the videos. Keys: ← → flip, 1 / 2 show one variant,
-// 0 both, P prompt. Usage: node cleaned/experiments/kf-slides.mjs --label vanderbilt6 --kf kf1,kf2 → runs/exp-<label>/slides/index.html
+// 0 both, P prompt. Usage: node V1/experiments/kf-slides.mjs --label vanderbilt6 --kf kf1,kf2 → runs/exp-<label>/slides/index.html
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

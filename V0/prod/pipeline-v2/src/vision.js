@@ -10,7 +10,7 @@ const MODEL = process.env.SM_MODEL || "gpt-6.1-sol";
 const CACHE = join(TESTS, "cache");
 function key() {
   if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY.trim();
-  for (const f of [join(TESTS, ".env"), join(REPO, "current/tests/creative-director/.env")]) {
+  for (const f of [join(TESTS, ".env"), join(REPO, "V0/tests/creative-director/.env")]) {
     if (!existsSync(f)) continue;
     const m = readFileSync(f, "utf8").match(/^OPENAI_API_KEY=(.+)$/m);
     if (m) return m[1].trim().replace(/^["']|["']$/g, "");

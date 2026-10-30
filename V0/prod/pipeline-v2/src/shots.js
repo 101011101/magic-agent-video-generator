@@ -24,7 +24,7 @@ const SCHEMA = {
   },
 };
 
-export const TEMPLATE = "current/tests/creative-director/templates/v6-shot-list.md";
+export const TEMPLATE = "V0/tests/creative-director/templates/v6-shot-list.md";
 
 export async function planShots({ request, uploads, story, chunks }) {
   const prompt = readFileSync(join(REPO, TEMPLATE), "utf8")

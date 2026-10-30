@@ -9,7 +9,7 @@
 Estimate mode breaks out of the attempt loop after the first attempt, so it prices one call per frame beat. Real runs average 2.5–2.83 attempts per frame beat. The bias is stable across independent runs, so it is correctable rather than irreducible uncertainty. The estimator notes "retries not counted" but publishes no worst-case figure, and nothing compares the estimate against remaining cap headroom — which is how `RUN-005` was launched with insufficient headroom and truncated.
 
 ## Evidence
-Attempts per frame beat, counted from `beats[].attempts` in `current/tests/pipeline-state-graph/runs/*/run.json`:
+Attempts per frame beat, counted from `beats[].attempts` in `V0/tests/pipeline-state-graph/runs/*/run.json`:
 
 | run | frame beats | attempts | ratio |
 |---|---|---|---|

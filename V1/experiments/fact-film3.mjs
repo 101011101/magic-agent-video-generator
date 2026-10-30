@@ -5,7 +5,7 @@
 // KF variants: the still template is src/kf/<id>.js (--kf kf1). Everything a variant makes lives under runs/exp-<label>/<kf>/
 // (frames.txt, clips.txt, page/, stills/, clips/) next to a copy of the template files that made it, so variants of the
 // same script can be compared side by side. The script, the cast lines and the bank are shared by all variants.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-film3.mjs --from vanderbilt2 --label vanderbilt5 [--kf kf1] [--total 30] [--max 15] [--model wan-3.0] [--still nano-banana-pro] [--reactions] [--build [--stills] [--shot N] [--subtitles] [--retry s1-3,clip-2] [--accept s1-3,clip-2]] [--parallel 3]
+// Usage: CLEANED_CAP=… node V1/experiments/fact-film3.mjs --from vanderbilt2 --label vanderbilt5 [--kf kf1] [--total 30] [--max 15] [--model wan-3.0] [--still nano-banana-pro] [--reactions] [--build [--stills] [--shot N] [--subtitles] [--retry s1-3,clip-2] [--accept s1-3,clip-2]] [--parallel 3]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -70,7 +70,7 @@ say(`\ncast: ${chars.map((c) => `${c.id}: ${L.features[c.id]}`).join(" · ")}`);
 // The template files that made it are copied next to the outputs.
 L.kf ??= {}; const K = L.kf[KFID] ??= { name: KF.KF.name };
 for (const f of [`kf/${KFID}.js`, "prompts.js", "script.js"]) copyFileSync(join(ROOT, "src", f), join(kdir, f.split("/").pop()));
-writeFileSync(join(kdir, "README.txt"), `${KFID}: ${KF.KF.name}\nmade ${new Date().toISOString()} by: node cleaned/experiments/fact-film3.mjs ${args.join(" ")}\n${KFID}.js is the still template, prompts.js the plan, clip template and helpers, script.js the shooting-script stage, all as they were when this variant was generated. frames.txt and clips.txt hold every assembled prompt; stills/, clips/ and page/ the build. The script itself (../shooting-script.txt) and the cast lines (../run.json) are shared by every variant.\n`);
+writeFileSync(join(kdir, "README.txt"), `${KFID}: ${KF.KF.name}\nmade ${new Date().toISOString()} by: node V1/experiments/fact-film3.mjs ${args.join(" ")}\n${KFID}.js is the still template, prompts.js the plan, clip template and helpers, script.js the shooting-script stage, all as they were when this variant was generated. frames.txt and clips.txt hold every assembled prompt; stills/, clips/ and page/ the build. The script itself (../shooting-script.txt) and the cast lines (../run.json) are shared by every variant.\n`);
 const plan = planStills(L.script, { reactions: REACTIONS }), scene = (n) => L.script.scenes.find((x) => x.n === n);
 const stillById = (id) => (id ? plan.stills.find((x) => x.id === id) || null : null);
 for (const s of plan.stills) Object.assign(s, KF.stillPrompt({ still: s, env: stillById(s.env), prev: stillById(s.prev), scene: scene(s.scene), els, features: L.features, medium: L.medium, state }));

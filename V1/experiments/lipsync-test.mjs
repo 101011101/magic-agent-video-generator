@@ -1,7 +1,7 @@
 // Lip-sync test on a few dialogue panels of a panels run: voice (OpenAI TTS, one cast voice per character) → clip of the panel
 // (Magic Hour image-to-video, background sound on) → lip sync (Magic Hour, lite) with the voice → the clip's background sound
 // mixed back under the voice (ffmpeg). Paid jobs go through the Jobs gate and the ledger.
-// Usage: CLEANED_CAP=… node cleaned/experiments/lipsync-test.mjs custom-rrh5 [--n 2] [--model wan-3.0]
+// Usage: CLEANED_CAP=… node V1/experiments/lipsync-test.mjs custom-rrh5 [--n 2] [--model wan-3.0]
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

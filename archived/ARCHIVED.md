@@ -1,6 +1,6 @@
 # Archived: Old Prototype
 
-> Reference only. The new system is built from [current/docs/](../current/docs/architecture.md).
+> Reference only. The new system is built from [V0/docs/](../V0/docs/architecture.md).
 
 **Contents:**
 - `server/`, `frontend/`, `dev.sh`, `.env.example`: the old prototype (Fastify + OpenAI Agents SDK backend, Next.js frontend).

@@ -1,6 +1,6 @@
 // Apparent size of a small prop vs its scale partner, per frame: the prop's longest extent and the partner's height as
 // percent of frame height (vision call, cached), and their ratio against the real ratio (7 cm / 168 cm = 0.042).
-// Usage: node current/prod/pipeline-state-graph/measure-size.mjs <runDir> [prop] [partner]
+// Usage: node V0/prod/pipeline-state-graph/measure-size.mjs <runDir> [prop] [partner]
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { visionCallImages } from "../pipeline-v2/src/vision.js";

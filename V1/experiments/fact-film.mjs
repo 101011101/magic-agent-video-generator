@@ -2,7 +2,7 @@
 // confident → story written only from the facts → screenplay → master element table → asset bank: real things are REFERENCED
 // from Wikimedia Commons (photos, portraits, engravings, with provenance), only things with no record are generated → keyframes
 // for the first scenes → state manager picks the images per frame → state table + page. Nothing is painted for the frames.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-film.mjs --brief "…" --label vanderbilt --scenes 2
+// Usage: CLEANED_CAP=… node V1/experiments/fact-film.mjs --brief "…" --label vanderbilt --scenes 2
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

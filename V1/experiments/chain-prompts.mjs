@@ -1,7 +1,7 @@
 // The chain's prompts for one scene, composed from its keyframe breakdown (keyframes.mjs --beats) and the state manager's choice
 // of images: first frame = the place's plate (or its latest frame) + one sheet per character present; every later frame = the
 // previous frame only (+ a sheet for anyone entering). Assets are taken from custom-bakery-v2 (sheets and plates already made).
-// Usage: node cleaned/experiments/chain-prompts.mjs --scene 2   → prints tool, inputs and prompt per frame; nothing is generated.
+// Usage: node V1/experiments/chain-prompts.mjs --scene 2   → prints tool, inputs and prompt per frame; nothing is generated.
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

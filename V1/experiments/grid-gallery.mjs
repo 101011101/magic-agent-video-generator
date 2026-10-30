@@ -1,5 +1,5 @@
 // Every grid image ever generated, with the prompt and inputs that made it, on one page. Reads the runs' job records.
-// Usage: node cleaned/experiments/grid-gallery.mjs  → runs/exp-bakery/page-grids/index.html (+ jpgs)
+// Usage: node V1/experiments/grid-gallery.mjs  → runs/exp-bakery/page-grids/index.html (+ jpgs)
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";

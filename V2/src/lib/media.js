@@ -38,7 +38,7 @@ export function thumb(file, out, width = 1000) { ff(["-i", file, "-vf", `scale='
 // Normalise and concatenate clips into one film (1280×720, 24 fps, aac).
 export const fps = (file) => { const r = execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate", "-of", "csv=p=0", file]).toString().trim().split("/"); return r.length === 2 ? Number(r[0]) / Number(r[1]) : Number(r[0]) || 24; };
 // Normalise and concatenate clips into one film (1280×720, aac). The frame rate is the clips' own (the first clip's), never
-// forced: forcing 24 on 30-fps clips dropped one frame in five and juddered through every clip (current/research, A4.5).
+// forced: forcing 24 on 30-fps clips dropped one frame in five and juddered through every clip (V0/research, A4.5).
 export const hasAudio = (file) => execFileSync("ffprobe", ["-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "csv=p=0", file]).toString().includes("audio");
 // Peak level of a file's audio in dB (volumedetect); -91 or so for digital silence, null without an audio stream.
 export const peakDb = (file) => { if (!hasAudio(file)) return null; const r = spawnSync("ffmpeg", ["-hide_banner", "-i", file, "-vn", "-af", "volumedetect", "-f", "null", "-"]); const m = r.stderr.toString().match(/max_volume:\s*(-?[\d.]+) dB/); return m ? Number(m[1]) : null; };

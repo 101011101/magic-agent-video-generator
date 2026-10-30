@@ -1,8 +1,8 @@
 // Pipeline state-graph: one prompt → state timeline (1 LLM call) → deterministic controller (seed-frame edits and merges from
 // old frames, verification, versions with pointers) → clips (wan-3.0, start frame only, audio) → seam fix → stitch → cue-sheet
-// mix → final.mp4 with sound. Outputs: current/tests/pipeline-state-graph/runs/<case>-<label>/ (final.mp4, index.html, run.json,
+// mix → final.mp4 with sound. Outputs: V0/tests/pipeline-state-graph/runs/<case>-<label>/ (final.mp4, index.html, run.json,
 // state.json, cues.json, timeline.html).
-// Usage: node current/prod/pipeline-state-graph/run.mjs --case p4-lighthouse [--label v1] [--count 9] [--beats 2] [--estimate] [--no-music] [--supervised]
+// Usage: node V0/prod/pipeline-state-graph/run.mjs --case p4-lighthouse [--label v1] [--count 9] [--beats 2] [--estimate] [--no-music] [--supervised]
 //   --supervised  approve every major step and every paid call in a browser page first (see ../test-machine/README.md)
 //   --count K   beats in the timeline (K × 5 s);  --beats N   run only the first N beats (probe);  --estimate   list jobs and credits, spend nothing
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, rmSync, mkdtempSync } from "node:fs";
@@ -28,11 +28,11 @@ const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9"
 const VIDEO = { model: "wan-3.0", resolution: "720p", audio: true };
 const t0 = Date.now();
 
-const c = JSON.parse(readFileSync(join(REPO, "current/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
-if (!c) throw new Error(`no case ${caseId} in current/tests/state-manager/cases.json`);
+const c = JSON.parse(readFileSync(join(REPO, "V0/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
+if (!c) throw new Error(`no case ${caseId} in V0/tests/state-manager/cases.json`);
 const read = (p) => readFileSync(join(REPO, p), "utf8");
 const story = read(c.story_path), chunks = read(c.chunks_path);
-const runDir = join(REPO, "current/tests/pipeline-state-graph/runs", `${caseId}-${label}`);
+const runDir = join(REPO, "V0/tests/pipeline-state-graph/runs", `${caseId}-${label}`);
 mkdirSync(join(runDir, "uploads"), { recursive: true });
 const logPath = join(runDir, "run.json");
 const log = existsSync(logPath) ? JSON.parse(readFileSync(logPath, "utf8")) : { run: `${caseId}-${label}`, case: c, jobs: {}, calls: [] };
@@ -41,7 +41,7 @@ const sup = await maybeSupervisor(args, { runDir, title: `A · state graph · ${
 const gate = async (name, about, detail) => (sup ? await sup.step(name, about, detail) : () => {});
 const jobs = new Jobs(runDir, log, { estimate, sup });
 // Uploads: the shared stand-in files of the benchmark (one real photo per case), used exactly like a real upload.
-const uploadDir = join(REPO, "current/tests/pipeline-v2/uploads", caseId), uploads = {};
+const uploadDir = join(REPO, "V0/tests/pipeline-v2/uploads", caseId), uploads = {};
 for (const u of ["u1", "u2", "u3"]) if (existsSync(join(uploadDir, `${u}.png`))) { copyFileSync(join(uploadDir, `${u}.png`), join(runDir, `uploads/${u}.png`)); uploads[u] = `uploads/${u}.png`; }
 
 // 1. State timeline (one LLM call, kept by the run).

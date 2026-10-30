@@ -1,5 +1,5 @@
 // Isolated tests, one per open problem (see tickets/G-006). Free ones use LLM vision or ffmpeg on images we already have;
-// paid ones go through the Jobs gate under run "exp-isolated". Usage: node cleaned/experiments/isolated.mjs T1 T3 …
+// paid ones go through the Jobs gate under run "exp-isolated". Usage: node V1/experiments/isolated.mjs T1 T3 …
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

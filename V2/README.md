@@ -1,7 +1,7 @@
 # V2 — the film pipeline, rebuilt clean
 
 Natural language → story → assets → screenplay → state tables → keyframes → clips → film. The design is in `prd/`, one file
-per subsystem, starting with `prd/00-overview.md`; the decisions behind it are in `prd/10-decisions.md`. Everything before V2 (`cleaned/`, `current/`) is archived and carries an `ARCHIVED.md`;
+per subsystem, starting with `prd/00-overview.md`; the decisions behind it are in `prd/10-decisions.md`. Everything before V2 (`V1/`, `V0/`) is archived and carries an `ARCHIVED.md`;
 it is reference material, nothing in it is run.
 
 ## Layout
@@ -59,7 +59,7 @@ committed.
 
 ## Where the old work is
 
-- `cleaned/`: the October 2026 experiments this V2 is ported from (`cleaned/src/`, `cleaned/experiments/`, the runs
-  `cleaned/runs/exp-*`, the PRDs under `cleaned/docs/`). See `cleaned/ARCHIVED.md`.
-- `current/`: the earlier pipeline. See `current/ARCHIVED.md`.
+- `V1/`: the October 2026 experiments this V2 is ported from (`V1/src/`, `V1/experiments/`, the runs
+  `V1/runs/exp-*`, the PRDs under `V1/docs/`). See `V1/ARCHIVED.md`.
+- `V0/`: the earlier pipeline. See `V0/ARCHIVED.md`.
 - `CASES.md` at the repository root, copied into `drafts/`: the media cases and the v3 schema sketch.

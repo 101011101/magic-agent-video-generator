@@ -3,7 +3,7 @@
 // + carried observed state, closed-loop gate) or the real last frame (continuous, trimmed, repaired if entities are
 // missing) → wan-3.0 clip with sound cues → observe the last frame into memory, persist state versions → stitch (hold/settle
 // trims, xfade on continuous joins) → text layers → audio agent (cue sheet, beds, placeholder score, VO) → judge → page.
-// Usage: node current/prod/pipeline-memory/run.mjs --case p4-lighthouse [--clips 9] [--scenes 1] [--label v1] [--estimate] [--remix] [--rejudge] [--xfade 0] [--supervised]
+// Usage: node V0/prod/pipeline-memory/run.mjs --case p4-lighthouse [--clips 9] [--scenes 1] [--label v1] [--estimate] [--remix] [--rejudge] [--xfade 0] [--supervised]
 //   --supervised  approve every major step and every paid call in a browser page first (see ../test-machine/README.md)
 //   A finished shot is marked done in run.json and replayed on re-runs (its keyframe decision and clip are final; memory is re-read from cache).
 import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync } from "node:fs";

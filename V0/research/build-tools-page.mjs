@@ -1,5 +1,5 @@
 // Builds magic-hour-tools.html: every Magic Hour tool with its input and output types.
-// Usage: node current/research/build-tools-page.mjs
+// Usage: node V0/research/build-tools-page.mjs
 // Sources: ../tests/fixtures/magic-hour-tools.json (catalog), sources/magic-hour-openapi.json (preset lists).
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

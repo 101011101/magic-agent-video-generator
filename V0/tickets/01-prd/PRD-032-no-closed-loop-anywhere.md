@@ -11,7 +11,7 @@ Both pipelines verify, and neither acts on what it learns. Pipeline A checks fra
 A verification system whose output reaches only the report is an observation system. The PRD describes verification as a stage in a pipeline rather than as a control input, and nothing downstream is specified to consume it.
 
 ## Evidence
-Pipeline A: `forced` is written to the frame record and read by exactly one consumer, `pipeline-state-graph/src/page.js`. `grep -c forced current/prod/pipeline-state-graph/src/graph.js` → **0**. Seed candidates are filtered on `f.accepted` alone (`graph.js:66`, `:75`, `:91`).
+Pipeline A: `forced` is written to the frame record and read by exactly one consumer, `pipeline-state-graph/src/page.js`. `grep -c forced V0/prod/pipeline-state-graph/src/graph.js` → **0**. Seed candidates are filtered on `f.accepted` alone (`graph.js:66`, `:75`, `:91`).
 
 Pipeline B: `judgeCut` is invoked at `pipeline-memory/run.mjs:206`, after `stitch` (`:162`) and after the audio step. It emits per-shot scores, `end_state_ok`, `primary_fault` and an issue list; no later code reads any of it.
 

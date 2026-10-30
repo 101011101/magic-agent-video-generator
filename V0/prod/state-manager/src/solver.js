@@ -1,4 +1,4 @@
-// Step 4: the state solver. Backward search over true/false conditions (current/docs/subsystems/05-solver.md).
+// Step 4: the state solver. Backward search over true/false conditions (V0/docs/subsystems/05-solver.md).
 // Each epoch: try non-join tools that make every condition true given perfect inputs; the join tool is the last pick.
 // Each chosen tool's inputs become nested goals. Recurse until every condition ends at a leaf.
 import { REFERENCE_ONLY, AUDIO_ATOMS } from "./signatures.js";

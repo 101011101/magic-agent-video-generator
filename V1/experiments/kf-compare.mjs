@@ -2,7 +2,7 @@
 // then per keyframe the images that are sent (thumbnails, with what each is) and the prompt, chunk by chunk, each chunk
 // labelled with where its text comes from; KF variants side by side. The painted still appears above its prompt once it
 // exists. Clip prompts (what goes to the video model with the two stills) at the bottom, collapsed, chunked the same way.
-// Usage: node cleaned/experiments/kf-compare.mjs --label vanderbilt6 --kf kf1,kf2   → runs/exp-<label>/compare/index.html
+// Usage: node V1/experiments/kf-compare.mjs --label vanderbilt6 --kf kf1,kf2   → runs/exp-<label>/compare/index.html
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

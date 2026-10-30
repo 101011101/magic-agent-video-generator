@@ -1,7 +1,7 @@
 // Paint one scene of a fact-film plan as a keyframe chain, from its state table: frame 1 from the place reference + the character
 // references, every later frame from the previous frame (+ a reference for whoever enters). Title cards and captions are overlays
 // for the edit, not frames, so keyframes that only add one are skipped. Magic Hour image editor, nano-banana-pro, 2k, 200 per frame.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-chain.mjs --label vanderbilt --scene 1
+// Usage: CLEANED_CAP=… node V1/experiments/fact-chain.mjs --label vanderbilt --scene 1
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

@@ -1,6 +1,6 @@
 // Keyframes only: one large picture per keyframe in script order, its gate verdict, every attempt on disk as thumbnails
 // (click to swap), and for the attempt shown the INPUT that made it: the images sent, in order, and the prompt, both taken
-// from the job record of that exact file. Usage: node cleaned/experiments/kf-gallery.mjs --label vanderbilt6 --kf kf2
+// from the job record of that exact file. Usage: node V1/experiments/kf-gallery.mjs --label vanderbilt6 --kf kf2
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

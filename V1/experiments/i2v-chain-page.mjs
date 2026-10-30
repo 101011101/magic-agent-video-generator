@@ -1,5 +1,5 @@
 // Build index.html for a chain run from chain.json + spec.json. Re-run after each clip lands.
-// Usage: node cleaned/experiments/i2v-chain-page.mjs <run dir> [notes.html]
+// Usage: node V1/experiments/i2v-chain-page.mjs <run dir> [notes.html]
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -19,7 +19,7 @@ ${style}
 img,video{width:100%;border-radius:6px;border:1px solid var(--line);display:block}.cap2{display:grid;grid-template-columns:1fr 1fr;gap:6px;font:12px var(--mono);color:var(--mut);text-align:center}
 </style></head><body><main>
 <h1>${esc(spec.name)}: one start frame, then each clip from the last frame of the one before</h1>
-<p class="mut">Model ${log.video.model}, ${log.video.resolution}, ${log.seconds} s per clip, no end frames. Start frame from the image generator (nano-banana-pro, 2k, 16:9). Hand-off: frame N−3 of each clip (before the end snap) becomes the next clip's only input. ${clips.length} of ${spec.clips.length} clips so far, ${total} credits. Script: <code>cleaned/experiments/i2v-chain.mjs</code>, spec and outputs in <code>runs/exp-adventure/</code>.</p>
+<p class="mut">Model ${log.video.model}, ${log.video.resolution}, ${log.seconds} s per clip, no end frames. Start frame from the image generator (nano-banana-pro, 2k, 16:9). Hand-off: frame N−3 of each clip (before the end snap) becomes the next clip's only input. ${clips.length} of ${spec.clips.length} clips so far, ${total} credits. Script: <code>V1/experiments/i2v-chain.mjs</code>, spec and outputs in <code>runs/exp-adventure/</code>.</p>
 `;
 if (existsSync(join(DIR, "start-rejected-likeness.png"))) html += `<section class="card"><h2>0. First start frame, rejected by the video model</h2>
 <img src="${jpg("start-rejected-likeness.png")}" alt="rejected start frame">

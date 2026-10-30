@@ -14,7 +14,7 @@ Two gaps in the thesis, not the code:
 - **No remedy.** `vision.md` says a failure "traces backward through the chain to the tool that failed". Tracing is diagnosis. The PRD never states what happens next, so the implementation invented accept-forced.
 
 ## Evidence
-Across the five recorded state-graph runs (`current/tests/pipeline-state-graph/runs/*/run.json`): 24 accepted frames, **18 accepted with faults already on record (75%)**. Per run — v2: 8 of 8; v3: 5 of 7; fixed30: 4 of 6; v1: 1 of 2; grandma: 0 of 1. The string `accept-forced` appears in `src/controller.js` and in no document under `current/docs/`.
+Across the five recorded state-graph runs (`V0/tests/pipeline-state-graph/runs/*/run.json`): 24 accepted frames, **18 accepted with faults already on record (75%)**. Per run — v2: 8 of 8; v3: 5 of 7; fixed30: 4 of 6; v1: 1 of 2; grandma: 0 of 1. The string `accept-forced` appears in `src/controller.js` and in no document under `V0/docs/`.
 
 ## Done when
 The PRD defines a third satisfaction state with an explicit per-condition tolerance, and a remedy policy selected by the condition's priority (retry / re-source / substitute tool / surface to the user). `post-mvp.md` already anticipates priority; it is moved into the MVP model. A reader can answer, from the docs alone, what the system does when a condition is false after execution.

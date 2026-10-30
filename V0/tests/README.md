@@ -6,7 +6,7 @@
 - [fixtures/](fixtures/): machine-readable inputs for code tests.
 - [benchmarks/](benchmarks/README.md): output benchmark against other AI video generators and the archived agent. Systems, metrics, prompt tiers, long-video prompts, run log.
 
-**Fixtures** (rebuild with `node current/tests/fixtures/build-fixtures.mjs`):
+**Fixtures** (rebuild with `node V0/tests/fixtures/build-fixtures.mjs`):
 - `prompts.json`: the 51 prompt-set prompts (group, prompt, uploads, expected handling, provenance) and the 9 creative director requests.
 - `operational-chunks.json`: 30 operational-chunk samples (request, model, format A or B, story path, chunks path). Inputs for state splitter tests.
 

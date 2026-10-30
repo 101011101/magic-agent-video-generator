@@ -1,8 +1,8 @@
 # Pipeline v2
 
-> Status: first working version (2026-10-07). Built on the litmus tests (`current/research/litmus/`). Fixes come from `current/prod/state-manager/DIAGNOSIS.md`.
+> Status: first working version (2026-10-07). Built on the litmus tests (`V0/research/litmus/`). Fixes come from `V0/prod/state-manager/DIAGNOSIS.md`.
 
-**Run:** `node current/prod/pipeline-v2/run.mjs --case p4-lighthouse [--scenes 4] [--label v1] [--plan-only]`. Output: `current/tests/pipeline-v2/runs/<case>-<label>/index.html`.
+**Run:** `node V0/prod/pipeline-v2/run.mjs --case p4-lighthouse [--scenes 4] [--label v1] [--plan-only]`. Output: `V0/tests/pipeline-v2/runs/<case>-<label>/index.html`.
 
 **Steps:**
 1. The creative director makes the story (v3a) and the change-based chunks (v5b). These are unchanged.

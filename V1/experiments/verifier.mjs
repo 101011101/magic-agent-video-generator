@@ -1,7 +1,7 @@
 // E1 Verifier sensitivity (LLM only, no image credits). Re-asks the slide 9 and 11 checks on frames whose truth we know,
 // varying the model, the effort, and whether the prompt asks about framing and physical sense. Each cell runs N times
 // (a salt in the prompt defeats the cache) to show how noisy the verdict is.
-// Usage: node cleaned/experiments/verifier.mjs [--models gpt-6.1-sol,claude-fable-5-1] [--n 3]
+// Usage: node V1/experiments/verifier.mjs [--models gpt-6.1-sol,claude-fable-5-1] [--n 3]
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

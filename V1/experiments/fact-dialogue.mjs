@@ -1,6 +1,6 @@
 // Dialogue at video time: one clip from a painted keyframe with the lines spoken IN the generation (veo3.1, audio on), each
 // speaker given a voice descriptor in the prompt. Then the clip's audio is transcribed (OpenAI) to check the words.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-dialogue.mjs --label vanderbilt --scene 2 --frame 4 [--model veo3.1] [--seconds 8]
+// Usage: CLEANED_CAP=… node V1/experiments/fact-dialogue.mjs --label vanderbilt --scene 2 --frame 4 [--model veo3.1] [--seconds 8]
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

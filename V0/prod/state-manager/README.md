@@ -2,13 +2,13 @@
 
 > Natural language → story → change-based operational chunks → true/false conditions → solver → tool-call plan. Tools are assumed to work perfectly; nothing is executed. Specs: [05-solver.md](../../docs/subsystems/05-solver.md), [01-types.md](../../docs/subsystems/01-types.md).
 
-**Run:** `node current/prod/state-manager/run.mjs [--only <case id>]` → `current/tests/state-manager/state-manager.html` and `out/<case>.json`. Needs `OPENAI_API_KEY` (env, `current/tests/state-manager/.env` or `current/tests/creative-director/.env`). LLM answers are cached in `current/tests/state-manager/cache/`.
+**Run:** `node V0/prod/state-manager/run.mjs [--only <case id>]` → `V0/tests/state-manager/state-manager.html` and `out/<case>.json`. Needs `OPENAI_API_KEY` (env, `V0/tests/state-manager/.env` or `V0/tests/creative-director/.env`). LLM answers are cached in `V0/tests/state-manager/cache/`.
 
-**Execute:** `node current/prod/state-manager/execute.mjs --case <id> --label <name> [--segments N] [--reuse runA,runB] [--dry-run]` → `current/tests/state-manager/runs/<case>-<label>/`. Flags and env are listed at the top of `execute.mjs`.
+**Execute:** `node V0/prod/state-manager/execute.mjs --case <id> --label <name> [--segments N] [--reuse runA,runB] [--dry-run]` → `V0/tests/state-manager/runs/<case>-<label>/`. Flags and env are listed at the top of `execute.mjs`.
 - `--scene-chain`: a scene = consecutive shots that continue (same location + depends on the previous shot). Shot 1 of a scene uses the planned start and end frames. Each later shot starts on the real last frame of the previous clip (ffmpeg). Its end frame is an image edit of that real frame, with the clean references of the characters and products it shows. Shots in one scene run in order. Scenes run in parallel. A cut keeps planned frames. Without the flag, the planned-frame behaviour is unchanged.
 - `--fit-frames`: centre-crop video input images to the output aspect before upload. `--max-seconds N`: cap clips for test runs.
 - `MH_END_FRAME_MODEL=wan-3.0` is the measured best end-frame model (first/last frame SSIM 0.98–0.99, real motion). kling-3.0 scores the same but crossfades. veo3.1-lite holds a still frame and accepts end frames only up to 8 s. seedance-1.5 is at 0.75–0.82. gemini-omni-1.1 is at 0.65–0.70.
-- Continuity check: after each run, `run.json.continuity` and the run page give SSIM (grayscale 640×360) for the first frame vs the start image, the last frame vs the end image, and each seam. Values below 0.9 are flagged; cut seams are not judged. `node current/prod/state-manager/check.mjs <run folder> [--write]` re-checks an earlier run.
+- Continuity check: after each run, `run.json.continuity` and the run page give SSIM (grayscale 640×360) for the first frame vs the start image, the last frame vs the end image, and each seam. Values below 0.9 are flagged; cut seams are not judged. `node V0/prod/state-manager/check.mjs <run folder> [--write]` re-checks an earlier run.
 
 **Files:**
 - `src/signatures.js`: loads the 22-atom vocabulary and 40 tool signatures from the fixtures, plus proposed fixes (atoms `visibility` and `layer_position`, tools `canvas` and `layer_composite`, patches to `fade` and `transform`). Applies the editor rule: edit tools keep what their main input provides unless the prompt names it.

@@ -6,7 +6,7 @@ subsystem:  keyframes
 
 what:
 V2 carries one keyframe template (`src/keyframes/template.js`, the PRD-aligned form). KF1 (references, task, changes,
-context, camera, people, rules) and KF2 (create this frame, context, from these references, rules) stay in `cleaned/src/kf/`
+context, camera, people, rules) and KF2 (create this frame, context, from these references, rules) stay in `V1/src/kf/`
 as archived code; the `--kf` variant switch, the per-variant run folders and the comparison page are not ported.
 
 why:

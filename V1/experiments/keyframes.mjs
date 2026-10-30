@@ -1,6 +1,6 @@
 // Storyboard, keyframe form: for one screenplay scene, the first frame in full (the scene prompt) and every later keyframe as the
 // transformation only, written as the resulting state. Text only; one LLM call per scene. Prints the result for review.
-// Usage: node cleaned/experiments/keyframes.mjs --from custom-bakery-real --scene 5 [--loaves]
+// Usage: node V1/experiments/keyframes.mjs --from custom-bakery-real --scene 5 [--loaves]
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

@@ -6,7 +6,7 @@
 **Blocked by:** none
 
 ## Problem
-`current/tests/subcases/MATRIX.md` §"Text and graphics" records that invented/hallucinated text (storefront branding, licence-plate text) is "0-for-3 on retries — a re-prompt never removes it," observed in 4 of 6 car shots. `current/tests/pipeline-memory/ledger.json` shows retries cost real credits at the same 200-cr `nano-banana-pro` rate as any other keyframe call: `p4-lighthouse-v1` alone spent 1,200 credits on retries. If any of those retries were attempting to fix a hallucinated-text fault, that spend was never going to succeed — the fault class is measured as unfixable by re-prompting the same model.
+`V0/tests/subcases/MATRIX.md` §"Text and graphics" records that invented/hallucinated text (storefront branding, licence-plate text) is "0-for-3 on retries — a re-prompt never removes it," observed in 4 of 6 car shots. `V0/tests/pipeline-memory/ledger.json` shows retries cost real credits at the same 200-cr `nano-banana-pro` rate as any other keyframe call: `p4-lighthouse-v1` alone spent 1,200 credits on retries. If any of those retries were attempting to fix a hallucinated-text fault, that spend was never going to succeed — the fault class is measured as unfixable by re-prompting the same model.
 
 Neither pipeline currently distinguishes "this fault class is worth retrying" from "this fault class has a 0% retry success rate on record." Every retry currently costs the same whether it is attacking a fixable fault (e.g. size, position) or an unfixable one (invented text).
 

@@ -1,7 +1,7 @@
 // Pipeline: prompt → world + story (S1) → seed: ground plans and verified plates (S0) → blocking (S1) → roots (S2) →
 // per slide: base (S3) → edit (S4) → verify (S5) → slideshow (S6). Stage 2 (--video): one clip per slide → final.mp4.
 // Runs saved with the older step script (or the first one-call plan) re-run from their saved plan.
-// Usage: node cleaned/run.mjs --case goldilocks [--label v1] [--slides N] [--video] [--clips 2,8] [--estimate]
+// Usage: node V1/run.mjs --case goldilocks [--label v1] [--slides N] [--video] [--clips 2,8] [--estimate]
 //   --prompt "…"  use a prompt instead of a case;  --slides N  build only the first N slides;  --estimate  spend nothing
 //   --first-frames  build only the first slide of each place (checks the seed: plates and the first state of every place)
 //   --video  also make the clips;  --clips 2,8  only these slides' clips (probe; no stitch until every clip exists)
@@ -37,7 +37,7 @@ const firstFrames = args.includes("--first-frames"), assetsOnly = args.includes(
 const clipsOnly = opt("--clips", null)?.split(",").map(Number) || null;
 const caseId = opt("--case", "custom"), label = opt("--label", "v1");
 const prompt = opt("--prompt", null) ?? JSON.parse(readFileSync(join(ROOT, "cases/cases.json"), "utf8")).find((c) => c.id === caseId)?.prompt;
-if (!prompt) throw new Error(`no case ${caseId} in cleaned/cases/cases.json and no --prompt`);
+if (!prompt) throw new Error(`no case ${caseId} in V1/cases/cases.json and no --prompt`);
 
 const name = `${caseId}-${label}`, dir = join(RUNS, name);
 for (const d of ["", "roots", "frames"]) mkdirSync(join(dir, d), { recursive: true });

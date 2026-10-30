@@ -1,5 +1,5 @@
 // Chain: start frame (text-to-image) → clip 1 → its last frame → clip 2 → … Each clip is one image-to-video call, no end frame.
-// Usage: node cleaned/experiments/i2v-chain.mjs <spec.json> [--model seedance-2.0] [--res 480p] [--seconds 8]
+// Usage: node V1/experiments/i2v-chain.mjs <spec.json> [--model seedance-2.0] [--res 480p] [--seconds 8]
 // Resumable: a step whose output file exists is skipped.
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";

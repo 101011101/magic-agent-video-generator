@@ -1,7 +1,7 @@
 // Pipeline v2: story → chunks (creative director) → shot list → bible references → cut frames → clips → stitch.
 // Litmus rules: one action per clip, no end frames, a continuous shot starts from the real last frame,
 // a cut starts from a fresh frame built from the clean bible references (never from the previous frame).
-// Usage: node current/prod/pipeline-v2/run.mjs --case p4-lighthouse [--scenes 4] [--label x] [--plan-only]
+// Usage: node V0/prod/pipeline-v2/run.mjs --case p4-lighthouse [--scenes 4] [--label x] [--plan-only]
 //   --from <label>        start from a copy of another run (its plan and media); jobs re-run only when their inputs change
 //   --relook A,B          rewrite these bible looks with kind and real size (1 LLM call); dependent refs, frames, clips re-run
 //   --retake 16:2         take 2 of shot 16's clip (best-of-N by hand)
@@ -31,21 +31,21 @@ const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9"
 const AUDIO = args.includes("--audio");
 const VIDEO = { model: "wan-3.0", resolution: "720p", audio: AUDIO };
 
-const c = JSON.parse(readFileSync(join(REPO, "current/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
+const c = JSON.parse(readFileSync(join(REPO, "V0/tests/state-manager/cases.json"), "utf8")).cases.find((x) => x.id === caseId);
 const read = (p) => readFileSync(join(REPO, p), "utf8");
 const story = read(c.story_path), chunks = read(c.chunks_path);
-const runDir = join(REPO, "current/tests/pipeline-v2/runs", `${caseId}-${label}`);
+const runDir = join(REPO, "V0/tests/pipeline-v2/runs", `${caseId}-${label}`);
 const from = opt("--from", null), estimate = args.includes("--estimate"), CONTEXT = args.includes("--context");
 const relookNames = opt("--relook", "").split(",").filter(Boolean);
 const takes = Object.fromEntries(opt("--retake", "").split(",").filter(Boolean).map((t) => t.split(":")).map(([id, n]) => [id, Number(n)]));
 if (from && !existsSync(join(runDir, "run.json"))) {
-  cpSync(join(REPO, "current/tests/pipeline-v2/runs", `${caseId}-${from}`), runDir, { recursive: true });
+  cpSync(join(REPO, "V0/tests/pipeline-v2/runs", `${caseId}-${from}`), runDir, { recursive: true });
   for (const f of ["final.mp4", "index.html"]) rmSync(join(runDir, f), { force: true });
 }
 mkdirSync(join(runDir, "refs"), { recursive: true });
 // Uploads: the case gives a text description only. Until a real asset pack exists, a stand-in photo is generated once per case
 // (shared folder, so other systems in the benchmark get the same file) and used exactly like a real upload.
-const uploadDir = join(REPO, "current/tests/pipeline-v2/uploads", caseId);
+const uploadDir = join(REPO, "V0/tests/pipeline-v2/uploads", caseId);
 const uploads = c.uploads && !/^none/i.test(c.uploads.trim()) ? ["u1"] : [];
 if (uploads.length && !existsSync(join(uploadDir, "u1.png")) && !args.includes("--estimate")) {
   mkdirSync(uploadDir, { recursive: true });

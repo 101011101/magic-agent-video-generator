@@ -11,7 +11,7 @@ The credit guard answers one question: does the next call fit under the cap. It 
 The PRD has no model of a run as a budgeted whole. Cost appears only as a tie-breaker in tool selection (`vision.md:86-90`), never as a constraint on scope.
 
 ## Evidence
-`current/prod/pipeline-state-graph/src/jobs.js:44` — the only forward-looking check is `led.total - (led.runs[this.log.run] || 0) + this.spent() + cost > CAP`, scoped to the single call named by `cost`.
+`V0/prod/pipeline-state-graph/src/jobs.js:44` — the only forward-looking check is `led.total - (led.runs[this.log.run] || 0) + this.spent() + cost > CAP`, scoped to the single call named by `cost`.
 
 `RUN-005` (`p4-lighthouse-fixed30`): spent **4,920 credits**, stopped at `clip:b5` with `credit cap 23000: clip:b5 (480) would exceed it`, and delivered a 20-second 4-clip artifact against a planned 30-second 6-beat one. `run.json` records `stopped` but never computes what the run still owes to finish.
 

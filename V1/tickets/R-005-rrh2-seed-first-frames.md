@@ -4,7 +4,7 @@
 **Blocked by:** B-008, B-009, B-010, B-011
 
 ## Done when
-`CLEANED_CAP=30000 node cleaned/run.mjs --prompt "Make a short storybook-style video of Little Red Riding Hood." --label rrh2 --entities-from custom-rrh1 --first-frames` finishes; the page shows each plate with its marks (intended vs canonical), the full blocking table, and the first frame of each place. Judge: do the plates match their plans (bed head/foot, doors), and is each first frame consistent with them.
+`CLEANED_CAP=30000 node V1/run.mjs --prompt "Make a short storybook-style video of Little Red Riding Hood." --label rrh2 --entities-from custom-rrh1 --first-frames` finishes; the page shows each plate with its marks (intended vs canonical), the full blocking table, and the first frame of each place. Judge: do the plates match their plans (bed head/foot, doors), and is each first frame consistent with them.
 
 ## Result (2026-10-18): 1,600 credits
 - Story 30 steps, every event of the tale in order. Blocking lint left one violation after the rewrite (step 25: Red re-enters while already inside).

@@ -1,5 +1,5 @@
 // Write the screenplay for a run's edited story and save it (run.json → screenplay; <run>/screenplay.txt). LLM only.
-// Usage: node cleaned/experiments/screenplay-run.mjs custom-rrh4
+// Usage: node V1/experiments/screenplay-run.mjs custom-rrh4
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { RUNS } from "../src/env.js";

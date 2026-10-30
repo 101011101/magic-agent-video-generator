@@ -20,7 +20,7 @@
   prose both had grown is removed.
 - **2026-10-30.** The state manager is a module with tables and queries, run once over the whole screenplay, and the source
   of every "image 1, image 2" a prompt names. Punch-ins are crops of the master. New setups are never painted from a single.
-- **2026-10-30.** V2 is a clean directory; `cleaned/` and `current/` are archived and not run.
+- **2026-10-30.** V2 is a clean directory; `V1/` and `V0/` are archived and not run.
 - **2026-10-30.** Ready-made preset voices over descriptor-only voices. A character's voice is a property of the asset, chosen
   once from the descriptor among the OpenAI TTS presets with a delivery instruction, sampled once for approval, and carried
   by the state manager; the same preset reads every line of that character. No real person's actual voice is cloned.

@@ -1,5 +1,5 @@
 // Isolated tests on the photoreal bakery run (custom-bakery-real). Paid ones go through the Jobs gate under run "exp-bakery".
-// Usage: node cleaned/experiments/bakery-tests.mjs S1 G5
+// Usage: node V1/experiments/bakery-tests.mjs S1 G5
 //   S1  the neighbour's sheet with the SAME spec and only the medium word changed: "studio photograph of a real person" vs
 //       "3D animated-film character". Does the theme word decide the look? (2 × 200 credits)
 //   G5  scene 5 (the counter) as ONE grid from a hand-written minimal prompt: plate + one sheet per person + one image of the bread

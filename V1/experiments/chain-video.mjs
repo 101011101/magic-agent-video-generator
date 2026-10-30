@@ -1,6 +1,6 @@
 // Video for a chain scene: one clip between each pair of consecutive keyframes (start frame → end frame), wan-3.0 720p with sound,
 // prompt = the screenplay beats that keyframe covers + their sfx + the scene's ambience; stitched with audio.
-// Usage: CLEANED_CAP=… node cleaned/experiments/chain-video.mjs --scene 2 [--seconds 5]
+// Usage: CLEANED_CAP=… node V1/experiments/chain-video.mjs --scene 2 [--seconds 5]
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

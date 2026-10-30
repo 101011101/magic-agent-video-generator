@@ -1,7 +1,7 @@
 // One pass per scene: text-to-video with named references. The place, every character's picture and the painted keyframes go in
 // as @references; the prompt is the whole scene (first frame, every change in order, the lines with voice descriptors) and the
 // clip is as long as the scene. Nothing is pinned; the keyframes are references the model is told to pass through, in order.
-// Usage: CLEANED_CAP=… node cleaned/experiments/fact-onepass.mjs --label vanderbilt2 --scene 2 [--model wan-3.0] [--seconds 16]
+// Usage: CLEANED_CAP=… node V1/experiments/fact-onepass.mjs --label vanderbilt2 --scene 2 [--model wan-3.0] [--seconds 16]
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";

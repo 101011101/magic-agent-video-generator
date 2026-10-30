@@ -6,7 +6,7 @@
 **Blocked by:** none
 
 ## Problem
-`current/tests/subcases/MATRIX.md` Part 3 names this exact bundle "Cheapest useful subset — 3,000 credits" and states it "is the smallest spend that could change the architecture": it answers whether context transfer works at all, whether prop scale is a model or a prompt problem, whether text can be suppressed, and whether online images work, without yet paying for the harder cut-to-new-place or model-swap tests.
+`V0/tests/subcases/MATRIX.md` Part 3 names this exact bundle "Cheapest useful subset — 3,000 credits" and states it "is the smallest spend that could change the architecture": it answers whether context transfer works at all, whether prop scale is a model or a prompt problem, whether text can be suppressed, and whether online images work, without yet paying for the harder cut-to-new-place or model-swap tests.
 
 This run executes: T07 (online image URL input, 480 cr), T09 (photographic input + painterly style, 10 cr), T10 (continuous two-clip context transfer, 1,160 cr), T15 (scale anchor vs. none, 400 cr), T17 (no-text instruction, 600 cr) and T20 (prop scale by image model, 4-model mini-sweep, 350 cr). T01–T06 are already answered by replay (RESULTS.md) at zero cost and are not re-run.
 

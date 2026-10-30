@@ -1,7 +1,7 @@
 # Magic Hour API Tool Catalog
 
 - Accessed: 2026-10-05. API: "Magic Hour API beta", base `https://api.magichour.ai`, bearer token auth.
-- Machine-readable twin: `current/tests/fixtures/magic-hour-tools.json`.
+- Machine-readable twin: `V0/tests/fixtures/magic-hour-tools.json`.
 - Category rule (inferred): generative = model makes new pixels/audio/text; deterministic = no new content (analysis, cutout, caption overlay, file ops).
 - Basis tags: [D] = documented, [I] = inferred. "unverified" = not confirmed in official docs.
 - All create calls are async: response `{id, credits_charged}` → poll `GET /v1/{video|image|audio}-projects/{id}` → `downloads[].url` (expires 24h). Statuses: queued, rendering, complete, error, canceled. Webhooks: `*.started`, `*.completed`, `*.errored`.

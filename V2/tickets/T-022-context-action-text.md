@@ -13,7 +13,7 @@ keep one form.
 
 why:
 The old-ideas review (`V2/drafts/review-old-ideas.md`) found the labelled action text contradicts the written rule and
-measured the leak (events painted early) as a real risk in the `cleaned/` runs; the labelled form was added so the painter
+measured the leak (events painted early) as a real risk in the `V1/` runs; the labelled form was added so the painter
 knows what the frame leads into. Both have a case; the rule and the code must say the same thing.
 
 acceptance:

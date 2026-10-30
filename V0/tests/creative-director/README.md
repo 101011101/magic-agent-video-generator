@@ -29,9 +29,9 @@
 - [results.html](results.html): all variants, both models.
 
 **Run:**
-- GPT: put `OPENAI_API_KEY=...` in `current/tests/creative-director/.env` (gitignored), then `node current/tests/creative-director/run-gpt.mjs`. Optional: `GPT_MODEL`, `GPT_EFFORT` (default `gpt-6.1-sol`, `high`), `--only <id>`, `--force`. Cached steps are skipped.
+- GPT: put `OPENAI_API_KEY=...` in `V0/tests/creative-director/.env` (gitignored), then `node V0/tests/creative-director/run-gpt.mjs`. Optional: `GPT_MODEL`, `GPT_EFFORT` (default `gpt-6.1-sol`, `high`), `--only <id>`, `--force`. Cached steps are skipped.
 - Claude: written by Claude Code subagents (Opus 5.5) from the same templates. Not raw API calls.
-- Pages: `node current/tests/creative-director/build-html.mjs [--focus | --compare-gpt]`.
+- Pages: `node V0/tests/creative-director/build-html.mjs [--focus | --compare-gpt]`.
 
 **Outputs:** `outputs/<gpt|claude>/<request id>/<step>.md`. GPT token usage in `meta.json`.
 

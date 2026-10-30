@@ -2,7 +2,7 @@
 
 > Model comparisons that hold everything constant except the model. Separate from the pipelines: a sweep answers "which tool", a pipeline run answers "does the system work". Ticket: [RUN-001](../../tickets/06-runs/RUN-001-image-model-cost-sweep.md).
 
-**Run:** `node current/prod/sweeps/run-001.mjs [--execute] [--phase generate|score|all] [--only <arm>] [--editor-source <file>]`
+**Run:** `node V0/prod/sweeps/run-001.mjs [--execute] [--phase generate|score|all] [--only <arm>] [--editor-source <file>]`
 A bare invocation is a **dry run**: it prints every request body and the exact cost and sends nothing. `--execute` spends.
 
 ## RUN-001 — image-model cost sweep
@@ -26,7 +26,7 @@ Both pipelines buy every image from `nano-banana-pro` at 150–200 credits; imag
 
 ## Reading the result
 
-`current/tests/sweeps/run-001/` — `results.json` and `index.html` (the variable table, each group stating what was held and what changed).
+`V0/tests/sweeps/run-001/` — `results.json` and `index.html` (the variable table, each group stating what was held and what changed).
 
 - **est.** is the spec's "from N credits/image" floor; **charged** is what Magic Hour billed. They differ.
 - **not scored** means the frame exists but the judge did not run. The credits were still spent. It is not a pass.
@@ -35,4 +35,4 @@ Both pipelines buy every image from `nano-banana-pro` at 150–200 credits; imag
 
 - **Resolution is 1k, not the 2k the pipelines run.** 1k is the only resolution all six generator models share — `krea-2` tops out at 1k, `nano-banana-pro` starts at it. Holding resolution constant is worth more than matching production, but the `nano-banana-pro` row is then a 1k proxy. A cheap winner needs confirming at 2k before it replaces anything, and `krea-2` never can.
 - **One sample per cell.** These models are stochastic; a single frame separates "usually" from "never" only when the gap is large. Treat a narrow result as a reason to repeat the arm, not as an answer.
-- Its own ledger (`current/tests/sweeps/ledger.json`, cap `MH_CAP`, default 2000). Sharing pipeline-memory's would force the cap past its 22,640 lifetime spend to run a 1,195 sweep.
+- Its own ledger (`V0/tests/sweeps/ledger.json`, cap `MH_CAP`, default 2000). Sharing pipeline-memory's would force the cap past its 22,640 lifetime spend to run a 1,195 sweep.

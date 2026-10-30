@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { REPO } from "../../state-manager/src/paths.js";
 import { jsonCall } from "../../state-manager/src/llm.js";
 
-export const RELOOK_TEMPLATE = "current/tests/creative-director/templates/v6b-bible-relook.md";
+export const RELOOK_TEMPLATE = "V0/tests/creative-director/templates/v6b-bible-relook.md";
 
 export async function relook({ bible, names, story }) {
   const entries = bible.filter((b) => names.includes(b.name));
@@ -16,7 +16,7 @@ export async function relook({ bible, names, story }) {
 }
 
 // Fixtures: props that are a fixed part of one location. They go into that location's plate, not into a separate reference.
-export const FIXTURES_TEMPLATE = "current/tests/creative-director/templates/v6c-fixtures.md";
+export const FIXTURES_TEMPLATE = "V0/tests/creative-director/templates/v6c-fixtures.md";
 export async function fixtures({ bible, story }) {
   const props = bible.filter((b) => b.kind === "prop"), locs = bible.filter((b) => b.kind === "location").map((b) => b.name);
   if (!props.length || !locs.length) return {};

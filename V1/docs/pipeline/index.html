@@ -98,21 +98,21 @@ flowchart TD
 
   <section class="card">
     <h2>Who runs it</h2>
-    <p><code>node cleaned/run.mjs</code> is a plain script: code decides every step, the order, the loop count (at most 2 question rounds) and the gate. LLM calls are function calls inside fixed steps that return JSON; no model decides what runs next. Nobody steers it while it runs; Claude only watches the log.</p>
+    <p><code>node V1/run.mjs</code> is a plain script: code decides every step, the order, the loop count (at most 2 question rounds) and the gate. LLM calls are function calls inside fixed steps that return JSON; no model decides what runs next. Nobody steers it while it runs; Claude only watches the log.</p>
   </section>
 
   <section class="card">
     <h2>Where the data lives</h2>
     <div class="tw"><table>
       <tr><th>What</th><th>Where</th><th>Notes</th></tr>
-      <tr><td>Everything a run decided</td><td><code>cleaned/runs/&lt;case&gt;-&lt;label&gt;/run.json</code></td><td>story, edit, ids, world, seed_plan, text blocking (records + folded slides), asset_specs, assets, seed (plates), jobs, calls, summary. Re-running a label resumes from it.</td></tr>
+      <tr><td>Everything a run decided</td><td><code>V1/runs/&lt;case&gt;-&lt;label&gt;/run.json</code></td><td>story, edit, ids, world, seed_plan, text blocking (records + folded slides), asset_specs, assets, seed (plates), jobs, calls, summary. Re-running a label resumes from it.</td></tr>
       <tr><td>State table</td><td><code>…/tracker.json</code></td><td>one row per frame and plate: requested ids, environment, file, base, references</td></tr>
       <tr><td>Images</td><td><code>…/roots/*.png</code> (sheets, plates and their tries), <code>…/frames/s&lt;n&gt;-a&lt;try&gt;.png</code></td><td>git-ignored; pages use small JPEG copies</td></tr>
       <tr><td>Pages</td><td><code>…/index.html</code> (slideshow), <code>…/assets.html</code>, <code>…/states/</code>, <code>…/text blocking/</code></td><td>built from run.json</td></tr>
-      <tr><td>LLM cache</td><td><code>cleaned/.cache/&lt;call-name&gt;-&lt;hash&gt;.json</code></td><td>key = model, call name, schema, prompt, images; same input → no call</td></tr>
+      <tr><td>LLM cache</td><td><code>V1/.cache/&lt;call-name&gt;-&lt;hash&gt;.json</code></td><td>key = model, call name, schema, prompt, images; same input → no call</td></tr>
       <tr><td>Image job cache</td><td><code>run.json</code> → <code>jobs</code></td><td>key = spec + input file hashes; same input → no credits</td></tr>
-      <tr><td>Credit ledger</td><td><code>cleaned/runs/ledger.json</code></td><td>credits per run; the cap (<code>CLEANED_CAP</code>) is checked before every paid job</td></tr>
-      <tr><td>Run log</td><td><code>cleaned/runs/&lt;case&gt;-&lt;label&gt;*.log</code></td><td>one line per step, solve and attempt</td></tr>
+      <tr><td>Credit ledger</td><td><code>V1/runs/ledger.json</code></td><td>credits per run; the cap (<code>CLEANED_CAP</code>) is checked before every paid job</td></tr>
+      <tr><td>Run log</td><td><code>V1/runs/&lt;case&gt;-&lt;label&gt;*.log</code></td><td>one line per step, solve and attempt</td></tr>
     </table></div>
   </section>
 

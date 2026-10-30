@@ -9,12 +9,12 @@ const CACHE_DIR = join(TESTS, "cache");
 
 function apiKey() {
   if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY.trim();
-  for (const f of [join(TESTS, ".env"), join(REPO, "current/tests/creative-director/.env")]) {
+  for (const f of [join(TESTS, ".env"), join(REPO, "V0/tests/creative-director/.env")]) {
     if (!existsSync(f)) continue;
     const m = readFileSync(f, "utf8").match(/^OPENAI_API_KEY=(.+)$/m);
     if (m) return m[1].trim().replace(/^["']|["']$/g, "");
   }
-  throw new Error("OPENAI_API_KEY not set (env, current/tests/state-manager/.env, or current/tests/creative-director/.env)");
+  throw new Error("OPENAI_API_KEY not set (env, V0/tests/state-manager/.env, or V0/tests/creative-director/.env)");
 }
 
 export const usage = { calls: 0, cached: 0, input_tokens: 0, output_tokens: 0 };
