@@ -1,0 +1,3 @@
+kf2: frame-first: CREATE THIS FRAME, CONTEXT, FROM THESE REFERENCES, RULES; new setups painted from the scene's master
+made 2026-10-30T04:13:38.070Z by: node cleaned/experiments/fact-film3.mjs --from vanderbilt2 --label vanderbilt6 --kf kf2 --total 30 --max 15 --model wan-3.0 --build --stills --recheck s1-3
+kf2.js is the still template, prompts.js the plan, clip template and helpers, script.js the shooting-script stage, all as they were when this variant was generated. frames.txt and clips.txt hold every assembled prompt; stills/, clips/ and page/ the build. The script itself (../shooting-script.txt) and the cast lines (../run.json) are shared by every variant.
