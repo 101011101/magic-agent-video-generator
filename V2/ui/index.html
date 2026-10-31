@@ -72,6 +72,14 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .nav{display:flex;align-items:center;gap:2px;margin-top:6px} .nav .cap{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;margin-right:auto} .nav .v{width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px} .nav .v.accepted{background:var(--ok)} .nav .v.flagged{background:var(--bad)}
 .thumbs{display:flex;gap:5px;overflow-x:auto;padding:2px 0} .thumbs img{height:42px;border-radius:5px;cursor:pointer;opacity:.55;border:2px solid transparent} .thumbs img.on{opacity:1;border-color:var(--blue)}
 .hint{color:var(--mut);font-size:13px;text-align:center;padding:40px 0 0}
+/* workflow */
+.wf .stage h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg);margin:8px 0 4px;display:flex;align-items:center;gap:6px} .wf .ex{color:var(--mut);display:inline-flex;cursor:help} .wf .exl{color:var(--mut);font-weight:400;font-size:11.5px;text-transform:none;letter-spacing:0;white-space:normal}
+.wf .tset{margin:2px 0 8px} .wf .th{display:flex;align-items:baseline;gap:8px;font-size:12.5px;margin-bottom:4px} .wf .th .cnt{color:var(--mut);font-size:11px}
+.wf .nodes{display:flex;flex-wrap:wrap;gap:6px} .wf .node{position:relative;border-radius:10px;corner-shape:squircle;background:var(--grey);cursor:pointer;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;font-size:10px;color:var(--fg);transition:opacity .15s,box-shadow .15s} .wf .node.pic{width:84px;height:56px} .wf .node.txt{padding:4px 9px;min-height:24px;align-items:center} .wf .node img,.wf .node video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover} .wf .node span{position:relative;z-index:1;background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:4px;padding:0 4px;max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .wf .node em{position:absolute;top:3px;right:4px;z-index:1;font-style:normal;font-size:9px;color:var(--mut);background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:3px;padding:0 3px}
+.wf .node[data-s=flagged]{box-shadow:inset 0 0 0 2px var(--bad)} .wf .node[data-s=accepted]{box-shadow:inset 0 0 0 1.5px var(--ok)} .wf .node.dim{opacity:.25} .wf .node.on{box-shadow:0 0 0 2.5px var(--blue)} .wf .node.dep{box-shadow:0 0 0 2px var(--warn)}
+.wf .sel{position:sticky;top:0;z-index:2;background:var(--card);border:1.5px solid var(--blue);border-radius:14px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px} .wf .selh{display:flex;align-items:center;gap:8px} .wf .selh b{font-size:14px} .wf .selh small{color:var(--mut)} .wf .selh .ib{margin-left:auto}
+.wf .kv{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center} .wf .kv em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-right:4px} .wf .chip{background:var(--grey);border-radius:7px;padding:3px 8px;cursor:pointer;display:inline-flex;gap:5px;align-items:baseline} .wf .chip small{color:var(--mut)} .wf .kv img{height:40px;border-radius:5px;opacity:.6;border:2px solid transparent} .wf .kv img.on{opacity:1;border-color:var(--blue)} .wf .kv.rr{border-top:1px solid var(--rule);padding-top:6px} .wf .kv.rr b{color:var(--fg)}
+.wf pre.pr{white-space:pre-wrap;font:11.5px/1.4 ui-monospace,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:220px;overflow:auto;margin:0} .wf .txtp{margin:0;font-size:13px;color:var(--fg)} .wf .file{color:var(--blue);cursor:pointer;background:var(--inf);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px}
 @media(max-width:720px){body{grid-template-columns:1fr}aside{display:none}}
 </style>
 </head>
@@ -181,10 +189,12 @@ function tree() {
   const mats = (S.materials || []).map((m) => `<li>${file(m)}</li>`).join("");
   const prompts = S.turns.flatMap((tu, i) => [tu.files?.sheet, tu.files?.plan, ...(tu.plan?.steps || []).map((s) => s.prompt_file)].filter(Boolean).map((f) => `<li>${file(f)}</li>`)).join("");
   const assets = S.turns.map((tu, i) => tu.plan ? dir(`turn ${i + 1}`, tu.plan.steps.map((s) => `<li>${file(s.produces, ` <span class="cnt">${esc(s.tool)}</span>`, s.state === "approved" ? "ok" : s.state)}</li>`).join("")) : "").join("");
-  const runs = RUNS.map((r) => `<li class="closed"><div class="row dir" data-run="${esc(r.label)}">${I.chev}<b>${esc(r.label)}</b><span class="cnt">${r.stills}</span></div><ul><li><div class="row" data-run="${esc(r.label)}">story · screenplay · keyframes</div></li></ul></li>`).join("");
+  const runs = RUNS.map((r) => `<li class="closed"><div class="row dir" data-run="${esc(r.label)}">${I.chev}<b>${esc(r.label)}</b><span class="cnt">${r.stills}</span></div><ul><li><div class="row" data-run="${esc(r.label)}">story · screenplay · keyframes</div></li><li><div class="row" data-tree="${esc(r.label)}">workflow</div></li></ul></li>`).join("");
   t.innerHTML = dir("materials", mats || `<li><div class="row" style="color:var(--mut)">none</div></li>`, true, (S.materials || []).length) + dir("prompts", prompts || `<li><div class="row" style="color:var(--mut)">none</div></li>`, false, S.turns.length) + dir("assets", assets || `<li><div class="row" style="color:var(--mut)">none</div></li>`) + dir("runs", runs, false, RUNS.length);
   t.querySelectorAll(".row.dir").forEach((d) => d.addEventListener("click", (e) => { if (d.dataset.run && e.detail === 2) return showRun(d.dataset.run); d.parentElement.classList.toggle("closed"); }));
   t.querySelectorAll("[data-run]:not(.dir)").forEach((d) => d.addEventListener("click", () => showRun(d.dataset.run)));
+  t.querySelectorAll("[data-tree]").forEach((d) => d.addEventListener("click", () => showTree(d.dataset.tree)));
+  if (S.turns?.some((x) => x.plan)) t.insertAdjacentHTML("beforeend", `<li><div class="row" id="sesstree">workflow of this session</div></li>`), $("#sesstree").addEventListener("click", () => showTree(null));
   t.querySelectorAll(".row.file").forEach((f) => f.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", f.dataset.name)));
 }
 document.addEventListener("dragstart", (e) => { const n = e.target.closest?.("[data-name]"); if (n) e.dataTransfer.setData("text/plain", n.dataset.name); });
@@ -200,6 +210,46 @@ const setMode = (m) => { const n = $("#mode"); n.dataset.m = m; n.querySelector(
 document.addEventListener("keydown", (e) => { if (e.key === "Tab" && e.shiftKey) { e.preventDefault(); setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]); } });
 $("#mode").addEventListener("click", () => setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]));
 $("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; tree(); });
+
+// the workflow view: the working tree of a run (or this session) as stages, slideshows per type, a node selected shows its dependents
+async function showTree(label) {
+  const T = await api(label ? `/tree/run/${encodeURIComponent(label)}` : `/tree/session/${SID}`); if (T.error) return; const by = Object.fromEntries(T.nodes.map((n) => [n.id, n]));
+  const media = (f) => label ? `/media/${encodeURIComponent(label)}/${f}` : `/sessions/${SID}/${f}`;
+  chat.querySelector(".hint")?.remove(); add(el(`<div class="msg user">workflow of ${esc(label || "this session")}</div>`));
+  const v = el(`<div class="view wf"><h2>Workflow<small>${T.nodes.length} calls · ${T.edges.length} dependencies</small></h2><div class="sel" hidden></div></div>`);
+  const TYPE_LABEL = { story: "story", scene: "scenes", shot: "shots", plate: "plates", sheet: "character sheets", ref: "pictures from the record", still: "keyframes", clip: "clips", music: "music", film: "film", material: "materials", field: "the sheet", step: "tool calls" };
+  const cap = (n) => n.file && /\.(png|jpe?g|webp)$/i.test(n.file) ? `<img src="${media(n.file)}" alt="">` : n.file && /\.mp4$/i.test(n.file) ? `<video src="${media(n.file)}" muted></video>` : "";
+  for (const st of T.stages) {
+    const sec = el(`<div class="stage"><h3>${esc(st.id)}<span class="ex" title="${esc(st.explain)}">${I.info}</span><span class="exl">${esc(st.explain)}</span></h3></div>`);
+    const types = [...new Set(T.nodes.filter((n) => n.stage === st.id).map((n) => n.type))];
+    for (const ty of types) {
+      const ns = T.nodes.filter((n) => n.type === ty); const first = ns[0];
+      const g = el(`<div class="tset"><div class="th"><b>${esc(TYPE_LABEL[ty] || ty)}</b><span class="cnt">${ns.length}</span><span class="exl">${esc(ty === "still" ? "one painted still per distinct frame; click one to see what hangs from it" : ty === "scene" ? "a change to a scene remakes only its own stills and clips" : ty === "step" ? "every output is attached to the call that made it" : first.explain.split(".")[0])}</span></div><div class="nodes"></div></div>`);
+      const box = g.querySelector(".nodes");
+      for (const n of ns) { const tile = el(`<div class="node ${cap(n) ? "pic" : "txt"}" data-id="${esc(n.id)}" data-s="${esc(n.gate || n.state || "")}">${cap(n)}<span>${esc(n.label)}</span>${n.credits ? `<em>${n.credits}</em>` : ""}</div>`); tile.title = n.explain; tile.addEventListener("click", () => select(n.id)); box.appendChild(tile); }
+      sec.appendChild(g);
+    }
+    v.appendChild(sec);
+  }
+  function select(id) {
+    const n = by[id]; const deps = new Set(n.dependents);
+    v.querySelectorAll(".node").forEach((t) => { t.classList.toggle("dim", !deps.has(t.dataset.id)); t.classList.toggle("on", t.dataset.id === id); t.classList.toggle("dep", deps.has(t.dataset.id) && t.dataset.id !== id); });
+    const sel = v.querySelector(".sel"); sel.hidden = false;
+    sel.innerHTML = `<div class="selh"><b>${esc(n.label)}</b><small>${esc(n.type)}${n.model ? ` · ${esc(n.model)}` : ""}${n.credits ? ` · ${n.credits} cr` : ""}</small><button class="ib" data-close title="Close">${I.x}</button></div>
+      <p class="exl">${esc(n.explain)}</p>
+      ${n.inputs?.length ? `<div class="kv"><em>takes</em>${n.inputs.map((i) => `<span class="chip" data-go="${esc(i.id)}">${esc(by[i.id]?.label || i.id)}<small>${esc(i.role)}</small></span>`).join("")}</div>` : ""}
+      ${n.attempts?.length ? `<div class="kv"><em>attempts</em>${n.attempts.map((a) => `<img src="${media(a)}" class="${a === n.file ? "on" : ""}" title="${esc(a)}">`).join("")}</div>` : ""}
+      ${n.prompt || n.prompt_file ? `<div class="kv"><em>prompt</em><span class="file" data-pr>${I.doc}${esc(n.prompt_file || `${n.label}.txt`)}</span></div><pre class="pr" hidden>${esc(n.prompt || "")}</pre>` : ""}
+      ${n.text ? `<p class="txtp">${esc(n.text)}</p>` : ""}
+      <div class="kv rr"><em>re-run</em><span>${n.dependents.length - 1} dependent${n.dependents.length === 2 ? "" : "s"} remade · ~<b>${n.rerun_credits}</b> cr</span><button class="ib run" title="Re-run from here (dry)">${I.play}</button></div>`;
+    sel.querySelector("[data-close]").addEventListener("click", () => { sel.hidden = true; v.querySelectorAll(".node").forEach((t) => t.classList.remove("dim", "on", "dep")); });
+    sel.querySelectorAll("[data-go]").forEach((c) => c.addEventListener("click", () => select(c.dataset.go)));
+    sel.querySelector("[data-pr]")?.addEventListener("click", () => { const p = sel.querySelector("pre.pr"); p.hidden = !p.hidden; });
+    sel.querySelector(".rr .run").addEventListener("click", () => add(el(`<div class="msg agent">Re-running ${esc(n.label)} would remake ${n.dependents.length - 1} thing${n.dependents.length === 2 ? "" : "s"} after it (${esc(n.dependents.filter((x) => x !== id).map((x) => by[x]?.label || x).join(", "))}) for about ${n.rerun_credits} credits, and touch nothing else. Dry for now.</div>`)));
+    sel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  add(v);
+}
 
 // views over a run
 async function showRun(label) {

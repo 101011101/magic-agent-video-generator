@@ -22,7 +22,8 @@ Files in this directory, in pipeline order:
 | `09-status.md` | what is built, built but not yet exercised, and design only |
 | `10-decisions.md` | the dated decisions log |
 | `11-agent.md` | the agent in front of everything: the question tree, the tools, the session, model choice, the persistent loop (design, dry prototype) |
-| `12-frontend.md` | the chat that shows its work: bubbles, tool cards, views, the creative-liberty toggle (design, dry prototype) |
+| `12-frontend.md` | the chat that shows its work: bubbles, tool blocks, views, modes (design, dry prototype) |
+| `13-worktree.md` | the working tree: every tool call as a node with its outputs attached, quantised text stages, explain lines, re-run with dependencies (design, dry prototype) |
 
 ## Models and services
 

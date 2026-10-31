@@ -5,7 +5,7 @@ priority:   medium
 subsystem:  edit, agent, state
 
 what:
-A PRD file, `prd/13-editing.md`, that says how an edit works before any code: the output fed back as an input with a
+A PRD file, `prd/14-editing.md`, that says how an edit works before any code: the output fed back as an input with a
 time range and an instruction, and the tools that act on it. The questions the file must answer:
 
 1. **Provenance decides the route.** An asset a run made re-enters the run: the instruction maps to shots and seconds
@@ -28,5 +28,5 @@ the output as input with timestamps, since tools exist for it. Writing the PRD f
 and the state tables shaped for it (parents, ranges, the shot map) so nothing has to be redone.
 
 acceptance:
-`prd/13-editing.md` written and listed in `00-overview.md`; the session schema in `11-agent.md` carries `parent` on
+`prd/14-editing.md` written and listed in `00-overview.md`; the session schema in `11-agent.md` carries `parent` on
 every asset; no code.
