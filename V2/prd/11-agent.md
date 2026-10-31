@@ -1,7 +1,7 @@
 # 11. The agent: conversation in front, tools behind, the session in between
 
 Written 2026-10-31 from the user's decisions of that day (T-030, T-033, T-034; the feedback of 2026-10-31 in
-`../drafts/`). Nothing in this file is built. The film chain of `00-overview.md` is unchanged; it becomes one tool.
+`../drafts/`). The dry prototype of 2026-10-31 is built (`src/agent/`: the sheet, the plan, the catalogue, the server, the page, the bench); no tool is called yet (see the end of this file). The film chain of `00-overview.md` is unchanged; it becomes one tool.
 
 ## What it is
 
@@ -214,7 +214,9 @@ figure for the tier. The session cap defaults to 1,000 credits and the confirmat
 
 ## What is built, and what is not
 
-Nothing. The pieces that exist and are reused: the registry and tiers (`lib/models.js`), the job layer (`lib/jobs.js`),
+The dry prototype of 2026-10-31 (`src/agent/agent.mjs`, `sheet.js`, `plan.js`, `catalogue.js`, `server.mjs`,
+`worktree.js`, `simulate.js`; `ui/`; `bench/`): the conversation to a priced plan, the chat and its views, the working
+tree, simulated runs. No tool is called yet. The pieces that existed before and are reused: the registry and tiers (`lib/models.js`), the job layer (`lib/jobs.js`),
 the film chain, the gates, the run record as the model for the session, the API sheet (`../reference/`) as the source
 of the tool catalogue, and the archived clarification slots and capability catalogue in `archived/server/src/` as the
 ancestors of the sheet and the catalogue. Tickets: T-030 (the brief sheet), T-031 (the benchmark that proves it),
@@ -248,3 +250,44 @@ of sub-elements, composes and variants, `13-worktree.md`), or **film** (the fixe
 desired state against the current state: more than one element that must coexist, text on the picture, variants or a
 sequence make a tree; a story makes a film; else single. The user sees the shape as the number of nodes and the
 arrows between them, never as a word.
+
+## The film chain as a tool: checked against the pipeline (2026-10-31, later)
+
+What lines up, measured on `topgun9` and read in `pipeline.mjs`:
+
+- **Stages are stops.** The catalogue's six film nodes are the pipeline's `--until story | assets | screenplay |
+  paint | film`; the pipeline stops at each and resumes from its record, so propose-then-run per stage is one spawn
+  per stage. It also stops on its own before the first still and before the first clip, and at every flag; those
+  stops hold in every mode. Inside a stage there is no pause from outside; a run killed mid-stage resumes without
+  paying twice (the pending-job record, the cache).
+- **Modes map.** `ask`: a card per stage, each waits for Run. `auto`: the sheet's open fields are assumed, the cards
+  are the same, the cost confirmation stands. `plan`: `--dry`, which runs everything but the paid calls and lists each
+  job with its cost. "Silence is consent" may run a text stage (story, screenplay, state, prompts); a paid stage
+  (generated sheets, paint, clips) waits for an explicit Run, the house rule.
+- **Audit works today.** The Workflow view reads `run.json`: every still with its attempts, its prompt (read-only),
+  its inputs, its gate and its cost; scenes and shots; sequences; the film (61 nodes for the ninth film). The keyframe
+  slideshow with flags and the screenplay with comments render for the same run.
+- **Editing a part.** A still: `--retry` (a new attempt), `--restore id:n` (an earlier attempt back), `--accept`,
+  `--recheck`; the view's re-run from a node is `--retry <id> --only <chosen dependents>`. A scene: the stale rule
+  exists (a changed key marks the still and waits for `--retry`), the entry point does not: a comment on scene 7 has
+  no `--revise` to call yet (T-042, T-039). A parameter: a run has one model profile (`L.models`), set from the flags
+  at every invocation; there is no per-still model, and a video model changed after the screenplay breaks its grid;
+  the card shows a pipeline step's models as text, rightly. A prompt: never by hand; the view shows the file, and the
+  edit surfaces are the screenplay node and the still node.
+- **Where the assets live.** A session's `assets/` holds the small jobs' outputs; a film's live in `runs/<label>/`,
+  listed under `runs/` in the sidebar and read by the tree from `run.json`. One exception to "runs/ is written by the
+  pipeline only": the server writes comments and flags to `runs/<label>/notes.json`; `12-frontend.md` puts
+  `notes.json` in the session, where it belongs (T-046).
+
+What does not line up yet (T-046):
+
+- `pipeline.mjs` is a program, not a library: it reads `argv`, takes the run's lock and starts the story at import
+  (an import once started a run). The server spawns it (`node V2/src/pipeline.mjs --label … --until …`) and
+  serializes spawns per label (the `.lock` refuses a second writer); a library entry is to build.
+- Two caps: the session's (1,000; confirmation at 500) and `CLEANED_CAP`. A spawn sets `CLEANED_CAP` to the ledger
+  total plus the card's approved amount, so the pipeline's guard enforces the card's number.
+- The plan prices a film from the brief (one still per 2.5 s of film: 2,400 for a 30-second film on nano at 2k) where
+  the pipeline knows the count once the screenplay exists (the ninth film: 20 stills, 4,000; printed by
+  `--until keyframes`, job by job by `--dry`). After the screenplay the card takes the pipeline's number.
+- The dependency rule: the pipeline's and the tree's disagree, and the pipeline's misses sequences and alters the
+  record on a dry retry (`13-worktree.md`, "Checked against the pipeline").

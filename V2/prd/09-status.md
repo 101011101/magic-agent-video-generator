@@ -22,6 +22,9 @@ Vanderbilt run reached its keyframes. Every rule below is in `V2/src`, documente
 | models | the registry (14 still models, 11 video models, 3 tiers): costs, grids, reference caps, clip-mode support, `--tier`, `--script-from` | — | prices marked estimate until a job pays them; a compact prompt rendering for low-capacity models (T-027) |
 | stage | the stage model (T-029): positions and headings in metres per frame, camera placed, derived screen words, the WORLD block, the geometry checks and the geometry gate; the film synopsis and scene situation; the place setting in plates; the previous frame across continuous scenes | — | the first staged screenplay and paint (topgun9) |
 | results | the run page (every frame, attempt, input, gate; clips with variants; sequences beside their pinned clips), the finished-product page, and the comparison page (two runs of one screenplay side by side, `compare.js`) | — | — |
+| agent | the dry prototype: the sheet (the question tree, the threshold, liberty), the plan (shape single/tree/film, priced by code from the registry), the catalogue, the proxy user and the bench (34 cases, result pages) | — | calling a tool; the fill-or-ask loop between a run's stages (T-037); editing (T-035) |
+| frontend | the local server and the one-page chat: bubbles, the understood line, tool blocks with editable parameters and states, the tree sidebar, the three views (story, screenplay with comments, keyframes with flags) over a run, the Workflow view, modes ask/auto/plan, tiers, simulated runs | — | running a card for real (T-038); a flag or a comment turned into a retry or a revision card (T-039) |
+| worktree | the graph from a run or a session (`worktree.js`), explain lines, dependents and the re-run estimate, drawn with arrows; the shape judgement and proposed trees; simulated tools; stale propagation on a session's plan | — | re-run from the view (T-040); one dependency rule shared with the pipeline, sequences invalidated, registry-priced estimates (T-046); quantised revisions (T-042) |
 
 Open with the user: the Vanderbilt two-shot (accept or retry) and its film; whether CONTEXT keeps the shot's action text
 (T-022); the identity half of the prop gate (T-021); T-026 physical scale; T-027 compact prompt for small models; T-028
@@ -44,3 +47,9 @@ and the film.
 scenes with the bank voices and a 1.4 speed-up, the music bed under it, 774 credits. `V2/results/topgun9-film/`.
 Label total 12,774.
 
+**2026-10-31 (the agent, the chat, the tree).** Built in a parallel session as dry prototypes (`11-agent.md`, `12-frontend.md`,
+`13-worktree.md`; T-034 to T-045), no tool called. The film chain checked against them on `topgun9`: the Workflow view
+reads the run (61 nodes, 115 edges) and the stages, the modes and the audit line up; the dependency rule does not (two
+rules, the pipeline's missing sequences and altering the record on a dry retry), the chain is a program and not a library,
+and the server writes notes into `runs/`: see `11-agent.md` "The film chain as a tool", `13-worktree.md` "Checked
+against the pipeline", and T-046.

@@ -44,7 +44,7 @@ Used everywhere unless a section says otherwise:
 
 ## The data flow
 
-The film chain below is one tool. In front of it sits the agent (`11-agent.md`, design): a message enters a session,
+The film chain below is one tool. In front of it sits the agent (`11-agent.md`, dry prototype): a message enters a session,
 one small call guesses the tools, the universal questions are filled from the message and asked where they are not
 answered with confidence, the cost is stated, and the tool runs. A small job (one image, an edit, a swap, captions)
 is a tool of its own; the film chain is the tool for anything with a story.
@@ -167,7 +167,7 @@ dialogue by TTS plus lip sync, voice conversion, room tone per scene, loudness a
 feature lines, the moment, the timed beats and the sound; the clip gate; the stitch at 1280×720 with the captions at the top
 and the subtitles at the bottom; the narration mixed under at the end.
 
-**Agent** (`11-agent.md`, `src/agent/`, design). The conversation and the tool calls. A session holds the messages, the
+**Agent** (`11-agent.md`, `src/agent/`, dry prototype; the chain checked against it in `11-agent.md` and `13-worktree.md`). The conversation and the tool calls. A session holds the messages, the
 assets made and the runs started; one small call plans the tools for a message; the universal questions (output, subject,
 platform and aspect, audience, length, message, materials, must-include) are filled from the message and the session, and
 only what is not answered with confidence is asked; the cost is stated before paid work; the tool runs on the cheapest
