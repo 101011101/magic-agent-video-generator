@@ -3,6 +3,7 @@
 // from an output port onto a node to wire it; drop a material name onto a node to add it as an input.
 // drawDag(container, steps, { media, onSelect(i), label, onConnect(fromName, toIndex), onMove(i, {x,y}) })
 function drawDag(root, steps, opts = {}) {
+  const Z = () => window.CANVAS_ZOOM || 1;
   const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
   const by = {}; steps.forEach((s, i) => (by[s.produces] = i));
   const level = new Array(steps.length).fill(0);
@@ -36,8 +37,8 @@ function drawDag(root, steps, opts = {}) {
   root.addEventListener("pointermove", (e) => {
     if (!drag) return;
     if (drag.kind === "pan") { root.scrollLeft = drag.sl - (e.clientX - drag.sx); root.scrollTop = drag.st - (e.clientY - drag.sy); return; }
-    if (drag.kind === "move") { const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; pos[drag.name] = { x: Math.max(0, drag.ox + dx), y: Math.max(0, drag.oy + dy) }; place(drag.n, drag.name); draw(); return; }
-    if (drag.kind === "wire") { const a = box(drag.from); const R = layer.getBoundingClientRect(); live = curve(a, { x1: e.clientX - R.left, y: e.clientY - R.top }); draw(); const t = document.elementFromPoint(e.clientX, e.clientY)?.closest(".dag-node"); document.querySelectorAll(".dag-node").forEach((n) => n.classList.toggle("target", n === t && n.dataset.i !== undefined && n.dataset.name !== drag.from)); }
+    if (drag.kind === "move") { const dx = (e.clientX - drag.sx) / Z(), dy = (e.clientY - drag.sy) / Z(); if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; pos[drag.name] = { x: Math.max(0, drag.ox + dx), y: Math.max(0, drag.oy + dy) }; place(drag.n, drag.name); draw(); return; }
+    if (drag.kind === "wire") { const a = box(drag.from); const R = layer.getBoundingClientRect(); live = curve(a, { x1: (e.clientX - R.left) / Z(), y: (e.clientY - R.top) / Z() }); draw(); const t = document.elementFromPoint(e.clientX, e.clientY)?.closest(".dag-node"); document.querySelectorAll(".dag-node").forEach((n) => n.classList.toggle("target", n === t && n.dataset.i !== undefined && n.dataset.name !== drag.from)); }
   });
   root.addEventListener("pointerup", (e) => {
     const d = drag; drag = null; root.classList.remove("panning"); if (!d) return;

@@ -35,8 +35,9 @@ main{flex:1;overflow:auto;padding:6px 14px 16px max(14px,env(safe-area-inset-lef
 /* middle: the canvas over the tool */
 .work{display:grid;grid-template-rows:auto 1fr 6px var(--th);min-width:0;height:100%} .canvashd{display:flex;align-items:center;gap:8px;padding:8px 18px 0;font-size:11.5px} .canvashd .ib{margin-left:auto}
 .tgroup{transition:opacity .2s}
-#canvas{overflow:auto;position:relative;cursor:grab;background:radial-gradient(circle,var(--rule) 1px,transparent 1.2px) 0 0/20px 20px} #canvas.panning{cursor:grabbing} #canvas .hint{position:absolute;left:0;right:0;top:20px}
-#space{position:relative;min-width:100%;min-height:100%}
+#canvas{overflow:hidden;position:relative;cursor:grab;background:radial-gradient(circle,var(--rule) 1px,transparent 1.2px) var(--gx,0px) var(--gy,0px)/var(--gs,20px) var(--gs,20px);touch-action:none} #canvas.panning{cursor:grabbing} #canvas .hint{position:absolute;left:0;right:0;top:20px}
+#space{position:absolute;left:0;top:0;width:4000px;height:4000px;transform-origin:0 0}
+.zoomhud{position:absolute;right:14px;bottom:12px;z-index:4;display:inline-flex;align-items:center;gap:2px;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);border:1px solid var(--rule);border-radius:10px;padding:2px 4px;font-size:11.5px;color:var(--mut)} .zoomhud .ib{width:26px;height:26px} .zoomhud b{min-width:38px;text-align:center;font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
 .tgroup{position:absolute;min-width:220px;padding:6px 8px 8px;border-radius:14px;corner-shape:squircle;border:1px solid transparent} .tgroup.on{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:color-mix(in srgb,var(--card) 55%,transparent)} .tgroup.dim{opacity:.42} .tgroup.dim:hover{opacity:.7}
 .tgroup .ch{display:flex;align-items:center;gap:8px;font-size:12px;cursor:move;user-select:none;padding:2px 4px;margin-bottom:4px} .tgroup .ch b{font-weight:600} .tgroup .ch .mut{color:var(--mut)} .tgroup .ch .add{margin-left:auto;display:inline-flex;gap:4px;align-items:center;cursor:default} .tgroup .ch .add select{max-width:150px} .tgroup .ch .ib{margin-left:0}
 .tgroup .dagbox{min-height:120px;min-width:200px}
@@ -102,7 +103,7 @@ aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01e
 <div class="split" id="splitL"></div>
 <div class="work">
   <div class="canvashd"><span class="mut">working trees · the agent suggests, you edit · drag the space to pan, a title to move a tree, a port to wire</span><button class="ib" id="newtree" title="Start an empty tree"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
-  <div id="canvas"><div id="space"></div><p class="hint">The working trees appear here.</p></div>
+  <div id="canvas"><div id="space"></div><p class="hint">The working trees appear here.</p><div class="zoomhud"><button class="ib" data-z="-1" title="Zoom out">−</button><b id="zoomv">100%</b><button class="ib" data-z="1" title="Zoom in">+</button><button class="ib" data-z="0" title="Fit everything">⊡</button></div></div>
   <div class="split h" id="splitT"></div>
   <div id="tool"><div class="empty">no tool focused</div></div>
 </div>
@@ -125,17 +126,17 @@ const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").
 const SID = "default"; let S = null, MODELS = null, RUNS = [], CATALOGUE = null; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
 const api = async (p, b) => (await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
-const add = (n, where = chat) => { if (where === canvas) { const g = document.createElement("div"); g.className = "vgroup"; g.style.visibility = "hidden"; g.style.left = "0px"; g.style.top = "0px"; g.appendChild(n); space().appendChild(g); const pos = placeFree(g); g.style.left = pos.x + "px"; g.style.top = pos.y + "px"; g.style.visibility = ""; growSpace(); g.scrollIntoView({ block: "start", behavior: "smooth" }); return n; } where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
+const add = (n, where = chat) => { if (where === canvas) { const g = document.createElement("div"); g.className = "vgroup"; g.style.visibility = "hidden"; g.style.left = "0px"; g.style.top = "0px"; g.appendChild(n); space().appendChild(g); const pos = placeFree(g); g.style.left = pos.x + "px"; g.style.top = pos.y + "px"; g.style.visibility = ""; centerOn(g); return n; } where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
 // Free space: the first spot, scanning left to right then down, where this group's box overlaps no other group (with a margin).
 function placeFree(g, prefer = null) {
   const sp = space(); const M = 20, STEP = 24; const others = [...sp.querySelectorAll(":scope > .tgroup, :scope > .vgroup")].filter((x) => x !== g).map((x) => ({ x: x.offsetLeft, y: x.offsetTop, w: x.offsetWidth, h: x.offsetHeight }));
   const w = g.offsetWidth, h = g.offsetHeight; const hits = (x, y) => others.some((o) => x < o.x + o.w + M && x + w + M > o.x && y < o.y + o.h + M && y + h + M > o.y);
   if (prefer && !hits(prefer.x, prefer.y)) return prefer;
-  const maxX = Math.max(24, canvas.clientWidth - w - 24);
+  const maxX = Math.max(24, canvas.clientWidth / VIEW.z - w - 24);
   for (let y = 24; y < 20000; y += STEP) for (let x = 24; x <= maxX; x += STEP) if (!hits(x, y)) return { x, y };
   return { x: 24, y: 24 };
 }
-function growSpace() { let w = 0, h = 0; space().querySelectorAll(":scope > .tgroup, :scope > .vgroup").forEach((g) => { w = Math.max(w, g.offsetLeft + g.offsetWidth + 40); h = Math.max(h, g.offsetTop + g.offsetHeight + 40); }); space().style.width = Math.max(w, canvas.clientWidth) + "px"; space().style.height = Math.max(h, canvas.clientHeight) + "px"; }
+function growSpace() { let w = 0, h = 0; space().querySelectorAll(":scope > .tgroup, :scope > .vgroup").forEach((g) => { w = Math.max(w, g.offsetLeft + g.offsetWidth + 400); h = Math.max(h, g.offsetTop + g.offsetHeight + 400); }); space().style.width = Math.max(w, 4000) + "px"; space().style.height = Math.max(h, 4000) + "px"; }
 const tier = () => $("#tier [aria-pressed=true]").dataset.t, mode = () => $("#mode").dataset.m;
 const isImg = (n) => /\.(png|jpe?g|webp|gif)$/i.test(n), isVid = (n) => /\.(mp4|mov)$/i.test(n);
 const matUrl = (n) => (S?.materials || []).includes(n) ? `/sessions/${SID}/materials/${encodeURIComponent(n)}` : null;
@@ -203,6 +204,12 @@ function focus(ti, i) {
 
 // ----- the canvas: one cluster per turn with a plan -----
 const space = () => $("#space");
+const VIEW = { x: 0, y: 0, z: 1 }; window.CANVAS_ZOOM = 1;
+function applyView() { VIEW.z = Math.max(0.25, Math.min(3, VIEW.z)); window.CANVAS_ZOOM = VIEW.z; space().style.transform = `translate(${VIEW.x}px, ${VIEW.y}px) scale(${VIEW.z})`; canvas.style.setProperty("--gx", VIEW.x + "px"); canvas.style.setProperty("--gy", VIEW.y + "px"); canvas.style.setProperty("--gs", 20 * VIEW.z + "px"); const zv = $("#zoomv"); if (zv) zv.textContent = Math.round(VIEW.z * 100) + "%"; }
+function zoomAt(f, cx, cy) { const z0 = VIEW.z, z1 = Math.max(0.25, Math.min(3, z0 * f)); VIEW.x = cx - (cx - VIEW.x) * (z1 / z0); VIEW.y = cy - (cy - VIEW.y) * (z1 / z0); VIEW.z = z1; applyView(); }
+function saveView() { try { localStorage.setItem("view", JSON.stringify(VIEW)); } catch {} }
+function centerOn(g) { if (!g) return; VIEW.x = canvas.clientWidth / 2 - (g.offsetLeft + g.offsetWidth / 2) * VIEW.z; VIEW.y = Math.min(24, canvas.clientHeight / 2 - (g.offsetTop + g.offsetHeight / 2) * VIEW.z); applyView(); saveView(); }
+function fitAll() { const gs = [...space().querySelectorAll(":scope > .tgroup, :scope > .vgroup")]; if (!gs.length) { VIEW.x = 0; VIEW.y = 0; VIEW.z = 1; applyView(); return; } let x1 = Infinity, y1 = Infinity, x2 = 0, y2 = 0; for (const g of gs) { x1 = Math.min(x1, g.offsetLeft); y1 = Math.min(y1, g.offsetTop); x2 = Math.max(x2, g.offsetLeft + g.offsetWidth); y2 = Math.max(y2, g.offsetTop + g.offsetHeight); } const z = Math.max(0.25, Math.min(1.5, Math.min((canvas.clientWidth - 48) / (x2 - x1), (canvas.clientHeight - 48) / (y2 - y1)))); VIEW.z = z; VIEW.x = 24 - x1 * z; VIEW.y = 24 - y1 * z; applyView(); }
 function cluster(t, ti) {
   const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
   const c = el(`<div class="tgroup${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><span class="add"><select data-addtool><option value="">+ tool…</option>${(CATALOGUE?.tools || []).map((x) => `<option value="${esc(x.id)}">${esc(x.group)} · ${esc(x.id)}${x.custom ? " (code)" : ""}</option>`).join("")}</select></span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
@@ -217,13 +224,13 @@ function cluster(t, ti) {
   c.style.visibility = "hidden"; c.style.left = "0px"; c.style.top = "0px";
   c.settle = () => { const pos = placeFree(c, t.plan.canvas || null); c.style.left = pos.x + "px"; c.style.top = pos.y + "px"; c.style.visibility = ""; growSpace(); };
   // the title moves the whole tree
-  const h = c.querySelector(".ch"); h.addEventListener("pointerdown", (e) => { if (e.target.closest("select,button")) return; const sx = e.clientX, sy = e.clientY, ox = c.offsetLeft, oy = c.offsetTop; let moved = false; const mv = (ev) => { const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; c.style.left = Math.max(0, ox + dx) + "px"; c.style.top = Math.max(0, oy + dy) + "px"; }; const up = async () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); growSpace(); if (moved) { t.plan.canvas = { x: c.offsetLeft, y: c.offsetTop }; await api(`/session/${SID}/plan`, { turn: ti, canvas: t.plan.canvas }); } }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); e.stopPropagation(); });
+  const h = c.querySelector(".ch"); h.addEventListener("pointerdown", (e) => { if (e.target.closest("select,button")) return; const sx = e.clientX, sy = e.clientY, ox = c.offsetLeft, oy = c.offsetTop; let moved = false; const mv = (ev) => { const dx = (ev.clientX - sx) / VIEW.z, dy = (ev.clientY - sy) / VIEW.z; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; c.style.left = Math.max(0, ox + dx) + "px"; c.style.top = Math.max(0, oy + dy) + "px"; }; const up = async () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); growSpace(); if (moved) { t.plan.canvas = { x: c.offsetLeft, y: c.offsetTop }; await api(`/session/${SID}/plan`, { turn: ti, canvas: t.plan.canvas }); } }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); e.stopPropagation(); });
   return c;
 }
 function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
-  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { space().querySelector(`.tgroup[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!space().querySelector(`.tgroup[data-t="${ti}"]`)) { const g = cluster(t, ti); space().appendChild(g); g.settle(); } }
+  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { centerOn(space().querySelector(`.tgroup[data-t="${ti}"]`)); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!space().querySelector(`.tgroup[data-t="${ti}"]`)) { const g = cluster(t, ti); space().appendChild(g); g.settle(); } }
 }
 const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
 async function rerender(ti = null, i = null) {
@@ -245,7 +252,7 @@ async function sendRaw(text, names) {
   const typing = add(el(`<div class="msg agent" style="color:var(--mut)">…</div>`));
   const r = await api("/turn", { session: SID, text, materials: names, tier: tier(), mode: mode() });
   typing.remove(); if (r.error) return add(el(`<div class="msg agent">${esc(r.error)}</div>`));
-  S = r.session; renderTurn(r.turn, r.turnIndex, r.text); if (r.turn.plan) focus(r.turnIndex, 0); tree();
+  S = r.session; renderTurn(r.turn, r.turnIndex, r.text); if (r.turn.plan) { focus(r.turnIndex, 0); centerOn(space().querySelector(`.tgroup[data-t="${r.turnIndex}"]`)); } tree();
 }
 async function send(text, names) { add(el(`<div class="msg user">${esc(text)}</div>`)); if (names.length) add(el(`<div class="atts">${names.map((n) => tile(n)).join("")}</div>`)); await sendRaw(text, names); }
 
@@ -369,9 +376,12 @@ for (const k of Object.keys(window.TEST_SCRIPTS || {})) $("#script").appendChild
 
 (async () => {
   MODELS = await api("/models"); RUNS = await api("/runs"); CATALOGUE = await api("/catalogue");
-  $("#newtree").addEventListener("click", async () => { const r = await api(`/session/${SID}/plan`, { new: true }); await rerender(r.turn, null); space().querySelector(`.tgroup[data-t="${r.turn}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); });
-  // panning the space; the splitters
-  canvas.addEventListener("pointerdown", (e) => { if (e.target.closest(".tgroup,.vgroup")) return; const sx = e.clientX, sy = e.clientY, sl = canvas.scrollLeft, st = canvas.scrollTop; canvas.classList.add("panning"); const mv = (ev) => { canvas.scrollLeft = sl - (ev.clientX - sx); canvas.scrollTop = st - (ev.clientY - sy); }; const up = () => { canvas.classList.remove("panning"); document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); });
+  $("#newtree").addEventListener("click", async () => { const r = await api(`/session/${SID}/plan`, { new: true }); await rerender(r.turn, null); centerOn(space().querySelector(`.tgroup[data-t="${r.turn}"]`)); });
+  // the view: pan and zoom as a transform on the space; the dot grid follows
+  canvas.addEventListener("pointerdown", (e) => { if (e.target.closest(".tgroup,.vgroup,.zoomhud")) return; const sx = e.clientX, sy = e.clientY, ox = VIEW.x, oy = VIEW.y; canvas.classList.add("panning"); const mv = (ev) => { VIEW.x = ox + (ev.clientX - sx); VIEW.y = oy + (ev.clientY - sy); applyView(); }; const up = () => { canvas.classList.remove("panning"); document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); saveView(); }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); });
+  canvas.addEventListener("wheel", (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) { const R = canvas.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX - R.left, e.clientY - R.top); } else { VIEW.x -= e.deltaX; VIEW.y -= e.deltaY; applyView(); } saveView(); }, { passive: false });
+  $(".zoomhud").addEventListener("click", (e) => { const b = e.target.closest("[data-z]"); if (!b) return; if (b.dataset.z === "0") fitAll(); else zoomAt(b.dataset.z === "1" ? 1.2 : 1 / 1.2, canvas.clientWidth / 2, canvas.clientHeight / 2); saveView(); });
+  try { const v = JSON.parse(localStorage.getItem("view") || "null"); if (v) Object.assign(VIEW, v); } catch {} applyView();
   const splitter = (id, onMove) => { const sp = $(id); sp.addEventListener("pointerdown", (e) => { sp.classList.add("on"); const mv = (ev) => onMove(ev); const up = () => { sp.classList.remove("on"); document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); try { localStorage.setItem("panes", JSON.stringify({ lw: getComputedStyle(document.documentElement).getPropertyValue("--lw"), rw: getComputedStyle(document.documentElement).getPropertyValue("--rw"), th: getComputedStyle(document.documentElement).getPropertyValue("--th") })); } catch {} }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); }); };
   const R = document.documentElement.style; splitter("#splitL", (ev) => R.setProperty("--lw", Math.max(260, Math.min(640, ev.clientX)) + "px")); splitter("#splitR", (ev) => R.setProperty("--rw", Math.max(160, Math.min(480, window.innerWidth - ev.clientX)) + "px")); splitter("#splitT", (ev) => R.setProperty("--th", Math.max(120, Math.min(window.innerHeight - 160, window.innerHeight - ev.clientY)) + "px"));
   try { const p = JSON.parse(localStorage.getItem("panes") || "null"); if (p) { if (p.lw) R.setProperty("--lw", p.lw.trim()); if (p.rw) R.setProperty("--rw", p.rw.trim()); if (p.th) R.setProperty("--th", p.th.trim()); } } catch {}
