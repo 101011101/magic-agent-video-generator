@@ -26,12 +26,15 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
   const by = {}; plan.steps.forEach((s, i) => (by[s.produces] = i));
   const file = (name) => { const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output; if (existsSync(join(dir, "materials", name))) return `materials/${name}`; if (plan.dir && existsSync(join(dir, "assets", plan.dir, name))) return `assets/${plan.dir}/${name}`; if (existsSync(join(dir, "assets", name))) return `assets/${name}`; return null; };
   const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
-  const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}.${ext}`;
+  const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}${s.attempt ? `-r${s.attempt}` : ""}.${ext}`;
   const set = (i, patch) => { Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };
   let filmStarted = false;
+  // everything that will run and whose inputs are not made yet waits, visibly, until its turn
+  const todo = order(plan.steps).filter((i) => (!only || only.includes(i)) && !["skipped", "paused", "done"].includes(plan.steps[i].state) || (only && only.includes(i) && plan.steps[i].state === "stale"));
+  for (const i of todo) { const s = plan.steps[i]; const ready = s.inputs.every((n) => by[n] === undefined || plan.steps[by[n]].state === "done"); if (!ready) set(i, { state: "waiting" }); }
   for (const i of order(plan.steps)) {
     const s = plan.steps[i]; if (only && !only.includes(i)) continue; if (s.state === "skipped" || s.state === "paused") continue;
-    const key = `t${plan.turn ?? 0}-s${i}-${s.tool}`;
+    const key = `t${plan.turn ?? 0}-s${i}-${s.tool}${s.attempt ? `-r${s.attempt}` : ""}`;
     try {
       if (FILM.includes(s.tool)) { if (!filmStarted) { filmStarted = true; await film(plan, dir, { id, tier, brief, sheet, set, say }); } continue; }
       set(i, { state: "running", started_at: Date.now() });

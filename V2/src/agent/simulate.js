@@ -44,7 +44,7 @@ export function simulate(plan, dir, { only = null } = {}) {
   const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
   for (const i of order(plan.steps)) {
     const s = plan.steps[i]; if (only && !only.includes(i)) continue; if (s.state === "skipped" || s.state === "paused") continue;
-    const name = `${s.produces.replace(/\.[a-z0-9]+$/i, "")}.svg`; writeFileSync(join(dir, sub, name), placeholder(s, i));
+    const name = `${s.produces.replace(/\.[a-z0-9]+$/i, "")}${s.attempt ? `-r${s.attempt}` : ""}.svg`; writeFileSync(join(dir, sub, name), placeholder(s, i));
     s.output = `${sub}/${name}`; s.state = "done"; s.ran_at = Date.now(); s.simulated = true;
   }
   return plan;
