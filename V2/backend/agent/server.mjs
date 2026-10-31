@@ -78,7 +78,7 @@ createServer(async (req, res) => {
         for (const st of t.plan.steps) s.assets.push({ label: st.produces, kind: /\.(mp4|mov)$/.test(st.produces) ? "clip" : /\.(mp3|wav)$/.test(st.produces) ? "sound" : "picture", from: st.tool, planned: true });
       }
       s.turns.push(t);
-      const text = r.questions ? `Before I plan this I need ${r.questions.length === 1 ? "one thing" : "a few things"}:\n` + r.questions.map((q) => `· ${q.question}${q.default ? ` (default: ${q.default})` : ""}`).join("\n") : `${r.plan.say || ""}${r.plan.tier_move ? ` This needs more than the free tier: ${r.plan.tier_move.why}.` : ""}${r.plan.refuse ? ` I can't do this one: ${r.plan.refuse}` : ""}`.trim();
+      const text = r.questions ? `${r.say ? r.say.replace(/[^.!?]*\?\s*$/, "").trim() + "\n" : ""}Before I go on I need ${r.questions.length === 1 ? "one thing" : "a few things"}:\n` + r.questions.map((q) => `· ${q.question}${q.default ? ` (default: ${q.default})` : ""}`).join("\n") : `${r.plan.say || ""}${r.plan.tier_move ? ` This needs more than the free tier: ${r.plan.tier_move.why}.` : ""}${r.plan.refuse ? ` I can't do this one: ${r.plan.refuse}` : ""}`.trim();
       s.messages.push({ who: "agent", text, at: Date.now(), turn: ti });
       save(s); return json(res, 200, { session: s, turn: t, text, turnIndex: ti });
     }

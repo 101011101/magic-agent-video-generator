@@ -13,6 +13,9 @@ export async function turn({ messages, materials = [], attached = null, session 
   const sheet = await fillSheet({ messages, materials, attached, session, goalHint, liberty, focus });
   if (sheet.questions.length) return { sheet, questions: sheet.questions };
   const p = await plan({ sheet, materials, session, tier, focus: sheet.about_focus ? focus : null });
+  // the planner may still need something the sheet did not ask (the exact words, a photo only the user has): that is a question, not an empty plan
+  if (p.refuse) return { sheet, plan: p };
+  if ((p.questions_left || []).length && !p.steps.length) return { sheet, questions: p.questions_left.map((q, i) => ({ field: `plan-${i + 1}`, question: q, default: null })), say: p.say };
   return { sheet, plan: p };
 }
 

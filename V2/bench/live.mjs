@@ -5,18 +5,19 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+import { proxyUser } from "../backend/agent/agent.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url)), V2 = join(HERE, "..");
 const arg = (k, d = null) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const U = arg("--server", "http://localhost:4747"), only = (arg("--only", "") || "").split(",").filter(Boolean);
 const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2"), OUT = arg("--out", join(HERE, "results", "live", stamp)); mkdirSync(OUT, { recursive: true });
-const api = async (p, b) => (await fetch(U + p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
+const api = async (p, b) => { for (let k = 0; ; k++) { try { return await (await fetch(U + p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json(); } catch (e) { if (k >= 2) throw e; console.log(`  (retrying ${p}: ${e.cause?.code || e.message})`); await new Promise((r) => setTimeout(r, 3000)); } } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ledger = () => JSON.parse(readFileSync(join(V2, "runs", "ledger.json"), "utf8")).total;
 const thumb = (file) => { if (!/\.(png|jpe?g|webp|mp4|mov)$/i.test(file)) return null; try { const out = join(OUT, "t-" + Math.random().toString(36).slice(2) + ".jpg"); if (/\.(mp4|mov)$/i.test(file)) execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", "0.5", "-i", file, "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6", out]); else execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-vf", "scale=360:-2", "-q:v", "6", out]); return `data:image/jpeg;base64,${readFileSync(out).toString("base64")}`; } catch { return null; } };
 
 const ASSEMBLE = arg("--assemble"); 
 const scripts = ASSEMBLE ? [] : readdirSync(join(HERE, "live")).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(join(HERE, "live", f), "utf8"))).filter((s) => !only.length || only.includes(s.name));
-const order = ["conversation", "multi-turn", "tools", "trees", "film"]; scripts.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
+const order = ["conversation-full", "conversation", "multi-turn", "tools", "trees", "film"]; scripts.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
 const results = [];
 for (const sc of scripts) {
   const sid = `live-${sc.name}`; const t0 = ledger(); console.log(`\n== ${sc.name} (${sc.mode}) · budget ${sc.budget}`);
@@ -29,6 +30,10 @@ for (const sc of scripts) {
       let r = await api("/turn", { session: sid, text: st.text, materials: st.materials || [], tier: "free", mode: sc.mode });
       const rec = { text: st.text, materials: st.materials || [], agent: r.text, asked: (r.turn.questions || []).map((q) => q.field), answered: null, expect: st.expect || {}, plan: null, checks: [] };
       if (r.turn.questions && st.answer) { rec.answered = st.answer; r = await api("/turn", { session: sid, text: st.answer, materials: [], tier: "free", mode: sc.mode }); rec.agent2 = r.text; if (r.turn.questions) rec.stillAsking = (r.turn.questions || []).map((q) => q.field); }
+      // a scripted user answers from the case's sheet, as many rounds as the agent needs (up to three)
+      rec.dialog = []; rec.case = st.case || null;
+      for (let k = 0; r.turn.questions && st.answer_sheet && k < 3; k++) { const reply = await proxyUser({ answerSheet: st.answer_sheet, questions: r.turn.questions, brief: st.text }); rec.dialog.push({ asked: r.turn.questions.map((q) => q.field), agent: r.text, user: reply }); r = await api("/turn", { session: sid, text: reply, materials: [], tier: "free", mode: sc.mode }); rec.agentFinal = r.text; }
+      if (r.turn.questions) rec.stillAsking = r.turn.questions.map((q) => q.field);
       rec.turnIndex = r.turnIndex; rec.plan = r.turn.plan ? { shape: r.turn.plan.shape, steps: r.turn.plan.steps.map((s) => ({ tool: s.tool, inputs: s.inputs, produces: s.produces, credits: s.credits })), estimate: r.turn.plan.estimate_credits } : null;
       lastSend = rec; turns.push(rec); console.log(`  ${st.text.slice(0, 60)} → ${rec.asked.length ? `asked ${rec.asked.join(",")}; ` : ""}${rec.plan ? rec.plan.steps.map((s) => s.tool).join(" → ") + ` (~${rec.plan.estimate})` : "no plan"}`);
       continue;
@@ -39,7 +44,7 @@ for (const sc of scripts) {
       for (let i = 0; i < 400; i++) { await sleep(3000); const run = await api("/running"); if (!run[sid]) break; }
       const S = await api(`/session/${sid}`); const t = S.turns[lastSend.turnIndex];
       lastSend.ran = t.plan.steps.map((s) => ({ tool: s.tool, state: s.state, output: s.output, credits: s.credits_spent, note: s.note, error: s.error, thumb: s.output && !s.output.startsWith("../../") ? thumb(join(V2, "sessions", sid, s.output)) : null, page: s.page }));
-      lastSend.spent = ledger() - before; spentHere += lastSend.spent; console.log(`  ran: ${lastSend.ran.map((s) => `${s.tool}:${s.state}`).join(", ")} · ${lastSend.spent} credits`);
+      lastSend.spent = ledger() - before; spentHere += lastSend.spent; writeFileSync(join(OUT, `${sc.name}.json`), JSON.stringify({ ...sc, session: sid, turns, spent: ledger() - t0 }, null, 2)); console.log(`  ran: ${lastSend.ran.map((s) => `${s.tool}:${s.state}`).join(", ")} · ${lastSend.spent} credits`);
       if (lastSend.ran.some((s) => s.state === "failed")) console.log(`  failed: ${lastSend.ran.filter((s) => s.state === "failed").map((s) => s.error).join(" | ")}`);
     }
   }
