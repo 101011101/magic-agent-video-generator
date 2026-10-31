@@ -1,16 +1,15 @@
 // The local web app over the dry agent (prd/12-frontend.md). No dependencies. Routes:
-//   POST /turn            {session, text, materials?, tier?, liberty?} → the agent's reply (sheet + questions | plan), saved to the session
-//   GET  /session/:id     the session record
-//   POST /session/:id/step {index, params, state}  write a tool card's edited parameters and state (proposed|paused|approved|skipped)
-//   GET  /models          the registry by kind, with tiers
-//   GET  /runs            run labels with a story
-//   GET  /run/:label      story, screenplay, stills, clips, comments, flags of a run folder
-//   POST /run/:label/comment {scene, shot?, text}   POST /run/:label/flag {still, text}
-//   GET  /media/<label>/<path>   run media; GET /  the page
+//   POST /turn                 {session, text, materials?, tier?, mode?} → sheet + questions | plan; saved to the session
+//   GET  /session/:id          the session record
+//   POST /session/:id/step     {turn?, index, params, model?, credits?, state}  a tool card's edits and state
+//   POST /session/reset        {session, mode?}
+//   POST /upload?session=&name=   raw body → sessions/<id>/materials/<name>
+//   GET  /sessions/<id>/...    session files (materials, prompts)
+//   GET  /models · GET /runs · GET /run/:label · POST /run/:label/comment|flag · GET /media/<label>/<path> · GET /
 // Usage: node V2/src/agent/server.mjs [--port 4747]
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
-import { join, extname, normalize } from "node:path";
+import { join, extname, normalize, basename } from "node:path";
 import { V2, RUNS } from "../lib/env.js";
 import { STILLS, VIDEOS, TIERS } from "../lib/models.js";
 import { turn } from "./agent.mjs";
@@ -19,12 +18,15 @@ import { price } from "./plan.js";
 const PORT = Number(process.argv[process.argv.indexOf("--port") + 1]) || 4747;
 const SESS = join(V2, "sessions"); mkdirSync(SESS, { recursive: true });
 const UI = join(V2, "ui");
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".mp4": "video/mp4", ".mp3": "audio/mpeg", ".json": "application/json" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".mp4": "video/mp4", ".mov": "video/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav", ".json": "application/json", ".txt": "text/plain; charset=utf-8" };
 
-const load = (id) => existsSync(join(SESS, `${id}.json`)) ? JSON.parse(readFileSync(join(SESS, `${id}.json`), "utf8")) : { id, messages: [], turns: [], assets: [], tier: "free", liberty: false, credits: 0 };
-const save = (s) => writeFileSync(join(SESS, `${s.id}.json`), JSON.stringify(s, null, 2));
+const sdir = (id) => { const d = join(SESS, id); mkdirSync(join(d, "materials"), { recursive: true }); mkdirSync(join(d, "prompts"), { recursive: true }); return d; };
+const load = (id) => existsSync(join(sdir(id), "session.json")) ? JSON.parse(readFileSync(join(sdir(id), "session.json"), "utf8")) : { id, messages: [], turns: [], assets: [], materials: [], tier: "free", mode: "ask", credits: 0 };
+const save = (s) => writeFileSync(join(sdir(s.id), "session.json"), JSON.stringify(s, null, 2));
 const json = (res, code, body) => { res.writeHead(code, { "content-type": "application/json" }); res.end(JSON.stringify(body)); };
 const body = (req) => new Promise((ok) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => ok(b ? JSON.parse(b) : {})); });
+const raw = (req) => new Promise((ok) => { const parts = []; req.on("data", (c) => parts.push(c)); req.on("end", () => ok(Buffer.concat(parts))); });
+const safe = (n) => basename(String(n)).replace(/[^\w.\-]+/g, "_");
 
 function runView(label) {
   const dir = join(RUNS, label); if (!existsSync(join(dir, "run.json"))) return null;
@@ -43,35 +45,45 @@ function runView(label) {
 createServer(async (req, res) => {
   const url = new URL(req.url, "http://x"); const p = url.pathname;
   try {
+    if (req.method === "POST" && p === "/upload") {
+      const id = url.searchParams.get("session") || "default", name = safe(url.searchParams.get("name") || "file");
+      const buf = await raw(req); writeFileSync(join(sdir(id), "materials", name), buf);
+      const s = load(id); s.materials = [...new Set([...(s.materials || []), name])]; save(s);
+      return json(res, 200, { name, url: `/sessions/${encodeURIComponent(id)}/materials/${encodeURIComponent(name)}` });
+    }
     if (req.method === "POST" && p === "/turn") {
       const b = await body(req); const s = load(b.session || "default");
-      if (b.tier) s.tier = b.tier; if (typeof b.liberty === "boolean") s.liberty = b.liberty;
+      if (b.tier) s.tier = b.tier; if (b.mode) s.mode = b.mode;
       s.messages.push({ who: "user", text: b.text, at: Date.now() });
-      const materials = [...new Set([...(s.materials || []), ...(b.materials || [])])]; s.materials = materials;
-      const session = s.assets;
-      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card"), materials, session, tier: s.tier, liberty: s.liberty, goalHint: s.goal || null });
-      s.goal = r.sheet.goal.value;
-      const t = { at: Date.now(), sheet: r.sheet, questions: r.questions || null, plan: r.plan || null };
-      if (r.plan) { t.plan.steps = t.plan.steps.map((st) => ({ ...st, state: "proposed" })); for (const st of t.plan.steps) s.assets.push({ label: st.produces, kind: /\.(mp4|mov)$/.test(st.produces) ? "clip" : /\.(mp3|wav)$/.test(st.produces) ? "sound" : "picture", from: st.tool, planned: true }); }
+      s.materials = [...new Set([...(s.materials || []), ...(b.materials || [])])];
+      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card"), materials: s.materials, session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null });
+      s.goal = r.questions ? r.sheet.goal.value : null;   // the goal carries only while questions are open; a new request after a plan starts fresh
+      const ti = s.turns.length, d = sdir(s.id);
+      const t = { at: Date.now(), sheet: r.sheet, questions: r.questions || null, plan: r.plan || null, files: {} };
+      writeFileSync(join(d, "prompts", `turn-${ti}-sheet.json`), JSON.stringify(r.sheet, null, 2)); t.files.sheet = `turn-${ti}-sheet.json`;
+      if (r.plan) {
+        t.plan.steps = t.plan.steps.map((st, i) => { const f = `turn-${ti}-step-${i}.txt`; writeFileSync(join(d, "prompts", f), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`); return { ...st, state: s.mode === "plan" ? "plan" : "proposed", prompt_file: f }; });
+        writeFileSync(join(d, "prompts", `turn-${ti}-plan.json`), JSON.stringify(t.plan, null, 2)); t.files.plan = `turn-${ti}-plan.json`;
+        for (const st of t.plan.steps) s.assets.push({ label: st.produces, kind: /\.(mp4|mov)$/.test(st.produces) ? "clip" : /\.(mp3|wav)$/.test(st.produces) ? "sound" : "picture", from: st.tool, planned: true });
+      }
       s.turns.push(t);
-      const understood = [`goal: ${r.sheet.goal.value} (${r.sheet.goal.source})`, ...r.sheet.fields.filter((f) => f.source !== "not_applicable" && f.value).map((f) => `${f.field}: ${f.value}${f.source === "stated" ? "" : ` (${f.source})`}`)].join("\n");
-      const text = r.questions ? r.questions.map((q) => q.question + (q.default ? ` (default: ${q.default})` : "")).join("\n") : `${r.plan.current_state} → ${r.plan.desired_state}. ${r.plan.steps.length} step${r.plan.steps.length === 1 ? "" : "s"}, about ${r.plan.estimate_credits} credits.${r.plan.tier_move ? ` Beyond the free tier: ${r.plan.tier_move.why}.` : ""}${r.plan.refuse ? ` I can't do this one: ${r.plan.refuse}` : ""}`;
-      s.messages.push({ who: "agent", text, understood, at: Date.now(), turn: s.turns.length - 1 });
-      save(s); return json(res, 200, { session: s, turn: t, text, understood });
+      const text = r.questions ? r.questions.map((q) => q.question + (q.default ? ` (default: ${q.default})` : "")).join("\n") : `${r.plan.steps.length} step${r.plan.steps.length === 1 ? "" : "s"} · ~${r.plan.estimate_credits} credits${r.plan.tier_move ? ` · beyond free: ${r.plan.tier_move.why}` : ""}${r.plan.refuse ? `\nDeclined: ${r.plan.refuse}` : ""}`;
+      s.messages.push({ who: "agent", text, at: Date.now(), turn: ti });
+      save(s); return json(res, 200, { session: s, turn: t, text, turnIndex: ti });
     }
-    if (req.method === "GET" && p.startsWith("/session/")) return json(res, 200, load(decodeURIComponent(p.slice(9))));
+    if (req.method === "GET" && /^\/session\/[^/]+$/.test(p)) return json(res, 200, load(decodeURIComponent(p.slice(9))));
     if (req.method === "POST" && /^\/session\/[^/]+\/step$/.test(p)) {
       const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const t = s.turns[b.turn ?? s.turns.length - 1]; if (!t?.plan) return json(res, 400, { error: "no plan" });
       const st = t.plan.steps[b.index]; if (!st) return json(res, 400, { error: "no step" });
-      if (b.params) Object.assign(st.params, b.params); if (b.model) st.params.model_override = b.model; if (b.state) st.state = b.state;
-      const re = price({ ...t.plan, steps: t.plan.steps.map((x) => ({ ...x })) }, s.tier); t.plan.estimate_credits = re.estimate_credits;
-      if (b.model) { st.model = b.model; st.credits = b.credits ?? st.credits; }
-      if (b.state === "approved") s.messages.push({ who: "card", text: `approved: ${st.tool} on ${st.model} (${st.credits} credits) — dry, not called`, at: Date.now() });
+      if (b.params) Object.assign(st.params, b.params); if (b.model) { st.model = b.model; if (b.resolution) st.resolution = b.resolution; } if (b.credits != null) st.credits = b.credits; if (b.state) st.state = b.state;
+      t.plan.estimate_credits = t.plan.steps.reduce((a, x) => a + (x.state === "skipped" ? 0 : x.credits || 0), 0);
+      writeFileSync(join(sdir(id), "prompts", st.prompt_file || `step-${b.index}.txt`), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`);
       save(s); return json(res, 200, { step: st, estimate: t.plan.estimate_credits });
     }
-    if (req.method === "POST" && p === "/session/reset") { const b = await body(req); const s = { id: b.session || "default", messages: [], turns: [], assets: [], tier: "free", liberty: !!b.liberty, credits: 0 }; save(s); return json(res, 200, s); }
+    if (req.method === "POST" && p === "/session/reset") { const b = await body(req); const old = load(b.session || "default"); const s = { id: b.session || "default", messages: [], turns: [], assets: [], materials: old.materials || [], tier: old.tier || "free", mode: b.mode || old.mode || "ask", credits: 0 }; save(s); return json(res, 200, s); }
+    if (p.startsWith("/sessions/")) { const rel = normalize(decodeURIComponent(p.slice(10))); if (rel.startsWith("..")) return json(res, 403, {}); const f = join(SESS, rel); if (!existsSync(f) || statSync(f).isDirectory()) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f).toLowerCase()] || "application/octet-stream" }); return res.end(readFileSync(f)); }
     if (p === "/models") return json(res, 200, { stills: STILLS, videos: VIDEOS, tiers: TIERS });
-    if (p === "/runs") return json(res, 200, readdirSync(RUNS).filter((d) => existsSync(join(RUNS, d, "run.json"))).map((d) => { const L = JSON.parse(readFileSync(join(RUNS, d, "run.json"), "utf8")); return { label: d, title: L.story?.title || "", brief: L.brief || "", stills: Object.keys(L.stills || {}).length }; }).filter((r) => r.title));
+    if (p === "/runs") return json(res, 200, readdirSync(RUNS).filter((d) => existsSync(join(RUNS, d, "run.json"))).map((d) => { const L = JSON.parse(readFileSync(join(RUNS, d, "run.json"), "utf8")); return { label: d, title: L.story?.title || "", stills: Object.keys(L.stills || {}).length }; }).filter((r) => r.title));
     if (req.method === "GET" && /^\/run\/[^/]+$/.test(p)) { const v = runView(decodeURIComponent(p.slice(5))); return v ? json(res, 200, v) : json(res, 404, { error: "no run" }); }
     if (req.method === "POST" && /^\/run\/[^/]+\/(comment|flag)$/.test(p)) {
       const [, , label, kind] = p.split("/"); const b = await body(req); const f = join(RUNS, label, "notes.json");
