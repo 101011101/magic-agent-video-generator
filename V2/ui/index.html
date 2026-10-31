@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Magic Agent</title>
+<style>
+/* Apple-like: system font, near-white ground, soft grey cards, one blue, frosted header, Messages bubbles. */
+:root{--bg:#f5f5f7;--card:#ffffff;--fg:#1d1d1f;--mut:#6e6e73;--rule:#e5e5ea;--blue:#0a84ff;--blue-fg:#fff;--grey:#e9e9eb;--ok:#34c759;--warn:#ff9f0a;--bad:#ff3b30;--inf:#eef4ff;--asm:#fff4e0;--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--fg:#f5f5f7;--mut:#98989d;--rule:#2c2c2e;--blue:#0a84ff;--grey:#2c2c2e;--inf:#14233a;--asm:#3a2a10;--shadow:0 1px 2px rgba(0,0,0,.4);color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:5;backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-bottom:1px solid var(--rule);padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.bar{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bar h1{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+.bar .sp{flex:1}
+.seg{display:inline-flex;background:var(--grey);border-radius:9px;padding:2px}
+.seg button{border:0;background:transparent;color:var(--fg);font:13px/1 inherit;padding:6px 12px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--card);box-shadow:var(--shadow);font-weight:600}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);cursor:pointer}
+.toggle input{appearance:none;width:40px;height:24px;border-radius:12px;background:var(--grey);position:relative;outline:0;cursor:pointer;transition:background .2s}
+.toggle input::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+.toggle input:checked{background:var(--ok)} .toggle input:checked::after{left:18px}
+select,input[type=text],input[type=number],textarea{font:inherit;font-size:13px;color:var(--fg);background:var(--grey);border:0;border-radius:8px;padding:6px 10px;outline:0}
+select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
+main{max-width:860px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 120px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.msg{max-width:78%;padding:9px 14px;border-radius:18px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+.msg.user{align-self:flex-end;background:var(--blue);color:var(--blue-fg);border-bottom-right-radius:5px}
+.msg.agent{align-self:flex-start;background:var(--grey);border-bottom-left-radius:5px}
+.msg.card{align-self:center;background:transparent;color:var(--mut);font-size:12px;padding:0}
+.und{align-self:flex-start;max-width:78%;font-size:12.5px;color:var(--mut);margin:-6px 0 0 14px;line-height:1.5}
+.und b{color:var(--fg);font-weight:500} .und .inf{background:var(--inf);border-radius:4px;padding:0 4px} .und .asm{background:var(--asm);border-radius:4px;padding:0 4px}
+.card{align-self:stretch;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.card .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap} .card .hd b{font-size:15px;font-weight:600} .card .hd small{color:var(--mut);font-size:12px}
+.pill{font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;border-radius:999px;padding:3px 9px;background:var(--grey);color:var(--mut)}
+.pill.proposed{background:var(--inf);color:var(--blue)} .pill.approved{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)} .pill.paused{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)} .pill.skipped{text-decoration:line-through}
+.io{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--mut)} .io .chip{background:var(--grey);color:var(--fg);border-radius:8px;padding:4px 9px} .io .arrow{opacity:.5}
+.params{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 12px} .params label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em} .params .wide{grid-column:1/-1}
+.params input,.params select,.params textarea{text-transform:none;letter-spacing:0}
+.ft{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .ft .cost{color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums} .ft .sp{flex:1}
+.btn{border:0;border-radius:999px;padding:7px 14px;font:13px/1 inherit;font-weight:600;cursor:pointer;background:var(--grey);color:var(--fg)} .btn.p{background:var(--blue);color:#fff} .btn:disabled{opacity:.45;cursor:default}
+.est{align-self:flex-start;font-size:12.5px;color:var(--mut);margin-left:4px}
+form.ask{position:fixed;bottom:0;left:0;right:0;padding:12px max(16px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-top:1px solid var(--rule)}
+form.ask .row{max-width:860px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+form.ask textarea{flex:1;min-height:40px;max-height:160px;resize:none;background:var(--card);border-radius:20px;padding:10px 14px;box-shadow:var(--shadow)}
+form.ask input[type=text]{width:220px;background:var(--card);border-radius:20px;box-shadow:var(--shadow)}
+form.ask .send{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;border:0;font-size:18px;cursor:pointer}
+.view{align-self:stretch;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
+.view h2{font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em} .view h3{font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 0}
+.story p{margin:0 0 .8em;max-width:62ch} .story .style{color:var(--mut);font-size:13px}
+.scene{border:1px solid var(--rule);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px} .scene .t{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap} .scene .t b{font-weight:600} .scene .t small{color:var(--mut)}
+.scene .syn{font-size:14px;color:var(--fg)} .shot{display:grid;grid-template-columns:52px 70px 1fr;gap:8px;font-size:13.5px;padding:6px 0;border-top:1px solid var(--rule)} .shot .n{color:var(--mut);font-variant-numeric:tabular-nums} .shot .ln{color:var(--mut);font-style:italic}
+.cmt{display:flex;gap:6px;margin-top:4px} .cmt input{flex:1} .note{font-size:12.5px;color:var(--blue);background:var(--inf);border-radius:8px;padding:5px 9px;align-self:flex-start}
+.slides{position:relative} .slides img,.slides video{width:100%;border-radius:12px;background:#000;aspect-ratio:16/9;object-fit:contain;display:block}
+.nav{display:flex;align-items:center;gap:8px;margin-top:8px} .nav .sp{flex:1} .nav .cap{font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding:2px 0} .thumbs img{height:48px;border-radius:6px;cursor:pointer;opacity:.6;border:2px solid transparent} .thumbs img.on{opacity:1;border-color:var(--blue)}
+.verdict{font-size:13px} .verdict.accepted{color:var(--ok)} .verdict.flagged{color:var(--bad)}
+details{font-size:12.5px;color:var(--mut)} details pre{white-space:pre-wrap;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:260px;overflow:auto}
+.hint{color:var(--mut);font-size:13px;text-align:center;padding:40px 0 0}
+@media(max-width:600px){.msg,.und{max-width:92%} .shot{grid-template-columns:44px 1fr} .shot .sz{display:none}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <h1>Magic Agent</h1>
+  <span class="seg" id="tier"><button data-t="free" aria-pressed="true">Free</button><button data-t="cheap">Cheap</button><button data-t="paid">Paid</button></span>
+  <label class="toggle"><input type="checkbox" id="liberty"> Creative liberty</label>
+  <span class="sp"></span>
+  <select id="runpick" title="Open a run's views"><option value="">Show a run…</option></select>
+  <button class="btn" id="reset">New chat</button>
+</div></header>
+<main id="chat"><p class="hint">Say what you want made. Attach materials by name in the box on the right (comma-separated), e.g. <i>mug.jpg, logo.png</i>.</p></main>
+<form class="ask" id="ask"><div class="row">
+  <textarea id="text" placeholder="Message" rows="1"></textarea>
+  <input type="text" id="materials" placeholder="materials: a.jpg, b.png">
+  <button class="send" type="submit" aria-label="Send">↑</button>
+</div></form>
+<script>
+const $ = (s, r = document) => r.querySelector(s), chat = $("#chat");
+const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const SID = "default"; let S = null, MODELS = null;
+const GRIDS = {};
+
+async function api(p, b) { const r = await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined); return r.json(); }
+function el(html) { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function add(node) { chat.appendChild(node); node.scrollIntoView({ block: "end", behavior: "smooth" }); return node; }
+const tier = () => $("#tier [aria-pressed=true]").dataset.t;
+
+function understood(sheet) {
+  const bits = [`<b>${esc(sheet.goal.value)}</b>${sheet.goal.source === "stated" ? "" : ` <span class="${sheet.goal.source === "assumed" ? "asm" : "inf"}">${sheet.goal.source}</span>`}`];
+  for (const f of sheet.fields) if (f.source !== "not_applicable" && f.value) bits.push(`${esc(f.field)} <b>${esc(f.value)}</b>${f.source === "stated" || f.source === "session" ? "" : ` <span class="${f.source === "assumed" ? "asm" : "inf"}">${f.source}</span>`}`);
+  return bits.join(" · ");
+}
+
+function modelOptions(kind, current) {
+  const t = MODELS.tiers[tier()]; const table = kind === "still" ? MODELS.stills : MODELS.videos;
+  return Object.entries(table).map(([n, m]) => `<option value="${n}"${n === current ? " selected" : ""}>${n}${m.plan ? ` · ${m.plan}` : ""}</option>`).join("");
+}
+function kindOf(step) { const s = MODELS.stills[step.model], v = MODELS.videos[step.model]; return s ? "still" : v ? "video" : step.tool === "film" || step.tool === "podcast" || step.tool === "edit-run" ? "pipeline" : "none"; }
+function costOf(step, model, res, seconds) {
+  const s = MODELS.stills[model], v = MODELS.videos[model];
+  if (s) return s.cost?.[res] ?? Object.values(s.cost || {})[0] ?? 0;
+  if (v) { const r = v.cost?.[res] ?? Object.values(v.cost || {})[0] ?? 24; return (Number(seconds) || 5) * r; }
+  return step.credits || 0;
+}
+
+function card(step, i, turnIndex) {
+  const kind = kindOf(step); const resList = kind === "still" ? (MODELS.stills[step.model]?.resolutions || []) : kind === "video" ? (MODELS.videos[step.model]?.resolutions || []) : [];
+  const c = el(`<div class="card" data-i="${i}">
+    <div class="hd"><b>${esc(step.group.replace("-", " "))} · ${esc(step.tool.replace(/-/g, " "))}</b><small>${esc(step.why)}</small><span class="sp"></span><span class="pill ${esc(step.state)}">${esc(step.state)}</span></div>
+    <div class="io">${step.inputs.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}${step.inputs.length ? `<span class="arrow">→</span>` : ""}<span class="chip">${esc(step.produces)}</span></div>
+    <div class="params">
+      ${kind === "still" || kind === "video" ? `<label>Model<select data-k="model">${modelOptions(kind, step.model)}</select></label><label>Resolution<select data-k="resolution">${resList.map((r) => `<option${r === step.resolution ? " selected" : ""}>${r}</option>`).join("")}</select></label>` : kind === "pipeline" ? `<label>Models<input type="text" data-k="models" value="${esc(step.model)}" readonly></label>` : ""}
+      ${kind === "video" || step.params.seconds ? `<label>Seconds<input type="number" data-k="seconds" min="1" max="60" value="${esc(step.params.seconds || 5)}"></label>` : ""}
+      ${step.params.aspect || kind !== "none" ? `<label>Aspect<select data-k="aspect">${["", "16:9", "9:16", "1:1", "4:5"].map((a) => `<option value="${a}"${a === (step.params.aspect || "") ? " selected" : ""}>${a || "auto"}</option>`).join("")}</select></label>` : ""}
+      ${step.params.extra ? `<label>Extra<input type="text" data-k="extra" value="${esc(step.params.extra)}"></label>` : ""}
+      <label class="wide">${kind === "none" && !step.params.prompt_or_change ? "" : "Prompt / change"}<textarea data-k="prompt_or_change" rows="2">${esc(step.params.prompt_or_change)}</textarea></label>
+    </div>
+    <div class="ft"><span class="cost"><span data-cost>${step.credits}</span> credits${step.needs_beyond_free ? ` · beyond free: ${esc(step.needs_beyond_free)}` : ""}</span><span class="sp"></span>
+      <button class="btn" data-a="skipped">Skip</button><button class="btn" data-a="paused">Pause</button><button class="btn p" data-a="approved">Run</button></div>
+  </div>`);
+  const recost = () => { const m = c.querySelector('[data-k="model"]')?.value || step.model, r = c.querySelector('[data-k="resolution"]')?.value || step.resolution, s = c.querySelector('[data-k="seconds"]')?.value; c.querySelector("[data-cost]").textContent = costOf(step, m, r, s); };
+  c.querySelector('[data-k="model"]')?.addEventListener("change", (e) => { const k = kindOf({ model: e.target.value, tool: step.tool }); const rl = (k === "still" ? MODELS.stills : MODELS.videos)[e.target.value]?.resolutions || []; const rs = c.querySelector('[data-k="resolution"]'); rs.innerHTML = rl.map((r) => `<option>${r}</option>`).join(""); recost(); });
+  c.querySelectorAll("[data-k]").forEach((x) => x.addEventListener("input", recost));
+  c.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => {
+    const params = {}; c.querySelectorAll("[data-k]").forEach((x) => { if (["seconds"].includes(x.dataset.k)) params[x.dataset.k] = Number(x.value); else if (x.dataset.k !== "model" && x.dataset.k !== "models") params[x.dataset.k] = x.value; });
+    const model = c.querySelector('[data-k="model"]')?.value; const state = b.dataset.a === "paused" && step.state === "paused" ? "proposed" : b.dataset.a;
+    const r = await api(`/session/${SID}/step`, { turn: turnIndex, index: i, params, model, credits: Number(c.querySelector("[data-cost]").textContent), state });
+    step.state = r.step.state; const pill = c.querySelector(".pill"); pill.className = `pill ${step.state}`; pill.textContent = step.state;
+    b.closest(".card").querySelectorAll("[data-a]").forEach((x) => (x.disabled = step.state === "approved" || step.state === "skipped"));
+    if (step.state === "paused") b.textContent = "Resume"; else if (b.dataset.a === "paused") b.textContent = "Pause";
+    if (state === "approved") add(el(`<div class="msg card">approved · ${esc(step.tool)} on ${esc(r.step.model || step.model)} · ${esc(c.querySelector("[data-cost]").textContent)} credits · dry, not called</div>`));
+  }));
+  if (step.state === "approved" || step.state === "skipped") c.querySelectorAll("[data-a]").forEach((x) => (x.disabled = true));
+  return c;
+}
+
+function renderTurn(t, turnIndex, agentText) {
+  add(el(`<div class="msg agent">${esc(agentText)}</div>`));
+  add(el(`<div class="und">${understood(t.sheet)}</div>`));
+  if (t.plan) { t.plan.steps.forEach((s, i) => add(card(s, i, turnIndex))); add(el(`<div class="est">estimate ${t.plan.estimate_credits} credits · tier ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}</div>`)); }
+}
+
+async function send(text, materials) {
+  add(el(`<div class="msg user">${esc(text)}</div>`));
+  const typing = add(el(`<div class="msg agent" style="color:var(--mut)">…</div>`));
+  const r = await api("/turn", { session: SID, text, materials, tier: tier(), liberty: $("#liberty").checked });
+  typing.remove(); if (r.error) return add(el(`<div class="msg agent">Something broke: ${esc(r.error)}</div>`));
+  S = r.session; renderTurn(r.turn, S.turns.length - 1, r.text);
+}
+
+$("#ask").addEventListener("submit", (e) => { e.preventDefault(); const t = $("#text").value.trim(); if (!t) return; const m = $("#materials").value.split(",").map((x) => x.trim()).filter(Boolean); $("#text").value = ""; $("#materials").value = ""; chat.querySelector(".hint")?.remove(); send(t, m); });
+$("#text").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#ask").requestSubmit(); } });
+$("#tier").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; $("#tier").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); });
+$("#reset").addEventListener("click", async () => { await api("/session/reset", { session: SID, liberty: $("#liberty").checked }); chat.innerHTML = '<p class="hint">New chat.</p>'; });
+
+// ----- views over a run: story, screenplay with comments, keyframe slideshow with flags -----
+async function showRun(label) {
+  const R = await api(`/run/${encodeURIComponent(label)}`); if (R.error) return;
+  const media = (p) => `/media/${encodeURIComponent(label)}/${p}`;
+  add(el(`<div class="msg user">Show me ${esc(label)}</div>`));
+  add(el(`<div class="msg agent">Here is ${esc(R.story?.title || label)}: the story, the screenplay by scene, and the keyframes. Comment on a scene or flag a still and I will start from there.</div>`));
+  // story
+  const st = R.story || {}; add(el(`<div class="view story"><h2>${esc(st.title || "")}</h2><div class="style">${esc(st.kind || "")}${st.style ? ` · ${esc(st.style)}` : ""} · ${esc(R.mode)}</div>${(st.story || "").split(/\n\n+/).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`));
+  // screenplay
+  const sc = R.script?.scenes || [];
+  const v = el(`<div class="view"><h2>Screenplay</h2>${R.script?.theme ? `<div class="style" style="color:var(--mut);font-size:13px">${esc(R.script.theme)}</div>` : ""}</div>`);
+  for (const s of sc) {
+    const notes = (R.notes.comments || []).filter((c) => c.scene === s.n);
+    const b = el(`<div class="scene"><div class="t"><b>Scene ${s.n}</b><small>${esc(s.place)}${s.time ? ` · ${esc(s.time)}` : ""}${s.seconds ? ` · ${esc(s.seconds)} s` : ""}</small><span class="sp"></span><small>${esc(s.tone || "")}</small></div><div class="syn">${esc(s.synopsis || s.situation || "")}</div>
+      ${(s.shots || []).map((sh) => `<div class="shot"><span class="n">${sh.n}${sh.seconds ? ` · ${sh.seconds}s` : ""}</span><span class="sz">${esc(sh.size || "")}</span><span>${esc(sh.moment || sh.action || "")}${(sh.lines || []).length ? `<br><span class="ln">${sh.lines.map((l) => esc(typeof l === "string" ? l : `${l.who || l.speaker || ""}: ${l.text || l.line || ""}`)).join(" / ")}</span>` : ""}</span></div>`).join("")}
+      ${notes.map((n) => `<div class="note">${esc(n.text)}</div>`).join("")}
+      <div class="cmt"><input type="text" placeholder="Comment on this scene…"><button class="btn">Send</button></div></div>`);
+    b.querySelector(".cmt button").addEventListener("click", async () => { const inp = b.querySelector(".cmt input"); if (!inp.value.trim()) return; await api(`/run/${encodeURIComponent(label)}/comment`, { scene: s.n, text: inp.value.trim() }); b.insertBefore(el(`<div class="note">${esc(inp.value.trim())}</div>`), b.querySelector(".cmt")); add(el(`<div class="msg user">Scene ${s.n}: ${esc(inp.value.trim())}</div>`)); inp.value = ""; });
+    v.appendChild(b);
+  }
+  add(v);
+  // keyframes slideshow
+  const stills = R.stills.filter((s) => s.file); if (!stills.length) return;
+  let i = 0, att = null;
+  const k = el(`<div class="view"><h2>Keyframes</h2><div class="slides"><img></div><div class="nav"><button class="btn" data-n="-1">‹</button><button class="btn" data-n="1">›</button><span class="cap"></span><span class="sp"></span><span class="verdict"></span><button class="btn" data-flag>Looks wrong</button></div><div class="thumbs"></div><details><summary>prompt and inputs</summary><pre></pre></details></div>`);
+  const draw = () => { const s = stills[i]; const file = att ?? s.file; k.querySelector("img").src = media(file); k.querySelector(".cap").textContent = `${i + 1}/${stills.length} · ${s.id} · scene ${s.scene} shot ${s.shot} · ${s.size} · ${s.how}${att ? ` · ${att.split("/").pop()}` : ""}`; const vd = k.querySelector(".verdict"); vd.textContent = s.gate || ""; vd.className = `verdict ${s.gate || ""}`; k.querySelector(".thumbs").innerHTML = s.attempts.map((a) => `<img src="${media(a)}" class="${(att ?? s.file) === a ? "on" : ""}" data-a="${a}">`).join(""); k.querySelector("pre").textContent = `${s.inputs.length ? "images: " + s.inputs.join(", ") + "\n\n" : ""}${s.prompt}`; const fl = (R.notes.flags || []).filter((f) => f.still === s.id); k.querySelectorAll(".note").forEach((n) => n.remove()); for (const f of fl) k.querySelector(".nav").after(el(`<div class="note">${esc(f.text)}</div>`)); };
+  k.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => { i = (i + Number(b.dataset.n) + stills.length) % stills.length; att = null; draw(); }));
+  k.querySelector(".thumbs").addEventListener("click", (e) => { const a = e.target.dataset.a; if (a) { att = a; draw(); } });
+  k.querySelector("[data-flag]").addEventListener("click", async () => { const s = stills[i]; const text = prompt(`What looks wrong in ${s.id}?`); if (!text) return; await api(`/run/${encodeURIComponent(label)}/flag`, { still: s.id, file: att ?? s.file, text }); R.notes.flags.push({ still: s.id, text }); draw(); add(el(`<div class="msg user">${esc(s.id)} looks wrong: ${esc(text)}</div>`)); add(el(`<div class="msg agent">Noted on ${esc(s.id)}. When the loop runs, this becomes a retry card for ${esc(s.id)} and what was painted from it.</div>`)); });
+  document.addEventListener("keydown", (e) => { if (!k.isConnected) return; if (e.key === "ArrowLeft") k.querySelector('[data-n="-1"]').click(); if (e.key === "ArrowRight") k.querySelector('[data-n="1"]').click(); });
+  draw(); add(k);
+  if (R.film) add(el(`<div class="view"><h2>Film</h2><div class="slides"><video controls src="${media(R.film)}"></video></div></div>`));
+}
+$("#runpick").addEventListener("change", (e) => { if (e.target.value) { chat.querySelector(".hint")?.remove(); showRun(e.target.value); e.target.value = ""; } });
+
+(async () => {
+  MODELS = await api("/models");
+  const runs = await api("/runs"); for (const r of runs) $("#runpick").appendChild(el(`<option value="${esc(r.label)}">${esc(r.label)} · ${esc(r.title)}</option>`));
+  S = await api(`/session/${SID}`); $("#liberty").checked = !!S.liberty; $("#tier").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === (S.tier || "free")));
+  if (S.messages?.length) { chat.innerHTML = ""; let ti = 0; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "card") add(el(`<div class="msg card">${esc(m.text)}</div>`)); else { renderTurn(S.turns[m.turn ?? ti], m.turn ?? ti, m.text); ti++; } } }
+})();
+</script>
+</body>
+</html>

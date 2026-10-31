@@ -61,7 +61,21 @@ function treeText(goal) {
 
 // Fill the sheet from the conversation. `messages` is [{who: user|agent, text}], `materials` the files the user has,
 // `session` the assets made earlier ([{label, kind, from}]). Returns the raw sheet plus the questions code derived.
-export async function fillSheet({ messages, materials = [], session = [], goalHint = null }) {
+// With `liberty` (the creative-liberty toggle) nothing is asked: every open field takes its default or the model's
+// best guess and is marked "assumed"; the goal alone is still asked when unknown, since no default exists for it.
+export async function fillSheet({ messages, materials = [], session = [], goalHint = null, liberty = false }) {
+  const out = await fillSheetRaw({ messages, materials, session, goalHint });
+  if (!liberty) return out;
+  const branch = BRANCHES[out.goal.value] || [];
+  for (const q of branch) {
+    const f = out.fields.find((x) => x.field === q.field); if (!f || f.source === "not_applicable") continue;
+    if (f.source === "unknown" || (f.source === "inferred" && f.confidence < THRESHOLD)) { f.value = f.value || q.default || "agent's choice"; f.source = "assumed"; f.confidence = 1; }
+  }
+  if (out.goal.source === "inferred") { out.goal.source = "assumed"; }
+  return { ...out, questions: out.goal.source === "unknown" ? questionsFor(out).slice(0, 1) : [] };
+}
+
+async function fillSheetRaw({ messages, materials = [], session = [], goalHint = null }) {
   const convo = messages.map((m) => `${m.who.toUpperCase()}: ${m.text}`).join("\n");
   const prompt = `You fill a SHEET for an agent that makes images, videos and sounds. Read the conversation and the materials and fill every field of the sheet. Rules:
 - source "stated": the user said it; put the exact words in quote. "session": an earlier message or a supplied file settles it. "inferred": not said, but a confident reading of the words, the platform, the materials (quote the words that imply it). "unknown": nothing supports a value. "not_applicable": this branch or this request does not need the field (then value "").

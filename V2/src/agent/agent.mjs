@@ -9,8 +9,8 @@ import { jsonCall, S } from "../lib/llm.js";
 const MAX_ROUNDS = 3;
 
 // One turn: returns {sheet, questions} or {sheet, plan}.
-export async function turn({ messages, materials = [], session = [], tier = "free", goalHint = null }) {
-  const sheet = await fillSheet({ messages, materials, session, goalHint });
+export async function turn({ messages, materials = [], session = [], tier = "free", goalHint = null, liberty = false }) {
+  const sheet = await fillSheet({ messages, materials, session, goalHint, liberty });
   if (sheet.questions.length) return { sheet, questions: sheet.questions };
   const p = await plan({ sheet, materials, session, tier });
   return { sheet, plan: p };
