@@ -87,18 +87,28 @@ export function runTree(L, label = "") {
 }
 const byId = (nodes, id) => nodes.find((n) => n.id === id);
 
-export function sessionTree(S) {
+// A film node that started a run pulls that run's whole tree in under it (the bank with its provenance, the stills,
+// the clips), so the session's tree shows where the research-sourced and generated references came from.
+export function sessionTree(S, { loadRun = null } = {}) {
   const nodes = [], edges = []; const add = (n) => { n.inputs ??= []; nodes.push(n); return n; };
+  const runs = new Set();
   for (const m of S.materials || []) add({ id: `mat:${m}`, type: "material", stage: "assets", label: m, file: `materials/${m}`, credits: 0 });
   const produced = {};
   S.turns.forEach((t, ti) => {
     for (const f of t.sheet?.fields || []) if (f.value && f.source !== "not_applicable") add({ id: `sheet:${ti}:${f.field}`, type: "field", stage: "sheet", label: f.field, text: f.value, source: f.source, credits: 0 });
     (t.plan?.steps || []).forEach((st, i) => {
       const id = `step:${ti}:${i}`;
-      add({ id, type: "step", stage: "job", label: `${st.tool}`, tool: st.tool, model: st.model, produces: st.produces, state: st.state, credits: st.credits || 0, prompt_file: st.prompt_file, params: st.params, inputs: st.inputs.map((x) => ({ id: produced[x] || `mat:${x}`, role: "input" })) });
-      produced[st.produces] = id; if (!nodes.some((n) => n.id === `mat:${st.produces}`)) {}
+      add({ id, type: "step", stage: "job", label: `${st.tool}`, tool: st.tool, model: st.model, produces: st.produces, state: st.state, run: st.run, credits: st.credits || 0, prompt_file: st.prompt_file, params: st.params, inputs: st.inputs.map((x) => ({ id: produced[x] || `mat:${x}`, role: "input" })) });
+      produced[st.produces] = id; if (st.run) runs.add(st.run);
     });
   });
+  for (const label of runs) {
+    const L = loadRun?.(label); if (!L) continue;
+    const rt = runTree(L, label); const pre = `run:${label}:`;
+    for (const n of rt.nodes) add({ ...n, id: pre + n.id, inputs: n.inputs.map((i) => ({ ...i, id: pre + i.id })), run: label, dependents: undefined, explain: undefined });
+    const storyStep = nodes.find((n) => n.type === "step" && n.tool === "story" && n.run === label); if (storyStep) { const st = nodes.find((n) => n.id === pre + "story"); if (st) st.inputs.push({ id: storyStep.id, role: "the brief sheet" }); }
+    for (const m of S.materials || []) { const rec = rt.nodes.find((n) => n.file && basename(n.file) === m); if (rec) { const rn = nodes.find((n) => n.id === pre + rec.id); if (rn) rn.inputs.push({ id: `mat:${m}`, role: "the user's record" }); } }
+  }
   for (const n of nodes) n.inputs = n.inputs.filter((i) => nodes.some((x) => x.id === i.id));
   for (const n of nodes) for (const i of n.inputs) edges.push([i.id, n.id]);
   const tree = { label: S.id, kind: "session", nodes, edges, stages: STAGES.filter((s) => nodes.some((n) => n.stage === s)).map((s) => ({ id: s, explain: STAGE_EXPLAIN[s] })) };
