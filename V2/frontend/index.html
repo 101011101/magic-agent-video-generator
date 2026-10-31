@@ -125,7 +125,16 @@ const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").
 const SID = "default"; let S = null, MODELS = null, RUNS = [], CATALOGUE = null; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
 const api = async (p, b) => (await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
-const add = (n, where = chat) => { if (where === canvas) { const g = document.createElement("div"); g.className = "vgroup"; g.style.left = "24px"; g.style.top = NEXTY + "px"; g.appendChild(n); space().appendChild(g); requestAnimationFrame(() => { NEXTY = NEXTY + g.offsetHeight + 28; growSpace(); g.scrollIntoView({ block: "start", behavior: "smooth" }); }); return n; } where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
+const add = (n, where = chat) => { if (where === canvas) { const g = document.createElement("div"); g.className = "vgroup"; g.style.visibility = "hidden"; g.style.left = "0px"; g.style.top = "0px"; g.appendChild(n); space().appendChild(g); const pos = placeFree(g); g.style.left = pos.x + "px"; g.style.top = pos.y + "px"; g.style.visibility = ""; growSpace(); g.scrollIntoView({ block: "start", behavior: "smooth" }); return n; } where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
+// Free space: the first spot, scanning left to right then down, where this group's box overlaps no other group (with a margin).
+function placeFree(g, prefer = null) {
+  const sp = space(); const M = 20, STEP = 24; const others = [...sp.querySelectorAll(":scope > .tgroup, :scope > .vgroup")].filter((x) => x !== g).map((x) => ({ x: x.offsetLeft, y: x.offsetTop, w: x.offsetWidth, h: x.offsetHeight }));
+  const w = g.offsetWidth, h = g.offsetHeight; const hits = (x, y) => others.some((o) => x < o.x + o.w + M && x + w + M > o.x && y < o.y + o.h + M && y + h + M > o.y);
+  if (prefer && !hits(prefer.x, prefer.y)) return prefer;
+  const maxX = Math.max(24, canvas.clientWidth - w - 24);
+  for (let y = 24; y < 20000; y += STEP) for (let x = 24; x <= maxX; x += STEP) if (!hits(x, y)) return { x, y };
+  return { x: 24, y: 24 };
+}
 function growSpace() { let w = 0, h = 0; space().querySelectorAll(":scope > .tgroup, :scope > .vgroup").forEach((g) => { w = Math.max(w, g.offsetLeft + g.offsetWidth + 40); h = Math.max(h, g.offsetTop + g.offsetHeight + 40); }); space().style.width = Math.max(w, canvas.clientWidth) + "px"; space().style.height = Math.max(h, canvas.clientHeight) + "px"; }
 const tier = () => $("#tier [aria-pressed=true]").dataset.t, mode = () => $("#mode").dataset.m;
 const isImg = (n) => /\.(png|jpe?g|webp|gif)$/i.test(n), isVid = (n) => /\.(mp4|mov)$/i.test(n);
@@ -194,7 +203,6 @@ function focus(ti, i) {
 
 // ----- the canvas: one cluster per turn with a plan -----
 const space = () => $("#space");
-let NEXTY = 24;
 function cluster(t, ti) {
   const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
   const c = el(`<div class="tgroup${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><span class="add"><select data-addtool><option value="">+ tool…</option>${(CATALOGUE?.tools || []).map((x) => `<option value="${esc(x.id)}">${esc(x.group)} · ${esc(x.id)}${x.custom ? " (code)" : ""}</option>`).join("")}</select></span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
@@ -206,8 +214,8 @@ function cluster(t, ti) {
   c.addEventListener("pointerdown", () => { if (!FOCUS || FOCUS.ti !== ti) { canvas.querySelectorAll(".tgroup").forEach((x) => x.classList.toggle("dim", x !== c)); } }, true);
   c.querySelector(".dagbox").classList.add("inspace"); c.querySelector(".dagbox").dataset.t = ti;
   // place the tree on the space: its saved spot, or the next free row
-  const pos = t.plan.canvas || { x: 24, y: NEXTY }; c.style.left = pos.x + "px"; c.style.top = pos.y + "px";
-  requestAnimationFrame(() => { if (!t.plan.canvas) NEXTY = Math.max(NEXTY, pos.y + c.offsetHeight + 28); growSpace(); });
+  c.style.visibility = "hidden"; c.style.left = "0px"; c.style.top = "0px";
+  c.settle = () => { const pos = placeFree(c, t.plan.canvas || null); c.style.left = pos.x + "px"; c.style.top = pos.y + "px"; c.style.visibility = ""; growSpace(); };
   // the title moves the whole tree
   const h = c.querySelector(".ch"); h.addEventListener("pointerdown", (e) => { if (e.target.closest("select,button")) return; const sx = e.clientX, sy = e.clientY, ox = c.offsetLeft, oy = c.offsetTop; let moved = false; const mv = (ev) => { const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; c.style.left = Math.max(0, ox + dx) + "px"; c.style.top = Math.max(0, oy + dy) + "px"; }; const up = async () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); growSpace(); if (moved) { t.plan.canvas = { x: c.offsetLeft, y: c.offsetTop }; await api(`/session/${SID}/plan`, { turn: ti, canvas: t.plan.canvas }); } }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); e.stopPropagation(); });
   return c;
@@ -215,14 +223,14 @@ function cluster(t, ti) {
 function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
-  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { space().querySelector(`.tgroup[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!space().querySelector(`.tgroup[data-t="${ti}"]`)) space().appendChild(cluster(t, ti)); }
+  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { space().querySelector(`.tgroup[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!space().querySelector(`.tgroup[data-t="${ti}"]`)) { const g = cluster(t, ti); space().appendChild(g); g.settle(); } }
 }
 const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
 async function rerender(ti = null, i = null) {
-  S = await api(`/session/${SID}`); chat.innerHTML = ""; space().innerHTML = ""; NEXTY = 24; canvas.querySelector(".hint")?.remove(); canvas.insertAdjacentHTML("beforeend", '<p class="hint">The working trees appear here.</p>');
+  S = await api(`/session/${SID}`); chat.innerHTML = ""; space().innerHTML = ""; canvas.querySelector(".hint")?.remove(); canvas.insertAdjacentHTML("beforeend", '<p class="hint">The working trees appear here.</p>');
   for (const m of S.messages) { if (m.who === "user") { add(el(`<div class="msg user">${esc(m.text)}</div>`)); if (m.attached?.length) add(el(`<div class="atts">${m.attached.map((n) => tile(n)).join("")}</div>`)); } else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg sys">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); }
   // a focused turn with an empty plan (a tree the user started) still shows a cluster
-  S.turns.forEach((t, ti) => { if (t.plan && !space().querySelector(`.tgroup[data-t="${ti}"]`)) { canvas.querySelector(".hint")?.remove(); space().appendChild(cluster(t, ti)); } });
+  S.turns.forEach((t, ti) => { if (t.plan && !space().querySelector(`.tgroup[data-t="${ti}"]`)) { canvas.querySelector(".hint")?.remove(); const g = cluster(t, ti); space().appendChild(g); g.settle(); } });
   if (space().children.length) canvas.querySelector(".hint")?.remove();
   const f = ti != null ? { ti, i } : FOCUS; if (f && f.i != null && S.turns[f.ti]?.plan?.steps?.[f.i]) focus(f.ti, f.i); else { toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = f && f.i == null ? { ti: f.ti, i: null } : null; canvas.querySelectorAll(".tgroup").forEach((c) => c.classList.toggle("dim", FOCUS ? c.dataset.t != FOCUS.ti : false)); }
   tree();
@@ -269,7 +277,7 @@ $("#tier").addEventListener("click", (e) => { const b = e.target.closest("button
 const setMode = (m) => { const n = $("#mode"); n.dataset.m = m; n.querySelector("b").textContent = m; $("#modehint").textContent = HINT[m]; };
 document.addEventListener("keydown", (e) => { if (e.key === "Tab" && e.shiftKey) { e.preventDefault(); setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]); } });
 $("#mode").addEventListener("click", () => setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]));
-$("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; space().innerHTML = ""; NEXTY = 24; toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; tree(); });
+$("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; space().innerHTML = ""; toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; tree(); });
 
 // ----- views over a run (into the canvas) -----
 async function showTree(label) {
