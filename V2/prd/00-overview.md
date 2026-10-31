@@ -21,6 +21,7 @@ Files in this directory, in pipeline order:
 | `08-costs.md` | credits per item and per film |
 | `09-status.md` | what is built, built but not yet exercised, and design only |
 | `10-decisions.md` | the dated decisions log |
+| `11-agent.md` | the agent in front of everything: the universal questions, the tools, the session, model choice, editing (design) |
 
 ## Models and services
 
@@ -40,6 +41,11 @@ Used everywhere unless a section says otherwise:
   without paying twice.
 
 ## The data flow
+
+The film chain below is one tool. In front of it sits the agent (`11-agent.md`, design): a message enters a session,
+one small call guesses the tools, the universal questions are filled from the message and asked where they are not
+answered with confidence, the cost is stated, and the tool runs. A small job (one image, an edit, a swap, captions)
+is a tool of its own; the film chain is the tool for anything with a story.
 
 ```
 brief ─► STORY        research gate → (research round) → story               mode = nonfiction | fiction
@@ -71,9 +77,19 @@ What each stage hands to the next:
   style sheet as a reference.
 - EDIT hands clips with the gate verdicts, then the film.
 
+## Models are a profile, not a constant
+
+The tools are the same across models: a still model is images plus a prompt in, one image out; a video model is a start
+and end frame plus a prompt, or ordered named references plus a prompt, one clip out. What differs is each model's
+capability profile, and the registry (`src/lib/models.js`, `08-costs.md`) holds it. Changing the model changes the
+pipeline through that profile: the screenplay snaps shots to the model's grid, the state manager sends as many reference
+images as the model takes (and drops the style sheet before the previous frame on a tight model), the clip stage refuses a
+mode the model cannot do, the painter and the renderer work at the profile's resolutions, and every estimate prices from
+it. `--tier paid|cheap|free` names a profile; `--script-from` makes the same film on another profile for comparison.
+
 ## Where the gates are, and the rule
 
-Six gates, code plus one vision call each, all in the state manager (`04-state.md`), and one at procurement
+Seven gates, code plus one vision call each, all in the state manager (`04-state.md`), and one at procurement
 (`02-assets.md`):
 
 - the sheet check on every generated reference sheet (nothing its description excludes, no prominent extra);
@@ -82,6 +98,7 @@ Six gates, code plus one vision call each, all in the state manager (`04-state.m
 - the room gate on every painted still (the arrangement against image 1 of the paint, told what the frame may show);
 - the bars gate on every still, by code (black letterbox or pillarbox bars; thin ones cropped at the stitch);
 - the style gate on every painted still (the medium and finish against the film's style sheet, faults only);
+- the geometry gate on every painted still with positioned props (heading and apparent size against the stage);
 - the load gate on every painted still with something carried (what hangs from each host against what the screenplay puts
   on it, from the structured `on` field);
 - the clip gate on every clip or sequence (count where countable, order where distinguishable, identity drift across
@@ -147,3 +164,11 @@ dialogue by TTS plus lip sync, voice conversion, room tone per scene, loudness a
 **Edit** (`07-edit.md`, `src/edit/edit.js`). One clip per shot, pinned on its two stills, from a prompt that carries the cast
 feature lines, the moment, the timed beats and the sound; the clip gate; the stitch at 1280×720 with the captions at the top
 and the subtitles at the bottom; the narration mixed under at the end.
+
+**Agent** (`11-agent.md`, `src/agent/`, design). The conversation and the tool calls. A session holds the messages, the
+assets made and the runs started; one small call plans the tools for a message; the universal questions (output, subject,
+platform and aspect, audience, length, message, materials, must-include) are filled from the message and the session, and
+only what is not answered with confidence is asked; the cost is stated before paid work; the tool runs on the cheapest
+model that can, moving up a tier only for a missing capability, a twice-flagged item or the user's word. An edit of
+something this session made re-enters its run on the named shots; an edit of a supplied asset is a tool over it with a
+time range.

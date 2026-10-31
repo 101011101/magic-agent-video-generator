@@ -105,3 +105,36 @@
   is not image 1. The writer is told that a camera from behind or from ahead stands on the line, not across it, so an
   attack is seen along its heading at least once. A prose rule that a vehicle carries one thing did not hold on its own
   (a fourth paint still hung missiles), and the prose preposition matcher put a store rule on a cockpit crosshair.
+- **2026-10-30 (models).** A model is a profile in one registry, never a constant in the code. The user, with word from
+  Magic Hour, wants the pipeline to work on the free-flagged models; the registry makes that a flag (`--tier free`) that
+  changes the grid, the reference cap, the clip modes, the resolutions and the costs together, and `--script-from` lets
+  the same screenplay run on two profiles for a frame-for-frame comparison. Prices are the sheet's until measured.
+- **2026-10-31.** The painter is told the story, not only the scene: a film synopsis and a per-scene physical situation
+  are fields, filled from the story for older scripts; a place's plate is generated in the situation the story first shows
+  it; the previous frame crosses places in a continuous scene. The user's diagnosis: every geometric error traces to the
+  absence of a world picture, local descriptors cannot replace it; the stage model (positions as numbers) is the next step.
+- **2026-10-31 (T-029).** Positions are numbers. Every scene has a stage in metres, every camera a position and a look
+  point, every prop a position and a heading; the pipeline derives the screen words from them and replaces the writer's,
+  writes a WORLD block (where everything is relative to the goal, what moved since the frame before, what fixes each size),
+  checks the impossible in metres, and a geometry gate reads heading and size back from the picture. The user's request,
+  verbatim, is in the ticket; the pipeline is built so a later reader can hold the result against it.
+- **2026-10-31 (late).** Attitude is motion, not a frame: a bank never differs between a shot's two stills (the painter's
+  jets face the camera on the word "banked"). An edit flagged by the geometry gate is retried as a delta edit, the change
+  list only on its passing image 1. A frame records a position and a heading; the clip renders what happens between.
+- **2026-10-31 (T-022).** A shot's first frame is not told the shot's action; it is told that nothing has begun. Measured:
+  a described detonation was painted into the frame before it, twice.
+- **2026-10-31 (later, s7-2).** A turn is a change of heading and nothing else: prose may not call a 2° slide a bank;
+  the writer must stage a turn (20° and a track that bends) or say what the numbers do. The geometry gate reads eight
+  directions against the stage's yaw and flags absence. A still that brings a vehicle into frame is painted from the
+  master, never edited from the frame without it. Measured: four and then five attempts of one frame turned the jets
+  to the camera with every word against it; the accepted opening wide was found wrong underneath (no frigate, the
+  plate's platform in its place, a jet 2.8× too large seen across) and had passed through the old gate's blind spots.
+- **2026-10-31.** The agent is the next subsystem, in front of the film chain, which becomes one tool among several
+  (`11-agent.md`). Conversation is for ambiguity only: every project has a universal set of questions (output, subject,
+  platform and aspect, audience, length, message, materials, must-include) that must be answered with confidence before
+  anything is paid; what the message states or the agent infers confidently is used and shown back, the rest is asked.
+- **2026-10-31.** Editing is a separate subsystem, treated as the output fed back as an input with a time range and an
+  instruction. Design split by provenance: an asset made by a run re-enters the run on the named shots (cached, paid
+  only for the change); a supplied asset or a whole-frame change goes to a tool over the asset.
+- **2026-10-31.** Cheapest model that can: the free tier is the default; a move up is for a missing capability, a
+  twice-flagged item on the user's word, or the user's explicit ask, and is costed before it is paid.
