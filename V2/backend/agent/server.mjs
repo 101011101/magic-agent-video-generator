@@ -61,15 +61,17 @@ createServer(async (req, res) => {
     if (req.method === "POST" && p === "/turn") {
       const b = await body(req); const s = load(b.session || "default");
       if (b.tier) s.tier = b.tier; if (b.mode) s.mode = b.mode;
-      s.messages.push({ who: "user", text: b.text, at: Date.now(), attached: b.materials || [] });
+      const foc = b.focus && s.turns[b.focus.turn]?.plan?.steps?.[b.focus.index] ? { ...b.focus, step: s.turns[b.focus.turn].plan.steps[b.focus.index] } : null;
+      s.messages.push({ who: "user", text: b.text, at: Date.now(), attached: b.materials || [], focus: foc ? { turn: foc.turn, index: foc.index, produces: foc.step.produces } : null });
       s.materials = [...new Set([...(s.materials || []), ...(b.materials || [])])];
-      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card").map((m) => ({ who: m.who, text: m.attached?.length ? `${m.text} [attached: ${m.attached.join(", ")}]` : m.text })), materials: s.materials, attached: b.materials || [], session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null });
+      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card").map((m) => ({ who: m.who, text: `${m.attached?.length ? `${m.text} [attached: ${m.attached.join(", ")}]` : m.text}${m.focus ? ` [looking at: ${m.focus.produces}, a ${s.turns[m.focus.turn]?.plan?.steps?.[m.focus.index]?.tool || "node"} in turn ${m.focus.turn + 1}]` : ""}` })), materials: s.materials, attached: b.materials || [], session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null, focus: foc });
       s.goal = r.questions ? r.sheet.goal.value : null;   // the goal carries only while questions are open; a new request after a plan starts fresh
       s.request = s.request || b.text;   // the message that started this request; questions and answers do not replace it
       const ti = s.turns.length, d = sdir(s.id);
       const t = { at: Date.now(), sheet: r.sheet, questions: r.questions || null, plan: r.plan || null, files: {}, brief: s.request }; if (!r.questions) s.request = null;
       writeFileSync(join(d, "prompts", `turn-${ti}-sheet.json`), JSON.stringify(r.sheet, null, 2)); t.files.sheet = `turn-${ti}-sheet.json`;
       if (r.plan) {
+        if (foc && r.sheet.about_focus) t.plan.about = { turn: foc.turn, index: foc.index, produces: foc.step.produces };
         if (r.plan.steps.length > 1) t.plan.dir = `tree-${ti + 1}`;   // a directory per working tree; a single node is the elementary tree and lives at the root
         t.plan.steps = t.plan.steps.map((st, i) => { const f = `turn-${ti}-step-${i}.txt`; writeFileSync(join(d, "prompts", f), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`); return { ...st, state: s.mode === "plan" ? "plan" : "proposed", prompt_file: f }; });
         writeFileSync(join(d, "prompts", `turn-${ti}-plan.json`), JSON.stringify(t.plan, null, 2)); t.files.plan = `turn-${ti}-plan.json`;

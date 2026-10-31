@@ -52,7 +52,7 @@ export const BRANCHES = {
 };
 
 const FIELD = S.obj({ field: S.str, value: S.str, source: S.enum(["stated", "session", "inferred", "unknown", "not_applicable"]), confidence: S.num, quote: S.str });
-const SCHEMA = S.obj({ goal: S.obj({ value: S.enum(GOALS), source: S.enum(["stated", "session", "inferred", "unknown"]), confidence: S.num, quote: S.str, why: S.str }), refers_to: S.str, fields: S.arr(FIELD) });
+const SCHEMA = S.obj({ goal: S.obj({ value: S.enum(GOALS), source: S.enum(["stated", "session", "inferred", "unknown"]), confidence: S.num, quote: S.str, why: S.str }), refers_to: S.str, about_focus: S.bool, fields: S.arr(FIELD) });
 
 function treeText(goal) {
   const b = BRANCHES[goal] || [];
@@ -63,8 +63,9 @@ function treeText(goal) {
 // `session` the assets made earlier ([{label, kind, from}]). Returns the raw sheet plus the questions code derived.
 // With `liberty` (the creative-liberty toggle) nothing is asked: every open field takes its default or the model's
 // best guess and is marked "assumed"; the goal alone is still asked when unknown, since no default exists for it.
-export async function fillSheet({ messages, materials = [], attached = null, session = [], goalHint = null, liberty = false }) {
-  const out = await fillSheetRaw({ messages, materials, session, goalHint });
+export async function fillSheet({ messages, materials = [], attached = null, session = [], goalHint = null, liberty = false, focus = null }) {
+  const out = await fillSheetRaw({ messages, materials, session, goalHint, focus });
+  if (!focus) out.about_focus = false;
   // Code rules the model keeps missing: one supplied picture or clip on a change IS the asset; one on an image request is its material.
   const pool = attached && attached.length ? attached : materials; const pics = pool.filter((m) => /\.(png|jpe?g|webp|gif|mp4|mov)$/i.test(m));
   const fix = (field, value) => { const f = out.fields.find((x) => x.field === field); if (f && (f.source === "unknown" || (f.source === "inferred" && f.confidence < THRESHOLD))) { f.value = value; f.source = "session"; f.confidence = 1; f.quote = ""; } };
@@ -82,7 +83,7 @@ export async function fillSheet({ messages, materials = [], attached = null, ses
   return { ...out, questions: out.goal.source === "unknown" ? questionsFor(out).slice(0, 1) : [] };
 }
 
-async function fillSheetRaw({ messages, materials = [], session = [], goalHint = null }) {
+async function fillSheetRaw({ messages, materials = [], session = [], goalHint = null, focus = null }) {
   const convo = messages.map((m) => `${m.who.toUpperCase()}: ${m.text}`).join("\n");
   const prompt = `You fill a SHEET for an agent that makes images, videos and sounds. Read the conversation and the materials and fill every field of the sheet. Rules:
 - source "stated": the user said it; put the exact words in quote. "session": an earlier message or a supplied file settles it. "inferred": not said, but a confident reading of the words, the platform, the materials (quote the words that imply it). "unknown": nothing supports a value. "not_applicable": this branch or this request does not need the field (then value "").
@@ -96,6 +97,7 @@ async function fillSheetRaw({ messages, materials = [], session = [], goalHint =
 - provenance: "made-here" when the asset is one this session produced (see session), else "supplied".
 - A verb alone does not decide the goal: "edit me a picture of X" with no picture is goal "image".
 - refers_to: when the user points at an earlier asset ("it", "the first one", "the ending"), the session label it means; else "".
+- about_focus: ${focus ? `the user is LOOKING AT ${focus.step.produces} (a ${focus.step.tool} node: "${(focus.step.params?.prompt_or_change || "").slice(0, 80)}"). true if this message is about that thing (a change to it, a question about it, "make it bigger", "the sign", "this one"); false if it is a new, unrelated request. When true: goal is "change", asset is ${focus.step.produces}, provenance "made-here".` : "false (nothing is focused)."}
 
 GOAL: one of ${GOALS.join(", ")} (video = a complete piece with a story; image = one or a few pictures; change = something done to an asset that exists; sound = speech, voice, music, dub; find = an answer, nothing made).${goalHint ? ` The goal was settled earlier as "${goalHint}"; keep it unless the user changed it.` : ""}
 

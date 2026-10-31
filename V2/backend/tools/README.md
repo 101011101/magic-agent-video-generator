@@ -21,4 +21,7 @@ call, with zero credits.
 | tool | what it promises | built |
 |---|---|---|
 | `text-overlay` | legible, exact words placed on a picture (top, middle, bottom) | 2026-10-31 |
-| `crop` / `resize` / `side-by-side` / `contact-sheet` | geometry and layout without a model | to do |
+| `crop` | the exact aspect, anchored, nothing regenerated | 2026-10-31 |
+| `write` | a text by the text model: post copy, a caption, a note | 2026-10-31 |
+| `check` | a vision verdict on a picture: the gate as a node | 2026-10-31 |
+| `resize` / `side-by-side` / `contact-sheet` | layout without a model | to do |

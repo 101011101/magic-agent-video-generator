@@ -9,10 +9,10 @@ import { jsonCall, S } from "../lib/llm.js";
 const MAX_ROUNDS = 3;
 
 // One turn: returns {sheet, questions} or {sheet, plan}.
-export async function turn({ messages, materials = [], attached = null, session = [], tier = "free", goalHint = null, liberty = false }) {
-  const sheet = await fillSheet({ messages, materials, attached, session, goalHint, liberty });
+export async function turn({ messages, materials = [], attached = null, session = [], tier = "free", goalHint = null, liberty = false, focus = null }) {
+  const sheet = await fillSheet({ messages, materials, attached, session, goalHint, liberty, focus });
   if (sheet.questions.length) return { sheet, questions: sheet.questions };
-  const p = await plan({ sheet, materials, session, tier });
+  const p = await plan({ sheet, materials, session, tier, focus: sheet.about_focus ? focus : null });
   return { sheet, plan: p };
 }
 

@@ -232,7 +232,7 @@ function centerOn(g) { if (!g) return; VIEW.x = canvas.clientWidth / 2 - (g.offs
 function fitAll() { const gs = [...space().querySelectorAll(":scope > .tgroup, :scope > .vgroup")]; if (!gs.length) { VIEW.x = 0; VIEW.y = 0; VIEW.z = 1; applyView(); return; } let x1 = Infinity, y1 = Infinity, x2 = 0, y2 = 0; for (const g of gs) { x1 = Math.min(x1, g.offsetLeft); y1 = Math.min(y1, g.offsetTop); x2 = Math.max(x2, g.offsetLeft + g.offsetWidth); y2 = Math.max(y2, g.offsetTop + g.offsetHeight); } const z = Math.max(0.25, Math.min(1.5, Math.min((canvas.clientWidth - 48) / (x2 - x1), (canvas.clientHeight - 48) / (y2 - y1)))); VIEW.z = z; VIEW.x = 24 - x1 * z; VIEW.y = 24 - y1 * z; applyView(); }
 function cluster(t, ti) {
   const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
-  const c = el(`<div class="tgroup${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span></div><div class="dagbox"></div></div>`);
+  const c = el(`<div class="tgroup${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b>${t.plan.about ? `<span class="mut">↳ about ${esc(t.plan.about.produces)}</span>` : ""}<span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span></div><div class="dagbox"></div></div>`);
   drawDag(c.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : outUrl(s.output), onSelect: (i) => focus(ti, i),
     onConnect: async (name, toIndex, toTurn) => { const tt = toTurn != null && toTurn !== "" ? Number(toTurn) : ti; const st = S.turns[tt].plan.steps[toIndex]; if (!st || st.inputs.includes(name)) return; st.inputs.push(name); await api(`/session/${SID}/step`, { turn: tt, index: toIndex, inputs: st.inputs }); await rerender(tt, toIndex); },
     onMove: async (i, pos) => { t.plan.steps[i].pos = pos; await api(`/session/${SID}/step`, { turn: ti, index: i, pos }); } });
@@ -241,7 +241,7 @@ function cluster(t, ti) {
   c.querySelector(".dagbox").classList.add("inspace"); c.querySelector(".dagbox").dataset.t = ti;
   // place the tree on the space: its saved spot, or the next free row
   c.style.visibility = "hidden"; c.style.left = "0px"; c.style.top = "0px";
-  c.settle = () => { const pos = placeFree(c, t.plan.canvas || null); c.style.left = pos.x + "px"; c.style.top = pos.y + "px"; c.style.visibility = ""; growSpace(); };
+  c.settle = () => { const near = t.plan.about ? space().querySelector(`.tgroup[data-t="${t.plan.about.turn}"]`) : null; const pos = placeFree(c, t.plan.canvas || (near ? { x: near.offsetLeft + near.offsetWidth + 60, y: near.offsetTop } : null)); c.style.left = pos.x + "px"; c.style.top = pos.y + "px"; c.style.visibility = ""; growSpace(); };
   // the title moves the whole tree
   const h = c.querySelector(".ch"); h.addEventListener("pointerdown", (e) => { if (e.target.closest("select,button")) return; const sx = e.clientX, sy = e.clientY, ox = c.offsetLeft, oy = c.offsetTop; let moved = false; const mv = (ev) => { const dx = (ev.clientX - sx) / VIEW.z, dy = (ev.clientY - sy) / VIEW.z; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; c.style.left = Math.max(0, ox + dx) + "px"; c.style.top = Math.max(0, oy + dy) + "px"; }; const up = async () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); growSpace(); if (moved) { t.plan.canvas = { x: c.offsetLeft, y: c.offsetTop }; await api(`/session/${SID}/plan`, { turn: ti, canvas: t.plan.canvas }); } }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); e.stopPropagation(); });
   return c;
@@ -269,7 +269,7 @@ async function runSteps(ti, indices) { if (creditsMode() === "real") return exec
 const simulateTurn = (ti) => runSteps(ti, null);
 async function sendRaw(text, names) {
   const typing = add(el(`<div class="msg agent" style="color:var(--mut)">…</div>`));
-  const r = await api("/turn", { session: SID, text, materials: names, tier: tier(), mode: mode() });
+  const r = await api("/turn", { session: SID, text, materials: names, tier: tier(), mode: mode(), focus: FOCUS && FOCUS.i != null ? { turn: FOCUS.ti, index: FOCUS.i } : null });
   typing.remove(); if (r.error) return add(el(`<div class="msg agent">${esc(r.error)}</div>`));
   S = r.session; renderTurn(r.turn, r.turnIndex, r.text); if (r.turn.plan) { focus(r.turnIndex, 0); centerOn(space().querySelector(`.tgroup[data-t="${r.turnIndex}"]`)); } tree();
 }
