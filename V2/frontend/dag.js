@@ -30,27 +30,28 @@ function drawDag(root, steps, opts = {}) {
     const p = e.target.closest(".port.out"), n = e.target.closest(".dag-node");
     if (p && opts.onConnect) { drag = { kind: "wire", from: p.closest(".dag-node").dataset.name }; }
     else if (n && n.dataset.i !== undefined) { drag = { kind: "move", n, name: n.dataset.name, i: Number(n.dataset.i), sx: e.clientX, sy: e.clientY, ox: pos[n.dataset.name].x, oy: pos[n.dataset.name].y, moved: false }; }
-    else if (!n) { drag = { kind: "pan", sx: e.clientX, sy: e.clientY, sl: root.scrollLeft, st: root.scrollTop }; root.classList.add("panning"); }
-    if (drag) { e.preventDefault(); root.setPointerCapture?.(e.pointerId); }
+    else if (!n && opts.pan !== false) { drag = { kind: "pan", sx: e.clientX, sy: e.clientY, sl: root.scrollLeft, st: root.scrollTop }; root.classList.add("panning"); }
+    if (drag) { e.preventDefault(); e.stopPropagation(); root.setPointerCapture?.(e.pointerId); }
   });
   root.addEventListener("pointermove", (e) => {
     if (!drag) return;
     if (drag.kind === "pan") { root.scrollLeft = drag.sl - (e.clientX - drag.sx); root.scrollTop = drag.st - (e.clientY - drag.sy); return; }
     if (drag.kind === "move") { const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; pos[drag.name] = { x: Math.max(0, drag.ox + dx), y: Math.max(0, drag.oy + dy) }; place(drag.n, drag.name); draw(); return; }
-    if (drag.kind === "wire") { const a = box(drag.from); const R = layer.getBoundingClientRect(); live = curve(a, { x1: e.clientX - R.left, y: e.clientY - R.top }); draw(); const t = document.elementFromPoint(e.clientX, e.clientY)?.closest(".dag-node"); layer.querySelectorAll(".dag-node").forEach((n) => n.classList.toggle("target", n === t && n.dataset.i !== undefined && n.dataset.name !== drag.from)); }
+    if (drag.kind === "wire") { const a = box(drag.from); const R = layer.getBoundingClientRect(); live = curve(a, { x1: e.clientX - R.left, y: e.clientY - R.top }); draw(); const t = document.elementFromPoint(e.clientX, e.clientY)?.closest(".dag-node"); document.querySelectorAll(".dag-node").forEach((n) => n.classList.toggle("target", n === t && n.dataset.i !== undefined && n.dataset.name !== drag.from)); }
   });
   root.addEventListener("pointerup", (e) => {
     const d = drag; drag = null; root.classList.remove("panning"); if (!d) return;
-    if (d.kind === "wire") { const t = document.elementFromPoint(e.clientX, e.clientY)?.closest(".dag-node"); live = null; layer.querySelectorAll(".target").forEach((n) => n.classList.remove("target")); draw(); if (t && t.dataset.i !== undefined && t.dataset.name !== d.from) opts.onConnect(d.from, Number(t.dataset.i)); }
+    if (d.kind === "wire") { const t = document.elementFromPoint(e.clientX, e.clientY)?.closest(".dag-node"); live = null; document.querySelectorAll(".dag-node.target").forEach((n) => n.classList.remove("target")); draw(); if (t && t.dataset.i !== undefined && t.dataset.name !== d.from) opts.onConnect(d.from, Number(t.dataset.i), t.closest(".dag")?.dataset.t); }
     else if (d.kind === "move") { if (d.moved) opts.onMove?.(d.i, pos[d.name]); else opts.onSelect?.(d.i); }
   });
   root.addEventListener("dragover", (e) => { const n = e.target.closest(".dag-node[data-i]"); if (n) { e.preventDefault(); n.classList.add("target"); } });
   root.addEventListener("dragleave", (e) => e.target.closest?.(".dag-node")?.classList.remove("target"));
-  root.addEventListener("drop", (e) => { const t = e.target.closest(".dag-node[data-i]"); layer.querySelectorAll(".target").forEach((n) => n.classList.remove("target")); if (!t || !opts.onConnect) return; e.preventDefault(); const name = e.dataTransfer.getData("text/plain"); if (name && name !== t.dataset.name) opts.onConnect(name, Number(t.dataset.i)); });
+  root.addEventListener("drop", (e) => { const t = e.target.closest(".dag-node[data-i]"); layer.querySelectorAll(".target").forEach((n) => n.classList.remove("target")); if (!t || !opts.onConnect) return; e.preventDefault(); const name = e.dataTransfer.getData("text/plain"); if (name && name !== t.dataset.name) opts.onConnect(name, Number(t.dataset.i), root.dataset.t); });
   requestAnimationFrame(draw); layer.querySelectorAll("img,video").forEach((m) => m.addEventListener("load", draw));
   return { draw, level };
 }
 const DAG_CSS = `.dag{position:relative;overflow:auto;min-height:150px;max-height:420px;cursor:grab;background:radial-gradient(circle,var(--rule,#e2e2e6) 1px,transparent 1.2px) 0 0/18px 18px;border-radius:12px}.dag.panning{cursor:grabbing}.dag-layer{position:relative;min-width:100%;min-height:100%}
+.dag.inspace{overflow:visible;min-height:0;max-height:none;background:none;cursor:default;border-radius:0}
 .dag-node{position:absolute;width:112px;border-radius:12px;background:var(--card,#fff);border:2px solid var(--blue,#0a84ff);padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;cursor:pointer;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .dag-node.mat{border-color:var(--rule,#ddd);border-style:dashed;cursor:default}.dag-node[data-s=done]{border-color:var(--ok,#30b350)}.dag-node[data-s=stale],.dag-node[data-s=waiting],.dag-node[data-s=paused]{border-color:var(--warn,#ff9f0a)}.dag-node[data-s=waiting]{border-style:dashed}.dag-node[data-s=running]{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue,#0a84ff) 25%,transparent)}.dag-node[data-s=failed]{border-color:var(--bad,#ff3b30)}.dag-node[data-s=skipped]{opacity:.5;border-color:var(--rule,#ddd)}
 .dag-node.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue,#0a84ff) 45%,transparent)}.dag-node.target{box-shadow:0 0 0 3px color-mix(in srgb,var(--ok,#30b350) 55%,transparent)}

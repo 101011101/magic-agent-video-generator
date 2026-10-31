@@ -3,7 +3,7 @@
 // materials and the assets, exec.json is the job log the ledger books under "session-<id>". A film tree hands the six
 // stage nodes to pipeline.mjs as one run under runs/<label>; the nodes follow the run's record as it fills.
 // Tools without a wired endpoint fall back to a placeholder (simulate.js) and say so on the node.
-import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, basename } from "node:path";
 import { spawn } from "node:child_process";
 import { Jobs } from "../lib/jobs.js";
@@ -25,7 +25,7 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
   run.log.jobs ??= {}; run.log.pending ??= {}; run.log.calls ??= [];
   const jobs = new Jobs(run);
   const by = {}; plan.steps.forEach((s, i) => (by[s.produces] = i));
-  const file = (name) => { const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output; if (existsSync(join(dir, "materials", name))) return `materials/${name}`; if (plan.dir && existsSync(join(dir, "assets", plan.dir, name))) return `assets/${plan.dir}/${name}`; if (existsSync(join(dir, "assets", name))) return `assets/${name}`; return null; };
+  const file = (name) => { const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output; if (existsSync(join(dir, "materials", name))) return `materials/${name}`; if (plan.dir && existsSync(join(dir, "assets", plan.dir, name))) return `assets/${plan.dir}/${name}`; if (existsSync(join(dir, "assets", name))) return `assets/${name}`; try { for (const d of readdirSync(join(dir, "assets"))) { for (const ext of ["", ".png", ".jpg", ".mp4", ".svg"]) { const cand = join(dir, "assets", d, name.replace(/\.[a-z0-9]+$/i, "") + ext); if (existsSync(cand) && !cand.endsWith("/")) return `assets/${d}/${basename(cand)}`; } } } catch {} return null; };
   const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
   const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}${s.attempt ? `-r${s.attempt}` : ""}.${ext}`;
   const set = (i, patch) => { Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };

@@ -10,7 +10,9 @@
 @media(prefers-color-scheme:dark){:root{--bg:#000;--card:#161618;--fg:#f5f5f7;--mut:#8e8e93;--rule:#2c2c2e;--grey:#2a2a2d;--inf:#14233a;--asm:#3a2a10;--shadow:0 1px 2px rgba(0,0,0,.5);color-scheme:dark}}
 *{box-sizing:border-box} [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:minmax(300px,380px) 1fr 236px;grid-template-rows:100%}
+:root{--lw:360px;--rw:236px;--th:300px}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:var(--lw) 6px 1fr 6px var(--rw);grid-template-rows:100%}
+.split{background:transparent;cursor:col-resize;position:relative;z-index:3} .split:hover,.split.on{background:color-mix(in srgb,var(--blue) 35%,transparent)} .split.h{cursor:row-resize;height:6px;grid-row:auto}
 svg.i{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
 .ib{border:0;background:transparent;color:var(--mut);cursor:pointer;font:inherit;font-size:12px;padding:0;width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center} .ib:hover{background:var(--grey);color:var(--fg)} .ib.run{color:var(--blue)} .ib:disabled{opacity:.3;cursor:default}
 select,input[type=text],input[type=number]{font:inherit;font-size:12.5px;color:var(--fg);background:var(--grey);border:0;border-radius:6px;padding:4px 7px;outline:0;max-width:100%} select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
@@ -31,14 +33,16 @@ main{flex:1;overflow:auto;padding:6px 14px 16px max(14px,env(safe-area-inset-lef
 .compose .rb{width:34px;height:34px;border-radius:50%;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center} .compose .att{background:var(--grey);color:var(--mut)} .compose .send{background:var(--blue);color:#fff} .compose .row.over textarea{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
 .under{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11.5px;color:var(--mut)} .mode{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:3px 8px;border-radius:7px} .mode:hover{background:var(--grey)} .mode i{width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block} .mode[data-m=auto] i{background:var(--ok)} .mode[data-m=plan] i{background:var(--mut)} .mode b{color:var(--fg);font-weight:600;text-transform:capitalize} .mode kbd{font:10px/1 inherit;color:var(--mut);border:1px solid var(--rule);border-radius:4px;padding:1px 4px} .under .seg{margin-left:auto}
 /* middle: the canvas over the tool */
-.work{display:grid;grid-template-rows:auto 1fr auto;min-width:0;height:100%} .canvashd{display:flex;align-items:center;gap:8px;padding:8px 18px 0;font-size:11.5px} .canvashd .ib{margin-left:auto}
-.cluster{transition:opacity .2s} .cluster.dim{opacity:.42} .cluster.dim:hover{opacity:.7}
-.cluster .ch .add{margin-left:auto;display:inline-flex;gap:4px;align-items:center} .cluster .ch .add select{max-width:160px} .cluster .ch .ib{margin-left:0}
-#canvas{overflow:auto;padding:16px 18px 24px;display:flex;flex-direction:column;gap:14px}
-.cluster{background:var(--card);border-radius:16px;corner-shape:squircle;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
-.cluster .ch{display:flex;align-items:center;gap:8px;font-size:12.5px} .cluster .ch b{font-weight:600} .cluster .ch .mut{color:var(--mut)} .cluster .ch .ib{margin-left:auto}
-.cluster.on{box-shadow:0 0 0 2px color-mix(in srgb,var(--blue) 30%,transparent),var(--shadow)}
-#tool{border-top:1px solid var(--rule);background:var(--bg);max-height:52vh;min-height:120px;overflow:auto;padding:10px 18px 16px;resize:vertical}
+.work{display:grid;grid-template-rows:auto 1fr 6px var(--th);min-width:0;height:100%} .canvashd{display:flex;align-items:center;gap:8px;padding:8px 18px 0;font-size:11.5px} .canvashd .ib{margin-left:auto}
+.tgroup{transition:opacity .2s}
+#canvas{overflow:auto;position:relative;cursor:grab;background:radial-gradient(circle,var(--rule) 1px,transparent 1.2px) 0 0/20px 20px} #canvas.panning{cursor:grabbing} #canvas .hint{position:absolute;left:0;right:0;top:20px}
+#space{position:relative;min-width:100%;min-height:100%}
+.tgroup{position:absolute;min-width:220px;padding:6px 8px 8px;border-radius:14px;corner-shape:squircle;border:1px solid transparent} .tgroup.on{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:color-mix(in srgb,var(--card) 55%,transparent)} .tgroup.dim{opacity:.42} .tgroup.dim:hover{opacity:.7}
+.tgroup .ch{display:flex;align-items:center;gap:8px;font-size:12px;cursor:move;user-select:none;padding:2px 4px;margin-bottom:4px} .tgroup .ch b{font-weight:600} .tgroup .ch .mut{color:var(--mut)} .tgroup .ch .add{margin-left:auto;display:inline-flex;gap:4px;align-items:center;cursor:default} .tgroup .ch .add select{max-width:150px} .tgroup .ch .ib{margin-left:0}
+.tgroup .dagbox{min-height:120px;min-width:200px}
+.vgroup{position:absolute;width:720px;max-width:90%}
+
+#tool{border-top:1px solid var(--rule);background:var(--bg);overflow:auto;padding:10px 18px 16px}
 #tool .th{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:8px} #tool .th .vn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);background:var(--card);color:var(--mut);font:11px/1 inherit;font-weight:600;cursor:pointer} #tool .th .vn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff} #tool .th .vname{text-transform:none;letter-spacing:0;font-weight:400}
 #tool .empty{color:var(--mut);font-size:13px;padding:20px 0;text-align:center}
 .tool{background:var(--card);border:2px solid var(--blue);border-radius:16px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
@@ -95,11 +99,14 @@ aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01e
     </div>
   </form>
 </div>
+<div class="split" id="splitL"></div>
 <div class="work">
-  <div class="canvashd"><span class="mut">working trees · the agent suggests, you edit</span><button class="ib" id="newtree" title="Start an empty tree"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
-  <div id="canvas"><p class="hint">The working tree appears here. Drag the background to pan, a node to move it, a port to wire it. Click a node to open its tool below.</p></div>
+  <div class="canvashd"><span class="mut">working trees · the agent suggests, you edit · drag the space to pan, a title to move a tree, a port to wire</span><button class="ib" id="newtree" title="Start an empty tree"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+  <div id="canvas"><div id="space"></div><p class="hint">The working trees appear here.</p></div>
+  <div class="split h" id="splitT"></div>
   <div id="tool"><div class="empty">no tool focused</div></div>
 </div>
+<div class="split" id="splitR"></div>
 <aside>
   <h1>Session</h1>
   <ul class="tree" id="tree"></ul>
@@ -118,7 +125,8 @@ const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").
 const SID = "default"; let S = null, MODELS = null, RUNS = [], CATALOGUE = null; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
 const api = async (p, b) => (await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
-const add = (n, where = chat) => { where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
+const add = (n, where = chat) => { if (where === canvas) { const g = document.createElement("div"); g.className = "vgroup"; g.style.left = "24px"; g.style.top = NEXTY + "px"; g.appendChild(n); space().appendChild(g); requestAnimationFrame(() => { NEXTY = NEXTY + g.offsetHeight + 28; growSpace(); g.scrollIntoView({ block: "start", behavior: "smooth" }); }); return n; } where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
+function growSpace() { let w = 0, h = 0; space().querySelectorAll(":scope > .tgroup, :scope > .vgroup").forEach((g) => { w = Math.max(w, g.offsetLeft + g.offsetWidth + 40); h = Math.max(h, g.offsetTop + g.offsetHeight + 40); }); space().style.width = Math.max(w, canvas.clientWidth) + "px"; space().style.height = Math.max(h, canvas.clientHeight) + "px"; }
 const tier = () => $("#tier [aria-pressed=true]").dataset.t, mode = () => $("#mode").dataset.m;
 const isImg = (n) => /\.(png|jpe?g|webp|gif)$/i.test(n), isVid = (n) => /\.(mp4|mov)$/i.test(n);
 const matUrl = (n) => (S?.materials || []).includes(n) ? `/sessions/${SID}/materials/${encodeURIComponent(n)}` : null;
@@ -181,34 +189,42 @@ function focus(ti, i) {
   const col = steps.map((s, k) => k).filter((k) => level[k] === level[i]);
   toolPanel.innerHTML = ""; const th = el(`<div class="th"><span>turn ${ti + 1} · column ${level[i] + 1}</span>${col.length > 1 ? `<span>· parallelized · ${col.length} calls</span>${col.map((k, n) => `<button class="vn" data-k="${k}" aria-pressed="${k === i}" title="${esc(steps[k].tool)} → ${esc(steps[k].produces)}">${n + 1}</button>`).join("")}<span class="vname">${esc(steps[i].tool.replace(/-/g, " "))} → ${esc(steps[i].produces)}</span>` : ""}</div>`);
   th.querySelectorAll(".vn").forEach((v) => v.addEventListener("click", () => focus(ti, Number(v.dataset.k)))); toolPanel.appendChild(th); toolPanel.appendChild(block(steps[i], i, ti));
-  canvas.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", d.closest(".cluster")?.dataset.t == ti && Number(d.dataset.i) === i)); canvas.querySelectorAll(".cluster").forEach((c) => { c.classList.toggle("on", c.dataset.t == ti); c.classList.toggle("dim", c.dataset.t != ti); });
+  canvas.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", d.closest(".tgroup")?.dataset.t == ti && Number(d.dataset.i) === i)); canvas.querySelectorAll(".tgroup").forEach((c) => { c.classList.toggle("on", c.dataset.t == ti); c.classList.toggle("dim", c.dataset.t != ti); });
 }
 
 // ----- the canvas: one cluster per turn with a plan -----
+const space = () => $("#space");
+let NEXTY = 24;
 function cluster(t, ti) {
   const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
-  const c = el(`<div class="cluster${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><span class="add"><select data-addtool><option value="">+ tool…</option>${(CATALOGUE?.tools || []).map((x) => `<option value="${esc(x.id)}">${esc(x.group)} · ${esc(x.id)}${x.custom ? " (code)" : ""}</option>`).join("")}</select></span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
+  const c = el(`<div class="tgroup${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><span class="add"><select data-addtool><option value="">+ tool…</option>${(CATALOGUE?.tools || []).map((x) => `<option value="${esc(x.id)}">${esc(x.group)} · ${esc(x.id)}${x.custom ? " (code)" : ""}</option>`).join("")}</select></span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
   drawDag(c.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : outUrl(s.output), onSelect: (i) => focus(ti, i),
-    onConnect: async (name, toIndex) => { const st = t.plan.steps[toIndex]; if (st.inputs.includes(name)) return; st.inputs.push(name); await api(`/session/${SID}/step`, { turn: ti, index: toIndex, inputs: st.inputs }); await rerender(ti, toIndex); },
+    onConnect: async (name, toIndex, toTurn) => { const tt = toTurn != null && toTurn !== "" ? Number(toTurn) : ti; const st = S.turns[tt].plan.steps[toIndex]; if (!st || st.inputs.includes(name)) return; st.inputs.push(name); await api(`/session/${SID}/step`, { turn: tt, index: toIndex, inputs: st.inputs }); await rerender(tt, toIndex); },
     onMove: async (i, pos) => { t.plan.steps[i].pos = pos; await api(`/session/${SID}/step`, { turn: ti, index: i, pos }); } });
   c.querySelector("[data-run]").addEventListener("click", () => runSteps(ti, null));
   c.querySelector("[data-addtool]").addEventListener("change", async (e) => { const tool = e.target.value; if (!tool) return; e.target.value = ""; const r = await api(`/session/${SID}/plan`, { turn: ti, add: { tool } }); if (r.error) return; await rerender(ti, r.index); });
-  c.addEventListener("pointerdown", () => { if (!FOCUS || FOCUS.ti !== ti) { canvas.querySelectorAll(".cluster").forEach((x) => x.classList.toggle("dim", x !== c)); } }, true);
+  c.addEventListener("pointerdown", () => { if (!FOCUS || FOCUS.ti !== ti) { canvas.querySelectorAll(".tgroup").forEach((x) => x.classList.toggle("dim", x !== c)); } }, true);
+  c.querySelector(".dagbox").classList.add("inspace"); c.querySelector(".dagbox").dataset.t = ti;
+  // place the tree on the space: its saved spot, or the next free row
+  const pos = t.plan.canvas || { x: 24, y: NEXTY }; c.style.left = pos.x + "px"; c.style.top = pos.y + "px";
+  requestAnimationFrame(() => { if (!t.plan.canvas) NEXTY = Math.max(NEXTY, pos.y + c.offsetHeight + 28); growSpace(); });
+  // the title moves the whole tree
+  const h = c.querySelector(".ch"); h.addEventListener("pointerdown", (e) => { if (e.target.closest("select,button")) return; const sx = e.clientX, sy = e.clientY, ox = c.offsetLeft, oy = c.offsetTop; let moved = false; const mv = (ev) => { const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; c.style.left = Math.max(0, ox + dx) + "px"; c.style.top = Math.max(0, oy + dy) + "px"; }; const up = async () => { document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); growSpace(); if (moved) { t.plan.canvas = { x: c.offsetLeft, y: c.offsetTop }; await api(`/session/${SID}/plan`, { turn: ti, canvas: t.plan.canvas }); } }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); e.stopPropagation(); });
   return c;
 }
 function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
-  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { canvas.querySelector(`.cluster[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!canvas.querySelector(`.cluster[data-t="${ti}"]`)) add(cluster(t, ti), canvas); }
+  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { space().querySelector(`.tgroup[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!space().querySelector(`.tgroup[data-t="${ti}"]`)) space().appendChild(cluster(t, ti)); }
 }
 const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
 async function rerender(ti = null, i = null) {
-  S = await api(`/session/${SID}`); chat.innerHTML = ""; canvas.innerHTML = "";
+  S = await api(`/session/${SID}`); chat.innerHTML = ""; space().innerHTML = ""; NEXTY = 24; canvas.querySelector(".hint")?.remove(); canvas.insertAdjacentHTML("beforeend", '<p class="hint">The working trees appear here.</p>');
   for (const m of S.messages) { if (m.who === "user") { add(el(`<div class="msg user">${esc(m.text)}</div>`)); if (m.attached?.length) add(el(`<div class="atts">${m.attached.map((n) => tile(n)).join("")}</div>`)); } else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg sys">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); }
   // a focused turn with an empty plan (a tree the user started) still shows a cluster
-  S.turns.forEach((t, ti) => { if (t.plan && !canvas.querySelector(`.cluster[data-t="${ti}"]`)) { canvas.querySelector(".hint")?.remove(); add(cluster(t, ti), canvas); } });
-  if (!canvas.children.length) canvas.innerHTML = '<p class="hint">The working tree appears here.</p>';
-  const f = ti != null ? { ti, i } : FOCUS; if (f && f.i != null && S.turns[f.ti]?.plan?.steps?.[f.i]) focus(f.ti, f.i); else { toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = f && f.i == null ? { ti: f.ti, i: null } : null; canvas.querySelectorAll(".cluster").forEach((c) => c.classList.toggle("dim", FOCUS ? c.dataset.t != FOCUS.ti : false)); }
+  S.turns.forEach((t, ti) => { if (t.plan && !space().querySelector(`.tgroup[data-t="${ti}"]`)) { canvas.querySelector(".hint")?.remove(); space().appendChild(cluster(t, ti)); } });
+  if (space().children.length) canvas.querySelector(".hint")?.remove();
+  const f = ti != null ? { ti, i } : FOCUS; if (f && f.i != null && S.turns[f.ti]?.plan?.steps?.[f.i]) focus(f.ti, f.i); else { toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = f && f.i == null ? { ti: f.ti, i: null } : null; canvas.querySelectorAll(".tgroup").forEach((c) => c.classList.toggle("dim", FOCUS ? c.dataset.t != FOCUS.ti : false)); }
   tree();
 }
 async function executeTurn(ti, indices = null) {
@@ -253,7 +269,7 @@ $("#tier").addEventListener("click", (e) => { const b = e.target.closest("button
 const setMode = (m) => { const n = $("#mode"); n.dataset.m = m; n.querySelector("b").textContent = m; $("#modehint").textContent = HINT[m]; };
 document.addEventListener("keydown", (e) => { if (e.key === "Tab" && e.shiftKey) { e.preventDefault(); setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]); } });
 $("#mode").addEventListener("click", () => setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]));
-$("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; canvas.innerHTML = '<p class="hint">The working tree appears here.</p>'; toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; tree(); });
+$("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; space().innerHTML = ""; NEXTY = 24; toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; tree(); });
 
 // ----- views over a run (into the canvas) -----
 async function showTree(label) {
@@ -345,7 +361,12 @@ for (const k of Object.keys(window.TEST_SCRIPTS || {})) $("#script").appendChild
 
 (async () => {
   MODELS = await api("/models"); RUNS = await api("/runs"); CATALOGUE = await api("/catalogue");
-  $("#newtree").addEventListener("click", async () => { const r = await api(`/session/${SID}/plan`, { new: true }); await rerender(r.turn, null); canvas.querySelector(`.cluster[data-t="${r.turn}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); });
+  $("#newtree").addEventListener("click", async () => { const r = await api(`/session/${SID}/plan`, { new: true }); await rerender(r.turn, null); space().querySelector(`.tgroup[data-t="${r.turn}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); });
+  // panning the space; the splitters
+  canvas.addEventListener("pointerdown", (e) => { if (e.target.closest(".tgroup,.vgroup")) return; const sx = e.clientX, sy = e.clientY, sl = canvas.scrollLeft, st = canvas.scrollTop; canvas.classList.add("panning"); const mv = (ev) => { canvas.scrollLeft = sl - (ev.clientX - sx); canvas.scrollTop = st - (ev.clientY - sy); }; const up = () => { canvas.classList.remove("panning"); document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); });
+  const splitter = (id, onMove) => { const sp = $(id); sp.addEventListener("pointerdown", (e) => { sp.classList.add("on"); const mv = (ev) => onMove(ev); const up = () => { sp.classList.remove("on"); document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); try { localStorage.setItem("panes", JSON.stringify({ lw: getComputedStyle(document.documentElement).getPropertyValue("--lw"), rw: getComputedStyle(document.documentElement).getPropertyValue("--rw"), th: getComputedStyle(document.documentElement).getPropertyValue("--th") })); } catch {} }; document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); e.preventDefault(); }); };
+  const R = document.documentElement.style; splitter("#splitL", (ev) => R.setProperty("--lw", Math.max(260, Math.min(640, ev.clientX)) + "px")); splitter("#splitR", (ev) => R.setProperty("--rw", Math.max(160, Math.min(480, window.innerWidth - ev.clientX)) + "px")); splitter("#splitT", (ev) => R.setProperty("--th", Math.max(120, Math.min(window.innerHeight - 160, window.innerHeight - ev.clientY)) + "px"));
+  try { const p = JSON.parse(localStorage.getItem("panes") || "null"); if (p) { if (p.lw) R.setProperty("--lw", p.lw.trim()); if (p.rw) R.setProperty("--rw", p.rw.trim()); if (p.th) R.setProperty("--th", p.th.trim()); } } catch {}
   S = await api(`/session/${SID}`); setMode(S.mode || "ask"); $("#tier").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === (S.tier || "free")));
   await rerender();
 })();
