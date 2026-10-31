@@ -12,7 +12,7 @@ subsystem:  agent (new), story, lib
 > cheaper models if possible.
 
 what:
-A new subsystem, `src/agent/`, in front of everything. The film chain (`pipeline.mjs`), the podcast (T-032) and the
+A new subsystem, `backend/agent/`, in front of everything. The film chain (`pipeline.mjs`), the podcast (T-032) and the
 small jobs (T-033) are tools it calls; it owns the conversation and the session.
 
 1. **The session**, `sessions/<id>/session.json`: the messages, the assets produced (file, job, the tool and inputs
@@ -36,7 +36,7 @@ small jobs (T-033) are tools it calls; it owns the conversation and the session.
    guess call is the cheapest of all.
 6. **Show and continue.** Every result comes back with its page or file, what it cost, and what can be changed; the
    next message edits it. The agent never remakes what the message did not name.
-7. **Surface.** A terminal loop first (`node V2/src/agent/agent.mjs` reads a line, answers, loops); the same functions
+7. **Surface.** A terminal loop first (`node V2/backend/agent/agent.mjs` reads a line, answers, loops); the same functions
    behind an HTTP route later for the chat workspace in `archived/frontend`.
 
 why:

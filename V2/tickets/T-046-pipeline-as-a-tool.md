@@ -33,7 +33,7 @@ the pipeline on topgun9"). What it found to build:
    of its eleven dependents is about 2,000.
 4. **A library entry.** `pipeline.mjs` guards its program (`import.meta.url` against `process.argv[1]`) and exports
    `runPipeline(opts)`: the flags as an object, `say` as a callback, the exit code returned. Until then the server
-   spawns it per stage (`node V2/src/pipeline.mjs --label … --until …`), one spawn per label at a time (the run's
+   spawns it per stage (`node V2/backend/composer/pipeline.mjs --label … --until …`), one spawn per label at a time (the run's
    `.lock` refuses a second writer), with `CLEANED_CAP` set to the ledger total plus the card's approved amount so the
    pipeline's own guard enforces the card's number.
 5. **Notes belong to the session.** Comments and flags move from `runs/<label>/notes.json` (where `server.mjs` writes

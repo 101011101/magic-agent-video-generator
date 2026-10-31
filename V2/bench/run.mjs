@@ -4,9 +4,9 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runCase } from "../src/agent/agent.mjs";
+import { runCase } from "../backend/agent/agent.mjs";
 import { page } from "./page.js";
-import { simulate } from "../src/agent/simulate.js";
+import { simulate } from "../backend/agent/simulate.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const arg = (k, d = null) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };

@@ -2,7 +2,7 @@
 
 Written 2026-10-30 from the `V1/` work of 26–30 October (the bakery ad, the Vanderbilt runs vanderbilt2 to vanderbilt6)
 and the decisions taken with the user in that period; restructured into one file per subsystem the same day. Everything
-marked **built** exists in `V2/src` and has run; **built, not yet exercised** means the code is in `V2/src` and passes the
+marked **built** exists in `V2/backend` and has run; **built, not yet exercised** means the code is in `V2/backend` and passes the
 tests but no paid run has gone through it; **design** has not been coded. Numbers are measured ones; where there is no
 measurement the text says so.
 
@@ -30,13 +30,13 @@ Files in this directory, in pipeline order:
 Used everywhere unless a section says otherwise:
 
 - Text and vision: OpenAI Responses API, model `gpt-6.1-sol`, strict JSON schema output, disk cache keyed on model, call name,
-  schema, prompt, images, effort, tools and an optional salt (`src/lib/llm.js`). Not metered in credits here.
-- Stills: Magic Hour `/v1/ai-image-editor`, model `nano-banana-pro`, 2k, 16:9 (`src/lib/jobs.js`, `src/lib/magichour.js`).
+  schema, prompt, images, effort, tools and an optional salt (`backend/lib/llm.js`). Not metered in credits here.
+- Stills: Magic Hour `/v1/ai-image-editor`, model `nano-banana-pro`, 2k, 16:9 (`backend/lib/jobs.js`, `backend/lib/magichour.js`).
 - Clips: Magic Hour `/v1/image-to-video`, model `wan-3.0`, 720p, audio on, a start and an end frame.
-- Narration and voice samples: OpenAI text-to-speech, model `gpt-4o-mini-tts`, one preset voice per speaker (`src/sound/sound.js`,
-  `src/assets/assets.js`).
+- Narration and voice samples: OpenAI text-to-speech, model `gpt-4o-mini-tts`, one preset voice per speaker (`backend/composer/sound/sound.js`,
+  `backend/composer/assets/assets.js`).
 - Captions and subtitles: cards rendered by the system text engine (AppKit through `osascript`) and composited by ffmpeg
-  (`src/lib/captions.js`); the Homebrew ffmpeg has no `drawtext`.
+  (`backend/lib/captions.js`); the Homebrew ffmpeg has no `drawtext`.
 - Credits are Magic Hour credits. Every paid call goes through `Jobs`, which reserves against `CLEANED_CAP` and a ledger
   across runs before it posts, never retries a POST (the server may already have charged it), records the job id under
   `pending` as soon as the server returns it, and records the finished job with its prompt and inputs so a run can resume
@@ -83,7 +83,7 @@ What each stage hands to the next:
 
 The tools are the same across models: a still model is images plus a prompt in, one image out; a video model is a start
 and end frame plus a prompt, or ordered named references plus a prompt, one clip out. What differs is each model's
-capability profile, and the registry (`src/lib/models.js`, `08-costs.md`) holds it. Changing the model changes the
+capability profile, and the registry (`backend/lib/models.js`, `08-costs.md`) holds it. Changing the model changes the
 pipeline through that profile: the screenplay snaps shots to the model's grid, the state manager sends as many reference
 images as the model takes (and drops the style sheet before the previous frame on a tight model), the clip stage refuses a
 mode the model cannot do, the painter and the renderer work at the profile's resolutions, and every estimate prices from
@@ -131,43 +131,43 @@ All of them decisions the user made during the work (dated in `10-decisions.md`)
 
 ## The subsystems in one paragraph each
 
-**Story** (`01-story.md`, `src/story/story.js`). A small gate call decides whether the brief needs facts; that sets the mode
+**Story** (`01-story.md`, `backend/composer/story/story.js`). A small gate call decides whether the brief needs facts; that sets the mode
 of the whole run. In nonfiction a research round with web search returns numbered facts and the documented looks, and the
 story is written from those facts only, cited paragraph by paragraph. In fiction the story is written from the brief and is
 where invention happens, so the screenplay can keep its rule of adding nothing.
 
-**Assets** (`02-assets.md`, `src/assets/assets.js`). The story is read into an element table: characters, props, places,
+**Assets** (`02-assets.md`, `backend/composer/assets/assets.js`). The story is read into an element table: characters, props, places,
 fixtures, each with what never changes about it. Real things are referenced from Wikimedia Commons with a vision pick and
 their provenance; a Commons picture used as a plate must be an empty photograph; the rest are generated with the medium as
 the noun of the prompt and a style reference; an earlier run's bank can be reused. Then the cast lines (a feature line per
 portrait), the voice descriptors, the voice bank (a ready-made preset voice per character and one for the narrator, with a
 rendered sample), and the plate descriptions that fill the state manager's place table.
 
-**Screenplay** (`03-screenplay.md`, `src/screenplay/screenplay.js`). One call turns the story into the shooting script:
+**Screenplay** (`03-screenplay.md`, `backend/composer/screenplay/screenplay.js`). One call turns the story into the shooting script:
 scenes with their place, tone, the 180-degree line and the blocking; shots with their camera, seconds on the clip model's
 grid and a moment; and for every shot a first and a last frame for every element, in frame or off, with positions, pose,
 hands and what each person is doing; the timed action, lines, narration and effects between them. Code checks timing,
 presence, continuity and vocabulary before anything is paid.
 
-**State manager** (`04-state.md`, `src/state/state.js`). One pass over the screenplay produces the tables: the elements with
+**State manager** (`04-state.md`, `backend/composer/state/state.js`). One pass over the screenplay produces the tables: the elements with
 their properties (reference, feature line, voice), the places with what their plates contain, the distinct stills with who is
 in them and what each is painted from, the clips. It answers the templates' questions (which images, who needs a portrait,
 who is off frame, how the cut relates, where to crop the master) and runs the gates.
 
-**Keyframes** (`05-keyframes.md`, `src/keyframes/`). One short prompt per distinct still, assembled from the tables:
+**Keyframes** (`05-keyframes.md`, `backend/composer/keyframes/`). One short prompt per distinct still, assembled from the tables:
 FRAME, PEOPLE, CHANGES, REFERENCES, RULES, with no prose about the room. A still is painted from the plate, edited from the
 previous still, or, for a tighter setup, cut from the painted master and used as it is or re-rendered at full detail.
 
-**Sound** (`06-sound.md`, `src/sound/sound.js`). Dialogue, ambience and effects are performed inside the clips by the video
+**Sound** (`06-sound.md`, `backend/composer/sound/sound.js`). Dialogue, ambience and effects are performed inside the clips by the video
 model from the screenplay and the voice descriptors. Narration is produced afterwards by one preset voice and mixed under the
 film. Subtitles come from the lines by code; captions are overlay cards. The voice bank fixes a preset per character;
 dialogue by TTS plus lip sync, voice conversion, room tone per scene, loudness and a voice gate are the open options.
 
-**Edit** (`07-edit.md`, `src/edit/edit.js`). One clip per shot, pinned on its two stills, from a prompt that carries the cast
+**Edit** (`07-edit.md`, `backend/composer/edit/edit.js`). One clip per shot, pinned on its two stills, from a prompt that carries the cast
 feature lines, the moment, the timed beats and the sound; the clip gate; the stitch at 1280×720 with the captions at the top
 and the subtitles at the bottom; the narration mixed under at the end.
 
-**Agent** (`11-agent.md`, `src/agent/`, dry prototype; the chain checked against it in `11-agent.md` and `13-worktree.md`). The conversation and the tool calls. A session holds the messages, the
+**Agent** (`11-agent.md`, `backend/agent/`, dry prototype; the chain checked against it in `11-agent.md` and `13-worktree.md`). The conversation and the tool calls. A session holds the messages, the
 assets made and the runs started; one small call plans the tools for a message; the universal questions (output, subject,
 platform and aspect, audience, length, message, materials, must-include) are filled from the message and the session, and
 only what is not answered with confidence is asked; the cost is stated before paid work; the tool runs on the cheapest

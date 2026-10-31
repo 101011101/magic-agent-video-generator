@@ -3,8 +3,8 @@
 // hands, doing; props: where, condition) → timed action, spoken lines, sounds, changes. The staging text here is for the
 // screenplay's own continuity; the keyframe prompts copy only positions and intention from it, never the camera prose.
 // checkScript() verifies the structure in code before anything is paid; scriptText() prints it for review.
-import { jsonCall, S } from "../lib/llm.js";
-import { VIDEOS } from "../lib/models.js";
+import { jsonCall, S } from "../../lib/llm.js";
+import { VIDEOS } from "../../lib/models.js";
 import { applyStage, checkStage, staged } from "./stage.js";
 
 // Seconds a clip may run, per video model (Magic Hour image-to-video; veo with an end frame).

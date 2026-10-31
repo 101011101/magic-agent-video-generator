@@ -1,11 +1,11 @@
 # 11. The agent: conversation in front, tools behind, the session in between
 
 Written 2026-10-31 from the user's decisions of that day (T-030, T-033, T-034; the feedback of 2026-10-31 in
-`../drafts/`). The dry prototype of 2026-10-31 is built (`src/agent/`: the sheet, the plan, the catalogue, the server, the page, the bench); no tool is called yet (see the end of this file). The film chain of `00-overview.md` is unchanged; it becomes one tool.
+`../drafts/`). The dry prototype of 2026-10-31 is built (`backend/agent/`: the sheet, the plan, the catalogue, the server, the page, the bench); no tool is called yet (see the end of this file). The film chain of `00-overview.md` is unchanged; it becomes one tool.
 
 ## What it is
 
-One subsystem, `src/agent/`, that every request enters through. It reads the message, decides which tools the request
+One subsystem, `backend/agent/`, that every request enters through. It reads the message, decides which tools the request
 needs, makes sure the universal questions are answered with confidence, asks the user only for what is still ambiguous,
 states the cost, runs the tools on the cheapest models that can do the job, shows the result, and keeps the session so
 the next message can change what was just made.
@@ -202,7 +202,7 @@ record: made here, or supplied.
 
 ## What the user sees
 
-A terminal loop first: `node V2/src/agent/agent.mjs [--session id] [--tier free]` reads a line, answers, loops. Every
+A terminal loop first: `node V2/backend/agent/agent.mjs [--session id] [--tier free]` reads a line, answers, loops. Every
 reply is short: what was understood (the sheet's inferred values), the questions if any, the estimate before paid
 work, the result with its page or file and cost, and one line of what can be changed. The same functions sit behind an
 HTTP route later for the chat workspace in `archived/frontend`.
@@ -214,8 +214,8 @@ figure for the tier. The session cap defaults to 1,000 credits and the confirmat
 
 ## What is built, and what is not
 
-The dry prototype of 2026-10-31 (`src/agent/agent.mjs`, `sheet.js`, `plan.js`, `catalogue.js`, `server.mjs`,
-`worktree.js`, `simulate.js`; `ui/`; `bench/`): the conversation to a priced plan, the chat and its views, the working
+The dry prototype of 2026-10-31 (`backend/agent/agent.mjs`, `sheet.js`, `plan.js`, `catalogue.js`, `server.mjs`,
+`worktree.js`, `simulate.js`; `frontend/`; `bench/`): the conversation to a priced plan, the chat and its views, the working
 tree, simulated runs. No tool is called yet. The pieces that existed before and are reused: the registry and tiers (`lib/models.js`), the job layer (`lib/jobs.js`),
 the film chain, the gates, the run record as the model for the session, the API sheet (`../reference/`) as the source
 of the tool catalogue, and the archived clarification slots and capability catalogue in `archived/server/src/` as the
@@ -282,7 +282,7 @@ What lines up, measured on `topgun9` and read in `pipeline.mjs`:
 What does not line up yet (T-046):
 
 - `pipeline.mjs` is a program, not a library: it reads `argv`, takes the run's lock and starts the story at import
-  (an import once started a run). The server spawns it (`node V2/src/pipeline.mjs --label … --until …`) and
+  (an import once started a run). The server spawns it (`node V2/backend/composer/pipeline.mjs --label … --until …`) and
   serializes spawns per label (the `.lock` refuses a second writer); a library entry is to build.
 - Two caps: the session's (1,000; confirmation at 500) and `CLEANED_CAP`. A spawn sets `CLEANED_CAP` to the ledger
   total plus the card's approved amount, so the pipeline's guard enforces the card's number.

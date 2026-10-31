@@ -8,6 +8,6 @@ Material that informs V2 but is not part of it yet, or is kept for reference:
 - the archived PRDs from `V1/docs/` (PRD v4 for the keyframe chain, the two approach drafts, the testing to-do, the
   call audit): where a rule in `../prd/` came from.
 - draft code: anything tried on the side before it earns a place under `../src/`. A draft that is run must still go through
-  `src/lib/jobs.js` so its credits are in the ledger.
+  `backend/lib/jobs.js` so its credits are in the ledger.
 
 Nothing here is run by the pipeline. When a draft becomes real, it moves to `../src/` and its ticket closes.

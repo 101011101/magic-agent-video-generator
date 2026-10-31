@@ -1,10 +1,10 @@
 // Two runs of the same screenplay side by side: V2/results/compare-<a>-vs-<b>/index.html. One row per still (left run A,
 // right run B, each with its gate verdict, attempt count and the model that made it), then the films if both exist, then
 // the credits. Made for the model comparison (qwen against nano on the topgun5 screenplay); works for any two labels.
-// Usage: node V2/src/compare.js <labelA> <labelB>
+// Usage: node V2/backend/composer/compare.js <labelA> <labelB>
 import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { RESULTS, RUNS } from "./lib/env.js";
+import { RESULTS, RUNS } from "../lib/env.js";
 import { normalizeShots } from "./screenplay/screenplay.js";
 
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -43,4 +43,4 @@ td img,td video{width:100%;border-radius:6px;display:block;background:#000}.meta
   return join(out, "index.html");
 }
 
-if (process.argv[1] && process.argv[1].endsWith("compare.js")) { const [a, b] = process.argv.slice(2); if (!a || !b) { console.error("usage: node V2/src/compare.js <labelA> <labelB>"); process.exit(2); } console.log(writeComparePage(a, b)); }
+if (process.argv[1] && process.argv[1].endsWith("compare.js")) { const [a, b] = process.argv.slice(2); if (!a || !b) { console.error("usage: node V2/backend/composer/compare.js <labelA> <labelB>"); process.exit(2); } console.log(writeComparePage(a, b)); }

@@ -5,7 +5,7 @@ priority:   high
 subsystem:  results
 
 what:
-`src/results.js --label <label>` writes `results/<label>/index.html`: the brief and mode, the story, the screenplay, the
+`backend/composer/results.js --label <label>` writes `results/<label>/index.html`: the brief and mode, the story, the screenplay, the
 state tables, then every keyframe with the picture on the left and on the right the images sent in order (each labelled
 plate, earlier still, crop or portrait, with its file) and the prompt as sent, with every earlier attempt as thumbnails
 (the one in use bold, "USED") and the gate's verdict; every clip with its two keyframes, prompt, gate verdict and

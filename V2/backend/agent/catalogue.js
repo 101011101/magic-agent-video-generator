@@ -13,7 +13,7 @@ export const GROUPS = {
   inspect: "an asset → a verdict; zero credit",
 };
 
-import { CUSTOM_TOOLS } from "../../tools/index.js";
+import { CUSTOM_TOOLS } from "../tools/index.js";
 
 export const TOOLS = [
   ...CUSTOM_TOOLS,

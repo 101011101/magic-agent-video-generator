@@ -73,8 +73,8 @@ card says the tier moved for this step; the agent does not re-plan.
 
 ## Surfaces
 
-A local web app first: a small HTTP server in `src/agent/server.mjs` with routes for a turn, a session, a run's
-views, the registry, and the run media; one page in `ui/index.html` with no build step. Later the same routes behind
+A local web app first: a small HTTP server in `backend/agent/server.mjs` with routes for a turn, a session, a run's
+views, the registry, and the run media; one page in `frontend/index.html` with no build step. Later the same routes behind
 the chat workspace in `archived/frontend`.
 
 ## Look

@@ -1,17 +1,17 @@
 # T-038 · The chat frontend: bubbles, tool cards with editable parameters, propose-then-run
 
-status:     dry prototype 2026-10-31 (`src/agent/server.mjs`, `ui/index.html`); running a tool is design
+status:     dry prototype 2026-10-31 (`backend/agent/server.mjs`, `frontend/index.html`); running a tool is design
 priority:   high
 subsystem:  agent, frontend (new)
 
 what:
 A local web app over the agent (`12-frontend.md`):
 
-1. **Server**, `src/agent/server.mjs`, no dependencies: `POST /turn` (messages, materials, liberty, tier → the sheet
+1. **Server**, `backend/agent/server.mjs`, no dependencies: `POST /turn` (messages, materials, liberty, tier → the sheet
    and either questions or the plan), `GET/POST /session/:id`, `GET /models` (the registry by kind and tier),
    `GET /run/:label` (story, screenplay, stills, clips of a run folder), `POST /run/:label/comment` and `/flag`,
-   static `ui/` and the run media.
-2. **The page**, `ui/index.html`, one file: the chat (user right, agent left), the understood line, the questions
+   static `frontend/` and the run media.
+2. **The page**, `frontend/index.html`, one file: the chat (user right, agent left), the understood line, the questions
    with a reply box, the tool cards (header, inputs, the parameter controls with the registry's models filtered by
    kind and tier, seconds on the grid, aspect, the editable prompt line, the cost updated live), the card states
    (proposed · running · paused · done · flagged · skipped) and their actions, the creative-liberty toggle, the tier

@@ -3,8 +3,8 @@
 **Purpose.** Everything heard: dialogue, narration, ambience, effects, subtitles and captions; and the question the user put
 on 2026-10-30, how a voice stays the same person's voice from one clip to the next.
 
-**Modules.** `src/sound/sound.js` (`narrationTrack`, `mixNarration`, `voiceOf`, the caption and subtitle re-exports),
-the voice bank in `src/assets/assets.js`, the clip prompt in `src/edit/edit.js`, `src/lib/captions.js`.
+**Modules.** `backend/composer/sound/sound.js` (`narrationTrack`, `mixNarration`, `voiceOf`, the caption and subtitle re-exports),
+the voice bank in `backend/composer/assets/assets.js`, the clip prompt in `backend/composer/edit/edit.js`, `backend/lib/captions.js`.
 
 ## What exists
 

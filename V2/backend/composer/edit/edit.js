@@ -5,11 +5,11 @@
 // The stitch normalises the clips, concatenates them, and burns the captions (top) and subtitles (bottom) as overlay cards.
 import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { key } from "../lib/env.js";
-import { VIDEO } from "../lib/jobs.js";
-import { video as videoProfile } from "../lib/models.js";
-import { frames, clipEnds, stitch, hasAudio } from "../lib/media.js";
-import { captionCard, burnCaptions, subtitlesFromScript } from "../lib/captions.js";
+import { key } from "../../lib/env.js";
+import { VIDEO } from "../../lib/jobs.js";
+import { video as videoProfile } from "../../lib/models.js";
+import { frames, clipEnds, stitch, hasAudio } from "../../lib/media.js";
+import { captionCard, burnCaptions, subtitlesFromScript } from "../../lib/captions.js";
 import { inFrame, norm } from "../screenplay/screenplay.js";
 
 const strip = (s) => String(s ?? "").trim().replace(/[.;,\s]+$/, ""), t = (s) => strip(s).replace(/^[A-Z]/, (c) => c.toLowerCase()), cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);

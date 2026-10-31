@@ -2,25 +2,25 @@
 // Stops at --until (default: keyframes, i.e. every keyframe prompt assembled, nothing painted). Gates flag and never
 // remake: a flagged still stops the build before clips, a flagged clip before the stitch; --retry ids remakes named items
 // (and what was built on a retried still), --accept ids keeps them, --recheck ids runs the gates again on them.
-// Usage: CLEANED_CAP=… node V2/src/pipeline.mjs --brief "…" --label vanderbilt [--reuse V1/runs/exp-vanderbilt2]
+// Usage: CLEANED_CAP=… node V2/backend/composer/pipeline.mjs --brief "…" --label vanderbilt [--reuse V1/runs/exp-vanderbilt2]
 //        [--until story|assets|screenplay|state|keyframes|paint|film] [--total 30] [--max 15] [--model wan-3.0]
 //        [--tier paid|cheap|free] [--still <model>] [--res 640px|1k|2k|4k] [--model <video model>] [--vres 480p|720p|1080p] [--script-from <label>: reuse that run's screenplay, the same film on other models] [--map new-id=old-id,…] [--no-generate] [--crop-direct 0.5] [--retry s1-3,clip-2] [--accept s1-3] [--recheck s1-3] [--restore s1-1:0: make an earlier attempt (its number on the results page) the still again; what was built on the still is treated as after --retry] [--dry: no paid call, each would-be job listed with its cost] [--clips pinned|start|t2v|seq] [--max-seq 15: seconds per sequence] [--seq-across: a sequence may run across scenes] [--speed-up 1.4: fast sequences rendered longer and played faster] [--voice-refs: t2v and seq speak in the bank voices] [--only clip-7,clip-8 | with --retry: the only dependents of a retried still that are remade, the rest kept and marked] [--retry root-<id> | --accept root-<id> for a flagged sheet] [--reactions] [--parallel N: clips at a time, default all at once] [--no-subtitles]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
-import { RUNS } from "./lib/env.js";
-import { usage } from "./lib/llm.js";
-import { Jobs, COST } from "./lib/jobs.js";
-import { profile, describe, supports } from "./lib/models.js";
+import { RUNS } from "../lib/env.js";
+import { usage } from "../lib/llm.js";
+import { Jobs, COST } from "../lib/jobs.js";
+import { profile, describe, supports } from "../lib/models.js";
 import { runStory } from "./story/story.js";
 import { runAssets } from "./assets/assets.js";
 import { writeScript, checkScript, scriptText, normalizeShots, reviseScript, fillAttachments, fillStoryContext } from "./screenplay/screenplay.js";
-import { bars } from "./lib/media.js";
+import { bars } from "../lib/media.js";
 import { State } from "./state/state.js";
 import { planKeyframes, paintKeyframes } from "./keyframes/keyframes.js";
 import { makeClips, makeSequences, stitchFilm } from "./edit/edit.js";
 import { GRID } from "./screenplay/screenplay.js";
 import { narrationTrack, mixNarration, musicBed, mixMusic } from "./sound/sound.js";
-import { subtitlesFromScript } from "./lib/captions.js";
+import { subtitlesFromScript } from "../lib/captions.js";
 import { writeResults } from "./results.js";
 import { writeFilmPage } from "./film-page.js";
 

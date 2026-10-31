@@ -60,7 +60,7 @@ job's edit. A node with no dependents (the last clip, a one-off image) re-runs a
 
 ## Where it lives
 
-`src/agent/worktree.js` builds the graph from a run folder or a session; the server serves it (`/tree/run/:label`,
+`backend/agent/worktree.js` builds the graph from a run folder or a session; the server serves it (`/tree/run/:label`,
 `/tree/session/:id`); the frontend renders it as the Workflow view: stages as sections, each with its heading and
 explain, each type as a slideshow, a node selectable to show its dependents and the re-run estimate. The sidebar's
 tree (`12-frontend.md`) is the same graph as a directory.

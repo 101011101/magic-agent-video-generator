@@ -1,6 +1,6 @@
 // The agent, dry: the conversation and the plan, no tool is called. One turn = fill the sheet; if questions remain,
 // ask and stop; else plan, price, and show. `runCase` drives a benchmark case with a proxy user who answers from the
-// case's answer sheet. `node V2/src/agent/agent.mjs --brief "…" [--materials a.jpg,b.png] [--tier free]` runs one
+// case's answer sheet. `node V2/backend/agent/agent.mjs --brief "…" [--materials a.jpg,b.png] [--tier free]` runs one
 // message and prints the questions or the plan; the benchmark runner is V2/bench/run.mjs.
 import { fillSheet, asked, THRESHOLD } from "./sheet.js";
 import { plan } from "./plan.js";
@@ -83,7 +83,7 @@ export function check(c, t) {
 // CLI: one message.
 if (process.argv[1] && process.argv[1].endsWith("agent.mjs")) {
   const arg = (k, d = null) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
-  const brief = arg("--brief"); if (!brief) { console.error('usage: node V2/src/agent/agent.mjs --brief "…" [--materials a.jpg,b.png] [--tier free]'); process.exit(1); }
+  const brief = arg("--brief"); if (!brief) { console.error('usage: node V2/backend/agent/agent.mjs --brief "…" [--materials a.jpg,b.png] [--tier free]'); process.exit(1); }
   const r = await turn({ messages: [{ who: "user", text: brief }], materials: (arg("--materials", "") || "").split(",").filter(Boolean), tier: arg("--tier", "free") });
   console.log(`goal: ${r.sheet.goal.value} (${r.sheet.goal.source}, ${r.sheet.goal.confidence})`);
   for (const f of r.sheet.fields) if (f.source !== "not_applicable") console.log(`  ${f.field}: ${f.value || "—"}  [${f.source}${f.source === "inferred" ? ` ${f.confidence}` : ""}]${f.quote ? `  "${f.quote}"` : ""}`);

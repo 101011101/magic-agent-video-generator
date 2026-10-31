@@ -1,7 +1,7 @@
 // STORY: natural language → a story. The research gate (one small call) decides whether the brief needs facts and sets the
 // pipeline's mode: nonfiction (research round with web search; the story written from the facts only, cited) or fiction
 // (no research; the story invented from the brief). Text calls only, cached.
-import { jsonCall, S } from "../lib/llm.js";
+import { jsonCall, S } from "../../lib/llm.js";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 

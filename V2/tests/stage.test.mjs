@@ -1,6 +1,6 @@
 // The stage model: derived screen facts, the override of the writer's guesses, the checks and the WORLD text. No model
 // calls. Run: node V2/tests/stage.test.mjs
-import { derive, applyStage, checkStage, worldText, staged, previousFrame, headingGap, TURN, ATTITUDE } from "../src/screenplay/stage.js";
+import { derive, applyStage, checkStage, worldText, staged, previousFrame, headingGap, TURN, ATTITUDE } from "../backend/composer/screenplay/stage.js";
 
 let fails = 0; const ok = (c, m) => { console.log(`${c ? "ok  " : "FAIL"} ${m}`); if (!c) fails++; };
 const cam = (at, toward) => ({ same_as: 0, stands: "s", view: "from behind", move: "static", height: "high", looks_at: "x", behind: [], at, toward });

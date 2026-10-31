@@ -9,10 +9,11 @@ it is reference material, nothing in it is run.
 | folder | what is in it |
 |---|---|
 | `prd/` | the product requirements: `00-overview.md` for how the subsystems work together, then one file per subsystem, costs, what is built, decisions (`PRD.md` is a pointer) |
-| `src/` | the pipeline code: one folder per subsystem, a shared `lib/`, the CLI `pipeline.mjs`, the page writer `results.js` |
+| `backend/` | the code: `composer/` (the film chain: story, assets, screenplay, state, keyframes, sound, edit, the CLI `pipeline.mjs`, the page writers), `agent/` (the conversation, the planner, the working tree, the executor, the server), `lib/` (shared: env, llm, jobs, Magic Hour client, media, captions, the model registry), `tools/` (custom tools by code) |
+| `frontend/` | the chat page (`index.html`), the tree drawing (`dag.js`), the test scripts (`scripts.js`); served by `backend/agent/server.mjs` |
 | `tests/` | small runnable test scripts (`state`, `edit`, `audit`) and the fixtures they use (a real run record from vanderbilt6; synthetic scripts for the audit cases) |
 | `runs/` | raw results, one folder per run label: `run.json`, `state.json`, references, stills, clips; never edited by hand |
-| `results/` | organised results: one HTML page per run, regenerated from `runs/` by `src/results.js` |
+| `results/` | organised results: one HTML page per run, regenerated from `runs/` by `backend/composer/results.js` |
 | `drafts/` | draft code and draft design material: `CASES.md`, the archived PRDs, sketches not yet in `prd/` |
 | `tickets/` | one file per ticket; the open tickets are the to-do list |
 
@@ -22,7 +23,7 @@ Each folder has its own `README.md` saying what belongs there.
 
 ```
 cd /Users/arviny/Downloads/Code/magic-agent-video-generator
-CLEANED_CAP=<ledger total + what you approve> node V2/src/pipeline.mjs \
+CLEANED_CAP=<ledger total + what you approve> node V2/backend/composer/pipeline.mjs \
   --brief "An interesting true fact about Cornelius Vanderbilt, as a 30-second live-action film." \
   --label vanderbilt7 \
   --until keyframes
@@ -44,10 +45,10 @@ Flags:
 - `--tier paid|cheap|free` picks the model profile (`paid`: nano-banana-pro 2k and wan-3.0 720p, every film so far; `cheap`:
   flux-2-klein 2k and minimax-h3 720p, the free-flagged models at paid resolutions; `free`: the same models at the free
   plan's 640px and 480p). `--still`, `--res`, `--model`, `--vres` override one part of it. Changing a model changes the
-  pipeline through the registry (`src/lib/models.js`): the screenplay's grid of clip lengths, how many reference images a
+  pipeline through the registry (`backend/lib/models.js`): the screenplay's grid of clip lengths, how many reference images a
   paint may send, which clip modes are possible, the resolutions and every cost. `--script-from <label>` reuses another
   run's screenplay, so the same film can be made on other models and compared frame for frame;
-  `node V2/src/compare.js <labelA> <labelB>` writes the two runs side by side, still by still, with gate verdicts and the
+  `node V2/backend/composer/compare.js <labelA> <labelB>` writes the two runs side by side, still by still, with gate verdicts and the
   films (`V2/results/compare-<a>-vs-<b>/index.html`).
 
 Keys come from the environment or the repository's `.env` (`OPENAI_API_KEY`, `MAGIC_HOUR_API_KEY`). The `.env` is never

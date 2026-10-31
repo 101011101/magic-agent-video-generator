@@ -1,11 +1,11 @@
 # T-037 · The persistent loop: fill-or-ask at every step, and the creative-liberty toggle
 
-status:     dry prototype 2026-10-31 (`src/agent/`: the sheet with `liberty`, assumed values marked); the loop between a run's stages is design
+status:     dry prototype 2026-10-31 (`backend/agent/`: the sheet with `liberty`, assumed values marked); the loop between a run's stages is design
 priority:   high
 subsystem:  agent
 
 what:
-1. **Fill-or-ask as one function**, `src/agent/sheet.js`: for every field the next step needs: filled (stated,
+1. **Fill-or-ask as one function**, `backend/agent/sheet.js`: for every field the next step needs: filled (stated,
    session)? else can it be made up (a default in the tree, an inference above the threshold, the material implies
    it, or liberty is on) → fill and mark `inferred` or `assumed`; else ask. Called between messages (today) and
    between a run's stages (to build: `pipeline.mjs` calls it before story, assets, screenplay, keyframes, clips, film

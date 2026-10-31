@@ -9,8 +9,8 @@ The simple requests the film chain does not serve, each as one tool the agent la
 needs and the cheapest model that can do it.
 
 1. **Tools from the sheet.** Every Magic Hour endpoint in `V2/reference/magic-hour-api-sheet.md` becomes a tool
-   definition in `src/lib/tools.js`: name, what it is for in one line, the fields, the models and their plan and cost
-   from `src/lib/models.js`, the inputs it needs (an image, a clip, a face, an audio file). First set: image generate,
+   definition in `backend/lib/tools.js`: name, what it is for in one line, the fields, the models and their plan and cost
+   from `backend/lib/models.js`, the inputs it needs (an image, a clip, a face, an audio file). First set: image generate,
    image edit, face swap (photo and video), character replace, background remover, upscale (image and video), auto
    subtitles, lip-sync, talking photo, voice generate, music. All calls go through `lib/jobs.js` so the cache, the cap
    and the ledger apply.

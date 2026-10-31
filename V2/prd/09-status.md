@@ -1,7 +1,7 @@
 # 9. What is built and what is not
 
 Status as of the end of 2026-10-30. Three V2 films exist from one brief, each a full pass through the pipeline; the
-Vanderbilt run reached its keyframes. Every rule below is in `V2/src`, documented in this directory, and covered by
+Vanderbilt run reached its keyframes. Every rule below is in `V2/backend`, documented in this directory, and covered by
 `node V2/tests/state.test.mjs`, `node V2/tests/edit.test.mjs` and `node V2/tests/audit.test.mjs` (no network).
 
 | film | run | what it proved | what it showed was missing |

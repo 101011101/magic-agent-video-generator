@@ -6,9 +6,9 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { key } from "../lib/env.js";
-import { hasAudio } from "../lib/media.js";
-import { subtitlesFromScript, captionCard, burnCaptions } from "../lib/captions.js";
+import { key } from "../../lib/env.js";
+import { hasAudio } from "../../lib/media.js";
+import { subtitlesFromScript, captionCard, burnCaptions } from "../../lib/captions.js";
 export { subtitlesFromScript, captionCard, burnCaptions };
 
 export const voiceOf = (voices, id) => voices?.[id] || "a natural voice of the period";

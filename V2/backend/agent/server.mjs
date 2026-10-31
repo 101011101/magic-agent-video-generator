@@ -6,7 +6,7 @@
 //   POST /upload?session=&name=   raw body → sessions/<id>/materials/<name>
 //   GET  /sessions/<id>/...    session files (materials, prompts)
 //   GET  /models · GET /runs · GET /run/:label · POST /run/:label/comment|flag · GET /media/<label>/<path> · GET /
-// Usage: node V2/src/agent/server.mjs [--port 4747]
+// Usage: node V2/backend/agent/server.mjs [--port 4747]
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { join, extname, normalize, basename } from "node:path";
@@ -23,7 +23,7 @@ const running = {};
 
 const PORT = Number(process.argv[process.argv.indexOf("--port") + 1]) || 4747;
 const SESS = join(V2, "sessions"); mkdirSync(SESS, { recursive: true });
-const UI = join(V2, "ui");
+const UI = join(V2, "frontend");
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".mp4": "video/mp4", ".mov": "video/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav", ".json": "application/json", ".txt": "text/plain; charset=utf-8" };
 
 const sdir = (id) => { const d = join(SESS, id); mkdirSync(join(d, "materials"), { recursive: true }); mkdirSync(join(d, "prompts"), { recursive: true }); return d; };

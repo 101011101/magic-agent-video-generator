@@ -5,14 +5,14 @@
 // the room gate (arrangement against image 1 of the paint: the plate, the master or the previous still). Gates flag; nothing is remade here. --retry / --accept / --recheck are
 // handled by the pipeline before this runs.
 import { existsSync } from "node:fs";
-import { crop as cropImage, bars, size as imageSize } from "../lib/media.js";
-import { captionCard } from "../lib/captions.js";
+import { crop as cropImage, bars, size as imageSize } from "../../lib/media.js";
+import { captionCard } from "../../lib/captions.js";
 import { execFileSync } from "node:child_process";
 // A black 16:9 frame with the caption centred: the caption card (transparent) laid over black.
 export function titleCard(text, out) { const tmp = out.replace(/\.png$/, "-text.png"); captionCard(text, tmp, { w: 1920, h: 1080, size: 56, at: "middle" }); execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=1920x1080", "-i", tmp, "-filter_complex", "[0][1]overlay=0:0", "-frames:v", "1", "-update", "1", out]); return out; }
 import { keyframePrompt, deltaEditPrompt, sameInstant } from "./template.js";
 import { inFrame } from "../screenplay/screenplay.js";
-import { WIDTH } from "../lib/models.js";
+import { WIDTH } from "../../lib/models.js";
 
 export const CROP_DIRECT = 0.5;   // a crop at least this fraction of the master's width is used as the frame without painting…
 export const MIN_CROP_PX = 1000;  // …and only when that is at least this many pixels wide: half of a 640px master is 320 px, which is no frame

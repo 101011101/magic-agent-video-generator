@@ -4,7 +4,7 @@
 // record) · clips · film. Media are referenced in place under runs/<label>/, never copied.
 import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { RESULTS, RUNS } from "./lib/env.js";
+import { RESULTS, RUNS } from "../lib/env.js";
 import { scriptText } from "./screenplay/screenplay.js";
 
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");

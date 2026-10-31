@@ -46,7 +46,7 @@ A test set that runs on every change and says whether the system got better or w
    Writes `V2/bench/results/<date>-<short sha>/index.html` (every case with its output, checks and cost) and
    `scores.json`; `V2/bench/README.md` keeps the trend table, one row per run, and the last run's outputs are the
    examples we show.
-4. **A diff**: `node V2/bench/compare.mjs <run a> <run b>` (from `src/compare.js`) puts two runs of the same case side by
+4. **A diff**: `node V2/bench/compare.mjs <run a> <run b>` (from `backend/composer/compare.js`) puts two runs of the same case side by
    side with the checks that changed.
 
 why:
@@ -59,4 +59,4 @@ acceptance:
 The ten cases in the tree with their checks; one full run on the free tier at or under about 2,500 credits (the film
 cases are the bulk, about 1,000 for the ad at 480p); the results page and the trend row; then a second run after one
 change (for example T-030) showing the diff. The zero-credit subset finishes in under five minutes and runs before
-every commit that touches `V2/src`.
+every commit that touches `V2/backend`.

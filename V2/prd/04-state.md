@@ -3,7 +3,7 @@
 **Purpose.** The tables every later stage queries, filled by code in a single pass over the whole screenplay, plus the gates
 that check what was made against them. Nothing creative lives here.
 
-**Module.** `src/state/state.js`, class `State`.
+**Module.** `backend/composer/state/state.js`, class `State`.
 
 **Inputs.** The screenplay, the element table, the bank (with the voices), the cast lines, the plate descriptions.
 
@@ -85,7 +85,7 @@ portrait every time, which was the earlier "identity from the bank, always" rule
 swap; the user's rule, and PRD v4's, is this one. **built, not yet exercised** (ticket T-002). On the vanderbilt6 fixture:
 the Lincoln single gets the master and Lincoln's portrait; the three-shot gets the master and no portraits.
 
-**Punch-ins are crops** (`cropFor`, and the crop branch in `src/keyframes/keyframes.js`). When a shot is a tighter view of
+**Punch-ins are crops** (`cropFor`, and the crop branch in `backend/composer/keyframes/keyframes.js`). When a shot is a tighter view of
 the master from the same side, which every shot of a static scene is, code cuts the frame out of the master: the people gate
 returns each person's horizontal centre and the top and bottom of his extent in the master, as percentages; from the shot's
 size and the people in frame, code computes a 16:9 crop box (knees-up keeps 80% of the figure's height for a medium-wide,
@@ -179,7 +179,7 @@ diagnostics; the template does not use it, by the rule that the reference carrie
 - Reported, not gating: SSIM of the clip's first and last frame against the two stills; the transcription of the clip's
   audio against the line (`gpt-4o-mini-transcribe`).
 
-**Review loop** (in `src/pipeline.mjs`). A flagged still stops its chain (a still is painted only when everything it is
+**Review loop** (in `backend/composer/pipeline.mjs`). A flagged still stops its chain (a still is painted only when everything it is
 painted from exists and is not flagged); a flagged clip stops the stitch; the build prints what to look at and exits.
 `--retry s1-3,clip-2` remakes the named items with a fresh attempt suffix (`-r1`, `-r2`) and forgets whatever was built on a
 retried still (its dependants and the clips that use them); every earlier attempt stays on disk and in `build.attempts`;

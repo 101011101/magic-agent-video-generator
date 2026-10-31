@@ -6,8 +6,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { captionCard } from "../src/lib/captions.js";
-import { size as imageSize } from "../src/lib/media.js";
+import { captionCard } from "../lib/captions.js";
+import { size as imageSize } from "../lib/media.js";
 
 export const tool = {
   id: "text-overlay", group: "change-content", custom: true, credits: 0,

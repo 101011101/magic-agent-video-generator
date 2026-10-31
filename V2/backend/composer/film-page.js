@@ -1,9 +1,9 @@
 // The finished-product page: V2/results/<label>-film/index.html. The film first, then the cut in order (one row per
 // shot: the clip, its two keyframes, the scene heading, the moment, what is said and shown), then the cost. Nothing about
-// prompts or attempts: that is the run page (results.js). Usage: node V2/src/film-page.js <label>
+// prompts or attempts: that is the run page (results.js). Usage: node V2/backend/composer/film-page.js <label>
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { RESULTS, RUNS } from "./lib/env.js";
+import { RESULTS, RUNS } from "../lib/env.js";
 import { normalizeShots } from "./screenplay/screenplay.js";
 import { State } from "./state/state.js";
 
@@ -52,4 +52,4 @@ h2{font:700 12px ui-monospace,monospace;letter-spacing:.12em;color:#8ab4ff;margi
   return join(out, "index.html");
 }
 
-if (process.argv[1] && process.argv[1].endsWith("film-page.js")) { const label = process.argv[2]; if (!label) { console.error("usage: node V2/src/film-page.js <label>"); process.exit(2); } console.log(writeFilmPage(label)); }
+if (process.argv[1] && process.argv[1].endsWith("film-page.js")) { const label = process.argv[2]; if (!label) { console.error("usage: node V2/backend/composer/film-page.js <label>"); process.exit(2); } console.log(writeFilmPage(label)); }

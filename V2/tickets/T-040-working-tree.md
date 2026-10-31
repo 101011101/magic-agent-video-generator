@@ -1,6 +1,6 @@
 # T-040 · The working tree: the workflow as a graph, dependents, re-run from any node
 
-status:     dry prototype 2026-10-31 (`src/agent/worktree.js`: the graph from a run folder or a session, dependents, the re-run estimate; the Workflow view); re-running from the view is to build
+status:     dry prototype 2026-10-31 (`backend/agent/worktree.js`: the graph from a run folder or a session, dependents, the re-run estimate; the Workflow view); re-running from the view is to build
 priority:   high
 subsystem:  agent, state, results, frontend
 
@@ -15,7 +15,7 @@ what:
    remade in order; nothing else is touched. For a run this is `--retry <still> --only <dependents>` driven from the
    view; for a session step it is the step's tool again with the same inputs, then every later step that took its
    output. A re-run writes new attempts, never over the old; the old output stays selectable.
-4. **The Workflow view** in the chat (`ui/index.html`): stages as sections with a heading and an explain; nodes of
+4. **The Workflow view** in the chat (`frontend/index.html`): stages as sections with a heading and an explain; nodes of
    one type as a slideshow; a node selected shows its inputs, its outputs, its prompt by name, its dependents
    highlighted, and the re-run estimate with one action.
 5. **The sidebar tree** is the same graph as a directory; selecting there selects in the view.

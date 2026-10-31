@@ -4,7 +4,7 @@
 first frame and last frame of every element, plus the timed beats between them. Keyframe prompts and clip prompts are
 transcribed from it by code, so it must be complete and unambiguous.
 
-**Module.** `src/screenplay/screenplay.js`: `scriptSchema`, `scriptPrompt`, `writeScript`, `checkScript`, `scriptText`,
+**Module.** `backend/composer/screenplay/screenplay.js`: `scriptSchema`, `scriptPrompt`, `writeScript`, `checkScript`, `scriptText`,
 the duration `GRID` per clip model.
 
 **Inputs.** The story, the element table (ids only may be used), the plate descriptions (`seen`), the total seconds, the
@@ -139,7 +139,7 @@ error, a bare "says" a note; a written camera move (tracking, panning, tilting, 
 pull) is an error when the camera is the subject of the clause and the clause is not negated ("the locked camera does not
 follow" and "the bombs descending" are not moves); the music arc lies inside the film.
 
-**The writer corrects its own errors** (`reviseScript`, in `src/pipeline.mjs`). When the check finds errors, the whole
+**The writer corrects its own errors** (`reviseScript`, in `backend/composer/pipeline.mjs`). When the check finds errors, the whole
 script goes back to the writer with the error list and the instruction to change nothing else; the corrected script is
 renumbered and checked again, twice at most, before the run stops. Text only. Before this a single error stopped the run
 and the remedy was a whole new screenplay. A mention counts as declared when it is contained in an element's name, alias
@@ -193,7 +193,7 @@ text never reaches the painter. The keyframe CONTEXT now opens Film / Now / Scen
 
 **The stage (T-029, 2026-10-31).** Every scene has one coordinate frame in metres (`stage.axis` in words, `stage.goal` the
 element x runs toward; y to the right facing +x, z up). Every camera has `at` and `toward`; every prop in every frame has
-`at`, `heading` (degrees from +x) and `pitch`; a person inside a vehicle is where the vehicle is. `src/screenplay/stage.js`
+`at`, `heading` (degrees from +x) and `pitch`; a person inside a vehicle is where the vehicle is. `backend/composer/screenplay/stage.js`
 derives screen third, depth, size word, heading relative to the camera and in/off frame from the numbers, and
 `normalizeShots` replaces the writer's words with them (the run log lists the replacements). `checkStage` makes errors of
 the impossible: a camera inside a thing, a flying thing below the surface, a speed above 400 m/s, a camera with nothing in

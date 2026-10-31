@@ -68,7 +68,7 @@ the frigate; the length of a room toward its far wall), y is to the right when f
 has `at` and `heading` (degrees from +x turning toward +y, so 90 is to the right of the line, with an optional `pitch`); a person inside a
 vehicle (`on`) is where the vehicle is. Every element on record has `size_m`, its longest dimension.
 
-From that, `src/screenplay/stage.js` derives what the writer used to guess: screen third, depth, the size word (angular
+From that, `backend/composer/screenplay/stage.js` derives what the writer used to guess: screen third, depth, the size word (angular
 size against a 40° horizontal lens), `points` (heading against the camera's forward and right), and whether a thing is in
 frame or off to one side. The derived values replace the writer's; `normalizeShots` applies them. The keyframe prompt gets
 a WORLD block: the camera's place on the stage, each prop's position relative to the goal and the line, and the change

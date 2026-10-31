@@ -1,9 +1,9 @@
 // The model registry and what follows from it: costs, grids, the reference cap per still model, clip-mode support, tiers.
 // No model calls, no credits. Run: node V2/tests/models.test.mjs
-import { STILLS, VIDEOS, TIERS, WIDTH, stillCost, videoCost, grid, maxImages, supports, profile, describe } from "../src/lib/models.js";
-import { COST } from "../src/lib/jobs.js";
-import { GRID } from "../src/screenplay/screenplay.js";
-import { State, MAX_REFS } from "../src/state/state.js";
+import { STILLS, VIDEOS, TIERS, WIDTH, stillCost, videoCost, grid, maxImages, supports, profile, describe } from "../backend/lib/models.js";
+import { COST } from "../backend/lib/jobs.js";
+import { GRID } from "../backend/composer/screenplay/screenplay.js";
+import { State, MAX_REFS } from "../backend/composer/state/state.js";
 
 let fails = 0; const ok = (c, m) => { console.log(`${c ? "ok  " : "FAIL"} ${m}`); if (!c) fails++; };
 

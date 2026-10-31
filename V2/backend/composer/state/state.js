@@ -15,9 +15,9 @@
 // frame when large enough, else painted from the crop).
 import { writeFileSync } from "node:fs";
 import { headingGap, READ_YAW, HEADING_TOLERANCE } from "../screenplay/stage.js";
-import { jsonCall, S } from "../lib/llm.js";
+import { jsonCall, S } from "../../lib/llm.js";
 import { PERSON_FIELDS, PROP_FIELDS, inFrame, norm } from "../screenplay/screenplay.js";
-import { maxImages } from "../lib/models.js";
+import { maxImages } from "../../lib/models.js";
 
 export const SIZE = { wide: 0, "medium-wide": 1, medium: 2, "medium-close": 3, close: 4 };
 export const MAX_REFS = 4;   // image 1 plus at most three carriers per paint

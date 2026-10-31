@@ -1,6 +1,6 @@
 # T-044 · Simulated tools: every node runs perfectly and makes a placeholder, so the loop can be tested at zero credits
 
-status:     dry prototype 2026-10-31 (`src/agent/simulate.js`; `bench/run.mjs --simulate`; `POST /session/:id/simulate`)
+status:     dry prototype 2026-10-31 (`backend/agent/simulate.js`; `bench/run.mjs --simulate`; `POST /session/:id/simulate`)
 priority:   high
 subsystem:  agent, bench
 

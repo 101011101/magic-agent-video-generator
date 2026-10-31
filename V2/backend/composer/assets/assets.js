@@ -4,9 +4,9 @@
 // Then the cast lines: each person's telling features (one vision call per portrait) and a voice descriptor (one call).
 import { copyFileSync, existsSync, readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { join } from "node:path";
-import { jsonCall, S } from "../lib/llm.js";
-import { key } from "../lib/env.js";
-import { bars, crop as cropImage, size as imageSize } from "../lib/media.js";
+import { jsonCall, S } from "../../lib/llm.js";
+import { key } from "../../lib/env.js";
+import { bars, crop as cropImage, size as imageSize } from "../../lib/media.js";
 
 const UA = "magic-agent-video-generator/0.2 (research pipeline; contact via repository)";
 

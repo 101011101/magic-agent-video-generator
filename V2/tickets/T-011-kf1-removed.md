@@ -5,7 +5,7 @@ priority:   low
 subsystem:  keyframes
 
 what:
-V2 carries one keyframe template (`src/keyframes/template.js`, the PRD-aligned form). KF1 (references, task, changes,
+V2 carries one keyframe template (`backend/composer/keyframes/template.js`, the PRD-aligned form). KF1 (references, task, changes,
 context, camera, people, rules) and KF2 (create this frame, context, from these references, rules) stay in `V1/src/kf/`
 as archived code; the `--kf` variant switch, the per-variant run folders and the comparison page are not ported.
 
@@ -15,4 +15,4 @@ faults, restating the whole world every time and ignoring what image 1 carried. 
 from here. The user kept KF2's order and dropped KF1 on 2026-10-30.
 
 acceptance:
-No `kf1` or `kf2` identifiers in `V2/src`; one template; the PRD §5 describes it.
+No `kf1` or `kf2` identifiers in `V2/backend`; one template; the PRD §5 describes it.

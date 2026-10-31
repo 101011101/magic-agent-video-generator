@@ -1,5 +1,5 @@
 // The tree drawn with arrows: nodes in columns by dependency depth, a bezier arrow from each producer to each taker.
-// Shared by the chat (ui/index.html) and the bench page (bench/page.js embeds this file). No dependencies.
+// Shared by the chat (frontend/index.html) and the bench page (bench/page.js embeds this file). No dependencies.
 // drawDag(container, steps, { media(step) → url|null, onSelect(index), label(step) })
 function drawDag(root, steps, opts = {}) {
   const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");

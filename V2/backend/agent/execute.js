@@ -12,7 +12,7 @@ import { STILLS, VIDEOS, stillCost, videoRate } from "../lib/models.js";
 import { duration } from "../lib/media.js";
 import { V2, RUNS } from "../lib/env.js";
 import { order, placeholder } from "./simulate.js";
-import { customTool } from "../../tools/index.js";
+import { customTool } from "../tools/index.js";
 
 const WIRED = new Set(["image", "image-edit", "image-to-video", "text-to-video", "music", "face-swap-photo", "background-remove", "upscale-image", "captions", "story", "assets", "screenplay", "keyframes", "clips", "film"]);
 const FILM = ["story", "assets", "screenplay", "keyframes", "clips", "film"];
@@ -100,7 +100,7 @@ async function film(plan, dir, { id, tier, brief, sheet, set, say }) {
   const label = plan.steps.find((s) => FILM.includes(s.tool) && s.run)?.run || `session-${id}-${Date.now().toString(36)}`; const rdir = join(RUNS, label);
   const field = (k) => sheet?.fields?.find((f) => f.field === k)?.value || "";
   const secs = Number(plan.steps[idx.clips]?.params?.seconds || plan.steps[idx.film]?.params?.seconds) || Number((field("length_s") || "").match(/\d+/)?.[0]) || 15;
-  const args = [join(V2, "src", "pipeline.mjs"), "--brief", brief, "--label", label, "--tier", tier, "--until", "film", "--total", String(secs), "--max", "10"];
+  const args = [join(V2, "backend", "composer", "pipeline.mjs"), "--brief", brief, "--label", label, "--tier", tier, "--until", "film", "--total", String(secs), "--max", "10"];
   for (const k of FILM) if (idx[k] !== undefined) set(idx[k], { state: "running", run: label });
   say(`film run ${label}: ${secs} s on the ${tier} tier`);
   const child = spawn(process.execPath, args, { cwd: join(V2, ".."), env: { ...process.env, CLEANED_CAP: process.env.CLEANED_CAP || "8000" }, stdio: ["ignore", "pipe", "pipe"] });

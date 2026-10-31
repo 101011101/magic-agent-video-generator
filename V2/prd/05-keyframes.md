@@ -3,12 +3,12 @@
 **Purpose.** One prompt per distinct frame of the film, assembled by code from the screenplay and the state manager, painted
 by the image editor with the references the state manager names (or cut from the painted master), gated, shown.
 
-**Modules.** `src/keyframes/template.js` (`keyframePrompt`), `src/keyframes/keyframes.js` (`planKeyframes`,
+**Modules.** `backend/composer/keyframes/template.js` (`keyframePrompt`), `backend/composer/keyframes/keyframes.js` (`planKeyframes`,
 `paintKeyframes`, `CROP_DIRECT`).
 
 **Inputs.** The state manager's stills table and queries, the bank, the cast lines, the medium.
 
-**The template** (`src/keyframes/template.js`), the PRD-aligned form the user settled on 2026-10-30, replacing both KF1
+**The template** (`backend/composer/keyframes/template.js`), the PRD-aligned form the user settled on 2026-10-30, replacing both KF1
 (references, task, changes, context, camera, people, rules) and KF2 (create this frame, context, from these references,
 rules), which restated the whole world every time and ignored what image 1 already carried. **built, not yet exercised** by
 a paid run.

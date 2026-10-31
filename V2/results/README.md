@@ -1,10 +1,10 @@
 # results — organised results
 
-One HTML page per run, `results/<label>/index.html`, written by `src/results.js` from `runs/<label>/`. Regenerate it any
+One HTML page per run, `results/<label>/index.html`, written by `backend/composer/results.js` from `runs/<label>/`. Regenerate it any
 time with:
 
 ```
-node V2/src/results.js --label <label>
+node V2/backend/composer/results.js --label <label>
 ```
 
 What a page shows, in this order: the brief and the mode; the story; the screenplay as text; the state tables (who is in
@@ -17,4 +17,4 @@ Nothing in this folder is a source of truth; delete and regenerate freely.
 
 A second page per finished run, `<label>-film/index.html`, is the finished product: the film first, then the cut shot by
 shot with its clip, its two keyframes and what is said and shown; no prompts, no attempts. The pipeline writes it after the
-stitch; `node V2/src/film-page.js <label>` rewrites it from the run record at any time.
+stitch; `node V2/backend/composer/film-page.js <label>` rewrites it from the run record at any time.

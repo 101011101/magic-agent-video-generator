@@ -5,16 +5,16 @@ import { fileURLToPath } from "node:url";
 import { mkdtempSync, mkdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { execFileSync, spawnSync } from "node:child_process";
-import { State } from "../src/state/state.js";
-import { checkScript, normalizeShots } from "../src/screenplay/screenplay.js";
-import { keyframePrompt, deltaEditPrompt } from "../src/keyframes/template.js";
-import { policySafe, makeClips, makeSequences, t2vPrompt } from "../src/edit/edit.js";
-import { subtitlesFromScript } from "../src/lib/captions.js";
-import { bars, stitch, hasAudio, fps } from "../src/lib/media.js";
-import { mixMusic } from "../src/sound/sound.js";
-import { MAX_REFS } from "../src/state/state.js";
-import { GRID } from "../src/screenplay/screenplay.js";
-import { COST } from "../src/lib/jobs.js";
+import { State } from "../backend/composer/state/state.js";
+import { checkScript, normalizeShots } from "../backend/composer/screenplay/screenplay.js";
+import { keyframePrompt, deltaEditPrompt } from "../backend/composer/keyframes/template.js";
+import { policySafe, makeClips, makeSequences, t2vPrompt } from "../backend/composer/edit/edit.js";
+import { subtitlesFromScript } from "../backend/lib/captions.js";
+import { bars, stitch, hasAudio, fps } from "../backend/lib/media.js";
+import { mixMusic } from "../backend/composer/sound/sound.js";
+import { MAX_REFS } from "../backend/composer/state/state.js";
+import { GRID } from "../backend/composer/screenplay/screenplay.js";
+import { COST } from "../backend/lib/jobs.js";
 
 const here = dirname(fileURLToPath(import.meta.url)), tmp = mkdtempSync(join(tmpdir(), "v2-audit-test-"));
 for (const d of ["refs", "roots", "stills", "clips"]) mkdirSync(join(tmp, d), { recursive: true });
@@ -152,7 +152,7 @@ const checkOpts = { total: 30, max: 15, model: "wan-3.0", elements, seen: {} }, 
 }
 // H4. A non-numeric cap refuses to load.
 {
-  const r = spawnSync("node", ["--input-type=module", "-e", `import(${JSON.stringify(join(here, "..", "src", "lib", "jobs.js"))}).then(() => { console.log("loaded"); process.exit(0); }, (e) => { console.error(String(e)); process.exit(3); })`], { env: { ...process.env, CLEANED_CAP: "3,000" } });
+  const r = spawnSync("node", ["--input-type=module", "-e", `import(${JSON.stringify(join(here, "..", "backend", "lib", "jobs.js"))}).then(() => { console.log("loaded"); process.exit(0); }, (e) => { console.error(String(e)); process.exit(3); })`], { env: { ...process.env, CLEANED_CAP: "3,000" } });
   ok(r.status === 3 && /CLEANED_CAP must be/.test(r.stderr.toString()), `CLEANED_CAP=3,000 refused: ${r.stderr.toString().trim().slice(0, 80)}`);
 }
 // Size: a far thing marked large is an error; the size word reaches the prompt.

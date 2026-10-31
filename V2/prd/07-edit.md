@@ -2,8 +2,8 @@
 
 **Purpose.** One clip per shot between its two keyframes, gated; the stitch; the overlays; the narration mixed under.
 
-**Modules.** `src/edit/edit.js` (`clipPrompt`, `policySafe`, `makeClips`, `stitchFilm`), `src/lib/media.js` (frames, SSIM,
-the stitch), `src/lib/captions.js`, `src/sound/sound.js` (the narration mix), `src/lib/jobs.js`.
+**Modules.** `backend/composer/edit/edit.js` (`clipPrompt`, `policySafe`, `makeClips`, `stitchFilm`), `backend/lib/media.js` (frames, SSIM,
+the stitch), `backend/lib/captions.js`, `backend/composer/sound/sound.js` (the narration mix), `backend/lib/jobs.js`.
 
 **The clip prompt** (`clipPrompt`, ported from `V1/src/prompts.js`), assembled by code:
 
@@ -37,7 +37,7 @@ jobs in flight), so a set of clips takes about as long as its longest one. **bui
 
 **The pending-job record, and resumption.** `Jobs` writes the Magic Hour job id under `run.json` → `pending[key]` the moment
 the server returns it and removes it when the download is done. On the next request for that key the pending job is
-resumed (`pollJob` in `src/lib/magichour.js`), downloaded, recorded and booked once; only a job that errored on the server
+resumed (`pollJob` in `backend/lib/magichour.js`), downloaded, recorded and booked once; only a job that errored on the server
 is forgotten and posted anew, so an interrupted poll never pays twice. The charge is booked before the download and an empty
 download is an error. In vanderbilt6 one 7-second render was lost the old way, about 670 credits possibly charged with no
 local record (ticket T-007). **built and run**: a radio clip of the second film timed out on Magic Hour's side and was resumed from its pending id on the next run, charged once.
@@ -94,7 +94,7 @@ without sound; concatenated; the captions (top) and subtitles (bottom) composite
 card already shows not overlaid again, two subtitle lines at one second on one card. Output `clips/film.mp4` with a video and a stereo audio stream (vanderbilt6: 30.4 s,
 mean level −12.6 dB). **built**.
 
-**The narration mix** (in `src/pipeline.mjs` after the stitch). The screenplay's `vo` lines are rendered by the narrator's
+**The narration mix** (in `backend/composer/pipeline.mjs` after the stitch). The screenplay's `vo` lines are rendered by the narrator's
 bank voice and mixed under `clips/film.mp4` at their film seconds, the film's own sound lowered beneath them; the result is
 `clips/film-narrated.mp4`, which becomes the film when narration exists. **built, not yet exercised**.
 

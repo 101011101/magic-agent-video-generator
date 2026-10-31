@@ -2,7 +2,7 @@
 
 **Purpose.** Turn a brief into a story the rest of the pipeline can trust, and decide whether that story may invent.
 
-**Module.** `src/story/story.js`, `runStory({ brief, log, run, seconds })`.
+**Module.** `backend/composer/story/story.js`, `runStory({ brief, log, run, seconds })`.
 
 **Inputs.** The brief (one sentence to a paragraph of natural language, with the deliverable where the user gives it: "a
 30-second live-action film") and the film's length in seconds.

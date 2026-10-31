@@ -3,8 +3,8 @@
 **Purpose.** Produce the element table and one reference per element that must look the same every time it is drawn, then
 the facts about those references that later stages query: the cast lines, the voice bank, the plate descriptions.
 
-**Module.** `src/assets/assets.js`, `runAssets({ log, run, jobs, reuse, map, generate })`; the plate descriptions are
-`State.describePlaces()` in `src/state/state.js`, called by the pipeline right after the assets stage.
+**Module.** `backend/composer/assets/assets.js`, `runAssets({ log, run, jobs, reuse, map, generate })`; the plate descriptions are
+`State.describePlaces()` in `backend/composer/state/state.js`, called by the pipeline right after the assets stage.
 
 **Inputs.** The story (and in nonfiction mode the research looks), the mode, optionally an earlier run to reuse
 (`--reuse <dir>`), optional explicit reuse mappings (`--map new-id=old-id,…`), and whether generation may spend

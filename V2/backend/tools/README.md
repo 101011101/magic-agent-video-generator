@@ -13,9 +13,9 @@ export const tool = {
 };
 ```
 
-`index.js` lists them; the agent's catalogue (`../src/agent/catalogue.js`) merges the list into the tool table and
+`index.js` lists them; the agent's catalogue (`../backend/agent/catalogue.js`) merges the list into the tool table and
 the planner reads each tool's `guarantees` when the desired state needs a property an image model cannot hold. The
-executor (`../src/agent/execute.js`) dispatches any tool marked `custom` to its `run()` and records it like a paid
+executor (`../backend/agent/execute.js`) dispatches any tool marked `custom` to its `run()` and records it like a paid
 call, with zero credits.
 
 | tool | what it promises | built |

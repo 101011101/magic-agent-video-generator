@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-const DAG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "ui", "dag.js"), "utf8");
+const DAG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "frontend", "dag.js"), "utf8");
 
 export function page(results, { tier, stamp }) {
   const total = results.flatMap((r) => r.checks || []), ok = total.filter((x) => x.pass).length;

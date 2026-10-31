@@ -4,9 +4,9 @@ import { readFileSync, mkdtempSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
-import { State } from "../src/state/state.js";
-import { keyframePrompt } from "../src/keyframes/template.js";
-import { checkScript } from "../src/screenplay/screenplay.js";
+import { State } from "../backend/composer/state/state.js";
+import { keyframePrompt } from "../backend/composer/keyframes/template.js";
+import { checkScript } from "../backend/composer/screenplay/screenplay.js";
 
 const fx = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "fixtures", "vanderbilt6-run.json"), "utf8"));
 const tmp = mkdtempSync(join(tmpdir(), "v2-test-")), run = { path: (f) => join(tmp, f), save: () => {} };

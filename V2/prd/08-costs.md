@@ -1,6 +1,6 @@
 # 8. Costs
 
-**The model registry** (`src/lib/models.js`, 2026-10-30). Every still and video model the pipeline may call is one entry with
+**The model registry** (`backend/lib/models.js`, 2026-10-30). Every still and video model the pipeline may call is one entry with
 its capability profile: input-image cap, resolutions, price per resolution, plan, and for video the grid of clip lengths,
 the rate per resolution, the audio surcharge, the reference kinds it takes and whether it honours an end frame. Nothing
 else in the pipeline holds a model constant: `jobs.COST` prices from it, the screenplay's `GRID` is derived from it, the
