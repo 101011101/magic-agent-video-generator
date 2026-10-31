@@ -13,8 +13,11 @@ export const GROUPS = {
   inspect: "an asset → a verdict; zero credit",
 };
 
+import { CUSTOM_TOOLS } from "../../tools/index.js";
+
 export const TOOLS = [
-  { id: "image", group: "make", takes: [], makes: "picture", endpoint: "/v1/ai-image-generator", kind: "still", needs: ["subject"] },
+  ...CUSTOM_TOOLS,
+  { id: "image", group: "make", takes: [], makes: "picture", endpoint: "/v1/ai-image-generator", kind: "still", needs: ["subject"], cannot: ["legible text"] },
   { id: "text-to-video", group: "make", takes: ["optional references"], makes: "clip", endpoint: "/v1/text-to-video", kind: "video", needs: ["subject", "seconds"] },
   { id: "music", group: "make", takes: [], makes: "sound", endpoint: "/v1/ai-music-generator", kind: "none", credits: "1 per second", needs: ["cue", "seconds"] },
   { id: "voice", group: "make", takes: ["text"], makes: "sound", endpoint: "/v1/ai-voice-generator", kind: "none", needs: ["text", "voice"] },
@@ -33,7 +36,7 @@ export const TOOLS = [
   { id: "character-replace", group: "change-identity", takes: ["clip", "character"], makes: "clip", endpoint: "/v1/character-replace", kind: "video", needs: ["clip", "character"] },
   { id: "head-swap", group: "change-identity", takes: ["picture", "head"], makes: "picture", endpoint: "/v1/head-swap", kind: "none", needs: ["picture", "head"] },
   { id: "clothes-changer", group: "change-identity", takes: ["picture", "garment"], makes: "picture", endpoint: "/v1/ai-clothes-changer", kind: "none", needs: ["picture", "garment"] },
-  { id: "image-edit", group: "change-content", takes: ["picture", "up to 9 more pictures"], makes: "picture", endpoint: "/v1/ai-image-editor", kind: "still", needs: ["picture", "change"] },
+  { id: "image-edit", group: "change-content", takes: ["picture", "up to 9 more pictures"], makes: "picture", endpoint: "/v1/ai-image-editor", kind: "still", needs: ["picture", "change"], cannot: ["legible text (a model cannot spell reliably)"] },
   { id: "video-edit", group: "change-content", takes: ["clip"], makes: "clip", endpoint: "/v1/ai-video-editor", kind: "video", needs: ["clip", "change"] },
   { id: "video-style", group: "change-content", takes: ["clip"], makes: "clip", endpoint: "/v1/animation (video-to-video)", kind: "none", needs: ["clip", "style"] },
   { id: "edit-run", group: "change-content", takes: ["a run this session made", "shots or seconds"], makes: "film", endpoint: "pipeline.mjs --retry/--only", kind: "pipeline", needs: ["run", "change"] },
@@ -56,5 +59,5 @@ export const tool = (id) => TOOLS.find((t) => t.id === id);
 export function catalogueText() {
   const byGroup = {};
   for (const t of TOOLS) (byGroup[t.group] ??= []).push(t);
-  return Object.entries(GROUPS).map(([g, what]) => `${g}: ${what}\n${(byGroup[g] || []).map((t) => `  - ${t.id}: takes ${t.takes.length ? t.takes.join(", ") : "nothing"}; makes a ${t.makes}; needs ${t.needs.join(", ")}`).join("\n")}`).join("\n");
+  return Object.entries(GROUPS).map(([g, what]) => `${g}: ${what}\n${(byGroup[g] || []).map((t) => `  - ${t.id}: takes ${t.takes.length ? t.takes.join(", ") : "nothing"}; makes a ${t.makes}; needs ${t.needs.join(", ")}${t.guarantees ? `; GUARANTEES ${t.guarantees.join(", ")}` : ""}${t.cannot ? `; CANNOT give ${t.cannot.join(", ")}` : ""}${t.custom ? "; by code, 0 credits" : ""}`).join("\n")}`).join("\n");
 }

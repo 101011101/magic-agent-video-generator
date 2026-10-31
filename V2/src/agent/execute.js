@@ -12,6 +12,7 @@ import { STILLS, VIDEOS, stillCost, videoRate } from "../lib/models.js";
 import { duration } from "../lib/media.js";
 import { V2, RUNS } from "../lib/env.js";
 import { order, placeholder } from "./simulate.js";
+import { customTool } from "../../tools/index.js";
 
 const WIRED = new Set(["image", "image-edit", "image-to-video", "text-to-video", "music", "face-swap-photo", "background-remove", "upscale-image", "captions", "story", "assets", "screenplay", "keyframes", "clips", "film"]);
 const FILM = ["story", "assets", "screenplay", "keyframes", "clips", "film"];
@@ -38,6 +39,16 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
     try {
       if (FILM.includes(s.tool)) { if (!filmStarted) { filmStarted = true; await film(plan, dir, { id, tier, brief, sheet, set, say }); } continue; }
       set(i, { state: "running", started_at: Date.now() });
+      const custom = customTool(s.tool);
+      if (custom) {
+        const ins = s.inputs.map((n) => ({ name: n, file: file(n) })).filter((x) => x.file).map((x) => ({ ...x, file: join(dir, x.file) }));
+        const words = s.inputs.filter((n) => !file(n) && !/\.[a-z0-9]{2,4}$/i.test(n)); const f = out(s, "png");
+        const at = (s.params.extra || "").match(/at:\s*(top|middle|bottom)/i)?.[1]?.toLowerCase();
+        const text = s.params.text || (words.length ? words.join(" ") : null) || (s.params.prompt_or_change.match(/["“']([^"”']{1,120})["”']/)?.[1]) || s.params.prompt_or_change;
+        custom.run({ inputs: ins, params: { ...s.params, text, at }, out: join(dir, f) });
+        run.log.jobs[key] = { endpoint: custom.endpoint, file: f, inputs: ins.map((x) => x.name), prompt: text, model: "code", credits: 0, at: new Date().toISOString() }; run.save();
+        set(i, { state: "done", output: f, credits_spent: 0, error: null, note: `by code: ${custom.id}` }); say(`${s.tool} → ${s.produces} (0 credits, by code)`); continue;
+      }
       if (!WIRED.has(s.tool)) { const f = out(s, "svg"); writeFileSync(join(dir, f), placeholder(s, i)); set(i, { state: "done", output: f, simulated: true, note: `${s.tool} has no wired endpoint yet; placeholder` }); continue; }
       const inputs = s.inputs.map((n) => ({ name: n, file: file(n) })).filter((x) => x.file);
       // an input that is not a file and not something a node made is text the planner misplaced: it goes into the prompt
