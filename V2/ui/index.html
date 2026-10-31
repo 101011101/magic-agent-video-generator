@@ -80,7 +80,8 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .carbody{grid-column:2;grid-row:2;min-width:0} .carbody .tool{box-shadow:none}
 .treev .calls{border-top:1px solid var(--rule);padding-top:8px;display:flex;flex-direction:column;gap:10px} .treev .car{border-top:0;padding-top:0}
 .treev .vw{margin-left:auto} .treev .vw button{display:inline-flex;align-items:center;padding:4px 8px} .view h2 .vw+.ib{margin-left:0}
-.pgroup{display:flex;flex-direction:column;gap:6px} .pver{display:flex;align-items:center;gap:6px;font-size:11.5px} .pver .vn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--rule);background:var(--card);color:var(--mut);font:12px/1 inherit;font-weight:600;cursor:pointer} .pver .vn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.pgroup{display:flex;flex-direction:column;gap:6px} .crow{display:flex;flex-direction:column;gap:4px} .crowh{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.dag-col{padding:6px 4px;border-radius:12px;transition:background .15s} .dag-col.band{background:color-mix(in srgb,var(--blue) 12%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--blue) 45%,transparent)} .pver{display:flex;align-items:center;gap:6px;font-size:11.5px} .pver .vn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--rule);background:var(--card);color:var(--mut);font:12px/1 inherit;font-weight:600;cursor:pointer} .pver .vn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .dag-node.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 45%,transparent)}
 /* workflow */
 .wf .stage h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg);margin:8px 0 4px;display:flex;align-items:center;gap:6px} .wf .ex{color:var(--mut);display:inline-flex;cursor:help} .wf .exl{color:var(--mut);font-weight:400;font-size:11.5px;text-transform:none;letter-spacing:0;white-space:normal}
@@ -209,24 +210,26 @@ function renderTurn(t, ti, text) {
       // (all in order). Calls that run in parallel (same tool, same depth, same inputs) are one call with numbered versions.
       const steps = t.plan.steps, by = {}; steps.forEach((s, i) => (by[s.produces] = i));
       const level = new Array(n).fill(0); for (let pass = 0; pass < n; pass++) steps.forEach((s, i) => { const l = s.inputs.map((x) => by[x]).filter((j) => j !== undefined && j !== i).map((j) => level[j] + 1); level[i] = l.length ? Math.max(...l) : 0; });
-      const groups = []; steps.forEach((s, i) => { const key = `${level[i]}|${s.tool}|${[...s.inputs].sort().join(",")}`; let g = groups.find((x) => x.key === key); if (!g) { g = { key, idx: [] }; groups.push(g); } g.idx.push(i); });
-      groups.sort((p, q) => Math.min(...p.idx) - Math.min(...q.idx));
+      const groups = []; steps.forEach((s, i) => { let g = groups.find((x) => x.level === level[i]); if (!g) { g = { level: level[i], idx: [] }; groups.push(g); } g.idx.push(i); });
+      groups.sort((p, q) => p.level - q.level);
+      const hasMats = steps.some((s) => s.inputs.some((x) => by[x] === undefined));
+      const band = (gi) => { const cols = box.querySelectorAll(".dag-col"); cols.forEach((c, k) => c.classList.toggle("band", gi >= 0 && k === groups[gi].level + (hasMats ? 1 : 0))); };
       const box = el(`<div class="view treev" data-t="${ti}"><h2>Working tree<small>${n} tool calls · ${done}/${n} made · ${esc(t.plan.dir || "")}</small><span class="seg vw"><button data-v="carousel" aria-pressed="true" title="One call at a time">${I.right}</button><button data-v="list" title="All calls in order">${I.doc}</button></span><button class="ib" data-run title="Run all">${I.play}</button></h2><div class="dagbox"></div><div class="calls"></div></div>`);
       const calls = box.querySelector(".calls"); const groupEls = groups.map((g) => {
         const w = el(`<div class="pgroup"></div>`);
-        if (g.idx.length > 1) w.appendChild(el(`<div class="pver"><span class="mut">parallelized · ${g.idx.length} versions</span>${g.idx.map((i, k) => `<button class="vn" data-k="${k}" title="${esc(steps[i].produces)}">${k + 1}</button>`).join("")}</div>`));
+        if (g.idx.length > 1) w.appendChild(el(`<div class="pver"><span class="mut">parallelized · ${g.idx.length} calls</span>${g.idx.map((i, k) => `<button class="vn" data-k="${k}" title="${esc(steps[i].tool)} → ${esc(steps[i].produces)}">${k + 1}</button>`).join("")}<span class="mut vname"></span></div>`));
         const blocks = g.idx.map((i) => { const bl = block(steps[i], i, ti); w.appendChild(bl); return bl; }); let cur = 0;
-        const showV = (k) => { cur = k; blocks.forEach((bl, j) => (bl.hidden = j !== k)); w.querySelectorAll(".vn").forEach((v) => v.setAttribute("aria-pressed", String(Number(v.dataset.k) === k))); };
+        const showV = (k) => { cur = k; blocks.forEach((bl, j) => (bl.hidden = j !== k)); w.querySelectorAll(".vn").forEach((v) => v.setAttribute("aria-pressed", String(Number(v.dataset.k) === k))); const vn = w.querySelector(".vname"); if (vn) vn.textContent = `${steps[g.idx[k]].tool.replace(/-/g, " ")} → ${steps[g.idx[k]].produces}`; box.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", Number(d.dataset.i) === g.idx[k])); };
         w.querySelectorAll(".vn").forEach((v) => v.addEventListener("click", () => showV(Number(v.dataset.k)))); showV(0);
         w.showVersion = (i) => { const k = g.idx.indexOf(i); if (k >= 0) showV(k); }; w.idx = g.idx; return w;
       });
       let view = "carousel"; try { view = localStorage.getItem("calls-view") || "carousel"; } catch {} let cur = 0;
       const render = () => {
         calls.innerHTML = ""; box.querySelectorAll(".vw button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === view)));
-        if (view === "list") { groupEls.forEach((w) => calls.appendChild(w)); return; }
+        if (view === "list") { groupEls.forEach((w, gi) => { const row = el(`<div class="crow"><div class="crowh">column ${gi + 1}${groups[gi].idx.length > 1 ? ` · ${groups[gi].idx.length} in parallel` : ""}</div></div>`); row.appendChild(w); row.addEventListener("mouseenter", () => band(gi)); row.addEventListener("mouseleave", () => band(-1)); calls.appendChild(row); }); band(-1); return; }
         const car = el(`<div class="car"><div class="carnav"><span class="cap"></span></div><button class="side l" data-n="-1" title="Previous">${I.left}</button><div class="carbody"></div><button class="side r" data-n="1" title="Next">${I.right}</button></div>`);
         const body = car.querySelector(".carbody"); groupEls.forEach((w) => { w.hidden = true; body.appendChild(w); });
-        const show = (k) => { cur = (k + groupEls.length) % groupEls.length; groupEls.forEach((w, j) => (w.hidden = j !== cur)); const g = groups[cur]; car.querySelector(".cap").textContent = `${cur + 1} / ${groupEls.length} · ${steps[g.idx[0]].tool.replace(/-/g, " ")}${g.idx.length > 1 ? ` · ${g.idx.length} versions` : ""}`; box.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", g.idx.includes(Number(d.dataset.i)))); };
+        const show = (k) => { cur = (k + groupEls.length) % groupEls.length; groupEls.forEach((w, j) => (w.hidden = j !== cur)); const g = groups[cur]; car.querySelector(".cap").textContent = `column ${cur + 1} / ${groupEls.length}${g.idx.length > 1 ? ` · ${g.idx.length} in parallel` : ` · ${steps[g.idx[0]].tool.replace(/-/g, " ")}`}`; band(cur); };
         car.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => show(cur + Number(b.dataset.n)))); calls.appendChild(car); show(cur);
       };
       box.querySelector(".vw").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; view = b.dataset.v; try { localStorage.setItem("calls-view", view); } catch {} groupEls.forEach((w) => (w.hidden = false)); render(); });
