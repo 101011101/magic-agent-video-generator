@@ -160,7 +160,7 @@ function block(step, i, ti) {
       <span class="file" data-pr>${I.doc}${esc(step.prompt_file || "prompt")}</span>
     </div>
     <textarea class="pr" data-k="prompt_or_change" hidden>${esc(step.params.prompt_or_change)}</textarea>
-    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : /#story$/.test(step.output) ? "" : `<img src="${step.output.startsWith("../../") ? "/results/" + esc(step.run) + "/" : `/sessions/${SID}/`}${step.output.startsWith("../../") ? "" : esc(step.output)}" alt="">`}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} cr` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
+    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : /#story$/.test(step.output) || step.output.startsWith("../../") ? "" : `<img src="/sessions/${SID}/${esc(step.output)}" alt="">`}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} cr` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
     <div class="ft"><span class="cost"><b data-cost>${step.credits}</b> cr${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
       <form class="note"><input type="text" placeholder="Tell the agent about this step"></form>
       <button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
@@ -174,7 +174,7 @@ function block(step, i, ti) {
   c.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => {
     const state = b.dataset.a === "paused" && step.state === "paused" ? "proposed" : b.dataset.a; const r = await post({ state });
     step.state = r.step.state; c.dataset.s = step.state; c.querySelector(".st").innerHTML = STICON[step.state] || ""; lock(); tree();
-    chat.querySelectorAll(`.tool[data-t="${ti}"]`).forEach((x) => { const st2 = S?.turns?.[ti]?.plan?.steps?.[Number(x.dataset.i)]; });
+    if (state === "approved") await runSteps(ti, [i]);
     const est = chat.querySelector(`.est[data-t="${ti}"]`); if (est) est.querySelector("b").textContent = r.estimate;
   }));
   c.querySelector("form.note").addEventListener("submit", async (e) => { e.preventDefault(); const inp = e.target.querySelector("input"); const text = inp.value.trim(); if (!text) return; inp.value = ""; const r = await api(`/session/${SID}/note`, { turn: ti, index: i, text }); add(el(`<div class="msg user">${esc(r.text)}</div>`)); await sendRaw(r.text, [], true); });
@@ -196,14 +196,16 @@ function renderTurn(t, ti, text) {
 
 const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
 async function rerender() { S = await api(`/session/${SID}`); chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg agent" style="color:var(--mut)">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } tree(); }
-async function executeTurn(ti) {
-  const r = await api(`/session/${SID}/execute`, { turn: ti, all: false }); if (r.error) { add(el(`<div class="msg agent">${esc(r.error)}</div>`)); return; }
-  await new Promise((ok) => { const iv = setInterval(async () => { const run = await api("/running"); await rerender(); if (!run[SID]) { clearInterval(iv); ok(); } }, 3000); });
+async function executeTurn(ti, indices = null) {
+  const r = await api(`/session/${SID}/execute`, { turn: ti, indices }); if (r.error) { add(el(`<div class="msg agent">${esc(r.error)}</div>`)); return; }
+  let busy = false; await new Promise((ok) => { const iv = setInterval(async () => { if (busy) return; busy = true; const run = await api("/running"); await rerender(); busy = false; if (!run[SID]) { clearInterval(iv); ok(); } }, 3000); });
 }
+// one block, or the whole turn: simulated or real per the panel's switch
+async function runSteps(ti, indices) { if (creditsMode() === "real") return executeTurn(ti, indices); const r = await api(`/session/${SID}/simulate`, { turn: ti, indices }); if (r.error) return; await rerender(); }
 async function simulateTurn(ti) {
   if (creditsMode() === "real") return executeTurn(ti);
-  const r = await api(`/session/${SID}/simulate`, { turn: ti, all: false }); if (r.error) return;
-  S = await api(`/session/${SID}`); chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && m.sim) add(el(`<div class="msg agent">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } tree();
+  const r = await api(`/session/${SID}/simulate`, { turn: ti }); if (r.error) return;
+  await rerender();
 }
 async function sendRaw(text, names, quiet = false) {
   const typing = add(el(`<div class="msg agent" style="color:var(--mut)">…</div>`));
@@ -320,15 +322,16 @@ async function cmdStep() {
   const st = sc.steps[CMD.i++]; CMD.waiting = true; cst(CMD.state === "paused" ? "paused" : "playing");
   try {
     if (st.do === "import") { const r = await api("/import", { session: SID, from: st.from, name: st.name }); S = await api(`/session/${SID}`); tree(); clog(`import ${r.name || r.error}`); }
-    else if (st.do === "send") { chat.querySelector(".hint")?.remove(); clog(`send: ${st.text.slice(0, 50)}…`); await send(st.text, st.materials || []); const t = S.turns[S.turns.length - 1]; clog(t.questions ? `  asked ${t.questions.length} question(s)` : `  plan: ${t.plan.shape}, ${t.plan.steps.length} node(s), ~${t.plan.estimate_credits} cr`); if (t.questions) { clog("  (answering with defaults: auto mode next turn)"); setMode("auto"); await send("Your call on all of that.", []); } }
+    else if (st.do === "send") { chat.querySelector(".hint")?.remove(); clog(`send: ${st.text.slice(0, 50)}…`); await send(st.text, st.materials || []); let t = S.turns[S.turns.length - 1]; clog(t.questions ? `  asked: ${t.questions.map((q) => q.field).join(", ")}` : `  plan: ${t.plan.shape}, ${t.plan.steps.length} node(s), ~${t.plan.estimate_credits} cr`); if (t.questions) { const was = mode(); setMode("auto"); clog("  answering: your call (auto for this answer)"); await send("Your call on all of that.", []); setMode(was); t = S.turns[S.turns.length - 1]; clog(t.plan ? `  plan: ${t.plan.shape}, ${t.plan.steps.length} node(s), ~${t.plan.estimate_credits} cr` : `  still asking: ${(t.questions || []).map((q) => q.field).join(", ")}`); } }
     else if (st.do === "run") { const ti = S.turns.length - 1; const t = S.turns[ti]; if (!t.plan) { clog("  nothing to run"); } else { clog(`  run (${creditsMode()}) turn ${ti + 1}`); await simulateTurn(ti); const d = S.turns[ti].plan.steps; clog(`  ${d.filter((x) => x.state === "done").length}/${d.length} done${d.some((x) => x.state === "failed") ? " · a step failed" : ""}${d.some((x) => x.credits_spent) ? ` · ${d.reduce((a, x) => a + (x.credits_spent || 0), 0)} credits` : ""}`); } }
   } catch (e) { clog(`  error: ${e.message}`); }
   CMD.waiting = false; return true;
 }
 async function cmdLoop() { while (CMD.state === "playing") { const more = await cmdStep(); if (!more) break; if (CMD.state !== "playing") break; } }
-$("#play").addEventListener("click", async () => { if (!CMD.script) { const k = $("#script").value; CMD.script = TEST_SCRIPTS[k]; CMD.i = 0; $("#cmdlog").textContent = ""; await api("/session/reset", { session: SID, mode: CMD.script.mode }); setMode(CMD.script.mode); chat.innerHTML = ""; S = await api(`/session/${SID}`); tree(); clog(`script: ${k} · credits ${creditsMode()}`); } if (CMD.state === "playing") return; cst("playing"); cmdLoop(); });
+async function cmdStart() { if (CMD.script && CMD.state !== "done") return; const k = $("#script").value; if (!TEST_SCRIPTS[k]) return; CMD.script = TEST_SCRIPTS[k]; CMD.i = 0; $("#cmdlog").textContent = ""; await api("/session/reset", { session: SID, mode: CMD.script.mode }); setMode(CMD.script.mode); chat.innerHTML = ""; S = await api(`/session/${SID}`); tree(); clog(`script: ${k} · credits ${creditsMode()}`); }
+$("#play").addEventListener("click", async () => { if (CMD.state === "playing" || CMD.waiting) return; await cmdStart(); cst("playing"); cmdLoop(); });
 $("#pause").addEventListener("click", () => { if (CMD.state === "playing") { cst("paused"); clog("paused"); } });
-$("#stepb").addEventListener("click", async () => { if (!CMD.script) { $("#play").click(); cst("paused"); return; } if (CMD.waiting) return; cst("paused"); await cmdStep(); cst("paused"); });
+$("#stepb").addEventListener("click", async () => { if (CMD.state === "playing" || CMD.waiting) return; await cmdStart(); cst("paused"); await cmdStep(); if (CMD.state !== "done") cst("paused"); });
 $("#script").addEventListener("change", () => { CMD.script = null; CMD.i = 0; cst("idle"); });
 $("#credits").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; $("#credits").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); if (b.dataset.c === "real") clog("real: tool calls spend credits"); });
 $("#cmdmin").addEventListener("click", () => $("#cmd").classList.toggle("min"));
@@ -339,7 +342,7 @@ for (const k of Object.keys(window.TEST_SCRIPTS || {})) $("#script").appendChild
 (async () => {
   MODELS = await api("/models"); RUNS = await api("/runs");
   S = await api(`/session/${SID}`); setMode(S.mode || "ask"); $("#tier").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === (S.tier || "free")));
-  if (S.messages?.length) { chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } }
+  if (S.messages?.length) { chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg agent" style="color:var(--mut)">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } }
   tree();
 })();
 </script>

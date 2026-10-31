@@ -63,10 +63,10 @@ function treeText(goal) {
 // `session` the assets made earlier ([{label, kind, from}]). Returns the raw sheet plus the questions code derived.
 // With `liberty` (the creative-liberty toggle) nothing is asked: every open field takes its default or the model's
 // best guess and is marked "assumed"; the goal alone is still asked when unknown, since no default exists for it.
-export async function fillSheet({ messages, materials = [], session = [], goalHint = null, liberty = false }) {
+export async function fillSheet({ messages, materials = [], attached = null, session = [], goalHint = null, liberty = false }) {
   const out = await fillSheetRaw({ messages, materials, session, goalHint });
   // Code rules the model keeps missing: one supplied picture or clip on a change IS the asset; one on an image request is its material.
-  const pics = materials.filter((m) => /\.(png|jpe?g|webp|gif|mp4|mov)$/i.test(m));
+  const pool = attached && attached.length ? attached : materials; const pics = pool.filter((m) => /\.(png|jpe?g|webp|gif|mp4|mov)$/i.test(m));
   const fix = (field, value) => { const f = out.fields.find((x) => x.field === field); if (f && (f.source === "unknown" || (f.source === "inferred" && f.confidence < THRESHOLD))) { f.value = value; f.source = "session"; f.confidence = 1; f.quote = ""; } };
   if (out.goal.value === "change" && pics.length === 1) fix("asset", pics[0]);
   if (out.goal.value === "change" && pics.length) fix("provenance", "supplied");

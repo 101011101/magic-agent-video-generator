@@ -54,7 +54,8 @@ export function price(p, tier) {
       else if (def.id === "assets") { s.model = t.still; s.credits = 6 * (STILLS[t.still]?.cost?.[t.res] ?? 5); }
       else { s.model = def.id === "film" && p.shape !== "film" ? `${t.still} + ${t.video}` : "text"; s.credits = def.id === "film" && p.shape !== "film" ? Math.round(secs * 33) : 0; }
     }
-    else if (def.credits) { s.credits = def.id === "music" ? (s.params.seconds || 30) : 0; }
+    else if (def.credits) { s.credits = def.id === "music" ? Math.round(s.params.seconds || 30) : 0; }
+    else { s.credits = { "upscale-image": 25, "face-swap-photo": 10, "face-swap-video": 0, "background-remove": 5, captions: Math.round(4.8 * (s.params.seconds || 10)), colorize: 10 }[def.id] ?? 0; }
     if (s.needs_beyond_free && tier === "free") move ??= { step: s.tool, why: s.needs_beyond_free };
     total += s.credits;
   }

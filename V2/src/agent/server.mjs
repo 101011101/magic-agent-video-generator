@@ -60,12 +60,13 @@ createServer(async (req, res) => {
     if (req.method === "POST" && p === "/turn") {
       const b = await body(req); const s = load(b.session || "default");
       if (b.tier) s.tier = b.tier; if (b.mode) s.mode = b.mode;
-      s.messages.push({ who: "user", text: b.text, at: Date.now() });
+      s.messages.push({ who: "user", text: b.text, at: Date.now(), attached: b.materials || [] });
       s.materials = [...new Set([...(s.materials || []), ...(b.materials || [])])];
-      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card"), materials: s.materials, session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null });
+      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card").map((m) => ({ who: m.who, text: m.attached?.length ? `${m.text} [attached: ${m.attached.join(", ")}]` : m.text })), materials: s.materials, attached: b.materials || [], session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null });
       s.goal = r.questions ? r.sheet.goal.value : null;   // the goal carries only while questions are open; a new request after a plan starts fresh
+      s.request = s.request || b.text;   // the message that started this request; questions and answers do not replace it
       const ti = s.turns.length, d = sdir(s.id);
-      const t = { at: Date.now(), sheet: r.sheet, questions: r.questions || null, plan: r.plan || null, files: {} };
+      const t = { at: Date.now(), sheet: r.sheet, questions: r.questions || null, plan: r.plan || null, files: {}, brief: s.request }; if (!r.questions) s.request = null;
       writeFileSync(join(d, "prompts", `turn-${ti}-sheet.json`), JSON.stringify(r.sheet, null, 2)); t.files.sheet = `turn-${ti}-sheet.json`;
       if (r.plan) {
         t.plan.steps = t.plan.steps.map((st, i) => { const f = `turn-${ti}-step-${i}.txt`; writeFileSync(join(d, "prompts", f), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`); return { ...st, state: s.mode === "plan" ? "plan" : "proposed", prompt_file: f }; });
@@ -94,8 +95,8 @@ createServer(async (req, res) => {
     }
     if (req.method === "POST" && /^\/session\/[^/]+\/simulate$/.test(p)) {
       const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const t = s.turns[b.turn ?? s.turns.length - 1]; if (!t?.plan) return json(res, 400, { error: "no plan" });
-      const stale = t.plan.steps.map((x, i) => (x.state === "stale" || x.state !== "done" ? i : -1)).filter((i) => i >= 0);
-      simulate(t.plan, sdir(id), { only: b.all ? null : stale });
+      const stale = Array.isArray(b.indices) ? b.indices : t.plan.steps.map((x, i) => (x.state === "done" || x.state === "paused" || x.state === "skipped" ? -1 : i)).filter((i) => i >= 0);
+      simulate(t.plan, sdir(id), { only: stale });
       for (const st of t.plan.steps) { const a = s.assets.find((x) => x.label === st.produces); if (a) { a.file = st.output; a.planned = false; } }
       s.messages.push({ who: "agent", text: `Done (simulated): ${t.plan.steps.filter((x) => x.state === "done").length} of ${t.plan.steps.length} nodes made, ${stale.length} just now.`, at: Date.now(), turn: b.turn ?? s.turns.length - 1, sim: true });
       save(s); return json(res, 200, { plan: t.plan, made: stale });
@@ -103,10 +104,11 @@ createServer(async (req, res) => {
     if (req.method === "POST" && /^\/session\/[^/]+\/execute$/.test(p)) {
       const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const ti = b.turn ?? s.turns.length - 1; const t = s.turns[ti]; if (!t?.plan) return json(res, 400, { error: "no plan" });
       if (running[id]) return json(res, 409, { error: "already running" });
-      const only = b.all ? null : t.plan.steps.map((x, i) => (x.state === "done" ? -1 : i)).filter((i) => i >= 0);
+      const only = Array.isArray(b.indices) ? b.indices : t.plan.steps.map((x, i) => (x.state === "done" || x.state === "paused" || x.state === "skipped" ? -1 : i)).filter((i) => i >= 0);
       t.plan.turn = ti; running[id] = true; save(s);
-      const brief = s.messages.find((m) => m.who === "user")?.text || "";
-      execute(t.plan, sdir(id), { id, tier: s.tier, sheet: t.sheet, brief, only, say: (m) => { const cur = load(id); cur.messages.push({ who: "agent", text: m, at: Date.now(), turn: ti, exec: true }); cur.turns[ti].plan = t.plan; save(cur); }, onStep: () => { const cur = load(id); cur.turns[ti].plan = t.plan; for (const st of t.plan.steps) { const a = cur.assets.find((x) => x.label === st.produces); if (a && st.output) { a.file = st.output; a.planned = false; } } save(cur); } })
+      const brief = t.brief || s.messages.find((m) => m.who === "user")?.text || "";
+      const merge = (i, st) => { const cur = load(id); const target = cur.turns[ti].plan.steps[i]; for (const k of ["state", "output", "credits_spent", "cached", "error", "note", "simulated", "run", "page", "started_at", "ran_at"]) if (st[k] !== undefined) target[k] = st[k]; const a = cur.assets.find((x) => x.label === st.produces); if (a && st.output) { a.file = st.output; a.planned = false; } return cur; };
+      execute(t.plan, sdir(id), { id, tier: s.tier, sheet: t.sheet, brief, only, say: (m) => { const cur = load(id); cur.messages.push({ who: "agent", text: m, at: Date.now(), turn: ti, exec: true }); save(cur); }, onStep: (i, st) => { save(merge(i, st)); } })
         .catch((e) => { const cur = load(id); cur.messages.push({ who: "agent", text: `Stopped: ${String(e.message || e).slice(0, 200)}`, at: Date.now(), turn: ti, exec: true }); save(cur); })
         .finally(() => { delete running[id]; });
       return json(res, 200, { started: true, only });
@@ -130,6 +132,7 @@ createServer(async (req, res) => {
       const n = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : { comments: [], flags: [] };
       (kind === "comment" ? n.comments : n.flags).push({ ...b, at: Date.now() }); writeFileSync(f, JSON.stringify(n, null, 2)); return json(res, 200, n);
     }
+    if (p.startsWith("/runs/") && p !== "/runs") { const rel = normalize(decodeURIComponent(p.slice(6))); if (rel.startsWith("..")) return json(res, 403, {}); const f = join(RUNS, rel); if (!existsSync(f) || statSync(f).isDirectory()) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f)] || "application/octet-stream" }); return res.end(readFileSync(f)); }
     if (p.startsWith("/media/")) { const rel = normalize(decodeURIComponent(p.slice(7))); if (rel.startsWith("..")) return json(res, 403, {}); const f = join(RUNS, rel); if (!existsSync(f) || statSync(f).isDirectory()) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f)] || "application/octet-stream" }); return res.end(readFileSync(f)); }
     const f = join(UI, p === "/" ? "index.html" : normalize(p)); if (f.startsWith(UI) && existsSync(f) && !statSync(f).isDirectory()) { res.writeHead(200, { "content-type": MIME[extname(f)] || "text/plain" }); return res.end(readFileSync(f)); }
     json(res, 404, { error: "not found" });
