@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { execFileSync, spawnSync } from "node:child_process";
 import { State } from "../src/state/state.js";
 import { checkScript, normalizeShots } from "../src/screenplay/screenplay.js";
-import { keyframePrompt } from "../src/keyframes/template.js";
+import { keyframePrompt, deltaEditPrompt } from "../src/keyframes/template.js";
 import { policySafe, makeClips, makeSequences, t2vPrompt } from "../src/edit/edit.js";
 import { subtitlesFromScript } from "../src/lib/captions.js";
 import { bars, stitch, hasAudio, fps } from "../src/lib/media.js";
@@ -338,6 +338,29 @@ const checkOpts = { total: 30, max: 15, model: "wan-3.0", elements, seen: {} }, 
   const side = film(scene({ n: 1, place: "harbour", start: 0, seconds: 10, shots: [shot({ n: 1, start: 0, seconds: 10, size: "wide", camera: { ...cam("above the sea"), view: "from the side" }, first: { people: [P("alice")], props: [X2("boat", "on the water", "none")], relations: [{ a: "alice", how: "swims toward", b: "boat" }] } })] }));
   const cs = checkScript(side, { ...checkOpts, elements: els2, total: 10 });
   ok(cs.notes.some((n) => /moves toward something else, but the camera is from the side/.test(n)) && !cs.errors.some((e) => /toward/.test(e)), "heading with a side camera is a note, never an error");
+}
+// The film synopsis and the scene situation open the CONTEXT; the previous frame crosses places in a continuous scene.
+{
+  const s = film(scene({ n: 1, place: "parlour", start: 0, seconds: 4, shots: [shot({ n: 1, start: 0, seconds: 4, size: "wide", camera: cam("at the south wall"), first: { people: [P("alice", "in frame", "left")], props: [] } })] }),
+               scene({ n: 2, place: "harbour", start: 4, seconds: 4, continuous: true, inside: false, situation: "Alice has just stepped out onto the quay at dusk; the ledger is still on the parlour table behind her", shots: [shot({ n: 2, start: 4, seconds: 4, size: "medium", camera: cam("on the quay"), first: { people: [P("alice", "in frame", "centre")], props: [] } })] }));
+  s.synopsis = "Alice Hart reads a ledger in a parlour, then walks out to the harbour at dusk.";
+  const st = mk(s), by = Object.fromEntries(st.stills.map((x) => [x.id, x])), r = st.refs(by["s2-1"]), p = keyframePrompt({ still: by["s2-1"], state: st, medium, mode: "paint" }).prompt;
+  ok(/\nFilm: Alice Hart reads a ledger in a parlour, then walks out to the harbour at dusk\./.test(p) && /\nNow: Alice has just stepped out onto the quay at dusk/.test(p), "CONTEXT opens with the film synopsis and the scene's situation");
+  ok(r.some((x) => x.ref === "prev:s1-1") && /image 2: the frame just before this one, in another place \(the parlour\)[^\n]*WORLD OUTSIDE/.test(p), `a continuous scene in another place gets the previous frame for the moment and the world outside: ${r.map((x) => x.ref).join(", ")}`);
+  const s2 = film(scene({ n: 1, place: "parlour", start: 0, seconds: 4, shots: [shot({ n: 1, start: 0, seconds: 4, size: "wide", camera: cam("at the south wall"), first: { people: [P("alice", "in frame", "left")], props: [] } })] }),
+                scene({ n: 2, place: "harbour", start: 4, seconds: 4, continuous: false, inside: false, shots: [shot({ n: 2, start: 4, seconds: 4, size: "medium", camera: cam("on the quay"), first: { people: [P("alice", "in frame", "centre")], props: [] } })] }));
+  const st2 = mk(s2), r2 = st2.refs(st2.stills[1]);
+  ok(!r2.some((x) => x.ref.startsWith("prev:")), "a scene that is not continuous does not get the other place's frame");
+}
+// A delta edit: the change list, the headings as an invariant, the rules; no scene restated.
+{
+  const X3 = (id, where, condition, points = "away from the camera") => ({ id, visible: "in frame", where, size: "small", points, facing: "f", condition, on: "none" });
+  const s = film(scene({ n: 1, place: "harbour", start: 0, seconds: 8, shots: [shot({ n: 1, start: 0, seconds: 4, size: "wide", camera: cam("on the quay"), first: { people: [], props: [X3("ledger", "on the quay", "closed")] } }),
+    shot({ n: 2, start: 4, seconds: 4, size: "wide", camera: cam("on the quay", 1), first: { people: [], props: [X3("ledger", "on the quay", "closed")] }, last: { people: [], props: [X3("ledger", "on the quay", "open, pages turning")] }, action: [{ at: 4, text: "the ledger falls open" }] })] }));
+  const st = mk(s), by = Object.fromEntries(st.stills.map((x) => [x.id, x])), edit = st.stills.find((x) => x.envKind === "edit");
+  ok(!!edit, `the shot's last frame is an edit of the first: ${st.stills.map((x) => `${x.id} ${x.envKind}`).join(", ")}`);
+  const p = deltaEditPrompt({ still: edit, state: st, medium });
+  ok(/^EDIT \(from image 1\)\n/.test(p) && /Change only this:\n- the ledger: now [^\n]*open, pages turning/.test(p) && /nothing turns \(the ledger away from the camera, exactly as in image 1\)/.test(p) && !/CONTEXT|PEOPLE \(|REFERENCES/.test(p), `the delta edit carries the change, the heading invariant and no restated scene:\n${p.split("\n").slice(0, 5).join("\n")}`);
 }
 // The frame just before is a reference when it is not image 1: a new camera after a close gets the master AND the previous still.
 {

@@ -56,6 +56,7 @@ async function openai({ model, name, schema, prompt, jpgs, effort, tools = [] })
 
 // Schema helpers (strict mode: every property required, no extras).
 export const S = {
+  num: { type: "number" },
   str: { type: "string" }, int: { type: "integer" }, bool: { type: "boolean" },
   arr: (items) => ({ type: "array", items }),
   enum: (values) => ({ type: "string", enum: values }),

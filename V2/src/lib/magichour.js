@@ -6,14 +6,20 @@ import { key } from "./env.js";
 
 const BASE = "https://api.magichour.ai";
 
+// Retries: GETs and idempotent POSTs (asking for an upload URL creates no job and costs nothing) are retried on a network
+// error, a 429 or a 5xx, three times with a growing wait; a POST that creates a job is never retried blindly, because a
+// 502 after the server accepted it would post and pay twice (the pending record is the way back in). A 502 on upload-urls
+// once ended a run at its first paint.
+const IDEMPOTENT = new Set(["/v1/files/upload-urls"]);
 async function request(method, path, body) {
+  const retriable = method === "GET" || IDEMPOTENT.has(path), tries = 4;
   for (let attempt = 1; ; attempt++) {
     const res = await fetch(`${BASE}${path}`, { method, headers: { authorization: `Bearer ${key("MAGIC_HOUR_API_KEY")}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined })
-      .catch((e) => { if (method !== "GET" || attempt === 3) throw e; return null; });
+      .catch((e) => { if (!retriable || attempt === tries) throw e; return null; });
     if (!res) { await new Promise((r) => setTimeout(r, 8000 * attempt)); continue; }
     const data = await res.json().catch(() => ({}));
     if (res.ok) return data;
-    if (method !== "GET" || !(res.status === 429 || res.status >= 500) || attempt === 3) throw new Error(`Magic Hour ${method} ${path} → HTTP ${res.status}: ${JSON.stringify(data).slice(0, 400)}`);
+    if (!retriable || !(res.status === 429 || res.status >= 500) || attempt === tries) throw new Error(`Magic Hour ${method} ${path} → HTTP ${res.status}: ${JSON.stringify(data).slice(0, 400)}`);
     await new Promise((r) => setTimeout(r, 5000 * attempt));
   }
 }

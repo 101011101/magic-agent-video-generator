@@ -7,13 +7,16 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { runJob, pollJob, download, upload } from "./magichour.js";
 import { RUNS } from "./env.js";
+import { stillCost, videoCost, TIERS } from "./models.js";
 
-export const IMAGE = { model: "nano-banana-pro", resolution: "2k", aspect_ratio: "16:9" };
-export const VIDEO = { model: "wan-3.0", resolution: "720p", audio: true };
+export const IMAGE = { model: TIERS.paid.still, resolution: TIERS.paid.res, aspect_ratio: "16:9" };
+export const VIDEO = { model: TIERS.paid.video, resolution: TIERS.paid.vres, audio: true };
 // Credits per second of output at 720p (Magic Hour catalog; wan-3.0 measured: 480 for 5 s). Audio is free on wan-3.0.
 export const VIDEO_RATE = { "wan-3.0": 96, "kling-3.0": 48, "seedance-1.5": 60, "seedance-2.5": 336, "veo3.1-lite": 48, "veo3.1": 96, "ltx-2.5": 48, "minimax-h3": 48 };
 export const AUDIO_EXTRA = { "kling-3.0": 24, "veo3.1": 24, "veo3.1-lite": 24, "seedance-1.5": 60 };   // per second, when audio is on (the sheet: included on wan, ltx, minimax, seedance 2.x)
-export const COST = { image: 200, video: (seconds, model = VIDEO.model, audio = true) => seconds * ((VIDEO_RATE[model] ?? 96) + (audio ? AUDIO_EXTRA[model] || 0 : 0)), music: (seconds) => seconds };
+// Costs come from the model registry (lib/models.js): a still at a resolution, a clip at a resolution with or without audio.
+// COST.image stays as the paid-tier still price for callers that only know the old constant.
+export const COST = { image: stillCost(IMAGE.model, IMAGE.resolution), still: (model = IMAGE.model, res = IMAGE.resolution) => stillCost(model, res), video: (seconds, model = VIDEO.model, audio = true, res = VIDEO.resolution) => videoCost(seconds, model, res, audio), music: (seconds) => seconds };
 export const CAP = Number(process.env.CLEANED_CAP || 8000);
 if (!Number.isFinite(CAP) || CAP < 0) throw new Error(`CLEANED_CAP must be a non-negative number of credits (got "${process.env.CLEANED_CAP}")`);   // a typo must not remove the only spend guard
 const LEDGER = join(RUNS, "ledger.json"), LOCK = join(RUNS, "ledger.lock");
@@ -49,7 +52,7 @@ export class Jobs {
   // One image job. inputs: run-relative image files (empty → generator, else editor).
   async image(key, file, prompt, inputs = [], image = IMAGE) {
     const endpoint = inputs.length ? "/v1/ai-image-editor" : "/v1/ai-image-generator";
-    return this.paid(key, file, { endpoint, ...image, prompt }, inputs, image.resolution === "4k" ? COST.image * 2 : COST.image, async (paths, onCreate) => {
+    return this.paid(key, file, { endpoint, ...image, prompt }, inputs, stillCost(image.model, image.resolution), async (paths, onCreate) => {
       const body = { name: `${this.run.name} ${key}`, image_count: 1, ...image, style: { prompt }, ...(paths.length ? { assets: { image_file_paths: paths } } : {}) };
       return runJob(endpoint, body, { kind: "image", onCreate });
     });
@@ -57,14 +60,14 @@ export class Jobs {
   // One image-to-video job: start frame, optional end frame.
   async video(key, file, prompt, start, end, seconds, video = VIDEO) {
     const inputs = end ? [start, end] : [start];
-    return this.paid(key, file, { endpoint: "/v1/image-to-video", ...video, prompt, seconds }, inputs, COST.video(seconds, video.model, video.audio), async ([s, e], onCreate) => {
+    return this.paid(key, file, { endpoint: "/v1/image-to-video", ...video, prompt, seconds }, inputs, COST.video(seconds, video.model, video.audio, video.resolution), async ([s, e], onCreate) => {
       const body = { name: `${this.run.name} ${key}`, ...video, end_seconds: seconds, style: { prompt }, assets: { image_file_path: s, ...(e ? { end_image_file_path: e } : {}) } };
       return runJob("/v1/image-to-video", body, { kind: "video", onCreate });
     });
   }
   // Text-to-video with named references (@name in the prompt), no pinned frame. refs: [{ name, file }].
   async tvideo(key, file, prompt, refs, seconds, video = VIDEO) {
-    return this.paid(key, file, { endpoint: "/v1/text-to-video", ...video, prompt, seconds, names: refs.map((r) => r.name) }, refs.map((r) => r.file), COST.video(seconds, video.model, video.audio), async (paths, onCreate) => {
+    return this.paid(key, file, { endpoint: "/v1/text-to-video", ...video, prompt, seconds, names: refs.map((r) => r.name) }, refs.map((r) => r.file), COST.video(seconds, video.model, video.audio, video.resolution), async (paths, onCreate) => {
       const body = { name: `${this.run.name} ${key}`, aspect_ratio: "16:9", ...video, end_seconds: seconds, style: { prompt }, references: refs.map((r, i) => ({ name: r.name, file_path: paths[i] })) };
       return runJob("/v1/text-to-video", body, { kind: "video", onCreate });
     });

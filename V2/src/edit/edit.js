@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { key } from "../lib/env.js";
 import { VIDEO } from "../lib/jobs.js";
+import { video as videoProfile } from "../lib/models.js";
 import { frames, clipEnds, stitch, hasAudio } from "../lib/media.js";
 import { captionCard, burnCaptions, subtitlesFromScript } from "../lib/captions.js";
 import { inFrame, norm } from "../screenplay/screenplay.js";
@@ -56,7 +57,7 @@ async function transcribe(run, file) {
 // mode: pinned (image-to-video on the first and last still, as built) | start (image-to-video on the first still only; the
 // end still is painted but not pinned) | t2v (text-to-video with the two stills and the portraits as named references).
 // Every rendered variant is kept under K.variants[n][mode]; K.made[n] is the variant of the mode last asked for.
-export async function makeClips({ state, jobs, K, run, say = console.log, only = null, model = "wan-3.0", parallel = 3, mode = "pinned", voiceRefs = false }) {
+export async function makeClips({ state, jobs, K, run, say = console.log, only = null, video = VIDEO, model = video.model, parallel = 3, mode = "pinned", voiceRefs = false }) {
   K.made ??= {}; K.attempts ??= {}; K.variants ??= {};
   const variant = model === "wan-3.0" ? mode : `${mode}@${model}`;   // a variant is a mode on a model
   const scene = (n) => state.script.scenes.find((x) => x.n === n), todo = state.clips.filter((c) => !only || only.has(`clip-${c.n}`));
@@ -79,7 +80,7 @@ export async function makeClips({ state, jobs, K, run, say = console.log, only =
     for (let a = 1; a <= 2; a++) {
       const file = `clips/s${c.n}${suffix}.mp4`;
       try {
-        const job = mode === "t2v" ? await jobs.tvideo(`clip-${c.n}${suffix}`, file, prompt, refs, c.seconds, { ...VIDEO, model, audio: true }) : await jobs.video(`clip-${c.n}${suffix}`, file, prompt, start, mode === "start" ? null : end, c.seconds, { ...VIDEO, model, audio: true });
+        const job = mode === "t2v" ? await jobs.tvideo(`clip-${c.n}${suffix}`, file, prompt, refs, c.seconds, { ...VIDEO, ...video, model, audio: true }) : await jobs.video(`clip-${c.n}${suffix}`, file, prompt, start, mode === "start" ? null : end, c.seconds, { ...VIDEO, ...video, model, audio: true });
         if (job.estimated) { say(`  clip ${c.n}: would be made (${c.seconds} s, ${job.credits} credits); dry run, nothing sent`); return; }
         const ends = clipEnds(run.path(file), { start: run.path(start), end: run.path(end), path: (f) => run.path(`clips/${f}`), key: `s${c.n}${suffix}` });
         frames(run.path(file), run.path(`clips/s${c.n}${suffix}`), 2);
@@ -121,11 +122,12 @@ export function seqPrompt({ group, state, voices, refs, script }) {
     `PEOPLE\n${ids.length} ${ids.length === 1 ? "person" : "people"} and nobody else; nothing appears that is not in the frames.`,
     `SOUND\nAmbient noise: ${multi ? [...new Set(group.map((g) => t(g.sc.ambience)))].join("; then ") : t(scene.ambience)}${ids.some((id) => group.some((g) => g.shot.lines.some((l) => l.who === id))) ? "; the voices clearly" : ""}; no music of any kind (the film's music is added afterwards); no narration; no subtitles.`].join("\n\n");
 }
-export async function makeSequences({ state, jobs, K, run, say = console.log, model = "wan-3.0", parallel = 0, maxSeq = 15, voiceRefs = false, grid = [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30], only = null, across = false, speedUp = 1 }) {
+export async function makeSequences({ state, jobs, K, run, say = console.log, video = VIDEO, model = video.model, parallel = 0, maxSeq = 15, voiceRefs = false, grid = [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30], only = null, across = false, speedUp = 1 }) {
   K.made ??= {}; K.attempts ??= {}; K.sequences ??= {};
   const scene = (n) => state.script.scenes.find((x) => x.n === n), chainBad = (id) => { for (let e = state.still(id); e; e = state.still(e.env)) { if (!K.painted[e.id] || K.painted[e.id].bad) return e.id; } return null; };
   // Grouping: consecutive shots of one scene while the total stays within maxSeq; a title card is its own group.
-  const groups = [], MAX_FRAMES = 8, framesOf = (g) => g.reduce((n, x) => n + (x.c.end !== x.c.start ? 2 : 1), 0); let cur = null;   // 8 frames leave room for two portraits or voices within the ten references
+  const MAX_REFS_V = videoProfile(model).maxRefs || 10, MAX_FRAMES = Math.min(8, MAX_REFS_V - 1);   // the model's reference cap from the registry; frames first, then portraits and voices fill what is left
+  const groups = [], framesOf = (g) => g.reduce((n, x) => n + (x.c.end !== x.c.start ? 2 : 1), 0); let cur = null;   // 8 frames leave room for two portraits or voices within the ten references
   for (const c of state.clips) {
     const card = K.painted[c.start]?.card, sc = scene(c.scene), shot = sc.shots.find((h) => h.n === c.n), item = { c, sc, shot };
     if (card || !cur || (!across && cur[0].sc.n !== sc.n) || cur.reduce((n, g) => n + g.c.seconds, 0) + c.seconds > maxSeq || framesOf(cur) + (c.end !== c.start ? 2 : 1) > MAX_FRAMES || K.painted[cur[0].c.start]?.card) { cur = [item]; groups.push(cur); } else cur.push(item);   // across: a scene change is just another hard cut
@@ -146,15 +148,15 @@ export async function makeSequences({ state, jobs, K, run, say = console.log, mo
     const refs = []; let i = 0;
     for (const g of group) { g.startRef = `f${++i}`; refs.push({ name: g.startRef, file: K.painted[g.c.start].file }); if (g.c.end !== g.c.start) { g.endRef = `f${++i}`; refs.push({ name: g.endRef, file: K.painted[g.c.end].file }); } else g.endRef = null; }
     const ids = [...new Set(group.flatMap((g) => [...g.shot.first.people, ...g.shot.last.people].filter(inFrame).map((p) => p.id)))];
-    for (const id of ids) if (refs.length < 10 && state.bank[id]?.file) refs.push({ name: id, file: state.bank[id].file });
-    if (voiceRefs) for (const id of [...new Set(group.flatMap((g) => g.shot.lines.map((l) => l.who)))]) if (refs.length < 10 && state.bank[id]?.voice?.sample) refs.push({ name: `${id}_voice`, file: state.bank[id].voice.sample, voice: true });
+    for (const id of ids) if (refs.length < MAX_REFS_V && state.bank[id]?.file) refs.push({ name: id, file: state.bank[id].file });
+    if (voiceRefs) for (const id of [...new Set(group.flatMap((g) => g.shot.lines.map((l) => l.who)))]) if (refs.length < MAX_REFS_V && state.bank[id]?.voice?.sample) refs.push({ name: `${id}_voice`, file: state.bank[id].voice.sample, voice: true });
     // A fast sequence may be rendered longer and played back faster at the stitch (speedUp 1.4 = 40% faster motion).
     const fast = speedUp > 1 && group.every((g) => ["fast", "frantic"].includes(g.shot.pace)), want = fast ? total * speedUp : total;
     const rendered = grid.find((s) => s >= want) ?? Math.ceil(want), k = (K.attempts[`seq-${key}`] || []).length, suffix = k ? `-r${k}` : "", file = `clips/seq-${key}${suffix}.mp4`;
     const prompt = seqPrompt({ group, state, voices: state.voices, refs, script: state.script });
     let made;
     try {
-      const job = await jobs.tvideo(`seq-${key}${suffix}`, file, prompt, refs, rendered, { ...VIDEO, model, audio: true });
+      const job = await jobs.tvideo(`seq-${key}${suffix}`, file, prompt, refs, rendered, { ...VIDEO, ...video, model, audio: true });
       if (job.estimated) { say(`  sequence ${key}: would be made (${rendered} s for ${total} s of shots, ${job.credits} credits); dry run, nothing sent`); return; }
       const ends = clipEnds(run.path(file), { start: run.path(K.painted[first.start].file), end: run.path(K.painted[last.end].file), path: (f) => run.path(`clips/${f}`), key: `seq-${key}${suffix}` });
       frames(run.path(file), run.path(`clips/seq-${key}${suffix}`), 2);

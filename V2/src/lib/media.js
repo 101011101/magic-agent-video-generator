@@ -31,7 +31,11 @@ export function bars(file) {
   const all = r.stderr.toString().match(/crop=\d+:\d+:\d+:\d+/g), m = all && all[all.length - 1].match(/crop=(\d+):(\d+):(\d+):(\d+)/), [W, H] = size(file);
   if (!m) return { top: 0, bottom: 0, left: 0, right: 0, frac: 0, boxed: false };
   const w = Number(m[1]), h = Number(m[2]), x = Number(m[3]), y = Number(m[4]), out = { top: y, bottom: H - y - h, left: x, right: W - x - w };
-  out.frac = Math.round(Math.max((out.top + out.bottom) / H, (out.left + out.right) / W) * 1000) / 1000; out.boxed = out.frac >= 0.05; return out;
+  // Letterbox and pillarbox bars are symmetric; black on one side only is picture (a dark console bezel at the foot of a
+  // touchscreen close-up read as a 138 px "bar" while the top had 24). Only the symmetric part counts and is cropped.
+  const sy = Math.min(out.top, out.bottom), sx = Math.min(out.left, out.right);
+  out.sym = { top: sy, bottom: sy, left: sx, right: sx };
+  out.frac = Math.round(Math.max((2 * sy) / H, (2 * sx) / W) * 1000) / 1000; out.boxed = out.frac >= 0.05; return out;
 }
 // A downscaled JPEG for pages.
 export function thumb(file, out, width = 1000) { ff(["-i", file, "-vf", `scale='min(${width},iw)':-2`, "-q:v", "5", out]); return out; }
@@ -48,7 +52,7 @@ export function stitch(partsIn, listFile, out) {
   const norm = parts.map(({ file: p, seconds, speed = 1 }, i) => { const q = p.replace(/\.mp4$/, "-part.mp4"); const silent = !hasAudio(p), quiet = silent || (peakDb(p) ?? -99) < -60;   // a part without sound gets a silent track; a silent track is not normalised (loudnorm on silence yields NaN and the encoder refuses it: the title card)
     // Thin black bars (a painter's letterbox carried into the clip) are cropped off before scaling; a bar above 10% is left
     // alone (a title card's black field would otherwise be "cropped" to its lettering).
-    const lb = bars(p), [W, H] = size(p), cut = lb.frac > 0 && lb.frac <= 0.1 ? `crop=${W - lb.left - lb.right}:${H - lb.top - lb.bottom}:${lb.left}:${lb.top},` : "";
+    const lb = bars(p), [W, H] = size(p), cut = lb.frac > 0 && lb.frac <= 0.1 ? `crop=${W - 2 * lb.sym.left}:${H - 2 * lb.sym.top}:${lb.sym.left}:${lb.sym.top},` : "";
     const fit = cut ? "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720" : "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2";   // a cut picture fills the frame (a slight zoom); an intact one is fitted
     const faster = speed > 1 ? `setpts=PTS/${speed},` : "", atempo = speed > 1 ? `atempo=${Math.min(2, speed)},` : "";   // faster playback: fewer seconds of motion, sound kept in pitch
     ff(["-i", p, ...(silent ? ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"] : []), ...(seconds ? ["-t", String(seconds)] : []), "-vf", `setpts=PTS-STARTPTS,${faster}${cut}${fit},fps=${rate},format=yuv420p`, "-af", quiet ? `${atempo}aresample=48000` : `${atempo}loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000`, ...(silent ? ["-map", "0:v", "-map", "1:a", "-shortest"] : []), "-c:v", "libx264", "-crf", "18", "-c:a", "aac", q]); return q; });
