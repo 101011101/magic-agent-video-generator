@@ -7,7 +7,7 @@ import { catalogueText, tool as toolOf } from "./catalogue.js";
 import { TIERS, STILLS, VIDEOS, stillCost, videoRate } from "../lib/models.js";
 
 const STEP = S.obj({ group: S.str, tool: S.str, inputs: S.arr(S.str), produces: S.str, params: S.obj({ seconds: S.num, aspect: S.str, resolution: S.str, prompt_or_change: S.str, extra: S.str }), why: S.str, needs_beyond_free: S.str });
-const SCHEMA = S.obj({ desired_state: S.str, current_state: S.str, steps: S.arr(STEP), questions_left: S.arr(S.str), refuse: S.str });
+const SCHEMA = S.obj({ say: S.str, desired_state: S.str, current_state: S.str, steps: S.arr(STEP), questions_left: S.arr(S.str), refuse: S.str });
 
 export async function plan({ sheet, materials = [], session = [], tier = "free" }) {
   const fields = sheet.fields.filter((f) => f.source !== "not_applicable" && f.value).map((f) => `${f.field}: ${f.value} (${f.source})`).join("\n");
@@ -17,6 +17,7 @@ Reason in STATES: the desired state is what the sheet asks for; the current stat
 - needs_beyond_free: "" normally; else one line naming what no free model gives for this step (references in image-to-video, 1080p, more than 2 input pictures for an edit on qwen, more than 5 on flux-2-klein, a length above the grid).
 - questions_left: anything the sheet still lacks that the tool cannot run without (usually empty: the sheet was filled first).
 - refuse: "" or one line if the request must be declined.
+- say: one or two short sentences TO THE USER, plain words, first person: what you understood and what you are about to do (name the tool in words, not its id: "I'll put the logo onto the mug photo with one edit"); mention a choice you made only if the user did not state it; no parameters, no prompts, no costs.
 
 TOOLS, by group:
 ${catalogueText()}

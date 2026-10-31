@@ -90,25 +90,40 @@ parameters and the registry's models, the creative-liberty toggle, and the three
 comments, keyframe slideshow with flags) over an existing run. No tool is called; Run records the approval in the
 session. Tickets T-037 to T-039.
 
-## Hard rule: fewer words (added 2026-10-31)
+## Hard rule: fewer words (added 2026-10-31, revised the same day)
 
 Anything that can be an indicator is an indicator, and anything that can be hidden is hidden:
 
-- **State is colour and an icon, never a label.** A card's left edge: blue proposed, amber paused, green done with a
-  check, red flagged, grey skipped. No "proposed" pill, no "approved" line in the chat.
+- **State is a border and an icon, never a label.** The whole block is outlined in the state's colour: blue proposed,
+  amber paused, green done with a check, red flagged, grey skipped. Corners are squircles, not plain rounds. No pill,
+  no "approved" line in the chat.
+- **Icons, never emoji.** Every action and marker is a line icon drawn by the page (run, pause, skip, retry, accept,
+  comment, flag, attach, prompt). Emoji look fake and render differently everywhere.
 - **Inputs and outputs are pictures.** A material is its thumbnail; an output is its thumbnail once it exists and a
-  dashed tile with its name until then. Names appear on hover or under the tile in small type.
+  dashed tile with its name until then. Names appear under the tile in small type.
 - **Prompts are files, shown by name.** Every prompt the agent assembles is saved into the session's working memory
-  as a text file (`prompts/turn-3-step-1.txt`) and the card shows the name; a click opens it. The same for the
-  sheet, the plan and the agent's own calls. The chat never prints a prompt.
-- **The understood line is hidden.** One small grey "details" affordance under the agent's bubble opens the sheet's
-  values; closed by default. Only questions and the next action are visible.
+  as a text file and the block shows the name; a click opens it. The chat never prints a prompt.
+- **Details are hidden.** One small grey affordance under the agent's bubble opens the sheet's values; closed by
+  default. Only the agent's words, its questions and the next action are visible.
 - **Parameters are a grid, not a stack.** Each parameter is a label-value cell in a wrapping grid; the value is an
-  inline control (a menu, a number, a one-line field). No card is taller than its parameters need.
-- **Actions are icons** with tooltips: run ▶, pause ⏸, skip ✕, retry ↻, accept ✓.
-- **Modes replace toggles.** One mode indicator in the header, cycled with ⇧⇥ like a terminal's edit/auto modes:
-  **ask** (the loop asks when a field is not answered with confidence), **auto** (full creative liberty, nothing is
-  asked, assumed values marked), **plan** (plan only, no card can run). The cost confirmation applies in every mode.
+  inline control. No block is taller than its parameters need.
+- **Modes live by the composer.** The ask / auto / plan indicator sits next to the message box, where the hands are,
+  and cycles with shift-tab, like a terminal's edit and auto modes. The cost confirmation applies in every mode.
+
+## Three things on the screen, and who owns what
+
+1. **The agent's words**, in a bubble. Every agent turn opens with one or two sentences in plain words saying what it
+   understood and what it is about to do, or what it needs first. The bubble is the agent's voice and nothing else
+   goes in it: no parameters, no prompts, no outputs.
+2. **Tool blocks**, rectangular, one per step, under the bubble. A block is the tool: its inputs as tiles, its
+   parameters as a grid, its prompt by file name, its cost, its actions, and, when it has run, **its output inside the
+   same block**, because the block owns what it made. A block is also the way to talk to the agent about that step: a
+   one-line note field on every block ("put the logo lower", "use the other photo") sends a message tied to the step,
+   and the agent answers with a revised block.
+3. **The tree**, a sidebar on the left: the session as a directory with a working tree, `materials/`, `prompts/`,
+   `assets/` (every step's output, planned or made, under its turn), `runs/` (the film runs the session started, each
+   with its story, screenplay, stills, clips). Folders open; any asset can be dragged onto a tool block's inputs or
+   onto the composer to attach it to the next message. The tree is the working memory made visible.
 
 ## Working memory for a session
 

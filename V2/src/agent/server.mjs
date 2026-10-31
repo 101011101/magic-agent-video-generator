@@ -67,7 +67,7 @@ createServer(async (req, res) => {
         for (const st of t.plan.steps) s.assets.push({ label: st.produces, kind: /\.(mp4|mov)$/.test(st.produces) ? "clip" : /\.(mp3|wav)$/.test(st.produces) ? "sound" : "picture", from: st.tool, planned: true });
       }
       s.turns.push(t);
-      const text = r.questions ? r.questions.map((q) => q.question + (q.default ? ` (default: ${q.default})` : "")).join("\n") : `${r.plan.steps.length} step${r.plan.steps.length === 1 ? "" : "s"} · ~${r.plan.estimate_credits} credits${r.plan.tier_move ? ` · beyond free: ${r.plan.tier_move.why}` : ""}${r.plan.refuse ? `\nDeclined: ${r.plan.refuse}` : ""}`;
+      const text = r.questions ? `Before I plan this I need ${r.questions.length === 1 ? "one thing" : "a few things"}:\n` + r.questions.map((q) => `· ${q.question}${q.default ? ` (default: ${q.default})` : ""}`).join("\n") : `${r.plan.say || ""}${r.plan.tier_move ? ` This needs more than the free tier: ${r.plan.tier_move.why}.` : ""}${r.plan.refuse ? ` I can't do this one: ${r.plan.refuse}` : ""}`.trim();
       s.messages.push({ who: "agent", text, at: Date.now(), turn: ti });
       save(s); return json(res, 200, { session: s, turn: t, text, turnIndex: ti });
     }
@@ -75,10 +75,16 @@ createServer(async (req, res) => {
     if (req.method === "POST" && /^\/session\/[^/]+\/step$/.test(p)) {
       const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const t = s.turns[b.turn ?? s.turns.length - 1]; if (!t?.plan) return json(res, 400, { error: "no plan" });
       const st = t.plan.steps[b.index]; if (!st) return json(res, 400, { error: "no step" });
-      if (b.params) Object.assign(st.params, b.params); if (b.model) { st.model = b.model; if (b.resolution) st.resolution = b.resolution; } if (b.credits != null) st.credits = b.credits; if (b.state) st.state = b.state;
+      if (b.params) Object.assign(st.params, b.params); if (Array.isArray(b.inputs)) st.inputs = b.inputs; if (b.model) { st.model = b.model; if (b.resolution) st.resolution = b.resolution; } if (b.credits != null) st.credits = b.credits; if (b.state) st.state = b.state;
       t.plan.estimate_credits = t.plan.steps.reduce((a, x) => a + (x.state === "skipped" ? 0 : x.credits || 0), 0);
       writeFileSync(join(sdir(id), "prompts", st.prompt_file || `step-${b.index}.txt`), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`);
       save(s); return json(res, 200, { step: st, estimate: t.plan.estimate_credits });
+    }
+    if (req.method === "POST" && /^\/session\/[^/]+\/note$/.test(p)) {
+      const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const t = s.turns[b.turn]; const st = t?.plan?.steps?.[b.index];
+      const text = `About the ${st ? st.tool.replace(/-/g, " ") : "step"}${st ? ` (${st.produces})` : ""}: ${b.text}`;
+      s.messages.push({ who: "user", text, at: Date.now(), step: { turn: b.turn, index: b.index } }); save(s);
+      return json(res, 200, { text });
     }
     if (req.method === "POST" && p === "/session/reset") { const b = await body(req); const old = load(b.session || "default"); const s = { id: b.session || "default", messages: [], turns: [], assets: [], materials: old.materials || [], tier: old.tier || "free", mode: b.mode || old.mode || "ask", credits: 0 }; save(s); return json(res, 200, s); }
     if (p.startsWith("/sessions/")) { const rel = normalize(decodeURIComponent(p.slice(10))); if (rel.startsWith("..")) return json(res, 403, {}); const f = join(SESS, rel); if (!existsSync(f) || statSync(f).isDirectory()) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f).toLowerCase()] || "application/octet-stream" }); return res.end(readFileSync(f)); }
