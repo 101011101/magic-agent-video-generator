@@ -31,7 +31,9 @@ main{flex:1;overflow:auto;padding:6px 14px 16px max(14px,env(safe-area-inset-lef
 .compose .rb{width:34px;height:34px;border-radius:50%;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center} .compose .att{background:var(--grey);color:var(--mut)} .compose .send{background:var(--blue);color:#fff} .compose .row.over textarea{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
 .under{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11.5px;color:var(--mut)} .mode{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:3px 8px;border-radius:7px} .mode:hover{background:var(--grey)} .mode i{width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block} .mode[data-m=auto] i{background:var(--ok)} .mode[data-m=plan] i{background:var(--mut)} .mode b{color:var(--fg);font-weight:600;text-transform:capitalize} .mode kbd{font:10px/1 inherit;color:var(--mut);border:1px solid var(--rule);border-radius:4px;padding:1px 4px} .under .seg{margin-left:auto}
 /* middle: the canvas over the tool */
-.work{display:grid;grid-template-rows:1fr auto;min-width:0;height:100%}
+.work{display:grid;grid-template-rows:auto 1fr auto;min-width:0;height:100%} .canvashd{display:flex;align-items:center;gap:8px;padding:8px 18px 0;font-size:11.5px} .canvashd .ib{margin-left:auto}
+.cluster{transition:opacity .2s} .cluster.dim{opacity:.42} .cluster.dim:hover{opacity:.7}
+.cluster .ch .add{margin-left:auto;display:inline-flex;gap:4px;align-items:center} .cluster .ch .add select{max-width:160px} .cluster .ch .ib{margin-left:0}
 #canvas{overflow:auto;padding:16px 18px 24px;display:flex;flex-direction:column;gap:14px}
 .cluster{background:var(--card);border-radius:16px;corner-shape:squircle;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .cluster .ch{display:flex;align-items:center;gap:8px;font-size:12.5px} .cluster .ch b{font-weight:600} .cluster .ch .mut{color:var(--mut)} .cluster .ch .ib{margin-left:auto}
@@ -94,7 +96,8 @@ aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01e
   </form>
 </div>
 <div class="work">
-  <div id="canvas"><p class="hint">The working tree appears here. Click a node to open its tool below; drag from a node's right port onto another node to point its output there.</p></div>
+  <div class="canvashd"><span class="mut">working trees · the agent suggests, you edit</span><button class="ib" id="newtree" title="Start an empty tree"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div>
+  <div id="canvas"><p class="hint">The working tree appears here. Drag the background to pan, a node to move it, a port to wire it. Click a node to open its tool below.</p></div>
   <div id="tool"><div class="empty">no tool focused</div></div>
 </div>
 <aside>
@@ -112,7 +115,7 @@ aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01e
 document.head.appendChild(Object.assign(document.createElement("style"), { textContent: DAG_CSS }));
 const $ = (s, r = document) => r.querySelector(s), chat = $("#chat"), canvas = $("#canvas"), toolPanel = $("#tool");
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-const SID = "default"; let S = null, MODELS = null, RUNS = []; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
+const SID = "default"; let S = null, MODELS = null, RUNS = [], CATALOGUE = null; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
 const api = async (p, b) => (await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
 const add = (n, where = chat) => { where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
@@ -152,7 +155,7 @@ function block(step, i, ti) {
     ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : outUrl(step.output) ? `<img src="${outUrl(step.output)}" alt="">` : ""}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} credits` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
     <div class="ft"><span class="cost" title="Magic Hour credits"><b data-cost>${step.credits}</b> credits${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
       <form class="note"><input type="text" placeholder="Tell the agent about this step"></form>
-      <button class="ib" data-remake title="Remake: run again, keep this output as an attempt, remake what depends on it">${I.retry}</button><button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
+      <button class="ib" data-remove title="Remove this node from the tree" style="color:var(--bad)">${I.x}</button><button class="ib" data-remake title="Remake: run again, keep this output as an attempt, remake what depends on it">${I.retry}</button><button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
   </div>`);
   const ta = c.querySelector("textarea.pr"); c.querySelector("[data-pr]")?.addEventListener("click", () => (ta.hidden = !ta.hidden));
   const recost = () => { const m = c.querySelector('[data-k="model"]')?.value || step.model, r = c.querySelector('[data-k="resolution"]')?.value || step.resolution, s = c.querySelector('[data-k="seconds"]')?.value; c.querySelector("[data-cost]").textContent = costOf(step, m, r, s); };
@@ -161,6 +164,7 @@ function block(step, i, ti) {
   const lock = () => { const done = ["skipped", "plan", "done", "running", "waiting"].includes(step.state); c.querySelectorAll("[data-a]").forEach((x) => (x.disabled = done)); c.querySelector("[data-remake]").disabled = !["done", "failed", "stale"].includes(step.state); const pb = c.querySelector('[data-a="paused"]'); pb.innerHTML = step.state === "paused" ? I.play : I.pause; pb.title = step.state === "paused" ? "Resume" : "Pause"; };
   const post = async (extra) => { const params = {}; c.querySelectorAll("[data-k]").forEach((x) => { if (x.dataset.k === "seconds") params.seconds = Number(x.value); else if (x.dataset.k !== "model") params[x.dataset.k] = x.value; }); return api(`/session/${SID}/step`, { turn: ti, index: i, params, inputs: step.inputs, model: c.querySelector('[data-k="model"]')?.value, resolution: c.querySelector('[data-k="resolution"]')?.value, credits: Number(c.querySelector("[data-cost]").textContent), ...extra }); };
   c.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => { const state = b.dataset.a === "paused" && step.state === "paused" ? "proposed" : b.dataset.a; const r = await post({ state }); step.state = r.step.state; if (state === "approved") await runSteps(ti, [i]); else await rerender(ti, i); }));
+  c.querySelector("[data-remove]").addEventListener("click", async () => { await api(`/session/${SID}/plan`, { turn: ti, remove: i }); FOCUS = null; await rerender(); });
   c.querySelector("[data-remake]").addEventListener("click", async () => { const r = await api(`/session/${SID}/step`, { turn: ti, index: i, remake: true }); if (r.error) return; S = await api(`/session/${SID}`); await runSteps(ti, [i, ...S.turns[ti].plan.steps.map((x, k) => (x.state === "stale" ? k : -1)).filter((k) => k >= 0)]); });
   c.querySelector("form.note").addEventListener("submit", async (e) => { e.preventDefault(); const inp = e.target.querySelector("input"); const text = inp.value.trim(); if (!text) return; inp.value = ""; const r = await api(`/session/${SID}/note`, { turn: ti, index: i, text }); add(el(`<div class="msg user">${esc(r.text)}</div>`)); await sendRaw(r.text, []); });
   const io = c.querySelector("[data-drop]"); io.addEventListener("dragover", (e) => { e.preventDefault(); io.classList.add("over"); }); io.addEventListener("dragleave", () => io.classList.remove("over"));
@@ -177,29 +181,34 @@ function focus(ti, i) {
   const col = steps.map((s, k) => k).filter((k) => level[k] === level[i]);
   toolPanel.innerHTML = ""; const th = el(`<div class="th"><span>turn ${ti + 1} · column ${level[i] + 1}</span>${col.length > 1 ? `<span>· parallelized · ${col.length} calls</span>${col.map((k, n) => `<button class="vn" data-k="${k}" aria-pressed="${k === i}" title="${esc(steps[k].tool)} → ${esc(steps[k].produces)}">${n + 1}</button>`).join("")}<span class="vname">${esc(steps[i].tool.replace(/-/g, " "))} → ${esc(steps[i].produces)}</span>` : ""}</div>`);
   th.querySelectorAll(".vn").forEach((v) => v.addEventListener("click", () => focus(ti, Number(v.dataset.k)))); toolPanel.appendChild(th); toolPanel.appendChild(block(steps[i], i, ti));
-  canvas.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", d.closest(".cluster")?.dataset.t == ti && Number(d.dataset.i) === i)); canvas.querySelectorAll(".cluster").forEach((c) => c.classList.toggle("on", c.dataset.t == ti));
+  canvas.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", d.closest(".cluster")?.dataset.t == ti && Number(d.dataset.i) === i)); canvas.querySelectorAll(".cluster").forEach((c) => { c.classList.toggle("on", c.dataset.t == ti); c.classList.toggle("dim", c.dataset.t != ti); });
 }
 
 // ----- the canvas: one cluster per turn with a plan -----
 function cluster(t, ti) {
   const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
-  const c = el(`<div class="cluster" data-t="${ti}"><div class="ch"><b>turn ${ti + 1}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
+  const c = el(`<div class="cluster${FOCUS && FOCUS.ti !== ti ? " dim" : ""}" data-t="${ti}"><div class="ch"><b>${t.user_made ? "your tree" : `turn ${ti + 1}`}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><span class="add"><select data-addtool><option value="">+ tool…</option>${(CATALOGUE?.tools || []).map((x) => `<option value="${esc(x.id)}">${esc(x.group)} · ${esc(x.id)}${x.custom ? " (code)" : ""}</option>`).join("")}</select></span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
   drawDag(c.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : outUrl(s.output), onSelect: (i) => focus(ti, i),
-    onConnect: async (name, toIndex) => { const st = t.plan.steps[toIndex]; if (st.inputs.includes(name)) return; st.inputs.push(name); await api(`/session/${SID}/step`, { turn: ti, index: toIndex, inputs: st.inputs }); await rerender(ti, toIndex); } });
+    onConnect: async (name, toIndex) => { const st = t.plan.steps[toIndex]; if (st.inputs.includes(name)) return; st.inputs.push(name); await api(`/session/${SID}/step`, { turn: ti, index: toIndex, inputs: st.inputs }); await rerender(ti, toIndex); },
+    onMove: async (i, pos) => { t.plan.steps[i].pos = pos; await api(`/session/${SID}/step`, { turn: ti, index: i, pos }); } });
   c.querySelector("[data-run]").addEventListener("click", () => runSteps(ti, null));
+  c.querySelector("[data-addtool]").addEventListener("change", async (e) => { const tool = e.target.value; if (!tool) return; e.target.value = ""; const r = await api(`/session/${SID}/plan`, { turn: ti, add: { tool } }); if (r.error) return; await rerender(ti, r.index); });
+  c.addEventListener("pointerdown", () => { if (!FOCUS || FOCUS.ti !== ti) { canvas.querySelectorAll(".cluster").forEach((x) => x.classList.toggle("dim", x !== c)); } }, true);
   return c;
 }
 function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
-  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { canvas.querySelector(`.cluster[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); add(cluster(t, ti), canvas); }
+  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { canvas.querySelector(`.cluster[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); if (t.plan.steps.length) focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); if (!canvas.querySelector(`.cluster[data-t="${ti}"]`)) add(cluster(t, ti), canvas); }
 }
 const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
 async function rerender(ti = null, i = null) {
   S = await api(`/session/${SID}`); chat.innerHTML = ""; canvas.innerHTML = "";
   for (const m of S.messages) { if (m.who === "user") { add(el(`<div class="msg user">${esc(m.text)}</div>`)); if (m.attached?.length) add(el(`<div class="atts">${m.attached.map((n) => tile(n)).join("")}</div>`)); } else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg sys">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); }
+  // a focused turn with an empty plan (a tree the user started) still shows a cluster
+  S.turns.forEach((t, ti) => { if (t.plan && !canvas.querySelector(`.cluster[data-t="${ti}"]`)) { canvas.querySelector(".hint")?.remove(); add(cluster(t, ti), canvas); } });
   if (!canvas.children.length) canvas.innerHTML = '<p class="hint">The working tree appears here.</p>';
-  const f = ti != null ? { ti, i } : FOCUS; if (f && S.turns[f.ti]?.plan?.steps?.[f.i]) focus(f.ti, f.i); else { toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; }
+  const f = ti != null ? { ti, i } : FOCUS; if (f && f.i != null && S.turns[f.ti]?.plan?.steps?.[f.i]) focus(f.ti, f.i); else { toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = f && f.i == null ? { ti: f.ti, i: null } : null; canvas.querySelectorAll(".cluster").forEach((c) => c.classList.toggle("dim", FOCUS ? c.dataset.t != FOCUS.ti : false)); }
   tree();
 }
 async function executeTurn(ti, indices = null) {
@@ -335,7 +344,8 @@ document.addEventListener("mousedown", (e) => { if (CMD.state === "playing" && !
 for (const k of Object.keys(window.TEST_SCRIPTS || {})) $("#script").appendChild(el(`<option>${esc(k)}</option>`));
 
 (async () => {
-  MODELS = await api("/models"); RUNS = await api("/runs");
+  MODELS = await api("/models"); RUNS = await api("/runs"); CATALOGUE = await api("/catalogue");
+  $("#newtree").addEventListener("click", async () => { const r = await api(`/session/${SID}/plan`, { new: true }); await rerender(r.turn, null); canvas.querySelector(`.cluster[data-t="${r.turn}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); });
   S = await api(`/session/${SID}`); setMode(S.mode || "ask"); $("#tier").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === (S.tier || "free")));
   await rerender();
 })();
