@@ -8,7 +8,7 @@ import { join, basename } from "node:path";
 import { spawn } from "node:child_process";
 import { Jobs } from "../lib/jobs.js";
 import { runJob } from "../lib/magichour.js";
-import { STILLS, VIDEOS, stillCost, videoRate } from "../lib/models.js";
+import { STILLS, VIDEOS, TIERS, stillCost, videoRate } from "../lib/models.js";
 import { duration } from "../lib/media.js";
 import { V2, RUNS } from "../lib/env.js";
 import { order, placeholder } from "./simulate.js";
@@ -107,7 +107,8 @@ async function film(plan, dir, { id, tier, brief, sheet, set, say }) {
   const label = plan.steps.find((s) => FILM.includes(s.tool) && s.run)?.run || `session-${id}-${Date.now().toString(36)}`; const rdir = join(RUNS, label);
   const field = (k) => sheet?.fields?.find((f) => f.field === k)?.value || "";
   const secs = Number(plan.steps[idx.clips]?.params?.seconds || plan.steps[idx.film]?.params?.seconds) || Number((field("length_s") || "").match(/\d+/)?.[0]) || 15;
-  const args = [join(V2, "backend", "composer", "pipeline.mjs"), "--brief", brief, "--label", label, "--tier", tier, "--until", "film", "--total", String(secs), "--max", "10"];
+  const prof = TIERS[tier] || TIERS.free;   // the pipeline's --still default is the paid model, so the tier's models are passed explicitly
+  const args = [join(V2, "backend", "composer", "pipeline.mjs"), "--brief", brief, "--label", label, "--tier", tier, "--still", prof.still, "--res", prof.res, "--model", prof.video, "--vres", prof.vres, "--until", "film", "--total", String(secs), "--max", "10"];
   for (const k of FILM) if (idx[k] !== undefined) set(idx[k], { state: "running", run: label });
   say(`film run ${label}: ${secs} s on the ${tier} tier`);
   const child = spawn(process.execPath, args, { cwd: join(V2, ".."), env: { ...process.env, CLEANED_CAP: process.env.CLEANED_CAP || "8000" }, stdio: ["ignore", "pipe", "pipe"] });
