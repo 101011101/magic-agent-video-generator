@@ -34,7 +34,7 @@ main>*{max-width:760px;width:100%;margin:0 auto}
 .grid{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px} .grid span{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap} .grid span em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em} .grid span b{font-weight:500} .grid .inf b{background:var(--inf);border-radius:4px;padding:0 4px} .grid .asm b{background:var(--asm);border-radius:4px;padding:0 4px}
 /* tool block */
 .tool{background:var(--card);border:2px solid var(--blue);border-radius:18px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
-.tool[data-s=paused],.tool[data-s=stale]{border-color:var(--warn)} .tool[data-s=done]{border-color:var(--ok)} .tool[data-s=approved]{border-color:var(--ok)} .tool[data-s=skipped]{border-color:var(--rule);opacity:.55} .tool[data-s=plan]{border-color:var(--rule)} .tool[data-s=flagged]{border-color:var(--bad)}
+.tool[data-s=paused],.tool[data-s=stale]{border-color:var(--warn)} .tool[data-s=done]{border-color:var(--ok)} .tool[data-s=running]{border-color:var(--blue);animation:pulse 1.2s ease-in-out infinite} .tool[data-s=failed]{border-color:var(--bad)} @keyframes pulse{50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 25%,transparent)}} .tool[data-s=approved]{border-color:var(--ok)} .tool[data-s=skipped]{border-color:var(--rule);opacity:.55} .tool[data-s=plan]{border-color:var(--rule)} .tool[data-s=flagged]{border-color:var(--bad)}
 .tool .hd{display:flex;align-items:center;gap:8px} .tool .hd b{font-size:14px;font-weight:600} .tool .hd small{color:var(--mut);font-size:11.5px} .tool .hd .st{margin-left:auto;color:var(--mut);display:flex} .tool[data-s=approved] .hd .st{color:var(--ok)} .tool[data-s=paused] .hd .st{color:var(--warn)} .tool[data-s=flagged] .hd .st{color:var(--bad)}
 .io{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-radius:10px;padding:2px} .io.over{background:var(--inf)}
 .tile{width:64px;height:64px;border-radius:12px;corner-shape:squircle;background:var(--grey);display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;font-size:9.5px;color:var(--mut);text-align:center;padding:3px;flex:none} .tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover} .tile span{position:relative;z-index:1;background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:4px;padding:1px 4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -82,12 +82,26 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .wf pre.pr{white-space:pre-wrap;font:11.5px/1.4 ui-monospace,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:220px;overflow:auto;margin:0} .wf .txtp{margin:0;font-size:13px;color:var(--fg)} .wf .file{color:var(--blue);cursor:pointer;background:var(--inf);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px}
 @media(max-width:720px){body{grid-template-columns:1fr}aside{display:none}}
 </style>
+<style>
+/* the test command panel: floating, not part of the product */
+#cmd{position:fixed;left:14px;bottom:14px;z-index:50;width:264px;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--rule);border-radius:16px;corner-shape:squircle;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:12px}
+#cmd .h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em} #cmd .h .ib{margin-left:auto}
+#cmd select{width:100%} #cmd .r{display:flex;align-items:center;gap:6px} #cmd .r .ib{width:30px;height:30px;background:var(--grey)} #cmd .r .ib.on{background:var(--blue);color:#fff}
+#cmd .st{display:flex;align-items:center;gap:6px;color:var(--mut)} #cmd .st i{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block} #cmd[data-s=playing] .st i{background:var(--ok)} #cmd[data-s=paused] .st i{background:var(--warn)}
+#cmd .log{max-height:110px;overflow:auto;font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--mut);border-top:1px solid var(--rule);padding-top:6px;white-space:pre-wrap}
+#cmd .sw{display:inline-flex;background:var(--grey);border-radius:7px;padding:2px;margin-left:auto} #cmd .sw button{border:0;background:transparent;color:var(--mut);font:11px/1 inherit;padding:4px 8px;border-radius:5px;cursor:pointer} #cmd .sw button[aria-pressed=true]{background:var(--card);color:var(--fg);font-weight:600;box-shadow:var(--shadow)} #cmd .sw button[aria-pressed=true][data-c=real]{color:var(--bad)}
+#cmd.min .log,#cmd.min select,#cmd.min .r,#cmd.min .st{display:none}
+</style>
 </head>
 <body>
 <aside>
   <h1>Session <button class="ib" id="reset" title="New chat"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></h1>
   <ul class="tree" id="tree"></ul>
 </aside>
+<div id="cmd" data-s="idle"><div class="h">Test scripts<span class="sw" id="credits"><button data-c="sim" aria-pressed="true">simulated</button><button data-c="real">real</button></span><button class="ib" id="cmdmin" title="Collapse"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button></div>
+  <select id="script"></select>
+  <div class="r"><button class="ib" id="play" title="Play"><svg class="i" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></svg></button><button class="ib" id="pause" title="Pause"><svg class="i" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="ib" id="stepb" title="One step"><svg class="i" viewBox="0 0 24 24"><path d="M6 5v14l8-7zM18 5v14"/></svg></button><span class="st"><i></i><span id="cmdst">idle</span></span></div>
+  <div class="log" id="cmdlog"></div></div>
 <div class="chatwrap">
   <main id="chat"><p class="hint">Say what you want made.</p></main>
   <form class="compose" id="ask"><div class="in">
@@ -105,6 +119,7 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
   </div></form>
 </div>
 <script src="dag.js"></script>
+<script src="scripts.js"></script>
 <script>
 document.head.appendChild(Object.assign(document.createElement("style"), { textContent: DAG_CSS }));
 const $ = (s, r = document) => r.querySelector(s), chat = $("#chat");
@@ -130,7 +145,7 @@ function grid(sheet) {
 }
 const kindOf = (m, tool) => MODELS.stills[m] ? "still" : MODELS.videos[m] ? "video" : /^(film|podcast|edit-run)$/.test(tool) ? "pipeline" : "none";
 function costOf(step, m, r, sec) { const s = MODELS.stills[m], v = MODELS.videos[m]; if (s) return s.cost?.[r] ?? Object.values(s.cost || {})[0] ?? 0; if (v) return (Number(sec) || 5) * (v.cost?.[r] ?? Object.values(v.cost || {})[0] ?? 24); return step.credits || 0; }
-const STICON = { paused: I.pause, approved: I.check, done: I.check, flagged: I.bang, stale: I.bang };
+const STICON = { paused: I.pause, approved: I.check, done: I.check, flagged: I.bang, stale: I.bang, failed: I.x, running: "…" };
 
 function block(step, i, ti) {
   const kind = kindOf(step.model, step.tool); const table = kind === "still" ? MODELS.stills : MODELS.videos;
@@ -145,7 +160,7 @@ function block(step, i, ti) {
       <span class="file" data-pr>${I.doc}${esc(step.prompt_file || "prompt")}</span>
     </div>
     <textarea class="pr" data-k="prompt_or_change" hidden>${esc(step.params.prompt_or_change)}</textarea>
-    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px"><img src="/sessions/${SID}/${esc(step.output)}" alt=""><span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : "made"}</span></div>` : ""}
+    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : /#story$/.test(step.output) ? "" : `<img src="${step.output.startsWith("../../") ? "/results/" + esc(step.run) + "/" : `/sessions/${SID}/`}${step.output.startsWith("../../") ? "" : esc(step.output)}" alt="">`}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} cr` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
     <div class="ft"><span class="cost"><b data-cost>${step.credits}</b> cr${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
       <form class="note"><input type="text" placeholder="Tell the agent about this step"></form>
       <button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
@@ -179,7 +194,14 @@ function renderTurn(t, ti, text) {
   }
 }
 
+const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
+async function rerender() { S = await api(`/session/${SID}`); chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg agent" style="color:var(--mut)">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } tree(); }
+async function executeTurn(ti) {
+  const r = await api(`/session/${SID}/execute`, { turn: ti, all: false }); if (r.error) { add(el(`<div class="msg agent">${esc(r.error)}</div>`)); return; }
+  await new Promise((ok) => { const iv = setInterval(async () => { const run = await api("/running"); await rerender(); if (!run[SID]) { clearInterval(iv); ok(); } }, 3000); });
+}
 async function simulateTurn(ti) {
+  if (creditsMode() === "real") return executeTurn(ti);
   const r = await api(`/session/${SID}/simulate`, { turn: ti, all: false }); if (r.error) return;
   S = await api(`/session/${SID}`); chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && m.sim) add(el(`<div class="msg agent">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } tree();
 }
@@ -288,6 +310,31 @@ async function showRun(label) {
   draw(); add(k);
   if (R.film) add(el(`<div class="view"><h2>Film</h2><div class="slides"><video controls src="${media(R.film)}"></video></div></div>`));
 }
+
+// ----- the test command panel (not part of the product) -----
+const CMD = { script: null, i: 0, state: "idle", waiting: false };
+const clog = (m) => { const l = $("#cmdlog"); l.textContent += (l.textContent ? "\n" : "") + m; l.scrollTop = l.scrollHeight; };
+const cst = (s) => { CMD.state = s; $("#cmd").dataset.s = s; $("#cmdst").textContent = s + (CMD.script ? ` · ${CMD.i}/${CMD.script.steps.length}` : ""); };
+async function cmdStep() {
+  const sc = CMD.script; if (!sc || CMD.i >= sc.steps.length) { cst("done"); return false; }
+  const st = sc.steps[CMD.i++]; CMD.waiting = true; cst(CMD.state === "paused" ? "paused" : "playing");
+  try {
+    if (st.do === "import") { const r = await api("/import", { session: SID, from: st.from, name: st.name }); S = await api(`/session/${SID}`); tree(); clog(`import ${r.name || r.error}`); }
+    else if (st.do === "send") { chat.querySelector(".hint")?.remove(); clog(`send: ${st.text.slice(0, 50)}…`); await send(st.text, st.materials || []); const t = S.turns[S.turns.length - 1]; clog(t.questions ? `  asked ${t.questions.length} question(s)` : `  plan: ${t.plan.shape}, ${t.plan.steps.length} node(s), ~${t.plan.estimate_credits} cr`); if (t.questions) { clog("  (answering with defaults: auto mode next turn)"); setMode("auto"); await send("Your call on all of that.", []); } }
+    else if (st.do === "run") { const ti = S.turns.length - 1; const t = S.turns[ti]; if (!t.plan) { clog("  nothing to run"); } else { clog(`  run (${creditsMode()}) turn ${ti + 1}`); await simulateTurn(ti); const d = S.turns[ti].plan.steps; clog(`  ${d.filter((x) => x.state === "done").length}/${d.length} done${d.some((x) => x.state === "failed") ? " · a step failed" : ""}${d.some((x) => x.credits_spent) ? ` · ${d.reduce((a, x) => a + (x.credits_spent || 0), 0)} credits` : ""}`); } }
+  } catch (e) { clog(`  error: ${e.message}`); }
+  CMD.waiting = false; return true;
+}
+async function cmdLoop() { while (CMD.state === "playing") { const more = await cmdStep(); if (!more) break; if (CMD.state !== "playing") break; } }
+$("#play").addEventListener("click", async () => { if (!CMD.script) { const k = $("#script").value; CMD.script = TEST_SCRIPTS[k]; CMD.i = 0; $("#cmdlog").textContent = ""; await api("/session/reset", { session: SID, mode: CMD.script.mode }); setMode(CMD.script.mode); chat.innerHTML = ""; S = await api(`/session/${SID}`); tree(); clog(`script: ${k} · credits ${creditsMode()}`); } if (CMD.state === "playing") return; cst("playing"); cmdLoop(); });
+$("#pause").addEventListener("click", () => { if (CMD.state === "playing") { cst("paused"); clog("paused"); } });
+$("#stepb").addEventListener("click", async () => { if (!CMD.script) { $("#play").click(); cst("paused"); return; } if (CMD.waiting) return; cst("paused"); await cmdStep(); cst("paused"); });
+$("#script").addEventListener("change", () => { CMD.script = null; CMD.i = 0; cst("idle"); });
+$("#credits").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; $("#credits").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); if (b.dataset.c === "real") clog("real: tool calls spend credits"); });
+$("#cmdmin").addEventListener("click", () => $("#cmd").classList.toggle("min"));
+// any click on the product while a script plays is a pause: the user wants to audit something
+document.addEventListener("mousedown", (e) => { if (CMD.state === "playing" && !e.target.closest("#cmd")) { cst("paused"); clog("paused (click)"); } }, true);
+for (const k of Object.keys(window.TEST_SCRIPTS || {})) $("#script").appendChild(el(`<option>${esc(k)}</option>`));
 
 (async () => {
   MODELS = await api("/models"); RUNS = await api("/runs");

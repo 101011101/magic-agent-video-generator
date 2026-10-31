@@ -16,6 +16,10 @@ import { turn } from "./agent.mjs";
 import { price } from "./plan.js";
 import { runTree, sessionTree } from "./worktree.js";
 import { simulate, dependents as stepDependents } from "./simulate.js";
+import { execute } from "./execute.js";
+import { copyFileSync } from "node:fs";
+const RESULTS_DIR = join(V2, "results");
+const running = {};
 
 const PORT = Number(process.argv[process.argv.indexOf("--port") + 1]) || 4747;
 const SESS = join(V2, "sessions"); mkdirSync(SESS, { recursive: true });
@@ -96,6 +100,24 @@ createServer(async (req, res) => {
       s.messages.push({ who: "agent", text: `Done (simulated): ${t.plan.steps.filter((x) => x.state === "done").length} of ${t.plan.steps.length} nodes made, ${stale.length} just now.`, at: Date.now(), turn: b.turn ?? s.turns.length - 1, sim: true });
       save(s); return json(res, 200, { plan: t.plan, made: stale });
     }
+    if (req.method === "POST" && /^\/session\/[^/]+\/execute$/.test(p)) {
+      const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const ti = b.turn ?? s.turns.length - 1; const t = s.turns[ti]; if (!t?.plan) return json(res, 400, { error: "no plan" });
+      if (running[id]) return json(res, 409, { error: "already running" });
+      const only = b.all ? null : t.plan.steps.map((x, i) => (x.state === "done" ? -1 : i)).filter((i) => i >= 0);
+      t.plan.turn = ti; running[id] = true; save(s);
+      const brief = s.messages.find((m) => m.who === "user")?.text || "";
+      execute(t.plan, sdir(id), { id, tier: s.tier, sheet: t.sheet, brief, only, say: (m) => { const cur = load(id); cur.messages.push({ who: "agent", text: m, at: Date.now(), turn: ti, exec: true }); cur.turns[ti].plan = t.plan; save(cur); }, onStep: () => { const cur = load(id); cur.turns[ti].plan = t.plan; for (const st of t.plan.steps) { const a = cur.assets.find((x) => x.label === st.produces); if (a && st.output) { a.file = st.output; a.planned = false; } } save(cur); } })
+        .catch((e) => { const cur = load(id); cur.messages.push({ who: "agent", text: `Stopped: ${String(e.message || e).slice(0, 200)}`, at: Date.now(), turn: ti, exec: true }); save(cur); })
+        .finally(() => { delete running[id]; });
+      return json(res, 200, { started: true, only });
+    }
+    if (req.method === "POST" && p === "/import") {
+      const b = await body(req); const id = b.session || "default"; const src = normalize(b.from || ""); if (src.startsWith("..") || !existsSync(join(V2, src))) return json(res, 404, { error: "no file" });
+      const name = safe(b.name || basename(src)); copyFileSync(join(V2, src), join(sdir(id), "materials", name)); const s = load(id); s.materials = [...new Set([...(s.materials || []), name])]; save(s);
+      return json(res, 200, { name, url: `/sessions/${encodeURIComponent(id)}/materials/${encodeURIComponent(name)}` });
+    }
+    if (p.startsWith("/results/")) { const rel = normalize(decodeURIComponent(p.slice(9))); if (rel.startsWith("..")) return json(res, 403, {}); let f = join(RESULTS_DIR, rel); if (existsSync(f) && statSync(f).isDirectory()) f = join(f, "index.html"); if (!existsSync(f)) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f)] || "text/html; charset=utf-8" }); return res.end(readFileSync(f)); }
+    if (req.method === "GET" && p === "/running") return json(res, 200, running);
     if (req.method === "POST" && p === "/session/reset") { const b = await body(req); const old = load(b.session || "default"); const s = { id: b.session || "default", messages: [], turns: [], assets: [], materials: old.materials || [], tier: old.tier || "free", mode: b.mode || old.mode || "ask", credits: 0 }; save(s); return json(res, 200, s); }
     if (p.startsWith("/sessions/")) { const rel = normalize(decodeURIComponent(p.slice(10))); if (rel.startsWith("..")) return json(res, 403, {}); const f = join(SESS, rel); if (!existsSync(f) || statSync(f).isDirectory()) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f).toLowerCase()] || "application/octet-stream" }); return res.end(readFileSync(f)); }
     if (req.method === "GET" && /^\/tree\/run\/[^/]+$/.test(p)) { const label = decodeURIComponent(p.split("/")[3]); const f = join(RUNS, label, "run.json"); if (!existsSync(f)) return json(res, 404, { error: "no run" }); return json(res, 200, runTree(JSON.parse(readFileSync(f, "utf8")), label)); }
