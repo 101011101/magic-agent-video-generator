@@ -140,3 +140,24 @@ notes.json        comments on scenes, flags on stills, with the item they are ti
 The chat shows names and thumbnails; the files hold the text. A reference picture and a prompt are the same kind of
 thing to the session, a file with a name and a provenance, and the agent's next turn reads the session the way the
 state manager reads its tables: it never re-derives from the conversation what the files already say.
+
+## Three panels (revised 2026-10-31, supersedes "Three things on the screen")
+
+The words and the tools are separated. The screen is three panels:
+
+1. **Left: the conversation.** Only bubbles: the user's requests, the agent's sentences, its questions, the hidden
+   details line. No tool block ever appears here. The composer and the mode indicator sit at the bottom.
+2. **Middle, top: the canvas.** The working tree, drawn as nodes with connection points, one cluster per request (a
+   single job is a one-node cluster). The tree shows only the main ideas: the shape, the tool of each node, its state
+   as a border, its output as a thumbnail once made. It is how the user navigates and controls the focus of the
+   context: clicking a node focuses it below. Outputs can be pointed into other nodes or other trees by dragging
+   from a node's output port to another node's input port; a material from the directory drags onto an input port
+   the same way. A re-pointed input is an edit of the plan and marks dependents stale.
+3. **Middle, bottom: the tool.** The focused node's tool, with the UI that tool needs: the parameter grid, the prompt
+   by file name, the inputs and the output, a timestamp picker for a clip tool, a crop frame for a crop, a text box
+   and placement for the overlay. When the focused node sits in a column that runs in parallel, the panel shows
+   that column with numbered versions to flip through, as the carousel did.
+4. **Right: the directory.** The session as a tree: materials, prompts, assets by working tree, bank, runs. Files
+   drag from here onto the canvas.
+
+The chat stays the agent's voice; the canvas is the plan; the tool panel is the hands; the directory is the memory.

@@ -5,118 +5,82 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Magic Agent</title>
 <style>
-/* Apple-like, fewer words. Three regions: the tree (left), the chat (bubbles are the agent's voice), tool blocks that own their output. */
+/* Three panels (prd/12-frontend.md): the conversation (left), the canvas with the working tree over the focused tool (middle), the directory (right). */
 :root{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#86868b;--rule:#e2e2e6;--blue:#0a84ff;--grey:#eceef0;--ok:#30b350;--warn:#ff9f0a;--bad:#ff3b30;--inf:#eef4ff;--asm:#fff4e0;--shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(0,0,0,.05);color-scheme:light}
 @media(prefers-color-scheme:dark){:root{--bg:#000;--card:#161618;--fg:#f5f5f7;--mut:#8e8e93;--rule:#2c2c2e;--grey:#2a2a2d;--inf:#14233a;--asm:#3a2a10;--shadow:0 1px 2px rgba(0,0,0,.5);color-scheme:dark}}
-*{box-sizing:border-box}
+*{box-sizing:border-box} [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:250px 1fr;grid-template-rows:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:minmax(300px,380px) 1fr 236px;grid-template-rows:100%}
 svg.i{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
-.sq{border-radius:18px;corner-shape:squircle}
-/* tree */
-aside{border-right:1px solid var(--rule);background:var(--card);overflow:auto;padding:14px 10px 20px max(10px,env(safe-area-inset-left,0px));font-size:12.5px}
-aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
-aside h1 .ib{margin-left:auto}
-.tree{list-style:none;margin:0;padding:0} .tree li{margin:0} .tree .row{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:7px;cursor:default;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .tree .row:hover{background:var(--grey)}
-.tree .row.dir{cursor:pointer;color:var(--mut)} .tree .row.dir b{color:var(--fg);font-weight:500} .tree ul{list-style:none;margin:0;padding-left:14px;border-left:1px solid var(--rule);margin-left:11px} .tree li.closed>ul{display:none}
-.tree .row.file{cursor:grab} .tree .row.file:active{cursor:grabbing} .tree .row img{width:18px;height:18px;object-fit:cover;border-radius:4px} .tree .dot{width:7px;height:7px;border-radius:50%;background:var(--rule);flex:none} .tree .dot.ok{background:var(--ok)} .tree .dot.proposed{background:var(--blue)} .tree .dot.paused{background:var(--warn)}
-.tree .cnt{margin-left:auto;color:var(--mut);font-size:11px}
-/* chat */
-.chatwrap{display:flex;flex-direction:column;min-width:0;height:100%}
-main{flex:1;overflow:auto;padding:18px max(20px,env(safe-area-inset-right,0px)) 24px 20px;display:flex;flex-direction:column;gap:10px}
-main>*{max-width:760px;width:100%;margin:0 auto}
-.msg{max-width:min(76%,560px);padding:8px 13px;border-radius:17px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;font-size:14.5px;margin:0}
-.msg.user{margin-left:auto;margin-right:calc((100% - 760px)/2);background:var(--blue);color:#fff;border-bottom-right-radius:5px}
-.msg.agent{margin-right:auto;margin-left:calc((100% - 760px)/2);background:var(--grey);border-bottom-left-radius:5px}
-@media(max-width:820px){.msg.user{margin-right:0}.msg.agent{margin-left:0}}
-.atts{display:flex;gap:6px;justify-content:flex-end;margin-top:-4px}
-.more{margin-top:-6px} .more summary{list-style:none;cursor:pointer;color:var(--mut);font-size:11.5px;padding:2px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px} .more summary::-webkit-details-marker{display:none} .more summary:hover{background:var(--grey)} .more .grid{margin:4px 0 0 8px}
-.grid{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px} .grid span{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap} .grid span em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em} .grid span b{font-weight:500} .grid .inf b{background:var(--inf);border-radius:4px;padding:0 4px} .grid .asm b{background:var(--asm);border-radius:4px;padding:0 4px}
-/* tool block */
-.tool{background:var(--card);border:2px solid var(--blue);border-radius:18px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
-.tool[data-s=paused],.tool[data-s=stale],.tool[data-s=waiting]{border-color:var(--warn)} .tool[data-s=waiting] .hd .st{color:var(--warn)} .tool[data-s=done]{border-color:var(--ok)} .dag-node[data-s=waiting]{border-color:var(--warn,#ff9f0a);border-style:dashed} .tool[data-s=running]{border-color:var(--blue);animation:pulse 1.2s ease-in-out infinite} .tool[data-s=failed]{border-color:var(--bad)} @keyframes pulse{50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 25%,transparent)}} .tool[data-s=approved]{border-color:var(--ok)} .tool[data-s=skipped]{border-color:var(--rule);opacity:.55} .tool[data-s=plan]{border-color:var(--rule)} .tool[data-s=flagged]{border-color:var(--bad)}
-.tool .hd{display:flex;align-items:center;gap:8px} .tool .hd b{font-size:14px;font-weight:600} .tool .hd small{color:var(--mut);font-size:11.5px} .tool .hd .st{margin-left:auto;color:var(--mut);display:flex} .tool[data-s=approved] .hd .st{color:var(--ok)} .tool[data-s=paused] .hd .st{color:var(--warn)} .tool[data-s=flagged] .hd .st{color:var(--bad)}
-.io{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-radius:10px;padding:2px} .io.over{background:var(--inf)}
-.tile{width:64px;height:64px;border-radius:12px;corner-shape:squircle;background:var(--grey);display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;font-size:9.5px;color:var(--mut);text-align:center;padding:3px;flex:none} .tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover} .tile span{position:relative;z-index:1;background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:4px;padding:1px 4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile.out{border:1.5px dashed var(--rule);background:transparent} .io .arrow{color:var(--mut);display:flex}
-.pg{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px} .pg label{display:inline-flex;align-items:center;gap:5px;white-space:nowrap} .pg label em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em} .pg input[type=number]{width:58px} .pg .file{color:var(--blue);cursor:pointer;background:var(--inf);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px}
-select,input[type=text],input[type=number]{font:inherit;font-size:12.5px;color:var(--fg);background:var(--grey);border:0;border-radius:6px;padding:4px 7px;outline:0;max-width:100%}
-select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
-.tool textarea.pr{display:block;width:100%;border:0;resize:vertical;min-height:60px;color:var(--fg);white-space:pre-wrap;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px}
-.out{border-top:1px solid var(--rule);padding-top:8px;display:flex;gap:10px;align-items:center;color:var(--mut);font-size:12.5px} .out .tile{width:120px;height:80px}
-.ft{display:flex;align-items:center;gap:2px} .ft .cost{color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums;margin-right:auto} .ft .cost b{color:var(--fg);font-weight:500}
-.ft .note{flex:1;display:flex;gap:4px;margin:0 8px} .ft .note input{flex:1;background:transparent;border-bottom:1px solid var(--rule);border-radius:0;padding:3px 2px} .ft .note input:focus{box-shadow:none;border-bottom-color:var(--blue)}
 .ib{border:0;background:transparent;color:var(--mut);cursor:pointer;font:inherit;font-size:12px;padding:0;width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center} .ib:hover{background:var(--grey);color:var(--fg)} .ib.run{color:var(--blue)} .ib:disabled{opacity:.3;cursor:default}
-.est{font-size:11.5px;color:var(--mut);margin-top:-2px}
-/* composer */
-.compose{border-top:1px solid var(--rule);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);background:color-mix(in srgb,var(--bg) 75%,transparent);padding:8px max(16px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) 16px}
-.compose .in{max-width:760px;margin:0 auto}
-.pend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px} .pend .tile{width:44px;height:44px;font-size:8.5px;border-radius:9px}
-.compose .row{display:flex;gap:8px;align-items:flex-end}
-.compose textarea{flex:1;min-height:38px;max-height:160px;resize:none;background:var(--card);border:0;border-radius:19px;padding:9px 14px;box-shadow:var(--shadow);font:inherit;font-size:14.5px;color:var(--fg);outline:0}
-.compose .rb{width:36px;height:36px;border-radius:50%;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center} .compose .att{background:var(--card);box-shadow:var(--shadow);color:var(--mut)} .compose .send{background:var(--blue);color:#fff}
-.compose .row.over textarea{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
-.under{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:11.5px;color:var(--mut)}
-.mode{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:3px 8px;border-radius:7px} .mode:hover{background:var(--grey)}
-.mode i{width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block} .mode[data-m=auto] i{background:var(--ok)} .mode[data-m=plan] i{background:var(--mut)}
-.mode b{color:var(--fg);font-weight:600;text-transform:capitalize} .mode kbd{font:10px/1 inherit;color:var(--mut);border:1px solid var(--rule);border-radius:4px;padding:1px 4px}
-.seg{display:inline-flex;background:var(--grey);border-radius:7px;padding:2px;margin-left:auto} .seg button{border:0;background:transparent;color:var(--mut);font:11.5px/1 inherit;padding:4px 9px;border-radius:5px;cursor:pointer} .seg button[aria-pressed=true]{background:var(--card);color:var(--fg);box-shadow:var(--shadow);font-weight:600}
-/* views */
-.view{background:var(--card);border-radius:18px;corner-shape:squircle;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px}
-.view h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px} .view h2 .wfx{margin-left:auto} .view h2 .ib{margin-left:0} .view h2 .ib:only-of-type:last-child{margin-left:auto} .view h2 small{color:var(--mut);font-weight:400;font-size:12px}
+select,input[type=text],input[type=number]{font:inherit;font-size:12.5px;color:var(--fg);background:var(--grey);border:0;border-radius:6px;padding:4px 7px;outline:0;max-width:100%} select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
+.seg{display:inline-flex;background:var(--grey);border-radius:7px;padding:2px} .seg button{border:0;background:transparent;color:var(--mut);font:11.5px/1 inherit;padding:4px 9px;border-radius:5px;cursor:pointer} .seg button[aria-pressed=true]{background:var(--card);color:var(--fg);box-shadow:var(--shadow);font-weight:600}
+/* left: the conversation */
+.chatcol{display:flex;flex-direction:column;min-width:0;height:100%;border-right:1px solid var(--rule);background:var(--card)}
+.chatcol h1{font-size:15px;font-weight:600;margin:0;padding:12px 16px 8px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px} .chatcol h1 .ib{margin-left:auto}
+main{flex:1;overflow:auto;padding:6px 14px 16px max(14px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:8px 12px;border-radius:16px;line-height:1.42;white-space:pre-wrap;word-wrap:break-word;font-size:14px}
+.msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:5px} .msg.agent{align-self:flex-start;background:var(--grey);border-bottom-left-radius:5px} .msg.sys{align-self:flex-start;color:var(--mut);font-size:12.5px;padding:0 4px}
+.atts{display:flex;gap:6px;justify-content:flex-end;margin-top:-4px} .msg.user+.atts .tile{width:44px;height:44px;font-size:8px}
+.more{margin-top:-6px} .more summary{list-style:none;cursor:pointer;color:var(--mut);font-size:11.5px;padding:2px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px} .more summary::-webkit-details-marker{display:none} .more summary:hover{background:var(--grey)} .more .grid{margin:4px 0 0 8px}
+.grid{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px} .grid span{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap} .grid span em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em} .grid span b{font-weight:500} .grid .inf b{background:var(--inf);border-radius:4px;padding:0 4px} .grid .asm b{background:var(--asm);border-radius:4px;padding:0 4px}
+.est{font-size:11.5px;color:var(--mut);align-self:flex-start;padding:0 4px;cursor:pointer} .est:hover{color:var(--blue)}
+.compose{border-top:1px solid var(--rule);padding:8px 12px max(10px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.pend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px} .pend .tile{width:40px;height:40px;font-size:8px;border-radius:9px}
+.compose .row{display:flex;gap:8px;align-items:flex-end} .compose textarea{flex:1;min-height:38px;max-height:160px;resize:none;background:var(--grey);border:0;border-radius:19px;padding:9px 14px;font:inherit;font-size:14px;color:var(--fg);outline:0}
+.compose .rb{width:34px;height:34px;border-radius:50%;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center} .compose .att{background:var(--grey);color:var(--mut)} .compose .send{background:var(--blue);color:#fff} .compose .row.over textarea{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 35%,transparent)}
+.under{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11.5px;color:var(--mut)} .mode{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:3px 8px;border-radius:7px} .mode:hover{background:var(--grey)} .mode i{width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block} .mode[data-m=auto] i{background:var(--ok)} .mode[data-m=plan] i{background:var(--mut)} .mode b{color:var(--fg);font-weight:600;text-transform:capitalize} .mode kbd{font:10px/1 inherit;color:var(--mut);border:1px solid var(--rule);border-radius:4px;padding:1px 4px} .under .seg{margin-left:auto}
+/* middle: the canvas over the tool */
+.work{display:grid;grid-template-rows:1fr auto;min-width:0;height:100%}
+#canvas{overflow:auto;padding:16px 18px 24px;display:flex;flex-direction:column;gap:14px}
+.cluster{background:var(--card);border-radius:16px;corner-shape:squircle;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.cluster .ch{display:flex;align-items:center;gap:8px;font-size:12.5px} .cluster .ch b{font-weight:600} .cluster .ch .mut{color:var(--mut)} .cluster .ch .ib{margin-left:auto}
+.cluster.on{box-shadow:0 0 0 2px color-mix(in srgb,var(--blue) 30%,transparent),var(--shadow)}
+#tool{border-top:1px solid var(--rule);background:var(--bg);max-height:52vh;min-height:120px;overflow:auto;padding:10px 18px 16px;resize:vertical}
+#tool .th{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:8px} #tool .th .vn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);background:var(--card);color:var(--mut);font:11px/1 inherit;font-weight:600;cursor:pointer} #tool .th .vn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff} #tool .th .vname{text-transform:none;letter-spacing:0;font-weight:400}
+#tool .empty{color:var(--mut);font-size:13px;padding:20px 0;text-align:center}
+.tool{background:var(--card);border:2px solid var(--blue);border-radius:16px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.tool[data-s=paused],.tool[data-s=stale],.tool[data-s=waiting]{border-color:var(--warn)} .tool[data-s=done]{border-color:var(--ok)} .tool[data-s=running]{border-color:var(--blue);animation:pulse 1.2s ease-in-out infinite} .tool[data-s=failed]{border-color:var(--bad)} .tool[data-s=skipped]{border-color:var(--rule);opacity:.55} .tool[data-s=plan]{border-color:var(--rule)} @keyframes pulse{50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 25%,transparent)}}
+.tool .hd{display:flex;align-items:center;gap:8px} .tool .hd b{font-size:14px;font-weight:600} .tool .hd small{color:var(--mut);font-size:11.5px} .tool .hd .st{margin-left:auto;color:var(--mut);display:flex} .tool[data-s=done] .hd .st{color:var(--ok)} .tool[data-s=paused] .hd .st,.tool[data-s=waiting] .hd .st{color:var(--warn)} .tool[data-s=failed] .hd .st{color:var(--bad)}
+.io{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-radius:10px;padding:2px} .io.over{background:var(--inf)}
+.tile{width:64px;height:64px;border-radius:12px;corner-shape:squircle;background:var(--grey);display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;font-size:9.5px;color:var(--mut);text-align:center;padding:3px;flex:none} .tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;cursor:zoom-in} .tile span{position:relative;z-index:1;background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:4px;padding:1px 4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .tile.out{border:1.5px dashed var(--rule);background:transparent} .io .arrow{color:var(--mut);display:flex}
+.pg{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px} .pg label{display:inline-flex;align-items:center;gap:5px;white-space:nowrap} .pg label em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em} .pg input[type=number]{width:58px} .pg .file{color:var(--blue);cursor:pointer;background:var(--inf);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px}
+.tool textarea.pr{display:block;width:100%;border:0;resize:vertical;min-height:60px;color:var(--fg);white-space:pre-wrap;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px}
+.out{border-top:1px solid var(--rule);padding-top:8px;display:flex;gap:10px;align-items:center;color:var(--mut);font-size:12.5px} .out .tile{width:150px;height:96px}
+.ft{display:flex;align-items:center;gap:2px} .ft .cost{color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums;margin-right:auto} .ft .cost b{color:var(--fg);font-weight:500} .ft .note{flex:1;display:flex;gap:4px;margin:0 8px} .ft .note input{flex:1;background:transparent;border-bottom:1px solid var(--rule);border-radius:0;padding:3px 2px} .ft .note input:focus{box-shadow:none;border-bottom-color:var(--blue)}
+.view{background:var(--card);border-radius:16px;corner-shape:squircle;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px}
+.view h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px} .view h2 small{color:var(--mut);font-weight:400;font-size:12px} .view h2 .ib{margin-left:auto}
 .story p{margin:0 0 .7em;max-width:64ch;font-size:14px}
-.scene{border:1px solid var(--rule);border-radius:12px;corner-shape:squircle;padding:9px 11px;display:flex;flex-direction:column;gap:5px} .scene .t{display:flex;gap:8px;align-items:center} .scene .t b{font-weight:600;font-size:13px} .scene .t small{color:var(--mut);font-size:11.5px} .scene .t .cm{margin-left:auto}
-.scene .syn{font-size:13px} .shot{display:grid;grid-template-columns:44px 1fr;gap:6px;font-size:12.5px;padding:4px 0;border-top:1px solid var(--rule)} .shot .n{color:var(--mut);font-variant-numeric:tabular-nums} .shot .ln{color:var(--mut);font-style:italic}
+.scene{border:1px solid var(--rule);border-radius:12px;corner-shape:squircle;padding:9px 11px;display:flex;flex-direction:column;gap:5px} .scene .t{display:flex;gap:8px;align-items:center} .scene .t b{font-weight:600;font-size:13px} .scene .t small{color:var(--mut);font-size:11.5px} .scene .t .cm{margin-left:auto} .scene .syn{font-size:13px} .shot{display:grid;grid-template-columns:44px 1fr;gap:6px;font-size:12.5px;padding:4px 0;border-top:1px solid var(--rule)} .shot .n{color:var(--mut);font-variant-numeric:tabular-nums} .shot .ln{color:var(--mut);font-style:italic}
 .cmt{display:none;gap:6px;margin-top:3px} .cmt.open{display:flex} .cmt input{flex:1} .notec{font-size:12px;color:var(--blue);background:var(--inf);border-radius:7px;padding:4px 8px;align-self:flex-start}
-.slides img,.slides video{width:100%;border-radius:12px;background:#000;aspect-ratio:16/9;object-fit:contain;display:block}
-.nav{display:flex;align-items:center;gap:2px;margin-top:6px} .nav .cap{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;margin-right:auto} .nav .v{width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px} .nav .v.accepted{background:var(--ok)} .nav .v.flagged{background:var(--bad)}
+.slides img,.slides video{width:100%;border-radius:12px;background:#000;aspect-ratio:16/9;object-fit:contain;display:block;cursor:zoom-in} .nav{display:flex;align-items:center;gap:2px;margin-top:6px} .nav .cap{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;margin-right:auto} .nav .v{width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px} .nav .v.accepted{background:var(--ok)} .nav .v.flagged{background:var(--bad)}
 .thumbs{display:flex;gap:5px;overflow-x:auto;padding:2px 0} .thumbs img{height:42px;border-radius:5px;cursor:pointer;opacity:.55;border:2px solid transparent} .thumbs img.on{opacity:1;border-color:var(--blue)}
-.hint{color:var(--mut);font-size:13px;text-align:center;padding:40px 0 0}
-[hidden]{display:none!important}
-#lb{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:28px;cursor:zoom-out} #lb .lbin{max-width:min(1400px,94vw);max-height:92vh;display:flex;flex-direction:column;gap:8px;align-items:center} #lb img,#lb video{max-width:94vw;max-height:84vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000;object-fit:contain} #lb .lbcap{color:#fff;font-size:12.5px;opacity:.85}
-.tile img,.tile video,.dag-node img,.dag-node video,.thumbs img,.slides img,.kv img,.out img{cursor:zoom-in}
-.car{border-top:1px solid var(--rule);padding-top:8px;display:grid;grid-template-columns:44px 1fr 44px;grid-template-rows:auto 1fr;gap:6px 8px;align-items:stretch} .carnav{grid-column:2;display:flex;align-items:center;justify-content:center} .carnav .cap{font-size:12px;color:var(--mut)}
-.car .side{grid-row:2;border:0;background:var(--grey);border-radius:12px;corner-shape:squircle;cursor:pointer;color:var(--mut);display:flex;align-items:center;justify-content:center;min-height:120px} .car .side:hover{background:var(--inf);color:var(--blue)} .car .side svg{width:26px;height:26px} .car .side.l{grid-column:1} .car .side.r{grid-column:3}
-.carbody{grid-column:2;grid-row:2;min-width:0} .carbody .tool{box-shadow:none}
-.treev .calls{border-top:1px solid var(--rule);padding-top:8px;display:flex;flex-direction:column;gap:10px} .treev .car{border-top:0;padding-top:0}
-.treev .vw{margin-left:auto} .treev .vw button{display:inline-flex;align-items:center;padding:4px 8px} .view h2 .vw+.ib{margin-left:0}
-.pgroup{display:flex;flex-direction:column;gap:6px} .crow{display:flex;flex-direction:column;gap:4px} .crowh{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-.dag-col{padding:6px 4px;border-radius:12px;transition:background .15s} .dag-col.band{background:color-mix(in srgb,var(--blue) 12%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--blue) 45%,transparent)} .pver{display:flex;align-items:center;gap:6px;font-size:11.5px} .pver .vn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--rule);background:var(--card);color:var(--mut);font:12px/1 inherit;font-weight:600;cursor:pointer} .pver .vn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
-.dag-node.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 45%,transparent)}
-/* workflow */
-.wf .stage h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg);margin:8px 0 4px;display:flex;align-items:center;gap:6px} .wf .ex{color:var(--mut);display:inline-flex;cursor:help} .wf .exl{color:var(--mut);font-weight:400;font-size:11.5px;text-transform:none;letter-spacing:0;white-space:normal}
-.wf .tset{margin:2px 0 8px} .wf .th{display:flex;align-items:baseline;gap:8px;font-size:12.5px;margin-bottom:4px} .wf .th .cnt{color:var(--mut);font-size:11px}
+.wf .stage h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg);margin:8px 0 4px;display:flex;align-items:center;gap:6px} .wf .ex{color:var(--mut);display:inline-flex;cursor:help} .wf .exl{color:var(--mut);font-weight:400;font-size:11.5px;text-transform:none;letter-spacing:0;white-space:normal} .wf .tset{margin:2px 0 8px} .wf .th{display:flex;align-items:baseline;gap:8px;font-size:12.5px;margin-bottom:4px} .wf .th .cnt{color:var(--mut);font-size:11px}
 .wf .nodes{display:flex;flex-wrap:wrap;gap:6px} .wf .node{position:relative;border-radius:10px;corner-shape:squircle;background:var(--grey);cursor:pointer;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;font-size:10px;color:var(--fg);transition:opacity .15s,box-shadow .15s} .wf .node.pic{width:84px;height:56px} .wf .node.txt{padding:4px 9px;min-height:24px;align-items:center} .wf .node img,.wf .node video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover} .wf .node span{position:relative;z-index:1;background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:4px;padding:0 4px;max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .wf .node em{position:absolute;top:3px;right:4px;z-index:1;font-style:normal;font-size:9px;color:var(--mut);background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:3px;padding:0 3px}
 .wf .node[data-s=flagged]{box-shadow:inset 0 0 0 2px var(--bad)} .wf .node[data-s=accepted]{box-shadow:inset 0 0 0 1.5px var(--ok)} .wf .node.dim{opacity:.25} .wf .node.on{box-shadow:0 0 0 2.5px var(--blue)} .wf .node.dep{box-shadow:0 0 0 2px var(--warn)}
-.wf .sel{position:sticky;top:0;z-index:2;background:var(--card);border:1.5px solid var(--blue);border-radius:14px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px} .wf .selh{display:flex;align-items:center;gap:8px} .wf .selh b{font-size:14px} .wf .selh small{color:var(--mut)} .wf .selh .ib{margin-left:auto}
-.wf .kv{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center} .wf .kv em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-right:4px} .wf .chip{background:var(--grey);border-radius:7px;padding:3px 8px;cursor:pointer;display:inline-flex;gap:5px;align-items:baseline} .wf .chip small{color:var(--mut)} .wf .kv img{height:40px;border-radius:5px;opacity:.6;border:2px solid transparent} .wf .kv img.on{opacity:1;border-color:var(--blue)} .wf .kv.rr{border-top:1px solid var(--rule);padding-top:6px} .wf .kv.rr b{color:var(--fg)}
-.wf pre.pr{white-space:pre-wrap;font:11.5px/1.4 ui-monospace,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:220px;overflow:auto;margin:0} .wf .txtp{margin:0;font-size:13px;color:var(--fg)} .wf .file{color:var(--blue);cursor:pointer;background:var(--inf);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px}
-@media(max-width:720px){body{grid-template-columns:1fr}aside{display:none}}
-</style>
-<style>
+.wf .sel{position:sticky;top:0;z-index:2;background:var(--card);border:1.5px solid var(--blue);border-radius:14px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px} .wf .selh{display:flex;align-items:center;gap:8px} .wf .selh b{font-size:14px} .wf .selh small{color:var(--mut)} .wf .selh .ib{margin-left:auto} .wf .kv{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center} .wf .kv em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-right:4px} .wf .chip{background:var(--grey);border-radius:7px;padding:3px 8px;cursor:pointer;display:inline-flex;gap:5px;align-items:baseline} .wf .chip small{color:var(--mut)} .wf .kv img{height:40px;border-radius:5px;opacity:.6;border:2px solid transparent} .wf .kv img.on{opacity:1;border-color:var(--blue)} .wf .kv.rr{border-top:1px solid var(--rule);padding-top:6px} .wf .kv.rr b{color:var(--fg)} .wf pre.pr{white-space:pre-wrap;font:11.5px/1.4 ui-monospace,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:220px;overflow:auto;margin:0} .wf .txtp{margin:0;font-size:13px} .wf .file{color:var(--blue);cursor:pointer;background:var(--inf);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px}
+/* right: the directory */
+aside{border-left:1px solid var(--rule);background:var(--card);overflow:auto;padding:12px 8px 20px 10px;font-size:12.5px}
+aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.tree{list-style:none;margin:0;padding:0} .tree .row{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:7px;cursor:default;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .tree .row:hover{background:var(--grey)} .tree .row.dir{cursor:pointer;color:var(--mut)} .tree .row.dir b{color:var(--fg);font-weight:500} .tree ul{list-style:none;margin:0;padding-left:14px;border-left:1px solid var(--rule);margin-left:11px} .tree li.closed>ul{display:none} .tree .row.file{cursor:grab} .tree .row.file:active{cursor:grabbing} .tree .row img{width:18px;height:18px;object-fit:cover;border-radius:4px} .tree .dot{width:7px;height:7px;border-radius:50%;background:var(--rule);flex:none} .tree .dot.ok{background:var(--ok)} .tree .dot.proposed{background:var(--blue)} .tree .dot.paused,.tree .dot.stale,.tree .dot.waiting{background:var(--warn)} .tree .cnt{margin-left:auto;color:var(--mut);font-size:11px}
+/* lightbox */
+#lb{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:28px;cursor:zoom-out} #lb .lbin{max-width:min(1400px,94vw);max-height:92vh;display:flex;flex-direction:column;gap:8px;align-items:center} #lb img,#lb video{max-width:94vw;max-height:84vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000;object-fit:contain} #lb .lbcap{color:#fff;font-size:12.5px;opacity:.85}
 /* the test command panel: floating, not part of the product */
-#cmd{position:fixed;left:14px;bottom:14px;z-index:50;width:264px;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--rule);border-radius:16px;corner-shape:squircle;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:12px}
-#cmd .h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em} #cmd .h .ib{margin-left:auto}
-#cmd select{width:100%} #cmd .r{display:flex;align-items:center;gap:6px} #cmd .r .ib{width:30px;height:30px;background:var(--grey)} #cmd .r .ib.on{background:var(--blue);color:#fff}
+#cmd{position:fixed;left:14px;bottom:110px;z-index:50;width:264px;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--rule);border-radius:16px;corner-shape:squircle;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:12px}
+#cmd .h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em} #cmd .h .ib{margin-left:auto} #cmd select{width:100%} #cmd .r{display:flex;align-items:center;gap:6px} #cmd .r .ib{width:30px;height:30px;background:var(--grey)}
 #cmd .st{display:flex;align-items:center;gap:6px;color:var(--mut)} #cmd .st i{width:8px;height:8px;border-radius:50%;background:var(--mut);display:inline-block} #cmd[data-s=playing] .st i{background:var(--ok)} #cmd[data-s=paused] .st i{background:var(--warn)}
 #cmd .log{max-height:110px;overflow:auto;font:11px/1.4 ui-monospace,Menlo,monospace;color:var(--mut);border-top:1px solid var(--rule);padding-top:6px;white-space:pre-wrap}
 #cmd .sw{display:inline-flex;background:var(--grey);border-radius:7px;padding:2px;margin-left:auto} #cmd .sw button{border:0;background:transparent;color:var(--mut);font:11px/1 inherit;padding:4px 8px;border-radius:5px;cursor:pointer} #cmd .sw button[aria-pressed=true]{background:var(--card);color:var(--fg);font-weight:600;box-shadow:var(--shadow)} #cmd .sw button[aria-pressed=true][data-c=real]{color:var(--bad)}
 #cmd.min .log,#cmd.min select,#cmd.min .r,#cmd.min .st{display:none}
+.hint{color:var(--mut);font-size:13px;text-align:center;padding:40px 0 0}
+@media(max-width:900px){body{grid-template-columns:1fr}aside,.work{display:none}}
 </style>
 </head>
 <body>
-<aside>
-  <h1>Session <button class="ib" id="reset" title="New chat"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></h1>
-  <ul class="tree" id="tree"></ul>
-</aside>
-<div id="cmd" data-s="idle"><div class="h">Test scripts<span class="sw" id="credits"><button data-c="sim" aria-pressed="true">simulated</button><button data-c="real">real</button></span><button class="ib" id="cmdmin" title="Collapse"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button></div>
-  <select id="script"></select>
-  <div class="r"><button class="ib" id="play" title="Play"><svg class="i" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></svg></button><button class="ib" id="pause" title="Pause"><svg class="i" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="ib" id="stepb" title="One step"><svg class="i" viewBox="0 0 24 24"><path d="M6 5v14l8-7zM18 5v14"/></svg></button><span class="st"><i></i><span id="cmdst">idle</span></span></div>
-  <div class="log" id="cmdlog"></div></div>
-<div id="lb" hidden><div class="lbin"><img alt=""><video controls hidden></video><div class="lbcap"></div></div></div>
-<div class="chatwrap">
+<div class="chatcol">
+  <h1>Magic Agent <button class="ib" id="reset" title="New chat"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></h1>
   <main id="chat"><p class="hint">Say what you want made.</p></main>
-  <form class="compose" id="ask"><div class="in">
+  <form class="compose" id="ask">
     <div class="pend" id="pend"></div>
     <div class="row" id="droprow">
       <button class="rb att" type="button" id="attach" title="Attach"><svg class="i" viewBox="0 0 24 24"><path d="M21 12.5 12.4 21a5.5 5.5 0 0 1-7.8-7.8l9.2-9.2a3.5 3.5 0 0 1 5 5l-9.2 9.2a1.5 1.5 0 0 1-2.1-2.1L15.7 8"/></svg></button><input type="file" id="files" multiple hidden>
@@ -124,152 +88,142 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
       <button class="rb send" type="submit" title="Send"><svg class="i" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
     </div>
     <div class="under">
-      <span class="mode" id="mode" data-m="ask" title="shift-tab cycles ask · auto · plan"><i></i><b>ask</b><kbd>⇧⇥</kbd></span>
-      <span id="modehint">asks when unsure</span>
+      <span class="mode" id="mode" data-m="ask" title="shift-tab cycles ask · auto · plan"><i></i><b>ask</b><kbd>⇧⇥</kbd></span><span id="modehint">asks when unsure</span>
       <span class="seg" id="tier"><button data-t="free" aria-pressed="true">Free</button><button data-t="cheap">Cheap</button><button data-t="paid">Paid</button></span>
     </div>
-  </div></form>
+  </form>
 </div>
+<div class="work">
+  <div id="canvas"><p class="hint">The working tree appears here. Click a node to open its tool below; drag from a node's right port onto another node to point its output there.</p></div>
+  <div id="tool"><div class="empty">no tool focused</div></div>
+</div>
+<aside>
+  <h1>Session</h1>
+  <ul class="tree" id="tree"></ul>
+</aside>
+<div id="lb" hidden><div class="lbin"><img alt=""><video controls hidden></video><div class="lbcap"></div></div></div>
+<div id="cmd" data-s="idle"><div class="h">Test scripts<span class="sw" id="credits"><button data-c="sim" aria-pressed="true">simulated</button><button data-c="real">real</button></span><button class="ib" id="cmdmin" title="Collapse"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button></div>
+  <select id="script"></select>
+  <div class="r"><button class="ib" id="play" title="Play"><svg class="i" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></svg></button><button class="ib" id="pause" title="Pause"><svg class="i" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button><button class="ib" id="stepb" title="One step"><svg class="i" viewBox="0 0 24 24"><path d="M6 5v14l8-7zM18 5v14"/></svg></button><span class="st"><i></i><span id="cmdst">idle</span></span></div>
+  <div class="log" id="cmdlog"></div></div>
 <script src="dag.js"></script>
 <script src="scripts.js"></script>
 <script>
 document.head.appendChild(Object.assign(document.createElement("style"), { textContent: DAG_CSS }));
-const $ = (s, r = document) => r.querySelector(s), chat = $("#chat");
+const $ = (s, r = document) => r.querySelector(s), chat = $("#chat"), canvas = $("#canvas"), toolPanel = $("#tool");
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const SID = "default"; let S = null, MODELS = null, RUNS = []; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
 const api = async (p, b) => (await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
-const add = (n) => { chat.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
+const add = (n, where = chat) => { where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };
 const tier = () => $("#tier [aria-pressed=true]").dataset.t, mode = () => $("#mode").dataset.m;
 const isImg = (n) => /\.(png|jpe?g|webp|gif)$/i.test(n), isVid = (n) => /\.(mp4|mov)$/i.test(n);
 const matUrl = (n) => (S?.materials || []).includes(n) ? `/sessions/${SID}/materials/${encodeURIComponent(n)}` : null;
+const outUrl = (o) => o ? (o.startsWith("../../") ? null : `/sessions/${SID}/${o}`) : null;
 const I = {
   play: '<svg class="i" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></svg>', pause: '<svg class="i" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>', x: '<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
   check: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></svg>', doc: '<svg class="i" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v5h5M9 13h6M9 17h6"/></svg>', arrow: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   left: '<svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>', right: '<svg class="i" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>', flag: '<svg class="i" viewBox="0 0 24 24"><path d="M5 21V4h12l-2 4 2 4H5"/></svg>', comment: '<svg class="i" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
-  folder: '<svg class="i" viewBox="0 0 24 24"><path d="M3 6h6l2 2h10v11H3z"/></svg>', chev: '<svg class="i" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M9 5l7 7-7 7"/></svg>', bang: '<svg class="i" viewBox="0 0 24 24"><path d="M12 4v10M12 18v1"/></svg>', info: '<svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7v1"/></svg>',
+  chev: '<svg class="i" viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M9 5l7 7-7 7"/></svg>', bang: '<svg class="i" viewBox="0 0 24 24"><path d="M12 4v10M12 18v1"/></svg>', info: '<svg class="i" viewBox="0 0 24 24" style="width:12px;height:12px"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7v1"/></svg>',
+  clock: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>', retry: '<svg class="i" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.7M4 20v-5h5"/></svg>',
 };
-const tile = (name, out = false) => { const u = matUrl(name); return `<div class="tile${out ? " out" : ""}" title="${esc(name)}" draggable="true" data-name="${esc(name)}">${u && isImg(name) ? `<img src="${u}" alt="">` : u && isVid(name) ? `<video src="${u}" muted></video>` : ""}<span>${esc(name)}</span></div>`; };
-
-function grid(sheet) {
-  const cell = (k, v, s) => `<span class="${s === "inferred" ? "inf" : s === "assumed" ? "asm" : ""}"><em>${esc(k)}</em><b>${esc(v)}</b></span>`;
-  return [cell("goal", sheet.goal.value, sheet.goal.source), ...sheet.fields.filter((f) => f.source !== "not_applicable" && f.value).map((f) => cell(f.field, f.value, f.source))].join("");
-}
-const kindOf = (m, tool) => MODELS.stills[m] ? "still" : MODELS.videos[m] ? "video" : /^(film|podcast|edit-run)$/.test(tool) ? "pipeline" : "none";
+const STICON = { paused: I.pause, done: I.check, flagged: I.bang, stale: I.bang, failed: I.x, running: "…", waiting: I.clock };
+const tile = (name, out = false, url = null) => { const u = url ?? matUrl(name); return `<div class="tile${out ? " out" : ""}" title="${esc(name)}" draggable="true" data-name="${esc(name)}">${u && isImg(name) ? `<img src="${u}" alt="">` : u && isVid(name) ? `<video src="${u}" muted></video>` : ""}<span>${esc(name)}</span></div>`; };
+function grid(sheet) { const cell = (k, v, s) => `<span class="${s === "inferred" ? "inf" : s === "assumed" ? "asm" : ""}"><em>${esc(k)}</em><b>${esc(v)}</b></span>`; return [cell("goal", sheet.goal.value, sheet.goal.source), ...sheet.fields.filter((f) => f.source !== "not_applicable" && f.value).map((f) => cell(f.field, f.value, f.source))].join(""); }
+const kindOf = (m, tool) => MODELS.stills[m] ? "still" : MODELS.videos[m] ? "video" : /^(film|podcast|edit-run|story|assets|screenplay|keyframes|clips)$/.test(tool) ? "pipeline" : "none";
 function costOf(step, m, r, sec) { const s = MODELS.stills[m], v = MODELS.videos[m]; if (s) return s.cost?.[r] ?? Object.values(s.cost || {})[0] ?? 0; if (v) return (Number(sec) || 5) * (v.cost?.[r] ?? Object.values(v.cost || {})[0] ?? 24); return step.credits || 0; }
-I.clock = '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'; I.retry = '<svg class="i" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.7M4 20v-5h5"/></svg>';
-const STICON = { paused: I.pause, approved: I.check, done: I.check, flagged: I.bang, stale: I.bang, failed: I.x, running: "…", waiting: I.clock };
 
+// ----- the tool block (middle, bottom) -----
 function block(step, i, ti) {
-  const kind = kindOf(step.model, step.tool); const table = kind === "still" ? MODELS.stills : MODELS.videos;
+  const kind = kindOf(step.model, step.tool); const table = kind === "still" ? MODELS.stills : MODELS.videos; const produced = Object.fromEntries((S?.turns?.[ti]?.plan?.steps || []).map((s) => [s.produces, s.output]));
+  const isOverlay = step.tool === "text-overlay"; const at = (step.params.extra || "").match(/at:\s*(top|middle|bottom)/i)?.[1] || "bottom";
   const c = el(`<div class="tool" data-s="${esc(step.state)}" data-i="${i}" data-t="${ti}">
-    <div class="hd"><b>${esc(step.tool.replace(/-/g, " "))}</b><small>${esc(step.group.replace("-", " "))}</small><span class="st">${STICON[step.state] || ""}</span></div>
-    <div class="io" data-drop>${step.inputs.map((x) => tile(x)).join("")}${step.inputs.length ? `<span class="arrow">${I.arrow}</span>` : ""}${tile(step.produces, true)}</div>
+    <div class="hd"><b>${esc(step.tool.replace(/-/g, " "))}</b><small>${esc(step.group.replace("-", " "))}${step.model ? ` · ${esc(step.model)}` : ""}</small><span class="st">${STICON[step.state] || ""}</span></div>
+    <div class="io" data-drop>${step.inputs.map((x) => tile(x, false, matUrl(x) || outUrl(produced[x]))).join("")}${step.inputs.length ? `<span class="arrow">${I.arrow}</span>` : ""}${tile(step.produces, !step.output, outUrl(step.output))}</div>
     <div class="pg">
       ${kind === "still" || kind === "video" ? `<label><em>model</em><select data-k="model">${Object.keys(table).map((n) => `<option value="${n}"${n === step.model ? " selected" : ""}>${n}</option>`).join("")}</select></label><label><em>res</em><select data-k="resolution">${(table[step.model]?.resolutions || []).map((r) => `<option${r === step.resolution ? " selected" : ""}>${r}</option>`).join("")}</select></label>` : kind === "pipeline" ? `<label><em>models</em>${esc(step.model)}</label>` : ""}
       ${kind === "video" || step.params.seconds ? `<label><em>s</em><input type="number" data-k="seconds" min="1" max="60" value="${esc(step.params.seconds || 5)}"></label>` : ""}
       ${kind !== "none" ? `<label><em>aspect</em><select data-k="aspect">${["", "16:9", "9:16", "1:1", "4:5"].map((a) => `<option value="${a}"${a === (step.params.aspect || "") ? " selected" : ""}>${a || "auto"}</option>`).join("")}</select></label>` : ""}
-      ${step.params.extra ? `<label><em>+</em><input type="text" data-k="extra" value="${esc(step.params.extra)}" size="${Math.min(28, step.params.extra.length + 2)}"></label>` : ""}
-      <span class="file" data-pr>${I.doc}${esc(step.prompt_file || "prompt")}</span>
+      ${isOverlay ? `<label><em>text</em><input type="text" data-k="prompt_or_change" value="${esc(step.params.prompt_or_change)}" size="18"></label><label><em>at</em><select data-k="extra">${["top", "middle", "bottom"].map((a) => `<option value="at: ${a}"${a === at ? " selected" : ""}>${a}</option>`).join("")}</select></label>` : step.params.extra ? `<label><em>+</em><input type="text" data-k="extra" value="${esc(step.params.extra)}" size="${Math.min(28, step.params.extra.length + 2)}"></label>` : ""}
+      ${isOverlay ? "" : `<span class="file" data-pr>${I.doc}${esc(step.prompt_file || "prompt")}</span>`}
     </div>
-    <textarea class="pr" data-k="prompt_or_change" hidden>${esc(step.params.prompt_or_change)}</textarea>
+    ${isOverlay ? "" : `<textarea class="pr" data-k="prompt_or_change" hidden>${esc(step.params.prompt_or_change)}</textarea>`}
     ${step.attempts?.length ? `<div class="io" style="opacity:.6">${step.attempts.map((a) => `<div class="tile" title="earlier attempt" style="width:48px;height:48px"><img src="/sessions/${SID}/${esc(a)}" alt=""><span>r</span></div>`).join("")}</div>` : ""}
-    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : /#story$/.test(step.output) || step.output.startsWith("../../") ? "" : `<img src="/sessions/${SID}/${esc(step.output)}" alt="">`}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} cr` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
+    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : outUrl(step.output) ? `<img src="${outUrl(step.output)}" alt="">` : ""}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} credits` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
     <div class="ft"><span class="cost" title="Magic Hour credits"><b data-cost>${step.credits}</b> credits${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
       <form class="note"><input type="text" placeholder="Tell the agent about this step"></form>
       <button class="ib" data-remake title="Remake: run again, keep this output as an attempt, remake what depends on it">${I.retry}</button><button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
   </div>`);
-  const ta = c.querySelector("textarea.pr"); c.querySelector("[data-pr]").addEventListener("click", () => (ta.hidden = !ta.hidden));
+  const ta = c.querySelector("textarea.pr"); c.querySelector("[data-pr]")?.addEventListener("click", () => (ta.hidden = !ta.hidden));
   const recost = () => { const m = c.querySelector('[data-k="model"]')?.value || step.model, r = c.querySelector('[data-k="resolution"]')?.value || step.resolution, s = c.querySelector('[data-k="seconds"]')?.value; c.querySelector("[data-cost]").textContent = costOf(step, m, r, s); };
   c.querySelector('[data-k="model"]')?.addEventListener("change", (e) => { const t2 = MODELS.stills[e.target.value] || MODELS.videos[e.target.value]; c.querySelector('[data-k="resolution"]').innerHTML = (t2?.resolutions || []).map((r) => `<option>${r}</option>`).join(""); recost(); });
   c.querySelectorAll("[data-k]").forEach((x) => x.addEventListener("input", recost));
-  const lock = () => { const done = step.state === "approved" || step.state === "skipped" || step.state === "plan" || step.state === "done" || step.state === "running" || step.state === "waiting"; c.querySelectorAll("[data-a]").forEach((x) => (x.disabled = done)); c.querySelector("[data-remake]").disabled = !(step.state === "done" || step.state === "failed" || step.state === "stale"); const pb = c.querySelector('[data-a="paused"]'); pb.innerHTML = step.state === "paused" ? I.play : I.pause; pb.title = step.state === "paused" ? "Resume" : "Pause"; };
-  const post = async (extra) => { const params = {}; c.querySelectorAll("[data-k]").forEach((x) => { if (x.dataset.k === "seconds") params.seconds = Number(x.value); else if (x.dataset.k !== "model") params[x.dataset.k] = x.value; }); const r = await api(`/session/${SID}/step`, { turn: ti, index: i, params, inputs: step.inputs, model: c.querySelector('[data-k="model"]')?.value, resolution: c.querySelector('[data-k="resolution"]')?.value, credits: Number(c.querySelector("[data-cost]").textContent), ...extra }); return r; };
-  c.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => {
-    const state = b.dataset.a === "paused" && step.state === "paused" ? "proposed" : b.dataset.a; const r = await post({ state });
-    step.state = r.step.state; c.dataset.s = step.state; c.querySelector(".st").innerHTML = STICON[step.state] || ""; lock(); tree();
-    if (state === "approved") await runSteps(ti, [i]);
-    const est = chat.querySelector(`.est[data-t="${ti}"]`); if (est) est.querySelector("b").textContent = r.estimate;
-  }));
-  c.querySelector("[data-remake]").addEventListener("click", async () => { const r = await api(`/session/${SID}/step`, { turn: ti, index: i, remake: true }); if (r.error) return; await runSteps(ti, [i, ...(S.turns[ti].plan.steps.map((x, k) => (x.state === "stale" ? k : -1)).filter((k) => k >= 0))]); });
-  c.querySelector("form.note").addEventListener("submit", async (e) => { e.preventDefault(); const inp = e.target.querySelector("input"); const text = inp.value.trim(); if (!text) return; inp.value = ""; const r = await api(`/session/${SID}/note`, { turn: ti, index: i, text }); add(el(`<div class="msg user">${esc(r.text)}</div>`)); await sendRaw(r.text, [], true); });
-  // drop an asset from the tree onto the inputs
-  const io = c.querySelector("[data-drop]");
-  io.addEventListener("dragover", (e) => { e.preventDefault(); io.classList.add("over"); }); io.addEventListener("dragleave", () => io.classList.remove("over"));
-  io.addEventListener("drop", async (e) => { e.preventDefault(); io.classList.remove("over"); const n = e.dataTransfer.getData("text/plain"); if (!n || step.inputs.includes(n)) return; step.inputs.push(n); io.querySelector(".arrow")?.remove(); io.querySelector(".tile.out").insertAdjacentHTML("beforebegin", tile(n) + `<span class="arrow">${I.arrow}</span>`); await post({}); });
+  const lock = () => { const done = ["skipped", "plan", "done", "running", "waiting"].includes(step.state); c.querySelectorAll("[data-a]").forEach((x) => (x.disabled = done)); c.querySelector("[data-remake]").disabled = !["done", "failed", "stale"].includes(step.state); const pb = c.querySelector('[data-a="paused"]'); pb.innerHTML = step.state === "paused" ? I.play : I.pause; pb.title = step.state === "paused" ? "Resume" : "Pause"; };
+  const post = async (extra) => { const params = {}; c.querySelectorAll("[data-k]").forEach((x) => { if (x.dataset.k === "seconds") params.seconds = Number(x.value); else if (x.dataset.k !== "model") params[x.dataset.k] = x.value; }); return api(`/session/${SID}/step`, { turn: ti, index: i, params, inputs: step.inputs, model: c.querySelector('[data-k="model"]')?.value, resolution: c.querySelector('[data-k="resolution"]')?.value, credits: Number(c.querySelector("[data-cost]").textContent), ...extra }); };
+  c.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => { const state = b.dataset.a === "paused" && step.state === "paused" ? "proposed" : b.dataset.a; const r = await post({ state }); step.state = r.step.state; if (state === "approved") await runSteps(ti, [i]); else await rerender(ti, i); }));
+  c.querySelector("[data-remake]").addEventListener("click", async () => { const r = await api(`/session/${SID}/step`, { turn: ti, index: i, remake: true }); if (r.error) return; S = await api(`/session/${SID}`); await runSteps(ti, [i, ...S.turns[ti].plan.steps.map((x, k) => (x.state === "stale" ? k : -1)).filter((k) => k >= 0)]); });
+  c.querySelector("form.note").addEventListener("submit", async (e) => { e.preventDefault(); const inp = e.target.querySelector("input"); const text = inp.value.trim(); if (!text) return; inp.value = ""; const r = await api(`/session/${SID}/note`, { turn: ti, index: i, text }); add(el(`<div class="msg user">${esc(r.text)}</div>`)); await sendRaw(r.text, []); });
+  const io = c.querySelector("[data-drop]"); io.addEventListener("dragover", (e) => { e.preventDefault(); io.classList.add("over"); }); io.addEventListener("dragleave", () => io.classList.remove("over"));
+  io.addEventListener("drop", async (e) => { e.preventDefault(); io.classList.remove("over"); const n = e.dataTransfer.getData("text/plain"); if (!n || step.inputs.includes(n)) return; step.inputs.push(n); await post({}); await rerender(ti, i); });
   lock(); return c;
 }
 
+// ----- focus: the tool panel shows the focused node's column, with numbered versions when it runs in parallel -----
+let FOCUS = null;
+function focus(ti, i) {
+  const t = S.turns[ti]; if (!t?.plan) return; const steps = t.plan.steps; FOCUS = { ti, i };
+  const by = {}; steps.forEach((s, k) => (by[s.produces] = k)); const level = new Array(steps.length).fill(0);
+  for (let pass = 0; pass < steps.length; pass++) steps.forEach((s, k) => { const l = s.inputs.map((x) => by[x]).filter((j) => j !== undefined && j !== k).map((j) => level[j] + 1); level[k] = l.length ? Math.max(...l) : 0; });
+  const col = steps.map((s, k) => k).filter((k) => level[k] === level[i]);
+  toolPanel.innerHTML = ""; const th = el(`<div class="th"><span>turn ${ti + 1} · column ${level[i] + 1}</span>${col.length > 1 ? `<span>· parallelized · ${col.length} calls</span>${col.map((k, n) => `<button class="vn" data-k="${k}" aria-pressed="${k === i}" title="${esc(steps[k].tool)} → ${esc(steps[k].produces)}">${n + 1}</button>`).join("")}<span class="vname">${esc(steps[i].tool.replace(/-/g, " "))} → ${esc(steps[i].produces)}</span>` : ""}</div>`);
+  th.querySelectorAll(".vn").forEach((v) => v.addEventListener("click", () => focus(ti, Number(v.dataset.k)))); toolPanel.appendChild(th); toolPanel.appendChild(block(steps[i], i, ti));
+  canvas.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", d.closest(".cluster")?.dataset.t == ti && Number(d.dataset.i) === i)); canvas.querySelectorAll(".cluster").forEach((c) => c.classList.toggle("on", c.dataset.t == ti));
+}
+
+// ----- the canvas: one cluster per turn with a plan -----
+function cluster(t, ti) {
+  const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
+  const c = el(`<div class="cluster" data-t="${ti}"><div class="ch"><b>turn ${ti + 1}</b><span class="mut">${esc(t.plan.shape || "")} · ${n} node${n === 1 ? "" : "s"} · ${done}/${n} made · ~${t.plan.estimate_credits} credits${t.plan.dir ? ` · ${esc(t.plan.dir)}` : ""}${t.plan.refuse ? ` · declined` : ""}</span><button class="ib run" data-run title="Run all">${I.play}</button></div><div class="dagbox"></div></div>`);
+  drawDag(c.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : outUrl(s.output), onSelect: (i) => focus(ti, i),
+    onConnect: async (name, toIndex) => { const st = t.plan.steps[toIndex]; if (st.inputs.includes(name)) return; st.inputs.push(name); await api(`/session/${SID}/step`, { turn: ti, index: toIndex, inputs: st.inputs }); await rerender(ti, toIndex); } });
+  c.querySelector("[data-run]").addEventListener("click", () => runSteps(ti, null));
+  return c;
+}
 function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
-  if (t.plan) {
-    const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
-    if (n > 1) {
-      // one block per working tree: the tree on top; the tool calls below either as a carousel (one at a time) or a list
-      // (all in order). Calls that run in parallel (same tool, same depth, same inputs) are one call with numbered versions.
-      const steps = t.plan.steps, by = {}; steps.forEach((s, i) => (by[s.produces] = i));
-      const level = new Array(n).fill(0); for (let pass = 0; pass < n; pass++) steps.forEach((s, i) => { const l = s.inputs.map((x) => by[x]).filter((j) => j !== undefined && j !== i).map((j) => level[j] + 1); level[i] = l.length ? Math.max(...l) : 0; });
-      const groups = []; steps.forEach((s, i) => { let g = groups.find((x) => x.level === level[i]); if (!g) { g = { level: level[i], idx: [] }; groups.push(g); } g.idx.push(i); });
-      groups.sort((p, q) => p.level - q.level);
-      const hasMats = steps.some((s) => s.inputs.some((x) => by[x] === undefined));
-      const band = (gi) => { const cols = box.querySelectorAll(".dag-col"); cols.forEach((c, k) => c.classList.toggle("band", gi >= 0 && k === groups[gi].level + (hasMats ? 1 : 0))); };
-      const box = el(`<div class="view treev" data-t="${ti}"><h2>Working tree<small>${n} tool calls · ${done}/${n} made · ${esc(t.plan.dir || "")}</small><span class="seg vw"><button data-v="carousel" aria-pressed="true" title="One call at a time">${I.right}</button><button data-v="list" title="All calls in order">${I.doc}</button></span><button class="ib" data-run title="Run all">${I.play}</button></h2><div class="dagbox"></div><div class="calls"></div></div>`);
-      const calls = box.querySelector(".calls"); const groupEls = groups.map((g) => {
-        const w = el(`<div class="pgroup"></div>`);
-        if (g.idx.length > 1) w.appendChild(el(`<div class="pver"><span class="mut">parallelized · ${g.idx.length} calls</span>${g.idx.map((i, k) => `<button class="vn" data-k="${k}" title="${esc(steps[i].tool)} → ${esc(steps[i].produces)}">${k + 1}</button>`).join("")}<span class="mut vname"></span></div>`));
-        const blocks = g.idx.map((i) => { const bl = block(steps[i], i, ti); w.appendChild(bl); return bl; }); let cur = 0;
-        const showV = (k) => { cur = k; blocks.forEach((bl, j) => (bl.hidden = j !== k)); w.querySelectorAll(".vn").forEach((v) => v.setAttribute("aria-pressed", String(Number(v.dataset.k) === k))); const vn = w.querySelector(".vname"); if (vn) vn.textContent = `${steps[g.idx[k]].tool.replace(/-/g, " ")} → ${steps[g.idx[k]].produces}`; box.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", Number(d.dataset.i) === g.idx[k])); };
-        w.querySelectorAll(".vn").forEach((v) => v.addEventListener("click", () => showV(Number(v.dataset.k)))); showV(0);
-        w.showVersion = (i) => { const k = g.idx.indexOf(i); if (k >= 0) showV(k); }; w.idx = g.idx; return w;
-      });
-      let view = "carousel"; try { view = localStorage.getItem("calls-view") || "carousel"; } catch {} let cur = 0;
-      const render = () => {
-        calls.innerHTML = ""; box.querySelectorAll(".vw button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === view)));
-        if (view === "list") { groupEls.forEach((w, gi) => { const row = el(`<div class="crow"><div class="crowh">column ${gi + 1}${groups[gi].idx.length > 1 ? ` · ${groups[gi].idx.length} in parallel` : ""}</div></div>`); row.appendChild(w); row.addEventListener("mouseenter", () => band(gi)); row.addEventListener("mouseleave", () => band(-1)); calls.appendChild(row); }); band(-1); return; }
-        const car = el(`<div class="car"><div class="carnav"><span class="cap"></span></div><button class="side l" data-n="-1" title="Previous">${I.left}</button><div class="carbody"></div><button class="side r" data-n="1" title="Next">${I.right}</button></div>`);
-        const body = car.querySelector(".carbody"); groupEls.forEach((w) => { w.hidden = true; body.appendChild(w); });
-        const show = (k) => { cur = (k + groupEls.length) % groupEls.length; groupEls.forEach((w, j) => (w.hidden = j !== cur)); const g = groups[cur]; car.querySelector(".cap").textContent = `column ${cur + 1} / ${groupEls.length}${g.idx.length > 1 ? ` · ${g.idx.length} in parallel` : ` · ${steps[g.idx[0]].tool.replace(/-/g, " ")}`}`; band(cur); };
-        car.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => show(cur + Number(b.dataset.n)))); calls.appendChild(car); show(cur);
-      };
-      box.querySelector(".vw").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; view = b.dataset.v; try { localStorage.setItem("calls-view", view); } catch {} groupEls.forEach((w) => (w.hidden = false)); render(); });
-      box.querySelector("[data-run]").addEventListener("click", () => simulateTurn(ti)); add(box);
-      const first = steps.findIndex((x) => x.state !== "done"); cur = Math.max(0, groups.findIndex((g) => g.idx.includes(first >= 0 ? first : 0))); render();
-      drawDag(box.querySelector(".dagbox"), steps, { media: (s) => s.material ? matUrl(s.produces) : s.output ? `/sessions/${SID}/${s.output}` : null, onSelect: (i) => { const gi = groups.findIndex((g) => g.idx.includes(i)); if (view === "carousel") { cur = gi; render(); } groupEls[gi].showVersion(i); groupEls[gi].scrollIntoView({ block: "center", behavior: "smooth" }); } });
-    } else t.plan.steps.forEach((s, i) => add(block(s, i, ti)));
-    add(el(`<div class="est" data-t="${ti}">~<b>${t.plan.estimate_credits}</b> Magic Hour credits · ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}${n === 1 ? ` · <a href="#" data-sim="${ti}">run</a>` : ""}</div>`)); chat.querySelector(`[data-sim="${ti}"]`)?.addEventListener("click", (e) => { e.preventDefault(); simulateTurn(ti); });
-  }
+  if (t.plan) { add(el(`<div class="est" data-t="${ti}" title="open on the canvas">${t.plan.steps.length} node${t.plan.steps.length === 1 ? "" : "s"} · ~${t.plan.estimate_credits} Magic Hour credits</div>`)).addEventListener("click", () => { canvas.querySelector(`.cluster[data-t="${ti}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); focus(ti, 0); }); canvas.querySelector(".hint")?.remove(); add(cluster(t, ti), canvas); }
 }
-
 const creditsMode = () => $("#credits [aria-pressed=true]").dataset.c;
-async function rerender() { S = await api(`/session/${SID}`); chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg agent" style="color:var(--mut)">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } tree(); }
+async function rerender(ti = null, i = null) {
+  S = await api(`/session/${SID}`); chat.innerHTML = ""; canvas.innerHTML = "";
+  for (const m of S.messages) { if (m.who === "user") { add(el(`<div class="msg user">${esc(m.text)}</div>`)); if (m.attached?.length) add(el(`<div class="atts">${m.attached.map((n) => tile(n)).join("")}</div>`)); } else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg sys">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); }
+  if (!canvas.children.length) canvas.innerHTML = '<p class="hint">The working tree appears here.</p>';
+  const f = ti != null ? { ti, i } : FOCUS; if (f && S.turns[f.ti]?.plan?.steps?.[f.i]) focus(f.ti, f.i); else { toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; }
+  tree();
+}
 async function executeTurn(ti, indices = null) {
-  const r = await api(`/session/${SID}/execute`, { turn: ti, indices }); if (r.error) { add(el(`<div class="msg agent">${esc(r.error)}</div>`)); return; }
+  const r = await api(`/session/${SID}/execute`, { turn: ti, indices }); if (r.error) { add(el(`<div class="msg sys">${esc(r.error)}</div>`)); return; }
   let busy = false; await new Promise((ok) => { const iv = setInterval(async () => { if (busy) return; busy = true; const run = await api("/running"); await rerender(); busy = false; if (!run[SID]) { clearInterval(iv); ok(); } }, 3000); });
 }
-// one block, or the whole turn: simulated or real per the panel's switch
 async function runSteps(ti, indices) { if (creditsMode() === "real") return executeTurn(ti, indices); const r = await api(`/session/${SID}/simulate`, { turn: ti, indices }); if (r.error) return; await rerender(); }
-async function simulateTurn(ti) {
-  if (creditsMode() === "real") return executeTurn(ti);
-  const r = await api(`/session/${SID}/simulate`, { turn: ti }); if (r.error) return;
-  await rerender();
-}
-async function sendRaw(text, names, quiet = false) {
+const simulateTurn = (ti) => runSteps(ti, null);
+async function sendRaw(text, names) {
   const typing = add(el(`<div class="msg agent" style="color:var(--mut)">…</div>`));
   const r = await api("/turn", { session: SID, text, materials: names, tier: tier(), mode: mode() });
   typing.remove(); if (r.error) return add(el(`<div class="msg agent">${esc(r.error)}</div>`));
-  S = r.session; renderTurn(r.turn, r.turnIndex, r.text); tree();
+  S = r.session; renderTurn(r.turn, r.turnIndex, r.text); if (r.turn.plan) focus(r.turnIndex, 0); tree();
 }
 async function send(text, names) { add(el(`<div class="msg user">${esc(text)}</div>`)); if (names.length) add(el(`<div class="atts">${names.map((n) => tile(n)).join("")}</div>`)); await sendRaw(text, names); }
 
-// the tree: the session as a directory
+// ----- the directory (right) -----
 function tree() {
   const t = $("#tree"); if (!S) return;
   const dir = (name, items, open = true, cnt = null) => `<li class="${open ? "" : "closed"}"><div class="row dir">${I.chev}<b>${esc(name)}</b>${cnt != null ? `<span class="cnt">${cnt}</span>` : ""}</div><ul>${items}</ul></li>`;
-  const file = (name, extra = "", dot = "") => `<div class="row file" draggable="true" data-name="${esc(name)}">${dot ? `<span class="dot ${dot}"></span>` : matUrl(name) && isImg(name) ? `<img src="${matUrl(name)}" alt="">` : I.doc}${esc(name)}${extra}</div>`;
+  const file = (name, extra = "", dot = "", img = null) => `<div class="row file" draggable="true" data-name="${esc(name)}">${img ? `<img src="${img}" alt="">` : dot ? `<span class="dot ${dot}"></span>` : matUrl(name) && isImg(name) ? `<img src="${matUrl(name)}" alt="">` : I.doc}${esc(name)}${extra}</div>`;
   const mats = (S.materials || []).map((m) => `<li>${file(m)}</li>`).join("");
-  const prompts = S.turns.flatMap((tu, i) => [tu.files?.sheet, tu.files?.plan, ...(tu.plan?.steps || []).map((s) => s.prompt_file)].filter(Boolean).map((f) => `<li>${file(f)}</li>`)).join("");
-  const assets = S.turns.map((tu, i) => tu.plan ? dir(`turn ${i + 1}`, tu.plan.steps.map((s) => `<li><div class="row file" draggable="true" data-name="${esc(s.produces)}">${s.output ? `<img src="/sessions/${SID}/${esc(s.output)}" alt="">` : `<span class="dot ${s.state === "done" ? "ok" : esc(s.state)}"></span>`}${esc(s.produces)}<span class="cnt">${esc(s.tool)}</span></div></li>`).join("")) : "").join("");
+  const prompts = S.turns.flatMap((tu) => [tu.files?.sheet, tu.files?.plan, ...(tu.plan?.steps || []).map((s) => s.prompt_file)].filter(Boolean).map((f) => `<li>${file(f)}</li>`)).join("");
+  const assets = S.turns.map((tu, i) => tu.plan ? dir(tu.plan.dir || `turn ${i + 1}`, tu.plan.steps.map((s) => `<li>${file(s.produces, ` <span class="cnt">${esc(s.tool)}</span>`, s.state === "done" ? "ok" : s.state, outUrl(s.output) && isImg(s.output || "") ? outUrl(s.output) : null)}</li>`).join("")) : "").join("");
   const runs = RUNS.map((r) => `<li class="closed"><div class="row dir" data-run="${esc(r.label)}">${I.chev}<b>${esc(r.label)}</b><span class="cnt">${r.stills}</span></div><ul><li><div class="row" data-run="${esc(r.label)}">story · screenplay · keyframes</div></li><li><div class="row" data-tree="${esc(r.label)}">workflow</div></li></ul></li>`).join("");
   t.innerHTML = dir("materials", mats || `<li><div class="row" style="color:var(--mut)">none</div></li>`, true, (S.materials || []).length) + dir("prompts", prompts || `<li><div class="row" style="color:var(--mut)">none</div></li>`, false, S.turns.length) + dir("assets", assets || `<li><div class="row" style="color:var(--mut)">none</div></li>`) + dir("runs", runs, false, RUNS.length);
   t.querySelectorAll(".row.dir").forEach((d) => d.addEventListener("click", (e) => { if (d.dataset.run && e.detail === 2) return showRun(d.dataset.run); d.parentElement.classList.toggle("closed"); }));
@@ -280,7 +234,7 @@ function tree() {
 }
 document.addEventListener("dragstart", (e) => { const n = e.target.closest?.("[data-name]"); if (n) e.dataTransfer.setData("text/plain", n.dataset.name); });
 
-// composer
+// ----- composer, modes, attachments -----
 $("#attach").addEventListener("click", () => $("#files").click());
 $("#files").addEventListener("change", async (e) => { for (const f of e.target.files) { const r = await (await fetch(`/upload?session=${SID}&name=${encodeURIComponent(f.name)}`, { method: "POST", body: f })).json(); S = S || { materials: [] }; S.materials = [...new Set([...(S.materials || []), r.name])]; pending.push(r.name); $("#pend").appendChild(el(tile(r.name))); } e.target.value = ""; tree(); });
 const row = $("#droprow"); row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("over"); }); row.addEventListener("dragleave", () => row.classList.remove("over")); row.addEventListener("drop", (e) => { e.preventDefault(); row.classList.remove("over"); const n = e.dataTransfer.getData("text/plain"); if (n && !pending.includes(n)) { pending.push(n); $("#pend").appendChild(el(tile(n))); } });
@@ -290,54 +244,42 @@ $("#tier").addEventListener("click", (e) => { const b = e.target.closest("button
 const setMode = (m) => { const n = $("#mode"); n.dataset.m = m; n.querySelector("b").textContent = m; $("#modehint").textContent = HINT[m]; };
 document.addEventListener("keydown", (e) => { if (e.key === "Tab" && e.shiftKey) { e.preventDefault(); setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]); } });
 $("#mode").addEventListener("click", () => setMode(MODES[(MODES.indexOf(mode()) + 1) % MODES.length]));
-$("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; tree(); });
+$("#reset").addEventListener("click", async () => { S = await api("/session/reset", { session: SID, mode: mode() }); chat.innerHTML = '<p class="hint">New chat.</p>'; canvas.innerHTML = '<p class="hint">The working tree appears here.</p>'; toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; tree(); });
 
-// the workflow view: the working tree of a run (or this session) as stages, slideshows per type, a node selected shows its dependents
+// ----- views over a run (into the canvas) -----
 async function showTree(label) {
   const T = await api(label ? `/tree/run/${encodeURIComponent(label)}` : `/tree/session/${SID}`); if (T.error) return; const by = Object.fromEntries(T.nodes.map((n) => [n.id, n]));
   const media = (f) => label ? `/media/${encodeURIComponent(label)}/${f}` : `/sessions/${SID}/${f}`;
-  chat.querySelector(".hint")?.remove(); add(el(`<div class="msg user">workflow of ${esc(label || "this session")}</div>`));
-  const v = el(`<div class="view wf"><h2>Workflow<small>${T.nodes.length} calls · ${T.edges.length} dependencies</small></h2><div class="sel" hidden></div></div>`);
+  const v = el(`<div class="view wf"><h2>Workflow<small>${esc(label || "this session")} · ${T.nodes.length} calls · ${T.edges.length} dependencies</small><button class="ib" data-close>${I.x}</button></h2><div class="sel" hidden></div></div>`); v.querySelector("[data-close]").addEventListener("click", () => v.remove());
   const TYPE_LABEL = { story: "story", scene: "scenes", shot: "shots", plate: "plates", sheet: "character sheets", ref: "pictures from the record", still: "keyframes", clip: "clips", music: "music", film: "film", material: "materials", field: "the sheet", step: "tool calls" };
-  const cap = (n) => n.file && /\.(png|jpe?g|webp)$/i.test(n.file) ? `<img src="${media(n.file)}" alt="">` : n.file && /\.mp4$/i.test(n.file) ? `<video src="${media(n.file)}" muted></video>` : "";
+  const cap = (n) => n.file && /\.(png|jpe?g|webp|svg)$/i.test(n.file) ? `<img src="${media(n.file)}" alt="">` : n.file && /\.mp4$/i.test(n.file) ? `<video src="${media(n.file)}" muted></video>` : "";
   for (const st of T.stages) {
     const sec = el(`<div class="stage"><h3>${esc(st.id)}<span class="ex" title="${esc(st.explain)}">${I.info}</span><span class="exl">${esc(st.explain)}</span></h3></div>`);
-    const types = [...new Set(T.nodes.filter((n) => n.stage === st.id).map((n) => n.type))];
-    for (const ty of types) {
-      const ns = T.nodes.filter((n) => n.type === ty); const first = ns[0];
-      const g = el(`<div class="tset"><div class="th"><b>${esc(TYPE_LABEL[ty] || ty)}</b><span class="cnt">${ns.length}</span><span class="exl">${esc(ty === "still" ? "one painted still per distinct frame; click one to see what hangs from it" : ty === "scene" ? "a change to a scene remakes only its own stills and clips" : ty === "step" ? "every output is attached to the call that made it" : first.explain.split(".")[0])}</span></div><div class="nodes"></div></div>`);
-      const box = g.querySelector(".nodes");
-      for (const n of ns) { const tile = el(`<div class="node ${cap(n) ? "pic" : "txt"}" data-id="${esc(n.id)}" data-s="${esc(n.gate || n.state || "")}">${cap(n)}<span>${esc(n.label)}</span>${n.credits ? `<em>${n.credits}</em>` : ""}</div>`); tile.title = n.explain; tile.addEventListener("click", () => select(n.id)); box.appendChild(tile); }
+    for (const ty of [...new Set(T.nodes.filter((n) => n.stage === st.id).map((n) => n.type))]) {
+      const ns = T.nodes.filter((n) => n.type === ty); const g = el(`<div class="tset"><div class="th"><b>${esc(TYPE_LABEL[ty] || ty)}</b><span class="cnt">${ns.length}</span><span class="exl">${esc((ns[0].explain || "").split(".")[0])}</span></div><div class="nodes"></div></div>`);
+      for (const n of ns) { const tl = el(`<div class="node ${cap(n) ? "pic" : "txt"}" data-id="${esc(n.id)}" data-s="${esc(n.gate || n.state || "")}">${cap(n)}<span>${esc(n.label)}</span>${n.credits ? `<em>${n.credits}</em>` : ""}</div>`); tl.title = n.explain || ""; tl.addEventListener("click", () => select(n.id)); g.querySelector(".nodes").appendChild(tl); }
       sec.appendChild(g);
     }
     v.appendChild(sec);
   }
   function select(id) {
-    const n = by[id]; const deps = new Set(n.dependents);
+    const n = by[id]; const deps = new Set(n.dependents || [id]);
     v.querySelectorAll(".node").forEach((t) => { t.classList.toggle("dim", !deps.has(t.dataset.id)); t.classList.toggle("on", t.dataset.id === id); t.classList.toggle("dep", deps.has(t.dataset.id) && t.dataset.id !== id); });
     const sel = v.querySelector(".sel"); sel.hidden = false;
-    sel.innerHTML = `<div class="selh"><b>${esc(n.label)}</b><small>${esc(n.type)}${n.model ? ` · ${esc(n.model)}` : ""}${n.credits ? ` · ${n.credits} cr` : ""}</small><button class="ib" data-close title="Close">${I.x}</button></div>
-      <p class="exl">${esc(n.explain)}</p>
+    sel.innerHTML = `<div class="selh"><b>${esc(n.label)}</b><small>${esc(n.type)}${n.model ? ` · ${esc(n.model)}` : ""}${n.credits ? ` · ${n.credits} credits` : ""}</small><button class="ib" data-close title="Close">${I.x}</button></div><p class="exl">${esc(n.explain || "")}</p>
       ${n.inputs?.length ? `<div class="kv"><em>takes</em>${n.inputs.map((i) => `<span class="chip" data-go="${esc(i.id)}">${esc(by[i.id]?.label || i.id)}<small>${esc(i.role)}</small></span>`).join("")}</div>` : ""}
       ${n.attempts?.length ? `<div class="kv"><em>attempts</em>${n.attempts.map((a) => `<img src="${media(a)}" class="${a === n.file ? "on" : ""}" title="${esc(a)}">`).join("")}</div>` : ""}
-      ${n.prompt || n.prompt_file ? `<div class="kv"><em>prompt</em><span class="file" data-pr>${I.doc}${esc(n.prompt_file || `${n.label}.txt`)}</span></div><pre class="pr" hidden>${esc(n.prompt || "")}</pre>` : ""}
-      ${n.text ? `<p class="txtp">${esc(n.text)}</p>` : ""}
-      <div class="kv rr"><em>re-run</em><span>${n.dependents.length - 1} dependent${n.dependents.length === 2 ? "" : "s"} remade · ~<b>${n.rerun_credits}</b> cr</span><button class="ib run" title="Re-run from here (dry)">${I.play}</button></div>`;
+      ${n.prompt || n.prompt_file ? `<div class="kv"><em>prompt</em><span class="file" data-pr>${I.doc}${esc(n.prompt_file || `${n.label}.txt`)}</span></div><pre class="pr" hidden>${esc(n.prompt || "")}</pre>` : ""}${n.text ? `<p class="txtp">${esc(n.text)}</p>` : ""}
+      <div class="kv rr"><em>re-run</em><span>${(n.dependents || []).length - 1} dependents remade · ~<b>${n.rerun_credits || 0}</b> credits</span></div>`;
     sel.querySelector("[data-close]").addEventListener("click", () => { sel.hidden = true; v.querySelectorAll(".node").forEach((t) => t.classList.remove("dim", "on", "dep")); });
-    sel.querySelectorAll("[data-go]").forEach((c) => c.addEventListener("click", () => select(c.dataset.go)));
-    sel.querySelector("[data-pr]")?.addEventListener("click", () => { const p = sel.querySelector("pre.pr"); p.hidden = !p.hidden; });
-    sel.querySelector(".rr .run").addEventListener("click", () => add(el(`<div class="msg agent">Re-running ${esc(n.label)} would remake ${n.dependents.length - 1} thing${n.dependents.length === 2 ? "" : "s"} after it (${esc(n.dependents.filter((x) => x !== id).map((x) => by[x]?.label || x).join(", "))}) for about ${n.rerun_credits} credits, and touch nothing else. Dry for now.</div>`)));
-    sel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    sel.querySelectorAll("[data-go]").forEach((c) => c.addEventListener("click", () => select(c.dataset.go))); sel.querySelector("[data-pr]")?.addEventListener("click", () => { const p = sel.querySelector("pre.pr"); p.hidden = !p.hidden; });
   }
-  add(v);
+  canvas.querySelector(".hint")?.remove(); add(v, canvas);
 }
-
-// views over a run
 async function showRun(label) {
-  const R = await api(`/run/${encodeURIComponent(label)}`); if (R.error) return; const media = (p) => `/media/${encodeURIComponent(label)}/${p}`;
-  chat.querySelector(".hint")?.remove(); add(el(`<div class="msg user">${esc(label)}</div>`));
-  const st = R.story || {}; add(el(`<div class="view story"><h2>${esc(st.title || label)}<small>${esc(st.kind || "")} · ${esc(R.mode)}</small></h2>${(st.story || "").split(/\n\n+/).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`));
-  const v = el(`<div class="view"><h2>Screenplay<small>${esc(R.script?.theme || "")}</small></h2></div>`);
+  const R = await api(`/run/${encodeURIComponent(label)}`); if (R.error) return; const media = (p) => `/media/${encodeURIComponent(label)}/${p}`; canvas.querySelector(".hint")?.remove();
+  const st = R.story || {}; add(el(`<div class="view story"><h2>${esc(st.title || label)}<small>${esc(st.kind || "")} · ${esc(R.mode)}</small><button class="ib" data-close>${I.x}</button></h2>${(st.story || "").split(/\n\n+/).map((p) => `<p>${esc(p)}</p>`).join("")}</div>`), canvas).querySelector("[data-close]").addEventListener("click", (e) => e.target.closest(".view").remove());
+  const v = el(`<div class="view"><h2>Screenplay<small>${esc(R.script?.theme || "")}</small><button class="ib" data-close>${I.x}</button></h2></div>`); v.querySelector("[data-close]").addEventListener("click", () => v.remove());
   for (const s of R.script?.scenes || []) {
     const notes = (R.notes.comments || []).filter((c) => c.scene === s.n);
     const b = el(`<div class="scene"><div class="t"><b>${s.n}</b><small>${esc(s.place)}${s.time ? ` · ${esc(s.time)}` : ""}${s.seconds ? ` · ${s.seconds}s` : ""}${s.tone ? ` · ${esc(s.tone)}` : ""}</small><button class="ib cm" title="Comment">${I.comment}</button></div><div class="syn">${esc(s.synopsis || s.situation || "")}</div>
@@ -347,24 +289,24 @@ async function showRun(label) {
     b.querySelector("form.cmt").addEventListener("submit", async (e) => { e.preventDefault(); const inp = b.querySelector(".cmt input"); if (!inp.value.trim()) return; await api(`/run/${encodeURIComponent(label)}/comment`, { scene: s.n, text: inp.value.trim() }); b.insertBefore(el(`<div class="notec">${esc(inp.value.trim())}</div>`), b.querySelector(".cmt")); add(el(`<div class="msg user">${s.n}: ${esc(inp.value.trim())}</div>`)); inp.value = ""; b.querySelector(".cmt").classList.remove("open"); });
     v.appendChild(b);
   }
-  add(v);
+  add(v, canvas);
   const stills = R.stills.filter((s) => s.file); if (!stills.length) return; let i = 0, att = null;
-  const k = el(`<div class="view"><h2>Keyframes</h2><div class="slides"><img></div><div class="nav"><span class="cap"></span><span class="v"></span><button class="ib" data-n="-1" title="Previous">${I.left}</button><button class="ib" data-n="1" title="Next">${I.right}</button><button class="ib" data-pr title="Prompt">${I.doc}</button><button class="ib" data-flag title="Looks wrong" style="color:var(--bad)">${I.flag}</button></div><div class="thumbs"></div><pre class="pr" style="display:none;white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:240px;overflow:auto"></pre></div>`);
+  const k = el(`<div class="view"><h2>Keyframes<button class="ib" data-close>${I.x}</button></h2><div class="slides"><img></div><div class="nav"><span class="cap"></span><span class="v"></span><button class="ib" data-n="-1" title="Previous">${I.left}</button><button class="ib" data-n="1" title="Next">${I.right}</button><button class="ib" data-pr title="Prompt">${I.doc}</button><button class="ib" data-flag title="Looks wrong" style="color:var(--bad)">${I.flag}</button></div><div class="thumbs"></div><pre class="pr" style="display:none;white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,monospace;background:var(--grey);border-radius:8px;padding:8px;max-height:240px;overflow:auto"></pre></div>`);
+  k.querySelector("[data-close]").addEventListener("click", () => k.remove());
   const draw = () => { const s = stills[i]; const file = att ?? s.file; k.querySelector("img").src = media(file); k.querySelector(".cap").textContent = `${i + 1}/${stills.length} · ${s.id} · ${s.size}${att ? ` · ${att.split("/").pop()}` : ""}`; k.querySelector(".v").className = `v ${s.gate || ""}`; k.querySelector(".v").title = s.gate || ""; k.querySelector(".thumbs").innerHTML = s.attempts.map((a) => `<img src="${media(a)}" class="${(att ?? s.file) === a ? "on" : ""}" data-a="${a}">`).join(""); k.querySelector("pre").textContent = `${s.inputs.length ? "images: " + s.inputs.join(", ") + "\n\n" : ""}${s.prompt}`; k.querySelectorAll(".notec").forEach((n) => n.remove()); for (const f of (R.notes.flags || []).filter((f) => f.still === s.id)) k.querySelector(".thumbs").after(el(`<div class="notec">${esc(f.text)}</div>`)); };
   k.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => { i = (i + Number(b.dataset.n) + stills.length) % stills.length; att = null; draw(); }));
   k.querySelector("[data-pr]").addEventListener("click", () => { const p = k.querySelector("pre"); p.style.display = p.style.display === "none" ? "block" : "none"; });
   k.querySelector(".thumbs").addEventListener("click", (e) => { if (e.target.dataset.a) { att = e.target.dataset.a; draw(); } });
   k.querySelector("[data-flag]").addEventListener("click", async () => { const s = stills[i]; const text = prompt(`${s.id}: what looks wrong?`); if (!text) return; await api(`/run/${encodeURIComponent(label)}/flag`, { still: s.id, file: att ?? s.file, text }); R.notes.flags.push({ still: s.id, text }); draw(); add(el(`<div class="msg user">${esc(s.id)}: ${esc(text)}</div>`)); });
-  document.addEventListener("keydown", (e) => { if (!k.isConnected || e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT") return; if (e.key === "ArrowLeft") k.querySelector('[data-n="-1"]').click(); if (e.key === "ArrowRight") k.querySelector('[data-n="1"]').click(); });
-  draw(); add(k);
-  if (R.film) add(el(`<div class="view"><h2>Film</h2><div class="slides"><video controls src="${media(R.film)}"></video></div></div>`));
+  draw(); add(k, canvas);
+  if (R.film) add(el(`<div class="view"><h2>Film<button class="ib" data-close>${I.x}</button></h2><div class="slides"><video controls src="${media(R.film)}"></video></div></div>`), canvas).querySelector("[data-close]").addEventListener("click", (e) => e.target.closest(".view").remove());
 }
 
-// ----- the lightbox: click an asset to see it up close -----
+// ----- the lightbox -----
 const LB = $("#lb"); const lbOpen = (src, cap) => { const isV = /\.(mp4|mov)(\?|$)/i.test(src); LB.querySelector("img").hidden = isV; LB.querySelector("video").hidden = !isV; if (isV) { LB.querySelector("video").src = src; LB.querySelector("video").play().catch(() => {}); } else LB.querySelector("img").src = src; LB.querySelector(".lbcap").textContent = cap || ""; LB.hidden = false; };
 const lbClose = () => { LB.hidden = true; const v = LB.querySelector("video"); v.pause(); v.removeAttribute("src"); };
-document.addEventListener("click", (e) => { if (!LB.hidden) { if (e.target.tagName !== "VIDEO") lbClose(); return; } const m = e.target.closest(".tile img, .tile video, .dag-node img, .dag-node video, .thumbs img, .slides img, .kv img, .out img, .out video"); if (!m) return; if (m.closest(".thumbs") || m.closest(".dag-node") || m.closest(".kv")) return; e.preventDefault(); e.stopPropagation(); const src = m.currentSrc || m.src; const holder = m.closest(".tile, .out, .slides"); lbOpen(src, holder?.title || holder?.querySelector("span")?.textContent || ""); }, true);
-document.addEventListener("dblclick", (e) => { const m = e.target.closest(".dag-node img, .thumbs img, .kv img"); if (m) { e.preventDefault(); lbOpen(m.currentSrc || m.src, m.title || m.closest(".dag-node")?.dataset.name || ""); } });
+document.addEventListener("click", (e) => { if (!LB.hidden) { if (e.target.tagName !== "VIDEO") lbClose(); return; } const m = e.target.closest(".tile img, .tile video, .slides img, .out img, .out video"); if (!m) return; e.preventDefault(); e.stopPropagation(); const holder = m.closest(".tile, .out, .slides"); lbOpen(m.currentSrc || m.src, holder?.title || holder?.querySelector("span")?.textContent || ""); }, true);
+document.addEventListener("dblclick", (e) => { const m = e.target.closest(".dag-node img, .thumbs img, .kv img, .wf .node img"); if (m) { e.preventDefault(); lbOpen(m.currentSrc || m.src, m.title || m.closest("[data-name]")?.dataset.name || ""); } });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !LB.hidden) lbClose(); });
 
 // ----- the test command panel (not part of the product) -----
@@ -377,27 +319,25 @@ async function cmdStep() {
   try {
     if (st.do === "import") { const r = await api("/import", { session: SID, from: st.from, name: st.name }); S = await api(`/session/${SID}`); tree(); clog(`import ${r.name || r.error}`); }
     else if (st.do === "send") { chat.querySelector(".hint")?.remove(); clog(`send: ${st.text.slice(0, 50)}…`); await send(st.text, st.materials || []); let t = S.turns[S.turns.length - 1]; clog(t.questions ? `  asked: ${t.questions.map((q) => q.field).join(", ")}` : `  plan: ${t.plan.shape}, ${t.plan.steps.length} node(s), ~${t.plan.estimate_credits} cr`); if (t.questions) { const was = mode(); setMode("auto"); clog("  answering: your call (auto for this answer)"); await send("Your call on all of that.", []); setMode(was); t = S.turns[S.turns.length - 1]; clog(t.plan ? `  plan: ${t.plan.shape}, ${t.plan.steps.length} node(s), ~${t.plan.estimate_credits} cr` : `  still asking: ${(t.questions || []).map((q) => q.field).join(", ")}`); } }
-    else if (st.do === "run") { const ti = S.turns.length - 1; const t = S.turns[ti]; if (!t.plan) { clog("  nothing to run"); } else { clog(`  run (${creditsMode()}) turn ${ti + 1}`); await simulateTurn(ti); const d = S.turns[ti].plan.steps; clog(`  ${d.filter((x) => x.state === "done").length}/${d.length} done${d.some((x) => x.state === "failed") ? " · a step failed" : ""}${d.some((x) => x.credits_spent) ? ` · ${d.reduce((a, x) => a + (x.credits_spent || 0), 0)} credits` : ""}`); } }
+    else if (st.do === "run") { const ti = S.turns.length - 1; const t = S.turns[ti]; if (!t.plan) clog("  nothing to run"); else { clog(`  run (${creditsMode()}) turn ${ti + 1}`); await runSteps(ti, null); const d = S.turns[ti].plan.steps; clog(`  ${d.filter((x) => x.state === "done").length}/${d.length} done${d.some((x) => x.state === "failed") ? " · a step failed" : ""}${d.some((x) => x.credits_spent) ? ` · ${d.reduce((a, x) => a + (x.credits_spent || 0), 0)} credits` : ""}`); } }
   } catch (e) { clog(`  error: ${e.message}`); }
   CMD.waiting = false; return true;
 }
 async function cmdLoop() { while (CMD.state === "playing") { const more = await cmdStep(); if (!more) break; if (CMD.state !== "playing") break; } }
-async function cmdStart() { if (CMD.script && CMD.state !== "done") return; const k = $("#script").value; if (!TEST_SCRIPTS[k]) return; CMD.script = TEST_SCRIPTS[k]; CMD.i = 0; $("#cmdlog").textContent = ""; await api("/session/reset", { session: SID, mode: CMD.script.mode }); setMode(CMD.script.mode); chat.innerHTML = ""; S = await api(`/session/${SID}`); tree(); clog(`script: ${k} · credits ${creditsMode()}`); }
+async function cmdStart() { if (CMD.script && CMD.state !== "done") return; const k = $("#script").value; if (!TEST_SCRIPTS[k]) return; CMD.script = TEST_SCRIPTS[k]; CMD.i = 0; $("#cmdlog").textContent = ""; await api("/session/reset", { session: SID, mode: CMD.script.mode }); setMode(CMD.script.mode); chat.innerHTML = ""; canvas.innerHTML = ""; toolPanel.innerHTML = '<div class="empty">no tool focused</div>'; FOCUS = null; S = await api(`/session/${SID}`); tree(); clog(`script: ${k} · credits ${creditsMode()}`); }
 $("#play").addEventListener("click", async () => { if (CMD.state === "playing" || CMD.waiting) return; await cmdStart(); cst("playing"); cmdLoop(); });
 $("#pause").addEventListener("click", () => { if (CMD.state === "playing") { cst("paused"); clog("paused"); } });
 $("#stepb").addEventListener("click", async () => { if (CMD.state === "playing" || CMD.waiting) return; await cmdStart(); cst("paused"); await cmdStep(); if (CMD.state !== "done") cst("paused"); });
 $("#script").addEventListener("change", () => { CMD.script = null; CMD.i = 0; cst("idle"); });
 $("#credits").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; $("#credits").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); if (b.dataset.c === "real") clog("real: tool calls spend credits"); });
 $("#cmdmin").addEventListener("click", () => $("#cmd").classList.toggle("min"));
-// any click on the product while a script plays is a pause: the user wants to audit something
 document.addEventListener("mousedown", (e) => { if (CMD.state === "playing" && !e.target.closest("#cmd")) { cst("paused"); clog("paused (click)"); } }, true);
 for (const k of Object.keys(window.TEST_SCRIPTS || {})) $("#script").appendChild(el(`<option>${esc(k)}</option>`));
 
 (async () => {
   MODELS = await api("/models"); RUNS = await api("/runs");
   S = await api(`/session/${SID}`); setMode(S.mode || "ask"); $("#tier").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === (S.tier || "free")));
-  if (S.messages?.length) { chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && (m.sim || m.exec)) add(el(`<div class="msg agent" style="color:var(--mut)">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } }
-  tree();
+  await rerender();
 })();
 </script>
 </body>
