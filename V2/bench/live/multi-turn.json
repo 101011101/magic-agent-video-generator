@@ -1,0 +1,80 @@
+{
+  "name": "multi-turn",
+  "mode": "ask",
+  "budget": 50,
+  "what": "Multi-turn editing: \"it\", \"the first one\", \"the vignette one\" resolve to the right asset",
+  "steps": [
+    {
+      "do": "import",
+      "from": "runs/topgun9/refs/vega-f35c-3.jpg",
+      "name": "jet.jpg"
+    },
+    {
+      "do": "send",
+      "text": "Make this black and white.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "expect": {
+        "tools": [
+          "image-edit"
+        ]
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Now add a soft vignette to it.",
+      "expect": {
+        "tools": [
+          "image-edit"
+        ],
+        "refers": "last"
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Upscale the first one you made, not the vignette.",
+      "expect": {
+        "tools": [
+          "upscale-image"
+        ],
+        "refers": "first"
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Put the word 'NAVY' at the bottom of the vignette one.",
+      "expect": {
+        "tools": [
+          "text-overlay"
+        ],
+        "credits_max": 0
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Crop that to a square.",
+      "expect": {
+        "tools": [
+          "crop"
+        ],
+        "credits_max": 0
+      }
+    },
+    {
+      "do": "run"
+    }
+  ]
+}

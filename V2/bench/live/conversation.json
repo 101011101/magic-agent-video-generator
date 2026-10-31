@@ -1,0 +1,72 @@
+{
+  "name": "conversation",
+  "mode": "ask",
+  "budget": 40,
+  "what": "Conversational: asks only for what is missing, then acts on the answer",
+  "steps": [
+    {
+      "do": "import",
+      "from": "runs/topgun9/refs/vega-f35c-3.jpg",
+      "name": "jet.jpg"
+    },
+    {
+      "do": "import",
+      "from": "runs/topgun9/stills/s3-1.png",
+      "name": "cockpit.png"
+    },
+    {
+      "do": "send",
+      "text": "Put some text on this.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "answer": "\"Open Daily\", at the bottom.",
+      "expect": {
+        "asks": true,
+        "tools": [
+          "text-overlay"
+        ],
+        "credits_max": 0
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Upscale it.",
+      "materials": [
+        "cockpit.png",
+        "jet.jpg"
+      ],
+      "answer": "The cockpit one.",
+      "expect": {
+        "asks": true,
+        "tools": [
+          "upscale-image"
+        ],
+        "credits_max": 25
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Make this photo warmer.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "expect": {
+        "asks": false,
+        "tools": [
+          "image-edit"
+        ],
+        "credits_max": 5
+      }
+    },
+    {
+      "do": "run"
+    }
+  ]
+}
