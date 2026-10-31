@@ -69,6 +69,7 @@ createServer(async (req, res) => {
       const t = { at: Date.now(), sheet: r.sheet, questions: r.questions || null, plan: r.plan || null, files: {}, brief: s.request }; if (!r.questions) s.request = null;
       writeFileSync(join(d, "prompts", `turn-${ti}-sheet.json`), JSON.stringify(r.sheet, null, 2)); t.files.sheet = `turn-${ti}-sheet.json`;
       if (r.plan) {
+        if (r.plan.steps.length > 1) t.plan.dir = `tree-${ti + 1}`;   // a directory per working tree; a single node is the elementary tree and lives at the root
         t.plan.steps = t.plan.steps.map((st, i) => { const f = `turn-${ti}-step-${i}.txt`; writeFileSync(join(d, "prompts", f), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`); return { ...st, state: s.mode === "plan" ? "plan" : "proposed", prompt_file: f }; });
         writeFileSync(join(d, "prompts", `turn-${ti}-plan.json`), JSON.stringify(t.plan, null, 2)); t.files.plan = `turn-${ti}-plan.json`;
         for (const st of t.plan.steps) s.assets.push({ label: st.produces, kind: /\.(mp4|mov)$/.test(st.produces) ? "clip" : /\.(mp3|wav)$/.test(st.produces) ? "sound" : "picture", from: st.tool, planned: true });

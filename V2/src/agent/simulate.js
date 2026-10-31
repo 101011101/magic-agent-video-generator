@@ -41,11 +41,11 @@ export function placeholder(step, i) {
 
 // Run the plan into `dir/assets`. `only` restricts to a set of indices (the stale set) and keeps other outputs.
 export function simulate(plan, dir, { only = null } = {}) {
-  mkdirSync(join(dir, "assets"), { recursive: true });
+  const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
   for (const i of order(plan.steps)) {
-    const s = plan.steps[i]; if (only && !only.includes(i)) continue;
-    const name = `${s.produces.replace(/\.[a-z0-9]+$/i, "")}.svg`; writeFileSync(join(dir, "assets", name), placeholder(s, i));
-    s.output = `assets/${name}`; s.state = "done"; s.ran_at = Date.now(); s.simulated = true;
+    const s = plan.steps[i]; if (only && !only.includes(i)) continue; if (s.state === "skipped" || s.state === "paused") continue;
+    const name = `${s.produces.replace(/\.[a-z0-9]+$/i, "")}.svg`; writeFileSync(join(dir, sub, name), placeholder(s, i));
+    s.output = `${sub}/${name}`; s.state = "done"; s.ran_at = Date.now(); s.simulated = true;
   }
   return plan;
 }

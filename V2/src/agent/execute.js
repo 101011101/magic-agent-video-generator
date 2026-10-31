@@ -24,8 +24,9 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
   run.log.jobs ??= {}; run.log.pending ??= {}; run.log.calls ??= [];
   const jobs = new Jobs(run);
   const by = {}; plan.steps.forEach((s, i) => (by[s.produces] = i));
-  const file = (name) => { const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output; if (existsSync(join(dir, "materials", name))) return `materials/${name}`; if (existsSync(join(dir, "assets", name))) return `assets/${name}`; return null; };
-  const out = (s, ext) => `assets/${s.produces.replace(/\.[a-z0-9]+$/i, "")}.${ext}`;
+  const file = (name) => { const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output; if (existsSync(join(dir, "materials", name))) return `materials/${name}`; if (plan.dir && existsSync(join(dir, "assets", plan.dir, name))) return `assets/${plan.dir}/${name}`; if (existsSync(join(dir, "assets", name))) return `assets/${name}`; return null; };
+  const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
+  const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}.${ext}`;
   const set = (i, patch) => { Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };
   let filmStarted = false;
   for (const i of order(plan.steps)) {
@@ -36,27 +37,30 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
       set(i, { state: "running", started_at: Date.now() });
       if (!WIRED.has(s.tool)) { const f = out(s, "svg"); writeFileSync(join(dir, f), placeholder(s, i)); set(i, { state: "done", output: f, simulated: true, note: `${s.tool} has no wired endpoint yet; placeholder` }); continue; }
       const inputs = s.inputs.map((n) => ({ name: n, file: file(n) })).filter((x) => x.file);
-      const missing = s.inputs.filter((n) => !file(n)); if (missing.length && !["image", "music", "text-to-video"].includes(s.tool)) throw new Error(`missing input ${missing.join(", ")}`);
+      // an input that is not a file and not something a node made is text the planner misplaced: it goes into the prompt
+      const missing = s.inputs.filter((n) => !file(n)); const words = missing.filter((n) => !/\.[a-z0-9]{2,4}$/i.test(n)); const lost = missing.filter((n) => /\.[a-z0-9]{2,4}$/i.test(n));
+      if (words.length) { s.params.prompt_or_change = `${s.params.prompt_or_change} The text "${words.join('", "')}" appears in the picture.`; s.inputs = s.inputs.filter((n) => !words.includes(n)); set(i, { note: `text moved into the prompt: ${words.join(", ")}` }); }
+      if (lost.length && !["image", "music", "text-to-video"].includes(s.tool)) throw new Error(`missing input ${lost.join(", ")}`);
       let r;
       if (s.tool === "image" || s.tool === "image-edit") {
         const f = out(s, "png"); const model = s.model || (tier === "paid" ? "nano-banana-pro" : "flux-2-klein"); const res = s.resolution || (STILLS[model]?.resolutions || ["640px"])[0];
         const gen = !inputs.length; const asp = s.params.aspect && (gen ? ["1:1", "16:9", "9:16"].includes(s.params.aspect) : true) ? s.params.aspect : gen ? (s.params.aspect === "4:5" || s.params.aspect === "4:3" ? "1:1" : "16:9") : null;
         r = await jobs.image(key, f, s.params.prompt_or_change, inputs.map((x) => x.file), { model, resolution: res, ...(asp ? { aspect_ratio: asp } : {}) });
-        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached });
+        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else if (s.tool === "image-to-video") {
         const f = out(s, "mp4"); const model = s.model || "minimax-h3"; const res = s.resolution || "480p"; const sec = grid(model, Number(s.params.seconds) || 5);
         const pics = inputs.filter((x) => /\.(png|jpe?g|webp)$/i.test(x.file)); if (!pics.length) throw new Error("image-to-video needs a picture");
         r = await jobs.video(key, f, s.params.prompt_or_change, pics[0].file, pics[1]?.file || null, sec, { model, resolution: res, audio: true });
-        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached });
+        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else if (s.tool === "text-to-video") {
         const f = out(s, "mp4"); const model = s.model || "minimax-h3"; const res = s.resolution || "480p"; const sec = grid(model, Number(s.params.seconds) || 5);
         const refs = inputs.slice(0, VIDEOS[model]?.maxRefs || 9).map((x) => { let n = x.name.replace(/\.[a-z0-9]+$/i, "").replace(/[^A-Za-z0-9_-]/g, "_"); if (!/^[A-Za-z]/.test(n)) n = "r_" + n; return { name: n, file: x.file }; });
         let prompt = s.params.prompt_or_change; for (const rf of refs) if (!prompt.includes(`@${rf.name}`)) prompt += ` @${rf.name}`;
         r = await jobs.tvideo(key, f, prompt, refs, sec, { model, resolution: res, audio: true, ...(s.params.aspect ? { aspect_ratio: s.params.aspect } : {}) });
-        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached });
+        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else if (s.tool === "music") {
         const f = out(s, "mp3"); const sec = Math.round(Math.max(15, Math.min(300, Number(s.params.seconds) || 30)));
-        r = await jobs.music(key, f, s.params.prompt_or_change, sec); set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached });
+        r = await jobs.music(key, f, s.params.prompt_or_change, sec); set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else {
         // generic endpoints through paid(): the body per the API sheet
         const spec = { "face-swap-photo": { endpoint: "/v1/face-swap-photo", cost: 10, ext: "png", body: (p) => ({ assets: { target_file_path: p[0], source_file_path: p[1], face_swap_mode: "all-faces" } }) },
@@ -68,7 +72,7 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
         // the target comes first for a swap: the picture, then the face
         const ordered = s.tool === "face-swap-photo" ? [...inputs].sort((a, b) => (/\b(face|me|self|selfie|portrait|headshot)\b/i.test(a.name.replace(/[._-]/g, " ")) ? 1 : 0) - (/\b(face|me|self|selfie|portrait|headshot)\b/i.test(b.name.replace(/[._-]/g, " ")) ? 1 : 0)) : inputs;
         r = await jobs.paid(key, f, { endpoint: spec.endpoint, prompt: s.params.prompt_or_change || "", model: s.tool, seconds: spec.seconds || 0 }, ordered.map((x) => x.file), spec.cost, (paths, onCreate) => runJob(spec.endpoint, { name: `${run.name} ${key}`, ...spec.body(paths) }, { kind, onCreate }));
-        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached });
+        set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       }
       say(`${s.tool} → ${s.produces}${r?.cached ? " (cached)" : ` (${r?.credits ?? 0} credits)`}`);
     } catch (e) { set(i, { state: "failed", error: String(e.message || e).slice(0, 300) }); say(`${s.tool} failed: ${String(e.message || e).slice(0, 200)}`); break; }
@@ -101,6 +105,6 @@ async function film(plan, dir, { id, tier, brief, sheet, set, say }) {
   }, 4000);
   await new Promise((ok) => child.on("close", ok)); clearInterval(tick); writeFileSync(join(dir, "exec-film.log"), log);
   const filmFile = ["film-narrated.mp4", "film-music.mp4", "film.mp4", "film-raw.mp4"].map((f) => join(rdir, "clips", f)).find(existsSync);
-  if (filmFile) { const f = `assets/${plan.steps[idx.film]?.produces?.replace(/\.[a-z0-9]+$/i, "") || "film"}.mp4`; copyFileSync(filmFile, join(dir, f)); const pages = { keyframes: `../../results/${label}/index.html`, clips: `../../runs/${label}/clips` }; for (const k of FILM) if (idx[k] !== undefined && plan.steps[idx[k]].state !== "done") set(idx[k], { state: "done", run: label, output: pages[k] || `../../runs/${label}/run.json#${k}` }); set(idx.film, { state: "done", output: f, run: label, page: `/results/${label}-film/` }); say(`film done: ${basename(filmFile)}`); }
+  if (filmFile) { const f = `assets/${plan.dir ? plan.dir + "/" : ""}${plan.steps[idx.film]?.produces?.replace(/\.[a-z0-9]+$/i, "") || "film"}.mp4`; mkdirSync(join(dir, "assets", plan.dir || ""), { recursive: true }); copyFileSync(filmFile, join(dir, f)); const pages = { keyframes: `../../results/${label}/index.html`, clips: `../../runs/${label}/clips` }; for (const k of FILM) if (idx[k] !== undefined && plan.steps[idx[k]].state !== "done") set(idx[k], { state: "done", run: label, output: pages[k] || `../../runs/${label}/run.json#${k}` }); set(idx.film, { state: "done", output: f, run: label, page: `/results/${label}-film/` }); say(`film done: ${basename(filmFile)}`); }
   else { for (const k of FILM) if (idx[k] !== undefined && plan.steps[idx[k]].state !== "done") set(idx[k], { state: "failed", run: label, error: log.split("\n").filter(Boolean).slice(-3).join(" | ").slice(0, 300) }); say(`film run ${label} stopped before the stitch; see exec-film.log`); }
 }

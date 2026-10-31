@@ -72,6 +72,8 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .nav{display:flex;align-items:center;gap:2px;margin-top:6px} .nav .cap{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums;margin-right:auto} .nav .v{width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px} .nav .v.accepted{background:var(--ok)} .nav .v.flagged{background:var(--bad)}
 .thumbs{display:flex;gap:5px;overflow-x:auto;padding:2px 0} .thumbs img{height:42px;border-radius:5px;cursor:pointer;opacity:.55;border:2px solid transparent} .thumbs img.on{opacity:1;border-color:var(--blue)}
 .hint{color:var(--mut);font-size:13px;text-align:center;padding:40px 0 0}
+.car{border-top:1px solid var(--rule);padding-top:8px;display:flex;flex-direction:column;gap:8px} .carnav{display:flex;align-items:center;gap:4px} .carnav .cap{font-size:12px;color:var(--mut);margin:0 auto} .carbody .tool{box-shadow:none}
+.dag-node.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 45%,transparent)}
 /* workflow */
 .wf .stage h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg);margin:8px 0 4px;display:flex;align-items:center;gap:6px} .wf .ex{color:var(--mut);display:inline-flex;cursor:help} .wf .exl{color:var(--mut);font-weight:400;font-size:11.5px;text-transform:none;letter-spacing:0;white-space:normal}
 .wf .tset{margin:2px 0 8px} .wf .th{display:flex;align-items:baseline;gap:8px;font-size:12.5px;margin-bottom:4px} .wf .th .cnt{color:var(--mut);font-size:11px}
@@ -161,7 +163,7 @@ function block(step, i, ti) {
     </div>
     <textarea class="pr" data-k="prompt_or_change" hidden>${esc(step.params.prompt_or_change)}</textarea>
     ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px">${/\.mp4$/i.test(step.output) ? `<video src="/sessions/${SID}/${esc(step.output)}" controls muted></video>` : /#story$/.test(step.output) || step.output.startsWith("../../") ? "" : `<img src="/sessions/${SID}/${esc(step.output)}" alt="">`}<span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : step.cached ? "made (cached)" : `made${step.credits_spent ? ` · ${step.credits_spent} cr` : ""}`}${step.page ? ` · <a href="${esc(step.page)}" target="_blank">page</a>` : ""}${step.note ? ` · ${esc(step.note)}` : ""}</span></div>` : step.error ? `<div class="out" style="color:var(--bad)">${esc(step.error)}</div>` : step.note ? `<div class="out">${esc(step.note)}</div>` : ""}
-    <div class="ft"><span class="cost"><b data-cost>${step.credits}</b> cr${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
+    <div class="ft"><span class="cost" title="Magic Hour credits"><b data-cost>${step.credits}</b> credits${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
       <form class="note"><input type="text" placeholder="Tell the agent about this step"></form>
       <button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
   </div>`);
@@ -189,8 +191,16 @@ function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
   if (t.plan) {
-    if (t.plan.steps.length > 1) { const box = el(`<div class="view treev"><h2>Proposed working tree<small>${t.plan.steps.length} nodes · ${esc(t.plan.shape || "")}</small><button class="ib runall" title="Run all (simulated)">${I.play}</button></h2><div class="dagbox"></div></div>`); add(box); drawDag(box.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : s.output ? `/sessions/${SID}/${s.output}` : null, onSelect: (i) => chat.querySelector(`.tool[data-t="${ti}"][data-i="${i}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }) }); box.querySelector(".runall").addEventListener("click", () => simulateTurn(ti)); }
-    t.plan.steps.forEach((s, i) => add(block(s, i, ti))); add(el(`<div class="est" data-t="${ti}">~<b>${t.plan.estimate_credits}</b> cr · ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}${t.plan.steps.length === 1 ? ` · <a href="#" data-sim="${ti}">run (simulated)</a>` : ""}</div>`)); chat.querySelector(`[data-sim="${ti}"]`)?.addEventListener("click", (e) => { e.preventDefault(); simulateTurn(ti); });
+    const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
+    if (n > 1) {
+      // one block per working tree: the tree on top, a carousel of its tool calls below; a node clicked in the tree moves the carousel
+      const box = el(`<div class="view treev" data-t="${ti}"><h2>Working tree<small>${n} tool calls · ${done}/${n} made · ${esc(t.plan.dir || "")}</small><button class="ib" data-run title="Run all">${I.play}</button></h2><div class="dagbox"></div><div class="car"><div class="carnav"><button class="ib" data-n="-1" title="Previous">${I.left}</button><span class="cap"></span><button class="ib" data-n="1" title="Next">${I.right}</button></div><div class="carbody"></div></div></div>`);
+      add(box); const body = box.querySelector(".carbody"); const blocks = t.plan.steps.map((s, i) => { const b = block(s, i, ti); b.hidden = true; body.appendChild(b); return b; }); let cur = 0;
+      const show = (i) => { cur = (i + n) % n; blocks.forEach((b, k) => (b.hidden = k !== cur)); box.querySelector(".cap").textContent = `${cur + 1} / ${n} · ${t.plan.steps[cur].tool.replace(/-/g, " ")}`; box.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", Number(d.dataset.i) === cur)); };
+      drawDag(box.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : s.output ? `/sessions/${SID}/${s.output}` : null, onSelect: show });
+      box.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => show(cur + Number(b.dataset.n)))); box.querySelector("[data-run]").addEventListener("click", () => simulateTurn(ti)); show(t.plan.steps.findIndex((x) => x.state !== "done") >= 0 ? t.plan.steps.findIndex((x) => x.state !== "done") : 0);
+    } else t.plan.steps.forEach((s, i) => add(block(s, i, ti)));
+    add(el(`<div class="est" data-t="${ti}">~<b>${t.plan.estimate_credits}</b> Magic Hour credits · ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}${n === 1 ? ` · <a href="#" data-sim="${ti}">run</a>` : ""}</div>`)); chat.querySelector(`[data-sim="${ti}"]`)?.addEventListener("click", (e) => { e.preventDefault(); simulateTurn(ti); });
   }
 }
 
