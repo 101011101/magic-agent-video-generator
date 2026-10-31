@@ -21,7 +21,8 @@ Files in this directory, in pipeline order:
 | `08-costs.md` | credits per item and per film |
 | `09-status.md` | what is built, built but not yet exercised, and design only |
 | `10-decisions.md` | the dated decisions log |
-| `11-agent.md` | the agent in front of everything: the universal questions, the tools, the session, model choice, editing (design) |
+| `11-agent.md` | the agent in front of everything: the question tree, the tools, the session, model choice, the persistent loop (design, dry prototype) |
+| `12-frontend.md` | the chat that shows its work: bubbles, tool cards, views, the creative-liberty toggle (design, dry prototype) |
 
 ## Models and services
 

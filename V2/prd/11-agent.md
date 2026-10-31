@@ -219,3 +219,24 @@ the film chain, the gates, the run record as the model for the session, the API 
 of the tool catalogue, and the archived clarification slots and capability catalogue in `archived/server/src/` as the
 ancestors of the sheet and the catalogue. Tickets: T-030 (the brief sheet), T-031 (the benchmark that proves it),
 T-033 (the small jobs), T-034 (the agent). Editing is its own ticket when the agent runs.
+
+## The loop is persistent, and it proposes (added 2026-10-31)
+
+The agent does not hand off to the film chain and wait. It is present at every step: between every message and
+between every stage of a run it runs the same check, for every field the next step needs: filled? if not, can it be
+made up (a default, a confident inference, the material implies it, or creative liberty is on) or must it be asked?
+What it made up is marked and shown; what it must ask is asked.
+
+**Creative liberty.** A per-session toggle. On, the agent assumes full creative liberty: every open field takes its
+default or the agent's best guess, marked `assumed`, nothing is asked, and the assumed values are shown so they can be
+changed afterwards. It never bypasses the cost confirmation.
+
+**Propose, then run.** Every tool call is shown before it runs, with its inputs and parameters filled from the
+conversation (`12-frontend.md`, tool cards). The user may run it, pause it, change a parameter, or object. No
+objection is consent. This applies to every tool, the film chain's stages included: story, assets, screenplay,
+keyframes, clips and the film each appear as they start, each pausable, each with the finer control the stage
+allows (a Commons pick to swap, a still to flag, a scene block to comment on).
+
+**Verification as a request.** "Show me the keyframes" or the agent's own "do these look right?" sends a view, not a
+bubble: a slideshow for stills and clips, scene blocks for the screenplay, a formatted page for the story. A flag on
+a still or a comment on a scene is a message tied to that item, and the next plan starts from it.
