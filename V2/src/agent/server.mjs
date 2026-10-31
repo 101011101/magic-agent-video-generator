@@ -15,6 +15,7 @@ import { STILLS, VIDEOS, TIERS } from "../lib/models.js";
 import { turn } from "./agent.mjs";
 import { price } from "./plan.js";
 import { runTree, sessionTree } from "./worktree.js";
+import { simulate, dependents as stepDependents } from "./simulate.js";
 
 const PORT = Number(process.argv[process.argv.indexOf("--port") + 1]) || 4747;
 const SESS = join(V2, "sessions"); mkdirSync(SESS, { recursive: true });
@@ -76,7 +77,7 @@ createServer(async (req, res) => {
     if (req.method === "POST" && /^\/session\/[^/]+\/step$/.test(p)) {
       const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const t = s.turns[b.turn ?? s.turns.length - 1]; if (!t?.plan) return json(res, 400, { error: "no plan" });
       const st = t.plan.steps[b.index]; if (!st) return json(res, 400, { error: "no step" });
-      if (b.params) Object.assign(st.params, b.params); if (Array.isArray(b.inputs)) st.inputs = b.inputs; if (b.model) { st.model = b.model; if (b.resolution) st.resolution = b.resolution; } if (b.credits != null) st.credits = b.credits; if (b.state) st.state = b.state;
+      const wasDone = st.state === "done"; if (b.params) Object.assign(st.params, b.params); if (Array.isArray(b.inputs)) st.inputs = b.inputs; if (wasDone && (b.params || b.inputs || b.model)) { st.state = "stale"; for (const j of stepDependents(t.plan.steps, b.index)) if (t.plan.steps[j].state === "done") t.plan.steps[j].state = "stale"; } if (b.model) { st.model = b.model; if (b.resolution) st.resolution = b.resolution; } if (b.credits != null) st.credits = b.credits; if (b.state) st.state = b.state;
       t.plan.estimate_credits = t.plan.steps.reduce((a, x) => a + (x.state === "skipped" ? 0 : x.credits || 0), 0);
       writeFileSync(join(sdir(id), "prompts", st.prompt_file || `step-${b.index}.txt`), `${st.tool} on ${st.model}${st.resolution ? ` ${st.resolution}` : ""}\ninputs: ${st.inputs.join(", ")}\nproduces: ${st.produces}\n\n${st.params.prompt_or_change}\n${st.params.extra ? `\n${st.params.extra}` : ""}`);
       save(s); return json(res, 200, { step: st, estimate: t.plan.estimate_credits });
@@ -86,6 +87,14 @@ createServer(async (req, res) => {
       const text = `About the ${st ? st.tool.replace(/-/g, " ") : "step"}${st ? ` (${st.produces})` : ""}: ${b.text}`;
       s.messages.push({ who: "user", text, at: Date.now(), step: { turn: b.turn, index: b.index } }); save(s);
       return json(res, 200, { text });
+    }
+    if (req.method === "POST" && /^\/session\/[^/]+\/simulate$/.test(p)) {
+      const id = decodeURIComponent(p.split("/")[2]); const b = await body(req); const s = load(id); const t = s.turns[b.turn ?? s.turns.length - 1]; if (!t?.plan) return json(res, 400, { error: "no plan" });
+      const stale = t.plan.steps.map((x, i) => (x.state === "stale" || x.state !== "done" ? i : -1)).filter((i) => i >= 0);
+      simulate(t.plan, sdir(id), { only: b.all ? null : stale });
+      for (const st of t.plan.steps) { const a = s.assets.find((x) => x.label === st.produces); if (a) { a.file = st.output; a.planned = false; } }
+      s.messages.push({ who: "agent", text: `Done (simulated): ${t.plan.steps.filter((x) => x.state === "done").length} of ${t.plan.steps.length} nodes made, ${stale.length} just now.`, at: Date.now(), turn: b.turn ?? s.turns.length - 1, sim: true });
+      save(s); return json(res, 200, { plan: t.plan, made: stale });
     }
     if (req.method === "POST" && p === "/session/reset") { const b = await body(req); const old = load(b.session || "default"); const s = { id: b.session || "default", messages: [], turns: [], assets: [], materials: old.materials || [], tier: old.tier || "free", mode: b.mode || old.mode || "ask", credits: 0 }; save(s); return json(res, 200, s); }
     if (p.startsWith("/sessions/")) { const rel = normalize(decodeURIComponent(p.slice(10))); if (rel.startsWith("..")) return json(res, 403, {}); const f = join(SESS, rel); if (!existsSync(f) || statSync(f).isDirectory()) return json(res, 404, {}); res.writeHead(200, { "content-type": MIME[extname(f).toLowerCase()] || "application/octet-stream" }); return res.end(readFileSync(f)); }

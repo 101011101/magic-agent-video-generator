@@ -34,7 +34,7 @@ main>*{max-width:760px;width:100%;margin:0 auto}
 .grid{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px} .grid span{display:inline-flex;gap:5px;align-items:baseline;white-space:nowrap} .grid span em{font-style:normal;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em} .grid span b{font-weight:500} .grid .inf b{background:var(--inf);border-radius:4px;padding:0 4px} .grid .asm b{background:var(--asm);border-radius:4px;padding:0 4px}
 /* tool block */
 .tool{background:var(--card);border:2px solid var(--blue);border-radius:18px;corner-shape:squircle;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
-.tool[data-s=paused]{border-color:var(--warn)} .tool[data-s=approved]{border-color:var(--ok)} .tool[data-s=skipped]{border-color:var(--rule);opacity:.55} .tool[data-s=plan]{border-color:var(--rule)} .tool[data-s=flagged]{border-color:var(--bad)}
+.tool[data-s=paused],.tool[data-s=stale]{border-color:var(--warn)} .tool[data-s=done]{border-color:var(--ok)} .tool[data-s=approved]{border-color:var(--ok)} .tool[data-s=skipped]{border-color:var(--rule);opacity:.55} .tool[data-s=plan]{border-color:var(--rule)} .tool[data-s=flagged]{border-color:var(--bad)}
 .tool .hd{display:flex;align-items:center;gap:8px} .tool .hd b{font-size:14px;font-weight:600} .tool .hd small{color:var(--mut);font-size:11.5px} .tool .hd .st{margin-left:auto;color:var(--mut);display:flex} .tool[data-s=approved] .hd .st{color:var(--ok)} .tool[data-s=paused] .hd .st{color:var(--warn)} .tool[data-s=flagged] .hd .st{color:var(--bad)}
 .io{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-radius:10px;padding:2px} .io.over{background:var(--inf)}
 .tile{width:64px;height:64px;border-radius:12px;corner-shape:squircle;background:var(--grey);display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;font-size:9.5px;color:var(--mut);text-align:center;padding:3px;flex:none} .tile img,.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover} .tile span{position:relative;z-index:1;background:color-mix(in srgb,var(--card) 82%,transparent);border-radius:4px;padding:1px 4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -63,7 +63,7 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .seg{display:inline-flex;background:var(--grey);border-radius:7px;padding:2px;margin-left:auto} .seg button{border:0;background:transparent;color:var(--mut);font:11.5px/1 inherit;padding:4px 9px;border-radius:5px;cursor:pointer} .seg button[aria-pressed=true]{background:var(--card);color:var(--fg);box-shadow:var(--shadow);font-weight:600}
 /* views */
 .view{background:var(--card);border-radius:18px;corner-shape:squircle;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px}
-.view h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px} .view h2 small{color:var(--mut);font-weight:400;font-size:12px}
+.view h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px} .view h2 .ib{margin-left:auto} .view h2 small{color:var(--mut);font-weight:400;font-size:12px}
 .story p{margin:0 0 .7em;max-width:64ch;font-size:14px}
 .scene{border:1px solid var(--rule);border-radius:12px;corner-shape:squircle;padding:9px 11px;display:flex;flex-direction:column;gap:5px} .scene .t{display:flex;gap:8px;align-items:center} .scene .t b{font-weight:600;font-size:13px} .scene .t small{color:var(--mut);font-size:11.5px} .scene .t .cm{margin-left:auto}
 .scene .syn{font-size:13px} .shot{display:grid;grid-template-columns:44px 1fr;gap:6px;font-size:12.5px;padding:4px 0;border-top:1px solid var(--rule)} .shot .n{color:var(--mut);font-variant-numeric:tabular-nums} .shot .ln{color:var(--mut);font-style:italic}
@@ -104,7 +104,9 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
     </div>
   </div></form>
 </div>
+<script src="dag.js"></script>
 <script>
+document.head.appendChild(Object.assign(document.createElement("style"), { textContent: DAG_CSS }));
 const $ = (s, r = document) => r.querySelector(s), chat = $("#chat");
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const SID = "default"; let S = null, MODELS = null, RUNS = []; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
@@ -128,7 +130,7 @@ function grid(sheet) {
 }
 const kindOf = (m, tool) => MODELS.stills[m] ? "still" : MODELS.videos[m] ? "video" : /^(film|podcast|edit-run)$/.test(tool) ? "pipeline" : "none";
 function costOf(step, m, r, sec) { const s = MODELS.stills[m], v = MODELS.videos[m]; if (s) return s.cost?.[r] ?? Object.values(s.cost || {})[0] ?? 0; if (v) return (Number(sec) || 5) * (v.cost?.[r] ?? Object.values(v.cost || {})[0] ?? 24); return step.credits || 0; }
-const STICON = { paused: I.pause, approved: I.check, flagged: I.bang };
+const STICON = { paused: I.pause, approved: I.check, done: I.check, flagged: I.bang, stale: I.bang };
 
 function block(step, i, ti) {
   const kind = kindOf(step.model, step.tool); const table = kind === "still" ? MODELS.stills : MODELS.videos;
@@ -143,7 +145,7 @@ function block(step, i, ti) {
       <span class="file" data-pr>${I.doc}${esc(step.prompt_file || "prompt")}</span>
     </div>
     <textarea class="pr" data-k="prompt_or_change" hidden>${esc(step.params.prompt_or_change)}</textarea>
-    ${step.output ? `<div class="out">${tile(step.output)}<span>${esc(step.output)}</span></div>` : ""}
+    ${step.output ? `<div class="out"><div class="tile" style="width:150px;height:96px"><img src="/sessions/${SID}/${esc(step.output)}" alt=""><span>${esc(step.produces)}</span></div><span>${step.simulated ? "simulated" : "made"}</span></div>` : ""}
     <div class="ft"><span class="cost"><b data-cost>${step.credits}</b> cr${step.needs_beyond_free ? ` · ${esc(step.needs_beyond_free)}` : ""}</span>
       <form class="note"><input type="text" placeholder="Tell the agent about this step"></form>
       <button class="ib" data-a="skipped" title="Skip">${I.x}</button><button class="ib" data-a="paused" title="Pause">${I.pause}</button><button class="ib run" data-a="approved" title="Run">${I.play}</button></div>
@@ -157,6 +159,7 @@ function block(step, i, ti) {
   c.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", async () => {
     const state = b.dataset.a === "paused" && step.state === "paused" ? "proposed" : b.dataset.a; const r = await post({ state });
     step.state = r.step.state; c.dataset.s = step.state; c.querySelector(".st").innerHTML = STICON[step.state] || ""; lock(); tree();
+    chat.querySelectorAll(`.tool[data-t="${ti}"]`).forEach((x) => { const st2 = S?.turns?.[ti]?.plan?.steps?.[Number(x.dataset.i)]; });
     const est = chat.querySelector(`.est[data-t="${ti}"]`); if (est) est.querySelector("b").textContent = r.estimate;
   }));
   c.querySelector("form.note").addEventListener("submit", async (e) => { e.preventDefault(); const inp = e.target.querySelector("input"); const text = inp.value.trim(); if (!text) return; inp.value = ""; const r = await api(`/session/${SID}/note`, { turn: ti, index: i, text }); add(el(`<div class="msg user">${esc(r.text)}</div>`)); await sendRaw(r.text, [], true); });
@@ -170,9 +173,16 @@ function block(step, i, ti) {
 function renderTurn(t, ti, text) {
   add(el(`<div class="msg agent">${esc(text)}</div>`));
   add(el(`<details class="more"><summary>${I.info} details</summary><div class="grid">${grid(t.sheet)}</div></details>`));
-  if (t.plan) { t.plan.steps.forEach((s, i) => add(block(s, i, ti))); add(el(`<div class="est" data-t="${ti}">~<b>${t.plan.estimate_credits}</b> cr · ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}</div>`)); }
+  if (t.plan) {
+    if (t.plan.steps.length > 1) { const box = el(`<div class="view treev"><h2>Proposed working tree<small>${t.plan.steps.length} nodes · ${esc(t.plan.shape || "")}</small><button class="ib runall" title="Run all (simulated)">${I.play}</button></h2><div class="dagbox"></div></div>`); add(box); drawDag(box.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : s.output ? `/sessions/${SID}/${s.output}` : null, onSelect: (i) => chat.querySelector(`.tool[data-t="${ti}"][data-i="${i}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }) }); box.querySelector(".runall").addEventListener("click", () => simulateTurn(ti)); }
+    t.plan.steps.forEach((s, i) => add(block(s, i, ti))); add(el(`<div class="est" data-t="${ti}">~<b>${t.plan.estimate_credits}</b> cr · ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}${t.plan.steps.length === 1 ? ` · <a href="#" data-sim="${ti}">run (simulated)</a>` : ""}</div>`)); chat.querySelector(`[data-sim="${ti}"]`)?.addEventListener("click", (e) => { e.preventDefault(); simulateTurn(ti); });
+  }
 }
 
+async function simulateTurn(ti) {
+  const r = await api(`/session/${SID}/simulate`, { turn: ti, all: false }); if (r.error) return;
+  S = await api(`/session/${SID}`); chat.innerHTML = ""; for (const m of S.messages) { if (m.who === "user") add(el(`<div class="msg user">${esc(m.text)}</div>`)); else if (m.who === "agent" && m.sim) add(el(`<div class="msg agent">${esc(m.text)}</div>`)); else if (m.who === "agent" && S.turns[m.turn]) renderTurn(S.turns[m.turn], m.turn, m.text); } tree();
+}
 async function sendRaw(text, names, quiet = false) {
   const typing = add(el(`<div class="msg agent" style="color:var(--mut)">…</div>`));
   const r = await api("/turn", { session: SID, text, materials: names, tier: tier(), mode: mode() });
@@ -188,7 +198,7 @@ function tree() {
   const file = (name, extra = "", dot = "") => `<div class="row file" draggable="true" data-name="${esc(name)}">${dot ? `<span class="dot ${dot}"></span>` : matUrl(name) && isImg(name) ? `<img src="${matUrl(name)}" alt="">` : I.doc}${esc(name)}${extra}</div>`;
   const mats = (S.materials || []).map((m) => `<li>${file(m)}</li>`).join("");
   const prompts = S.turns.flatMap((tu, i) => [tu.files?.sheet, tu.files?.plan, ...(tu.plan?.steps || []).map((s) => s.prompt_file)].filter(Boolean).map((f) => `<li>${file(f)}</li>`)).join("");
-  const assets = S.turns.map((tu, i) => tu.plan ? dir(`turn ${i + 1}`, tu.plan.steps.map((s) => `<li>${file(s.produces, ` <span class="cnt">${esc(s.tool)}</span>`, s.state === "approved" ? "ok" : s.state)}</li>`).join("")) : "").join("");
+  const assets = S.turns.map((tu, i) => tu.plan ? dir(`turn ${i + 1}`, tu.plan.steps.map((s) => `<li><div class="row file" draggable="true" data-name="${esc(s.produces)}">${s.output ? `<img src="/sessions/${SID}/${esc(s.output)}" alt="">` : `<span class="dot ${s.state === "done" ? "ok" : esc(s.state)}"></span>`}${esc(s.produces)}<span class="cnt">${esc(s.tool)}</span></div></li>`).join("")) : "").join("");
   const runs = RUNS.map((r) => `<li class="closed"><div class="row dir" data-run="${esc(r.label)}">${I.chev}<b>${esc(r.label)}</b><span class="cnt">${r.stills}</span></div><ul><li><div class="row" data-run="${esc(r.label)}">story · screenplay · keyframes</div></li><li><div class="row" data-tree="${esc(r.label)}">workflow</div></li></ul></li>`).join("");
   t.innerHTML = dir("materials", mats || `<li><div class="row" style="color:var(--mut)">none</div></li>`, true, (S.materials || []).length) + dir("prompts", prompts || `<li><div class="row" style="color:var(--mut)">none</div></li>`, false, S.turns.length) + dir("assets", assets || `<li><div class="row" style="color:var(--mut)">none</div></li>`) + dir("runs", runs, false, RUNS.length);
   t.querySelectorAll(".row.dir").forEach((d) => d.addEventListener("click", (e) => { if (d.dataset.run && e.detail === 2) return showRun(d.dataset.run); d.parentElement.classList.toggle("closed"); }));

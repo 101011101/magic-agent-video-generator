@@ -240,3 +240,11 @@ allows (a Commons pick to swap, a still to flag, a scene block to comment on).
 **Verification as a request.** "Show me the keyframes" or the agent's own "do these look right?" sends a view, not a
 bubble: a slideshow for stills and clips, scene blocks for the screenplay, a formatted page for the story. A flag on
 a still or a comment on a scene is a message tied to that item, and the next plan starts from it.
+
+## The shape judgement (added 2026-10-31)
+
+Before tools, the planner says what shape the request has: **single** (one tool), **tree** (a proposed working tree
+of sub-elements, composes and variants, `13-worktree.md`), or **film** (the fixed chain). The shape comes from the
+desired state against the current state: more than one element that must coexist, text on the picture, variants or a
+sequence make a tree; a story makes a film; else single. The user sees the shape as the number of nodes and the
+arrows between them, never as a word.

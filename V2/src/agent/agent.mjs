@@ -63,6 +63,9 @@ export function check(c, t) {
   if (e.sheet_stated) for (const f of e.sheet_stated) { const x = field(f); add(`${f} stated`, x && (x.source === "stated" || x.source === "session"), x?.source); }
   if (e.sheet_inferred_min) for (const f of e.sheet_inferred_min) { const x = field(f); add(`${f} inferred or stated, not asked`, x && x.source !== "unknown" && x.source !== "not_applicable" && !askedFields.includes(f === "aspect" ? "platform" : f), x?.source); }
   if (e.sheet_direction) { const x = t.sheet.fields.find((y) => y.field === "direction"); add(`direction = ${e.sheet_direction}`, x?.value === e.sheet_direction, x?.value); }
+  if (e.shape) add(`shape ${e.shape}`, t.plan?.shape === e.shape, t.plan?.shape);
+  if (e.nodes_min != null) add(`nodes ≥ ${e.nodes_min}`, tools.length >= e.nodes_min, tools.length);
+  if (e.compose) { const by = new Set((t.plan?.steps || []).map((s) => s.produces)); add("a compose takes ≥ 2 made nodes", (t.plan?.steps || []).some((s) => s.inputs.filter((x) => by.has(x)).length >= 2), (t.plan?.steps || []).map((s) => s.inputs.filter((x) => by.has(x)).length)); }
   if (e.tools) add("tools " + e.tools.join(" → "), JSON.stringify(tools) === JSON.stringify(e.tools), tools);
   if (e.tools_any) add("tools one of " + e.tools_any.map((a) => a.join("→")).join(" | "), e.tools_any.some((a) => JSON.stringify(a) === JSON.stringify(tools.filter((x) => !(e.tools_optional || []).includes(x)))), tools);
   if (e.tools_forbidden) for (const f of e.tools_forbidden) add(`never ${f}`, !tools.includes(f), tools);

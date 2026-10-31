@@ -70,3 +70,31 @@ tree (`12-frontend.md`) is the same graph as a directory.
 The dry prototype of 2026-10-31: the graph from any run folder (story, scenes, shots, bank assets, stills with
 their attempts, sequences, music, film) and from a session; explain lines by type; dependents and the re-run
 estimate; the Workflow view. Re-running from the view is design (T-040).
+
+## Proposed trees: the plan for a complex task is a working tree (added 2026-10-31)
+
+The planner judges the **shape** of every request before it picks tools:
+
+- **single**: one element, one tool (a logo on a mug, a face swap, captions). The plan is one node, or a short chain.
+- **tree**: more than one element must coexist, or text goes on the picture, or there are variants or a sequence (an
+  Instagram post with a product, a headline and a logo; a carousel; a product on a new background; a thumbnail).
+  The plan is a **proposed working tree**: the sub-elements to make or edit first, the compose steps that take them,
+  the variants after; every node a tool call with its inputs naming the nodes it takes; the order is the tree's
+  topological order. Creative direction turns into this structure and nowhere else: the direction fields feed the
+  tree call, the tree's leaves are simple problems, and the planner picks a tool per leaf.
+- **film**: anything with a story. The tree is known and fixed: story → screenplay → keyframes → clips → film, with
+  the asset bank hanging from the story and every keyframe from its shot (`00-overview.md`). The planner does not
+  invent it; it instantiates it with the sheet's answers.
+
+The proposed tree is shown before anything runs, as nodes with arrows (`12-frontend.md`): the user audits it the way
+they audit a finished run, because it follows the same tool rules and the same shapes. A node's parameters can be
+changed, a node removed, an input re-pointed; a change marks the node's dependents stale and they are remade when the
+tree runs; nothing upstream is touched.
+
+**Memory follows the tree.** The session's `assets/` folder holds one file per node output under the node's name, so
+the directory on disk and the tree on screen are the same structure. The state manager keeps the context inside the
+elements (what is in a frame, what it means relationally); the working tree keeps the dependencies and the tools.
+
+**Simulation.** For tests, the tools can be stood in for: every node "runs" perfectly and produces a placeholder
+image carrying its name, tool and inputs, so the loop, the tree, the propagation and the memory layout can be
+exercised at zero credits before any real call.
