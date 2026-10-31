@@ -291,3 +291,28 @@ What does not line up yet (T-046):
   `--until keyframes`, job by job by `--dry`). After the screenplay the card takes the pipeline's number.
 - The dependency rule, built the same day: one rule (`backend/lib/deps.js`, `State.dependents`) read by the pipeline
   and the tree; a sequence is pinned on its frames; a dry run writes nothing (`13-worktree.md`, "Built").
+
+## Focus is context (added 2026-10-31)
+
+At the start of every turn the loop reads what the user is looking at: the focused tree and node, if any. The sheet
+then answers one more question before the goal: is this message about that node? "Make the sign real", "bigger",
+"this one but at night" are; a new request is not. When it is, the goal is a change, the asset is that node's
+output, provenance is made-here, and the plan changes that node: it takes the output as its input, or redoes the
+node's tool with the changed instruction and the original inputs, and touches nothing else. The new tree is placed
+beside the one it edits and says what it is about. When it is not, the focus is ignored and a new tree is planned.
+
+## Text, and what the planner knows about tools (added 2026-10-31)
+
+Every tool in the catalogue declares what it **guarantees** and what it **cannot** do, and the planner matches the
+desired state's properties to them. The rule that came out of the Instagram post:
+
+- words laid over a picture (a headline, a caption, a label, a price, a title card) are a `text-overlay` node after
+  the picture, exact and legible by code;
+- words that are part of the scene (a neon sign, a shop front, a jersey number, a label on a bottle) are an
+  image-edit, because only the model can paint a sign; on a tight tier a `check` node follows it to say whether the
+  word reads;
+- a size or aspect variant is a `crop` node by code; an image model asked to crop returns the same picture;
+- an edit that precedes an overlay never mentions the headline or the words, or the model paints letters of its
+  own; it asks for an uncluttered area instead;
+- words that must be written (a post's text, a slogan the user did not give) are a `write` node whose file feeds
+  the overlay or a voice.

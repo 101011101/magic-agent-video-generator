@@ -161,3 +161,41 @@ The words and the tools are separated. The screen is three panels:
    drag from here onto the canvas.
 
 The chat stays the agent's voice; the canvas is the plan; the tool panel is the hands; the directory is the memory.
+
+## The workbench (revised 2026-10-31, later in the day; supersedes "Three panels" where they differ)
+
+The middle panel is a **workbench**: one surface for every working tree, panned and zoomed rather than scrolled.
+
+- **One space.** A dot grid. Every tree spawns onto it as a group: the agent's trees as it proposes them, the user's
+  own trees from the plus in the header, and the run views (a story, a screenplay, a keyframe slideshow, a workflow).
+  Nothing spawns on top of anything: a new group is measured and placed by a free-space search (left to right, then
+  down, with a margin), and a saved spot is kept unless it collides. A tree is dragged as a whole by its title; a
+  node is dragged on its own; both positions are saved. The tree the user is in is at full brightness, every other
+  tree is dimmed to about forty percent and comes partway back on hover.
+- **Pan and zoom.** Drag the empty space or scroll to pan; pinch or ctrl-scroll to zoom about the cursor, from a
+  quarter to triple size; a small readout in the corner with minus, plus and fit-all. The grid moves and scales with
+  the view. Moving, wiring and placing all account for the zoom. The view is remembered. No scrollbars anywhere.
+- **The tree shows only the main ideas.** A node is its tool, its output name, its state as a border (blue proposed,
+  amber paused or waiting or stale, red failed, grey skipped) and, once made, a green dot and its picture. Done is
+  the dot, not a green border. The details live in the tool panel.
+- **Connections.** A port on each side of a node. Drag from an output port onto a node, in the same tree or in any
+  other, to make that output the node's input; drop a file from the directory onto a node for the same effect. A
+  live dashed line follows the drag. A node that takes from another tree finds the file under that tree's
+  directory. Wiring is an edit of the plan: the node's dependents go stale.
+- **The tree's controls are universal**: one row in the canvas header, acting on the focused tree: the tree's name
+  and estimate, a menu of every tool in the catalogue to add a node, run all, a plus for an empty tree of your own.
+  A node has its own actions in the tool panel: run, pause, skip, remake, remove.
+- **Parallel calls.** Nodes at the same depth run in parallel. Focusing one shows its column in the tool panel with
+  numbered circles to flip between the calls in it, headed "parallelized · N calls".
+- **Suggested local assets.** The focused tool lists the assets it could take: this tree's other outputs first, then
+  the outputs of trees wired to this one, then the rest of the session and the materials, each a tile named with
+  where it came from. A click adds one as an input. A button beside the list asks the agent to choose the inputs; it
+  answers in the conversation with which and why.
+- **LLM calls are nodes.** `write` (a text by the text model: post copy, a caption, a note) and `check` (a vision
+  verdict on a picture, the gate as a node, a failing verdict is a flag and never a remake) sit in the catalogue
+  beside the code tools `text-overlay` and `crop`, at zero credits. In a film tree the story and screenplay stages
+  were already nodes. The planner's own sheet and plan calls stay outside the tree: they are what proposes it.
+- **Focus is context.** Every message carries what the user is looking at. The loop first decides whether the
+  message is about that node (a change, a question, "this one"); if so the plan changes that node and the new tree
+  lands beside the one it edits, labelled with what it is about; if not, a new tree as usual.
+- **The test panel floats**: dragged anywhere by its title, remembered, never part of the product.

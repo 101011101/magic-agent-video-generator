@@ -158,3 +158,11 @@ in `tests/state.test.mjs`, the sequence cases in `tests/edit.test.mjs`.
 One difference remains by design: the tree reads what was sent (the job records), the state manager what the plan
 would send now. A still the plan no longer has (the ninth film's s1-2, from an earlier plan, still in the record's
 stills table) is in the tree and not in the state manager's answer.
+
+## Trees connect to trees (added 2026-10-31)
+
+A working tree is not closed. A node may take the output of a node in another tree, wired by hand on the workbench
+or planned by the agent when a request refers to something an earlier tree made; the executor finds the file under
+the other tree's directory and the dependents of that output span both trees. LLM calls are nodes too (`write`,
+`check`, the film's story and screenplay), so a tree can carry its own words and its own verdicts. The planner's
+sheet and plan are the only calls outside the trees: they propose them.
