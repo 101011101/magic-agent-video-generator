@@ -41,6 +41,14 @@ Flags:
   cost (the text and vision calls still run); `--clips pinned|start|t2v|seq` picks how shots become clips, with
   `--seq-across`, `--max-seq`, `--speed-up`, `--voice-refs`, `--only clip-N`; `--parallel N` limits the clips sent at once
   (all by default).
+- `--tier paid|cheap|free` picks the model profile (`paid`: nano-banana-pro 2k and wan-3.0 720p, every film so far; `cheap`:
+  flux-2-klein 2k and minimax-h3 720p, the free-flagged models at paid resolutions; `free`: the same models at the free
+  plan's 640px and 480p). `--still`, `--res`, `--model`, `--vres` override one part of it. Changing a model changes the
+  pipeline through the registry (`src/lib/models.js`): the screenplay's grid of clip lengths, how many reference images a
+  paint may send, which clip modes are possible, the resolutions and every cost. `--script-from <label>` reuses another
+  run's screenplay, so the same film can be made on other models and compared frame for frame;
+  `node V2/src/compare.js <labelA> <labelB>` writes the two runs side by side, still by still, with gate verdicts and the
+  films (`V2/results/compare-<a>-vs-<b>/index.html`).
 
 Keys come from the environment or the repository's `.env` (`OPENAI_API_KEY`, `MAGIC_HOUR_API_KEY`). The `.env` is never
 committed.

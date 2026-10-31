@@ -1,20 +1,21 @@
 # T-022 · Does the keyframe CONTEXT keep the shot's action text?
 
-status:     open (a decision for the user)
+status:     decided 2026-10-31: (b) for first frames, (a) for last frames
 priority:   medium
 subsystem:  keyframes
 
 what:
-Decide between (a) the current CONTEXT block, which names the shot's action labelled "during the shot, after this frame:
-… none of that has happened yet" or "before this frame: … all of that is complete", and (b) CONTEXT without the action
-text (scene heading, first or last frame of shot n, moment, tone only), as the 2026-10-30 decision "never the action
-paragraph" reads. Measure on the painted V2 stills: does any first frame show its shot's action already happening? Then
-keep one form.
+A shot's FIRST frame no longer names the action that follows it. Its CONTEXT says "the first frame of shot n; this is the
+instant before the shot's action: nothing of it has begun; nothing has struck, fallen, opened, lit or changed yet". A
+shot's LAST frame keeps "during the shot, before this frame: … all of that is complete", which is the state the frame
+shows. The moment, treatment and tone stay in both.
 
 why:
-The old-ideas review (`V2/drafts/review-old-ideas.md`) found the labelled action text contradicts the written rule and
-measured the leak (events painted early) as a real risk in the `V1/` runs; the labelled form was added so the painter
-knows what the frame leads into. Both have a case; the rule and the code must say the same thing.
+Measured on the staged film (topgun9): the strike close, the first frame of the strike shot, was painted twice with the
+impact already under way, fire and spray on the deck, while its CONTEXT named the detonation in detail ("detonates at deck
+contact at 22.00 … two fire-and-spray columns spread"). The painter paints what it is told about; "none of that has
+happened yet" did not hold against a described explosion. The old-ideas review had predicted the leak.
 
 acceptance:
-One form in the template and in `05-keyframes.md`; a test asserts it; the decision logged in `10-decisions.md`.
+The template and `05-keyframes.md` say the same thing; the audit test asserts the first-frame wording; the strike close
+repaints without the impact.

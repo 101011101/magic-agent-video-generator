@@ -1,6 +1,21 @@
 # 8. Costs
 
-Per item, Magic Hour credits:
+**The model registry** (`src/lib/models.js`, 2026-10-30). Every still and video model the pipeline may call is one entry with
+its capability profile: input-image cap, resolutions, price per resolution, plan, and for video the grid of clip lengths,
+the rate per resolution, the audio surcharge, the reference kinds it takes and whether it honours an end frame. Nothing
+else in the pipeline holds a model constant: `jobs.COST` prices from it, the screenplay's `GRID` is derived from it, the
+state manager's reference cap is `min(4, inputs + 1)` of the still model, `supports(model, mode)` refuses a clip mode the
+model cannot do (no end frame, no references) before anything is paid, and `--tier` names a profile (`paid`, `cheap`,
+`free`). Prices come from the API sheet (`reference/magic-hour-api-sheet.md`); a price is marked measured once a job has
+paid it on our account. The free-plan limits (640px stills, 480p video, free-flagged models) are the `free` tier.
+
+| tier | still | video | 21 stills | 30 s of clips | film, no retries |
+|---|---|---|---|---|---|
+| paid | nano-banana-pro @2k, 200 | wan-3.0 @720p, 96/s | 4,200 | 2,880 (about 4,000 with the 1.4× speed-up) | about 7,100 |
+| cheap | flux-2-klein @2k, 10 | minimax-h3 @720p, 48/s | 210 | 1,440 (about 2,000) | about 1,700 |
+| free | flux-2-klein @640px, 5 | minimax-h3 @480p, 24/s | 105 | 720 (about 1,000) | about 900 |
+
+Per item on the paid tier, Magic Hour credits:
 
 | item | credits | note |
 |---|---|---|

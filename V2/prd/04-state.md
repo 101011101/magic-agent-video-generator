@@ -59,7 +59,9 @@ two bombs, the scene) once came back as a three-panel collage with the image num
 already image 1 (a new camera after a close, so image 1 is the scene's master wide), the state manager sends it as image 2:
 "the frame just before this one, a moment earlier from another camera; everything continues from it: what is intact or
 spent, where each thing has got to, and how big each thing is beside the others; only its camera does not apply". It takes
-one of the carrier slots under the cap; it is sent only for a still of the same place, never a card. The close on the
+one of the carrier slots under the cap; it is sent for a still of the same place, or of another place when the scene is
+continuous (then the painter is told to take the moment and the world outside any window from it, never the room); never a
+card. The close on the
 frigate (s7-7 of the fourth run) was painted from the wide master of two shots earlier with the bombs' record photos, and
 the bombs came out a third of the frame high while the frame before had them beside the ship.
 
@@ -112,19 +114,41 @@ diagnostics; the template does not use it, by the rule that the reference carrie
 
 **Gates.** All flag; none remakes.
 
+- The room gate is told where the shot's camera looks (`cameraOf`: looks_at, behind), so a plate fixture outside that view is
+  not a missing fixture: the opening wide of three runs was flagged for an offshore platform the camera had its back to.
+  A still model with a tight input cap never receives the style sheet (qwen painted the sheet's platform through a canopy), and
+  so is not held to it: the style gate reports its finish faults as a note instead of a flag.
+
+- An accepted people count travels with the picture like an accepted load (`peopleBaseline`): the edit of an over-the-shoulder
+  frame accepted with one person "too many" shows the same person and is not flagged again.
+- *Bars gate*: only the SYMMETRIC part of any black edge counts as a bar (letterbox and pillarbox are symmetric; black on
+  one side is picture: a console bezel at the foot of a touchscreen close-up was read as a 138 px bar); the stitch crops the
+  symmetric part only.
+- *Geometry gate* (`geometryCheck`, T-029), per painted still with positioned props: one vision call reading each thing's heading
+  as seen by the camera and its share of the frame's height; flags a heading opposite to the stage's (toward where the stage
+  says away, left where it says right) and a size off by more than 3 times (the vision model's share estimate is coarse; a correct opening wide with hero-sized jets measured 2.6× over).
+- An accepted size deviation travels with the picture (`geoBaseline`), headings never: the edit of a frame accepted with the jet
+  painted large shows the same large jet and is not flagged again for it. Apparent size follows each thing's real dimensions
+  and its orientation to the camera (a stern-on frigate shows its mast and beam, not its length; the first model flagged four
+  correct frames for a "small" frigate).
+  Since 2026-10-31 (later): the heading is read as one of eight directions and held against the stage's yaw, more than
+  70° off is a flag (the first gate flagged only the exact opposite, and two jets turned 90° to face each other passed
+  it); a staged thing missing from the picture at 3% of the height or more is a flag; a size 2.5× off is a flag.
 - *Load gate* (`loadCheck`), per painted still that has anything carried (not for crops): one vision call naming each host
   and what the screenplay puts on it; the gate lists what is visibly attached to or hanging from each host and says
   `extra` when there is more than the list, or a kind the list does not name; `absent` when the host is not in the picture
   or too small to judge, and then nothing is enforced; the fitting that holds a listed item (pylon, rack, strap, hand) belongs
   to the item and is never extra (the first clean-run paint was flagged for "one bomb and its pylon"). Three paints of the fourth screenplay's attack approach hung extra
   bombs and missiles on the jets while the people, room, bars and style gates all passed: nothing was looking at the
-  loads. The identity half of T-021 (is this the same object as its picture) is still open.
+  loads. An accepted liberty travels with the picture: when image 1 was accepted with extra stores on a host, those stores are the baseline
+  for the still and only something beyond them is extra (`loadBaseline`); every edit of an accepted approach once re-flagged the
+  same missile. The identity half of T-021 (is this the same object as its picture) is still open.
 
 - A still's identity (its dedup key) is the place, the scene's time of day and interior flag, the camera and the frame, so
   a day scene and a night scene in one room never share a still.
 - *People gate* (`peopleCheck`), per still (the left-to-right order only when the picture lets the gate tell the people
-  apart, which two helmeted pilots do not, and the count not enforced when the gate says the people are not countable and
-  the screenplay puts every one of them at far depth, as pilots inside banking jets in a wide; the note says so), one vision call with the cast lines: how many people are visible, the ids from the
+  apart, which two helmeted pilots do not, and the count not enforced below the expected number when
+  the screenplay puts every one of them at far depth or inside something (`on`: a pilot in their jet at any depth) (a count above it still is; the gate's own "countable" answer was unreliable at 640px), as pilots inside banking jets in a wide; the note says so), one vision call with the cast lines: how many people are visible, the ids from the
   left edge to the right edge, the third each stands in, and each person's box (horizontal centre, top of the head, lowest
   visible point, as percentages) for the crops. Pass: the count equals the frame's in-frame people and the left-to-right
   order agrees with the frame's thirds (a lefter third before a righter one; the same third in either order). The exact third
@@ -179,3 +203,9 @@ head).
 **Status.** The single pass, the tables, the queries, the environment rule with the master and the cross-scene case, the
 portrait rule, the crops and the three gates are built; the pass has run at zero credits; the crops, the portrait rule and the
 gates have not yet been through a paid V2 run.
+
+**The base of a still that brings a vehicle into frame (2026-10-31, later).** An edit keeps the camera of the still
+before it, except when a positioned prop comes INTO frame: six edits of a single-jet frame brought the second jet in
+as a huge foreground jet nose-first, with the words, the WORLD block and a change-only edit all saying otherwise. Such
+a still is painted from the master wide that already shows every vehicle from this side. The relation text for a
+master with the same camera view says "held on the same side and at the same angle", never "moved to a new angle".

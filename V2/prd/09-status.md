@@ -19,7 +19,28 @@ Vanderbilt run reached its keyframes. Every rule below is in `V2/src`, documente
 | keyframes | the template with CONTEXT (synopsis, memory, theme, moment, treatment, tone), FRAME (motion cues, view), PEOPLE and PROPS (size, heading), RELATIONS, CHANGES, REFERENCES (what image 1 shows, the style sheet), RULES (the medium words); far people as figures; painting with attempts kept, stale ids flagged, a retried crop painted | — | — |
 | sound | the voice bank; voice references in text-to-video; the music bed and its mix with ducking and arc cuts; subtitles; captions; loudness per part | narration under a film (the Vanderbilt film has not been made) | lip sync, room tone, the voice gate |
 | edit | four clip modes (pinned, start, t2v, seq), sequences across scenes with a frame cap and faster playback, variants kept per mode and model, all clips at once, the guarded loop, resumed jobs, the ledger lock, the stitch (bars cropped, highest rate, silent tracks, cards once) | — | beat cutting, inserts, screen composites |
-| results | the run page (every frame, attempt, input, gate; clips with variants; sequences beside their pinned clips) and the finished-product page | — | — |
+| models | the registry (14 still models, 11 video models, 3 tiers): costs, grids, reference caps, clip-mode support, `--tier`, `--script-from` | — | prices marked estimate until a job pays them; a compact prompt rendering for low-capacity models (T-027) |
+| stage | the stage model (T-029): positions and headings in metres per frame, camera placed, derived screen words, the WORLD block, the geometry checks and the geometry gate; the film synopsis and scene situation; the place setting in plates; the previous frame across continuous scenes | — | the first staged screenplay and paint (topgun9) |
+| results | the run page (every frame, attempt, input, gate; clips with variants; sequences beside their pinned clips), the finished-product page, and the comparison page (two runs of one screenplay side by side, `compare.js`) | — | — |
 
 Open with the user: the Vanderbilt two-shot (accept or retry) and its film; whether CONTEXT keeps the shot's action text
-(T-022); the identity half of the prop gate (T-021); the fourth Top Gun run: 18 stills painted, the load gate's verdicts on them, and the jets-flying-past problem (the side-camera line rule) that only a fifth screenplay fixes.
+(T-022); the identity half of the prop gate (T-021); T-026 physical scale; T-027 compact prompt for small models; T-028
+declare the realistic loadout (the missile the painter will not drop).
+
+**Films on the free-flagged video model (2026-10-31):** `topgun4-film` (nano stills, minimax-h3 @480p, the free plan's
+resolution; about 1,000 credits of video) and `topgun8-film` (nano stills on the fifth screenplay, minimax-h3 @720p). The
+qwen arm (`topgun7`) is the cheap-still experiment: see `compare-topgun7-vs-topgun8`. minimax takes nine references, not
+ten; the registry says so.
+
+**2026-10-31 (later).** The ninth film's attack wide (s7-2) is open: see T-029, "After the first full run". New
+pipeline surface: `--retry` with `--only` (remake only the named dependents, mark the rest), `--restore id:n` (an
+earlier attempt becomes the still again). Spend on the label: 7,400 credits.
+
+**2026-10-31 (later still).** The ninth film repainted on a clean plate: 20 stills passing or accepted, every jet
+heading the right way (T-029, last section). Spend on the label: 12,000 credits. Next on the user's word: sequences
+and the film.
+
+**2026-10-31 (film).** The ninth film finished on the free video model: minimax-h3 at 480p, three sequences across
+scenes with the bank voices and a 1.4 speed-up, the music bed under it, 774 credits. `V2/results/topgun9-film/`.
+Label total 12,774.
+

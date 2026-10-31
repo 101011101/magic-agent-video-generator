@@ -105,3 +105,22 @@ is not carried into V2 yet.
 **Status.** Built for people and places; the plate description, the plate check, reuse with `--map`, and the voice bank are
 built, the last three exercised only as far as the first V2 run went (text and samples, no painting); items, screens,
 products are design.
+
+**A place's setting (2026-10-31).** Every place carries `setting`: the situation in which the story first shows it ("a
+single-seat cockpit in flight above open sea, blue sky and sea through the canopy, another jet alongside"), extracted
+with the elements and filled from the story for a bank from an earlier run. A generated plate is made "as the story first
+shows it". Rook's cockpit plate was generated with the interior described and nothing about flight, came out parked on an
+airfield, and the room gate then held every Rook frame to that airfield.
+
+**The style sheet is its own asset (2026-10-31).** `roots/style-sheet.png`: the first generated plate's finish laid on an empty
+expanse (sky over water, or a bare wall for an indoor film), generated once per film from that plate as image 1 and reused
+with the bank. The sea plate served as the sheet before, and its offshore platform appeared through a cockpit canopy twice
+(qwen, then nano): a style reference must carry nothing a painter can copy.
+
+**A plate holds the place and nothing of the cast (2026-10-31, later).** The plate prompt excludes the story's
+vehicles and objects by name, and the setting line asks for the surroundings only (sky, sea or ground, weather, light,
+viewpoint): generated "as the story first shows it, beneath two F-35Cs", the Meridian Range plate came with two jets
+painted into it, and the frames painted on it got two more. The sheet check lists those names as excluded. A reused
+sheet that was never checked (made before the check existed) is checked on reuse, and a regenerated plate remakes every
+still painted from it.
+

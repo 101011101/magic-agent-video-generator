@@ -121,3 +121,53 @@ pass the tests on the vanderbilt6 fixture and the audit cases (`V2/tests/audit.t
 Vanderbilt stills (one two-shot flagged for an edge figure, undecided) and ten Top Gun stills (the three cockpit frames
 repainted after the latest-still rule, all passing; the warship wide passing against its image 1). Open: whether CONTEXT
 should carry the shot's action text at all (`10-decisions.md`, 2026-10-30, and ticket T-022).
+
+**Repair, not repaint (2026-10-30).** A still that fails the load gate and nothing else is not painted again on `--retry`:
+its retry is a removal edit of that very frame (image 1 = the flagged still; "X carries exactly: …; the picture shows …;
+remove everything attached that is not in the list and leave clean wing where it was; nothing else changes"), through the
+same gates. Removing a thing is what editors do best; a fresh painting rolled the same dice and five attack approaches in a
+row grew a missile beside the bomb. A repaired still that fails again is painted fresh on the next `--retry`. The run log
+says REPAIR and names the frame it edits; the results page shows the attempt chain as before.
+First result (nano, topgun8 s7-1): the repair returned the frame nearly unchanged, missile still on the wing; the prior
+is stronger than a removal edit. The mechanism stays (it is cheap and right for most removals), but the structural answer
+for customary stores is T-028: declare the realistic loadout rather than forbid it.
+
+**WORLD (T-029, 2026-10-31).** Between FRAME and PEOPLE a staged shot gets a WORLD block: the stage in words, the camera's
+place on it relative to the nearest subject (behind or ahead on the line, how far, how high, looking along or across), every
+positioned prop relative to the goal and the line in metres ("1,400 m short of the frigate, 20 m left of the line, 150 m
+up; heading away from the camera"), a released thing's trail behind its aircraft, what moved since the frame before
+("advanced 600 m along the line; dropped 20 m"), and the distance that fixes each thing's share of the frame. Local
+descriptors can be satisfied in contradictory ways; the release frame of the fifth film had the jets flying away from a
+ship the bombs were falling toward.
+
+**The delta edit (T-029, 2026-10-31).** An edit the geometry gate flags (something turned or changed size where the stage
+says it did not) is retried as a change-only edit of its own image 1, which passed: "image 1 is this exact frame a moment
+earlier; change only this: …; nothing else changes: nothing turns (each thing's heading, exactly as in image 1), nothing
+grows or shrinks", the WORLD block in metres, the rules. No CONTEXT, no PEOPLE, no REFERENCES beyond image 1. The full
+prompt restates the whole scene and the painter recomposes it: the release frame turned both jets to face the camera in
+two films running; the minimal removal edit of a flipped frame had kept its composition exactly, which is the property a
+retry needs. A delta edit that fails again is painted in full on the next retry.
+
+**WORLD deltas on the same stage; sizes as shares (2026-10-31, later).** "Since the frame before" is measured against
+the previous frame on the same stage: the shot's first frame for its last, the previous shot's last frame for a first
+(the chain's previous still once served, and for the first exterior after a cockpit scene it was a frame in cockpit
+coordinates: "advanced 4420 m along the line"). A lateral move reads "closed 19 m toward the line"; a thing the frame
+before never held is not called unmoved; a heading change of 20° or more reads "turned N° to the right". A staged
+prop's size in the PEOPLE/PROPS lines is its two shares of the frame, the WORLD block's numbers ("about 5% of the
+frame's height and 12% of its width"): the size word's phrase ("about a quarter of the frame's height") came from the
+larger of the two shares and made the painter enlarge a jet seen from behind. A paint from the master flagged for a
+heading is retried as a delta edit of the master when it shows the same side.
+
+**A first frame is not told the action (T-022, decided 2026-10-31).** The CONTEXT of a shot's first frame says only that
+it is the instant before the shot's action and that nothing of it has begun; the action itself is not named. The last
+frame keeps the action as "before this frame: … all complete". The strike close was painted twice with the impact under
+way while its CONTEXT described the detonation; the painter paints what it is told about.
+
+**The frame before an action, extended (2026-10-31, later still).** T-022 removed the action line from a shot's first
+frame; the treatment and the moment carried the event just as well ("daylight opens between each empty pylon and its
+departing bomb" put both bombs in the air in the frame before the release, and every gate passed it). A first frame
+with an action now carries the moment of the shot before and no treatment. Two gates close the hole: a thing staged
+level but read as pointing down has fallen, and a listed item no longer attached to its host is flagged by the load
+gate. A punch-in is cut from its master only when it is the master's instant, by the people's boxes or, when the
+subjects are vehicles, by the vehicles' boxes read from the master.
+

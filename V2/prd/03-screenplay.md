@@ -42,7 +42,7 @@ FRAME  { people [{ id, visible: in frame|off left|off right, third: left|centre|
                                                                    relations = the prepositions between elements, by id;
                                                                    on = the id of what the prop is attached to, mounted on, held by
                                                                    or carried in at this instant (a bomb on its pylon, the pylon on
-                                                                   its aircraft), or none when it is free; not a key field
+                                                                   its aircraft), or none when it is free; a person's `on` is the vehicle or mount they are inside or riding; not a key field
 ```
 
 `at` values are film seconds. Ids are enums built from the element table, so an undeclared person or object cannot appear.
@@ -183,3 +183,37 @@ and that a side view shows a thing crossing the frame, never heading somewhere: 
 from behind or from ahead at least once, the side view kept for formation beats. The fourth Top Gun screenplay put every
 attack-run camera "on the starboard side of the flight line, never across the line" and the jets read as flying past the
 frigate, not at it. A shot whose relations say "toward" under a side camera gets a note, not an error.
+
+**The film synopsis and the scene situation (2026-10-31).** Two fields the writer fills and a text call fills for older
+scripts (`fillStoryContext`): `synopsis` at film level (the whole story in a few sentences, in order) and `situation` per
+scene (the physical situation of the world during the scene, whatever the camera shows: where every vehicle and person is,
+what is outside any window or canopy). The scene synopsis was supposed to carry this ("physical situation first") and did
+not: the writer gave Rook's cockpit scene "Rook sits inside the neighboring F-35C", nothing about flight, and the story
+text never reaches the painter. The keyframe CONTEXT now opens Film / Now / Scene / Moment.
+
+**The stage (T-029, 2026-10-31).** Every scene has one coordinate frame in metres (`stage.axis` in words, `stage.goal` the
+element x runs toward; y to the right facing +x, z up). Every camera has `at` and `toward`; every prop in every frame has
+`at`, `heading` (degrees from +x) and `pitch`; a person inside a vehicle is where the vehicle is. `src/screenplay/stage.js`
+derives screen third, depth, size word, heading relative to the camera and in/off frame from the numbers, and
+`normalizeShots` replaces the writer's words with them (the run log lists the replacements). `checkStage` makes errors of
+the impossible: a camera inside a thing, a flying thing below the surface, a speed above 400 m/s, a camera with nothing in
+frame. The writer is told real speeds and sizes and that the numbers produce the picture. Every element on record carries
+`size_m`, its real longest dimension, filled from the story for older banks.
+
+**Attitude is motion, not a frame (2026-10-31).** A frame records a position and a heading; a bank, a roll, a flare or a
+nose-up is what the clip renders between two stills, never a difference between a shot's first and last frames. With the
+heading unchanged, a condition that differs only by attitude words is an error the writer fixes by copying the first
+frame's condition. The bank frame of the staged film was painted three times with the jets turned to face the camera; the
+word "banked" alone does that to the painter, and the geometry gate refused every attempt.
+
+
+**A turn is a change of heading (2026-10-31, later).** With the heading of a shot's movers unchanged (under 20°),
+none of the shot's prose (action, treatment, looks_at, relations), and none of the scene's situation and synopsis or
+the film synopsis over their scopes, may call the movement a bank, a turn or a convergence: the writer narrated a 19 m
+slide toward the line as "bank inward … converging diagonals" and the painter drew the jets converging through four
+attempts while every number said straight ahead. The check names the phrase and says what the numbers do. Attitude
+words in a mover's condition with the heading unchanged are an error too. A thing goes where its nose points: each
+frame's heading of a mover that covers 50 m lies within half the shot's turn plus 5° of its track, so a token heading
+change cannot stand in for the words (the writer tried 10°). The stage goal is never a mover (in cockpit coordinates
+it is the one thing that seems to move) and keeps one heading across the film. Heading is degrees from +x turning
+toward +y: 90 is to the right of the line. The revision prompt carries the STAGE rules.

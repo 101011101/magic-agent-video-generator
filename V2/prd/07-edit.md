@@ -109,3 +109,9 @@ a one-pass text-to-video clip with references for B-roll with nobody in it; dial
 **Status.** Built for the static case and used to make the vanderbilt6 film in `V1/`; the V2 port with the narration mix,
 the guarded clip loop, the resumption of pending jobs and the stitch rules has not yet made a clip (the audit cases pass in
 `V2/tests/audit.test.mjs`); the design items are not started.
+
+**Clip modes follow the video model (2026-10-30).** Before anything is paid the pipeline asks the registry whether the
+chosen model can do the chosen mode at the chosen resolution: pinned needs an end frame (kling-2.6 honours one only at
+1080p, wan-2.2 takes none), t2v and seq need named references (ltx-2.5's are undocumented, so the run proceeds with a
+note; a model with none is refused). The sequence stage takes a video profile (model, resolution, audio) instead of a bare
+model name; variants are still keyed mode@model.
