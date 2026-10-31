@@ -34,6 +34,7 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
     try { for (const d of readdirSync(join(dir, "assets"))) for (const v of variants(name)) { const cand = join(dir, "assets", d, v); if (existsSync(cand)) return `assets/${d}/${v}`; } } catch {}
     return null;
   };
+  const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
   const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}${s.attempt ? `-r${s.attempt}` : ""}.${ext}`;
   const set = (i, patch) => { Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };
   let filmStarted = false;
