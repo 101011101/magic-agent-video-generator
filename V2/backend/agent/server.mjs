@@ -113,7 +113,7 @@ createServer(async (req, res) => {
       t.plan.turn = ti; running[id] = true; save(s);
       const brief = t.brief || s.messages.find((m) => m.who === "user")?.text || "";
       const merge = (i, st) => { const cur = load(id); const target = cur.turns[ti].plan.steps[i]; for (const k of ["state", "output", "credits_spent", "cached", "error", "note", "simulated", "run", "page", "started_at", "ran_at", "attempt", "attempts"]) if (st[k] !== undefined) target[k] = st[k]; const a = cur.assets.find((x) => x.label === st.produces); if (a && st.output) { a.file = st.output; a.planned = false; } return cur; };
-      execute(t.plan, sdir(id), { id, tier: s.tier, sheet: t.sheet, brief, only, say: (m) => { const cur = load(id); cur.messages.push({ who: "agent", text: m, at: Date.now(), turn: ti, exec: true }); save(cur); }, onStep: (i, st) => { save(merge(i, st)); } })
+      execute(t.plan, sdir(id), { id, tier: s.tier, sheet: t.sheet, brief, only, assets: s.assets, say: (m) => { const cur = load(id); cur.messages.push({ who: "agent", text: m, at: Date.now(), turn: ti, exec: true }); save(cur); }, onStep: (i, st) => { save(merge(i, st)); } })
         .catch((e) => { const cur = load(id); cur.messages.push({ who: "agent", text: `Stopped: ${String(e.message || e).slice(0, 200)}`, at: Date.now(), turn: ti, exec: true }); save(cur); })
         .finally(() => { delete running[id]; });
       return json(res, 200, { started: true, only });

@@ -12,9 +12,10 @@ const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replac
 const api = async (p, b) => (await fetch(U + p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ledger = () => JSON.parse(readFileSync(join(V2, "runs", "ledger.json"), "utf8")).total;
-const thumb = (file) => { try { const out = join(OUT, "t-" + Math.random().toString(36).slice(2) + ".jpg"); if (/\.(mp4|mov)$/i.test(file)) execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", "0.5", "-i", file, "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6", out]); else execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-vf", "scale=360:-2", "-q:v", "6", out]); return `data:image/jpeg;base64,${readFileSync(out).toString("base64")}`; } catch { return null; } };
+const thumb = (file) => { if (!/\.(png|jpe?g|webp|mp4|mov)$/i.test(file)) return null; try { const out = join(OUT, "t-" + Math.random().toString(36).slice(2) + ".jpg"); if (/\.(mp4|mov)$/i.test(file)) execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", "0.5", "-i", file, "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6", out]); else execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-vf", "scale=360:-2", "-q:v", "6", out]); return `data:image/jpeg;base64,${readFileSync(out).toString("base64")}`; } catch { return null; } };
 
-const scripts = readdirSync(join(HERE, "live")).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(join(HERE, "live", f), "utf8"))).filter((s) => !only.length || only.includes(s.name));
+const ASSEMBLE = arg("--assemble"); 
+const scripts = ASSEMBLE ? [] : readdirSync(join(HERE, "live")).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(join(HERE, "live", f), "utf8"))).filter((s) => !only.length || only.includes(s.name));
 const order = ["conversation", "multi-turn", "tools", "trees", "film"]; scripts.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
 const results = [];
 for (const sc of scripts) {
@@ -57,7 +58,9 @@ for (const sc of scripts) {
   const spent = ledger() - t0; results.push({ ...sc, session: sid, turns, spent }); console.log(`  == ${sc.name}: ${spent} credits, ${turns.flatMap((t) => t.checks).filter((c) => c.pass).length}/${turns.flatMap((t) => t.checks).length} checks`);
   writeFileSync(join(OUT, `${sc.name}.json`), JSON.stringify(results.at(-1), null, 2));
 }
-// the page
+// the page (from this run, or from every JSON in --assemble <dir>)
+if (ASSEMBLE) { for (const f of readdirSync(ASSEMBLE).filter((x) => x.endsWith(".json"))) results.push(JSON.parse(readFileSync(join(ASSEMBLE, f), "utf8"))); const ord = ["conversation", "multi-turn", "tools", "trees", "film"]; results.sort((a, b) => ord.indexOf(a.name) - ord.indexOf(b.name)); }
+const PAGE_DIR = ASSEMBLE || OUT;
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const total = results.reduce((a, r) => a + r.spent, 0), checks = results.flatMap((r) => r.turns.flatMap((t) => t.checks));
 const html = `<title>Live Bench</title>
@@ -87,4 +90,4 @@ ${t.ran ? `<div class="nodes">${t.ran.map((s) => `<div class="node" data-s="${es
 <div class="chk">${t.checks.map((c) => `<span class="${c.pass ? "ok" : "bad"}" title="${esc(JSON.stringify(c.got))}">${c.pass ? "✓" : "✗"} ${esc(c.name)}</span>`).join("")}</div>
 </div>`).join("")}</section>`).join("")}
 </div>`;
-writeFileSync(join(OUT, "index.html"), html); console.log(`\n${total} credits · ${checks.filter((c) => c.pass).length}/${checks.length} checks · ${OUT}/index.html`);
+writeFileSync(join(PAGE_DIR, "index.html"), html); console.log(`\n${total} credits · ${checks.filter((c) => c.pass).length}/${checks.length} checks · ${PAGE_DIR}/index.html`);

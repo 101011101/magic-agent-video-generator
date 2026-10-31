@@ -18,15 +18,22 @@ const WIRED = new Set(["image", "image-edit", "image-to-video", "text-to-video",
 const FILM = ["story", "assets", "screenplay", "keyframes", "clips", "film"];
 const grid = (model, s) => { const g = VIDEOS[model]?.grid || [5]; return g.includes(s) ? s : g.reduce((a, b) => (Math.abs(b - s) < Math.abs(a - s) ? b : a)); };
 
-export async function execute(plan, dir, { id, tier = "free", sheet = null, brief = "", say = () => {}, onStep = () => {}, only = null } = {}) {
+export async function execute(plan, dir, { id, tier = "free", sheet = null, brief = "", say = () => {}, onStep = () => {}, only = null, assets = [] } = {}) {
   mkdirSync(join(dir, "assets"), { recursive: true });
   const logFile = join(dir, "exec.json");
   const run = { name: `session-${id}`, path: (f) => join(dir, f), log: existsSync(logFile) ? JSON.parse(readFileSync(logFile, "utf8")) : { jobs: {}, pending: {}, calls: [] }, save: () => writeFileSync(logFile, JSON.stringify(run.log, null, 2)) };
   run.log.jobs ??= {}; run.log.pending ??= {}; run.log.calls ??= [];
   const jobs = new Jobs(run);
   const by = {}; plan.steps.forEach((s, i) => (by[s.produces] = i));
-  const file = (name) => { const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output; if (existsSync(join(dir, "materials", name))) return `materials/${name}`; if (plan.dir && existsSync(join(dir, "assets", plan.dir, name))) return `assets/${plan.dir}/${name}`; if (existsSync(join(dir, "assets", name))) return `assets/${name}`; try { for (const d of readdirSync(join(dir, "assets"))) { for (const ext of ["", ".png", ".jpg", ".mp4", ".svg"]) { const cand = join(dir, "assets", d, name.replace(/\.[a-z0-9]+$/i, "") + ext); if (existsSync(cand) && !cand.endsWith("/")) return `assets/${d}/${basename(cand)}`; } } } catch {} return null; };
-  const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
+  const stem = (n) => n.replace(/\.[a-z0-9]+$/i, "");
+  const variants = (n) => [n, ...["png", "jpg", "jpeg", "mp4", "mp3", "txt", "json", "svg"].map((e) => `${stem(n)}.${e}`)];
+  const file = (name) => {
+    const i = by[name]; if (i !== undefined && plan.steps[i].output) return plan.steps[i].output;
+    const known = (assets || []).find((a) => a.label === name && a.file && existsSync(join(dir, a.file))); if (known) return known.file;   // what the session says was made
+    for (const v of variants(name)) { if (existsSync(join(dir, "materials", v))) return `materials/${v}`; if (plan.dir && existsSync(join(dir, "assets", plan.dir, v))) return `assets/${plan.dir}/${v}`; if (existsSync(join(dir, "assets", v))) return `assets/${v}`; }
+    try { for (const d of readdirSync(join(dir, "assets"))) for (const v of variants(name)) { const cand = join(dir, "assets", d, v); if (existsSync(cand)) return `assets/${d}/${v}`; } } catch {}
+    return null;
+  };
   const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}${s.attempt ? `-r${s.attempt}` : ""}.${ext}`;
   const set = (i, patch) => { Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };
   let filmStarted = false;
