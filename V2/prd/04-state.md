@@ -209,3 +209,12 @@ before it, except when a positioned prop comes INTO frame: six edits of a single
 as a huge foreground jet nose-first, with the words, the WORLD block and a change-only edit all saying otherwise. Such
 a still is painted from the master wide that already shows every vehicle from this side. The relation text for a
 master with the same camera view says "held on the same side and at the same angle", never "moved to a new angle".
+
+**What depends on what (`dependents`, T-046, 2026-10-31).** One query answers the pipeline's `--retry`, `--restore` and
+`--retry root-<place>` and the working tree alike. The **hard** set must be remade when `id` changes: the stills painted
+into it as image 1, recursively; the clips and the sequences pinned on any of them; the film. The **soft** set was only
+informed by it and is kept, marked "kept with an older reference": the stills that took it as the frame before, a
+portrait or a prop picture (the same `refs()` that chose the images). The kinds of edge are named once in
+`backend/lib/deps.js`; the tree reads the same kinds off the job records' roles. `--only` may name a hard or a soft
+taker to remake it. Before this the pipeline followed image 1 only and the tree followed every input, so the two
+disagreed on every frame that had been a "frame before" (s6-2 of the ninth film: 2 against 13). **built**.

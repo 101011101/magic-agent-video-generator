@@ -115,3 +115,9 @@ chosen model can do the chosen mode at the chosen resolution: pinned needs an en
 1080p, wan-2.2 takes none), t2v and seq need named references (ltx-2.5's are undocumented, so the run proceeds with a
 note; a model with none is refused). The sequence stage takes a video profile (model, resolution, audio) instead of a bare
 model name; variants are still keyed mode@model.
+
+**A sequence is pinned on its frames (T-046, 2026-10-31).** `makeSequences` records the still files a sequence was
+rendered from (`frames`) and renders it again when any of them changed since (a repaint, a restore), keeping the old
+render as an attempt; a record from before this rule reads the frames off its `refs`. Before it a rendered sequence was
+kept whatever happened to its stills, where a pinned clip had always compared its two frames. **built**, tested in
+`tests/edit.test.mjs`; no run has needed it yet (the ninth film's sequences were made after its last repaint).

@@ -1,6 +1,7 @@
 # T-046 · The film chain as a tool of the agent: one dependency rule, a library entry, the session's notes, real estimates
 
-status:     open
+status:     in progress: 1, 2, 3 and 8 built 2026-10-31 (`backend/lib/deps.js`, `State.dependents`, `pipeline.mjs`, `edit.js`,
+            `worktree.js`; tests in `tests/worktree.test.mjs`, `state.test.mjs`, `edit.test.mjs`); 4 to 7 open
 priority:   high
 subsystem:  state, edit, agent, frontend, lib
 
@@ -60,3 +61,11 @@ credits) and eleven soft takers marked; `--retry s6-2 --dry --until film` prints
 byte-identical; a test in `tests/edit.test.mjs` with a repainted still shows its sequence remade; a film started from
 a card runs stage by stage, waits before paint and before clips in both modes, and the ledger matches the card's
 number; `notes.json` is absent from `runs/`.
+
+built (2026-10-31):
+Items 1, 2, 3 and 8. The tree for the ninth film now gives s7-2 eleven dependents at about 2,200 credits, s6-2 two
+with s7-1 and s7-2 marked, the range plate seventeen; the pipeline's `--retry` names the same sets. Left from the
+check: the record's stills table keeps ids an earlier plan had (s1-2 of the ninth film), so the tree shows a still the
+state manager no longer plans; a run could prune or mark them. Items 4 to 7 sit in the agent's files (`execute.js`
+spawns the pipeline today with `--until film` and a fixed cap of 8,000, which is item 4's stage-by-stage spawn and
+item 7's explicit go still to do).

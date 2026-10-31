@@ -1,8 +1,13 @@
 // The working tree (prd/13-worktree.md): the workflow as a graph, read from the records. runTree(L) builds it from a
 // run's run.json; sessionTree(S) from a session. Nodes carry type, stage, inputs (node ids with roles), params, the
 // prompt file or text, outputs with attempts and the gate, credits, and an explain line assembled from the graph.
-// dependents(tree, id) is the transitive closure; rerun(tree, id) is that set with its cost.
+// dependents(tree, id) is the closure along the HARD edges (lib/deps.js: image 1, a pinned frame, a shot, a scene, an
+// input); informed(tree, ids) is what the SOFT edges reach (the frame before, a portrait, a prop picture, the style
+// sheet), kept and marked. rerun(tree, id) prices the remake from the registry at the run's profile, not the recorded
+// spend with its attempts (T-046).
 import { basename } from "node:path";
+import { isHard } from "../lib/deps.js";
+import { stillCost, videoRate } from "../lib/models.js";
 
 export const STAGES = ["sheet", "story", "screenplay", "assets", "keyframes", "clips", "sound", "film", "job"];
 
@@ -18,9 +23,9 @@ export const STAGE_EXPLAIN = {
   job: "a small job: one tool call on what the user supplied",
 };
 
-function explain(n, byId, deps) {
+function explain(n, byId, deps, inf = []) {
   const names = (ids) => ids.map((i) => byId[i]?.label || i).join(", ");
-  const d = deps.filter((x) => x !== n.id), dn = d.length ? ` ${d.length} thing${d.length === 1 ? "" : "s"} depend on it (${names(d.slice(0, 4))}${d.length > 4 ? ", …" : ""}).` : " Nothing depends on it.";
+  const d = deps.filter((x) => x !== n.id), dn = (d.length ? ` ${d.length} thing${d.length === 1 ? "" : "s"} depend on it (${names(d.slice(0, 4))}${d.length > 4 ? ", …" : ""}).` : " Nothing depends on it.") + (inf.length ? ` ${inf.length} more took it as a reference and would be marked (${names(inf.slice(0, 3))}${inf.length > 3 ? ", …" : ""}).` : "");
   switch (n.type) {
     case "story": return `The story written from the brief; every scene is read from it.${dn}`;
     case "scene": return `Scene ${n.scene}${n.place ? ` in ${n.place}` : ""}: ${n.shots} shot${n.shots === 1 ? "" : "s"}; a change here remakes only this scene's stills and clips.${dn}`;
@@ -60,11 +65,14 @@ export function runTree(L, label = "") {
   for (const [sid, s] of Object.entries(L.stills || {})) {
     const attempts = jobs.filter((j) => j.file && (j.file === `stills/${sid}.png` || j.file.startsWith(`stills/${sid}-r`))).map((j) => j.file);
     const j = jobFor(s.file) || jobs.find((x) => attempts.includes(x.file));
-    add({ id: `still:${sid}`, type: "still", stage: "keyframes", label: sid, scene: s.scene, shot: s.shot, size: s.size, how: s.how, gate: s.gate, file: s.file, attempts, model: j?.model, credits: jobs.filter((x) => attempts.includes(x.file)).reduce((a, x) => a + (x.credits || 0), 0), prompt: j?.prompt || "", raw_inputs: j?.inputs || [], inputs: s.scene && s.shot ? [{ id: `shot-${s.scene}-${s.shot}`, role: "shot" }] : [] });
+    add({ id: `still:${sid}`, type: "still", stage: "keyframes", label: sid, scene: s.scene, shot: s.shot, size: s.size, how: s.how, gate: s.gate, card: s.from === "card" || !!L.build?.painted?.[sid]?.card, file: s.file, attempts, model: j?.model, credits: jobs.filter((x) => attempts.includes(x.file)).reduce((a, x) => a + (x.credits || 0), 0), prompt: j?.prompt || "", raw_inputs: j?.inputs || [], inputs: s.scene && s.shot ? [{ id: `shot-${s.scene}-${s.shot}`, role: "shot" }] : [] });
     for (const a of attempts) byFile[a] = `still:${sid}`;
   }
-  // clips and music
-  for (const j of jobs) if (/video/.test(j.endpoint)) add({ id: `clip:${basename(j.file)}`, type: "clip", stage: "clips", label: basename(j.file, ".mp4"), file: j.file, seconds: j.seconds, model: j.model, credits: j.credits || 0, prompt: j.prompt || "", raw_inputs: j.inputs || [] });
+  // clips and music. A clip's seconds are its shots' (the job record's `seconds` is the job's wall-clock): a sequence's
+  // rendered length from the build record, a pinned clip's from its shot.
+  const shotSeconds = (n) => { for (const sc of L.script?.scenes || []) for (const sh of sc.shots || []) if (sh.n === n) return sh.seconds; return null; };
+  const clipSeconds = (file) => { const q = basename(file).match(/^seq-(\d+-\d+)/); if (q) { const sq = L.build?.sequences?.[q[1]]; return sq?.rendered ?? sq?.seconds ?? null; } const m = basename(file).match(/^s(\d+)/); return m ? shotSeconds(Number(m[1])) : null; };
+  for (const j of jobs) if (/video/.test(j.endpoint)) add({ id: `clip:${basename(j.file)}`, type: "clip", stage: "clips", label: basename(j.file, ".mp4"), file: j.file, seconds: clipSeconds(j.file), model: j.model, credits: j.credits || 0, prompt: j.prompt || "", raw_inputs: j.inputs || [] });
   for (const j of jobs) if (/music/.test(j.endpoint)) add({ id: "music", type: "music", stage: "sound", label: "music bed", file: j.file, seconds: j.seconds, credits: j.credits || 0, prompt: j.prompt || "" });
   const clips = nodes.filter((n) => n.type === "clip");
   if (clips.length) add({ id: "film", type: "film", stage: "film", label: "film", file: L.build?.film?.file || "clips/film.mp4", credits: 0, inputs: [...clips.map((c) => ({ id: c.id, role: "clip" })), ...(byFile[nodes.find((n) => n.type === "music")?.file] ? [{ id: "music", role: "music" }] : [])] });
@@ -76,12 +84,16 @@ export function runTree(L, label = "") {
     const seen = new Set();
     for (const [k, f] of expand(n, n.raw_inputs || []).entries()) {
       const id = resolveId(f); if (!id || id === n.id || seen.has(id)) continue; seen.add(id);
-      const role = n.type === "still" ? (k === 0 ? "image 1" : byId(nodes, id)?.type === "sheet" ? "portrait" : byId(nodes, id)?.type === "ref" ? "prop" : "reference") : n.type === "clip" ? "pinned still" : "reference";
+      const role = n.type === "still" ? (k === 0 ? "image 1" : byId(nodes, id)?.type === "sheet" ? "portrait" : byId(nodes, id)?.type === "ref" ? "prop" : "reference") : n.type === "clip" ? (byId(nodes, id)?.type === "still" ? "pinned still" : "reference") : "reference";
       n.inputs.push({ id, role });
     }
     delete n.raw_inputs;
   }
-  for (const n of nodes) for (const i of n.inputs) edges.push([i.id, n.id]);
+  for (const n of nodes) for (const i of n.inputs) edges.push([i.id, n.id, isHard(i.role) ? "hard" : "soft"]);
+  // What remaking a node costs, from the registry at the run's profile: one still, a clip at its seconds, a plate or a
+  // sheet or the music at its one job; never the recorded spend, which counts every attempt.
+  const M = L.models || {}, priced = (fn, fallback) => { try { const v = fn(); return Number.isFinite(v) ? v : fallback; } catch { return fallback; } };
+  for (const n of nodes) n.remake = n.type === "still" ? (n.card ? 0 : priced(() => stillCost(M.still, M.res), jobFor(n.file)?.credits || 0)) : n.type === "clip" ? (n.seconds ? priced(() => n.seconds * videoRate(M.video, M.vres, true), n.credits) : n.credits) : ["plate", "sheet", "ref", "music"].includes(n.type) ? n.credits : 0;
   const tree = { label, kind: "run", nodes, edges, stages: STAGES.filter((s) => nodes.some((n) => n.stage === s)).map((s) => ({ id: s, explain: STAGE_EXPLAIN[s] })) };
   finish(tree); return tree;
 }
@@ -110,19 +122,22 @@ export function sessionTree(S, { loadRun = null } = {}) {
     for (const m of S.materials || []) { const rec = rt.nodes.find((n) => n.file && basename(n.file) === m); if (rec) { const rn = nodes.find((n) => n.id === pre + rec.id); if (rn) rn.inputs.push({ id: `mat:${m}`, role: "the user's record" }); } }
   }
   for (const n of nodes) n.inputs = n.inputs.filter((i) => nodes.some((x) => x.id === i.id));
-  for (const n of nodes) for (const i of n.inputs) edges.push([i.id, n.id]);
+  for (const n of nodes) for (const i of n.inputs) edges.push([i.id, n.id, isHard(i.role) ? "hard" : "soft"]);
   const tree = { label: S.id, kind: "session", nodes, edges, stages: STAGES.filter((s) => nodes.some((n) => n.stage === s)).map((s) => ({ id: s, explain: STAGE_EXPLAIN[s] })) };
   finish(tree); return tree;
 }
 
 function finish(tree) {
   const map = Object.fromEntries(tree.nodes.map((n) => [n.id, n]));
-  for (const n of tree.nodes) { const d = dependents(tree, n.id); n.dependents = d; n.rerun_credits = d.reduce((a, id) => a + (map[id]?.credits || 0), 0); n.explain = explain(n, map, d); }
+  for (const n of tree.nodes) { const d = dependents(tree, n.id); n.dependents = d; n.informed = informed(tree, d); n.rerun_credits = d.reduce((a, id) => a + (map[id]?.remake ?? map[id]?.credits ?? 0), 0); n.explain = explain(n, map, d, n.informed); }
 }
 
+// The closure along the hard edges: what must be remade when `id` changes. A soft edge does not carry.
 export function dependents(tree, id) {
   const out = new Set([id]); let grew = true;
-  while (grew) { grew = false; for (const [a, b] of tree.edges) if (out.has(a) && !out.has(b)) { out.add(b); grew = true; } }
+  while (grew) { grew = false; for (const [a, b, kind] of tree.edges) if (kind !== "soft" && out.has(a) && !out.has(b)) { out.add(b); grew = true; } }
   return [...out];
 }
-export const rerun = (tree, id) => { const map = Object.fromEntries(tree.nodes.map((n) => [n.id, n])); const ids = dependents(tree, id); return { ids, credits: ids.reduce((a, i) => a + (map[i]?.credits || 0), 0) }; };
+// What the remade set reaches through soft edges: kept, marked as built with an older reference.
+export function informed(tree, ids) { const set = new Set(ids), out = new Set(); for (const [a, b, kind] of tree.edges) if (kind === "soft" && set.has(a) && !set.has(b)) out.add(b); return [...out]; }
+export const rerun = (tree, id) => { const map = Object.fromEntries(tree.nodes.map((n) => [n.id, n])); const ids = dependents(tree, id); return { ids, informed: informed(tree, ids), credits: ids.reduce((a, i) => a + (map[i]?.remake ?? map[i]?.credits ?? 0), 0) }; };

@@ -35,4 +35,16 @@ ok(!/Walls:|Light:|south wall/.test(p.prompt), `the Lincoln single prompt has no
 console.log("\n---- s1-3 prompt (paint from the master)\n" + p.prompt);
 console.log("\n---- s1-3 prompt (re-render of a crop)\n" + keyframePrompt({ still: by["s1-3"], state, medium: fx.medium, mode: "crop" }).prompt);
 console.log("\n---- s1-2 prompt (edit)\n" + keyframePrompt({ still: by["s1-2"], state, medium: fx.medium, mode: "edit" }).prompt);
+// T-046, the one rule of dependency. Hard: what was painted into it, recursively, and the clips pinned on those; soft: what
+// took it as the frame before or as a portrait, kept and marked.
+{
+  const d2 = state.dependents("s1-2"), d3 = state.dependents("s1-3"), dp = state.dependents(`root-${by["s1-1"].place}`), dl = state.dependents("lincoln");
+  ok(d2.hard.length === 3 && ["s1-3", "s1-4", "s1-5"].every((x) => d2.hard.includes(x)), `s1-2 → hard: the three stills painted from the master (${d2.hard.join(", ")})`);
+  const pinned = state.clips.filter((c) => ["s1-2", "s1-3", "s1-4", "s1-5"].includes(c.start) || ["s1-2", "s1-3", "s1-4", "s1-5"].includes(c.end)).map((c) => `clip-${c.n}`);
+  ok(JSON.stringify(d2.clips) === JSON.stringify(pinned) && d2.film, `s1-2 → the clips pinned on them (${d2.clips.join(", ")}) and the film`);
+  ok(d3.hard.length === 0 && d3.soft.includes("s1-4"), `s1-3 → nothing is painted from it; s1-4 took it as the frame before, soft (${d3.soft.join(", ")})`);
+  ok(dp.hard[0] === "s1-1" && dp.hard.length === 5, `the plate → every still of the place, through s1-1 (${dp.hard.join(", ")})`);
+  ok(dl.hard.length === 0 && dl.soft.includes("s1-3"), `Lincoln's portrait → soft only: the stills that took it (${dl.soft.join(", ")})`);
+}
+
 console.log(`\n${fails ? `${fails} FAILED` : "all passed"}`); process.exit(fails ? 1 : 0);

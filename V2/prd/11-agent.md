@@ -289,5 +289,5 @@ What does not line up yet (T-046):
 - The plan prices a film from the brief (one still per 2.5 s of film: 2,400 for a 30-second film on nano at 2k) where
   the pipeline knows the count once the screenplay exists (the ninth film: 20 stills, 4,000; printed by
   `--until keyframes`, job by job by `--dry`). After the screenplay the card takes the pipeline's number.
-- The dependency rule: the pipeline's and the tree's disagree, and the pipeline's misses sequences and alters the
-  record on a dry retry (`13-worktree.md`, "Checked against the pipeline").
+- The dependency rule, built the same day: one rule (`backend/lib/deps.js`, `State.dependents`) read by the pipeline
+  and the tree; a sequence is pinned on its frames; a dry run writes nothing (`13-worktree.md`, "Built").

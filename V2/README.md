@@ -39,7 +39,7 @@ Flags:
 - `--retry s1-3,clip-2` remake the named items (every earlier attempt stays on disk; anything built on a retried still is
   forgotten); `--accept s1-3,clip-2` keep flagged items as they are; `--recheck s1-3` run the gates again on a still as
   painted, after a gate's criterion changed; `--dry` sends no paid call and lists each job a real run would send with its
-  cost (the text and vision calls still run); `--clips pinned|start|t2v|seq` picks how shots become clips, with
+  cost (the text and vision calls still run) and writes nothing to the run record or the pages; `--clips pinned|start|t2v|seq` picks how shots become clips, with
   `--seq-across`, `--max-seq`, `--speed-up`, `--voice-refs`, `--only clip-N`; `--parallel N` limits the clips sent at once
   (all by default).
 - `--tier paid|cheap|free` picks the model profile (`paid`: nano-banana-pro 2k and wan-3.0 720p, every film so far; `cheap`:

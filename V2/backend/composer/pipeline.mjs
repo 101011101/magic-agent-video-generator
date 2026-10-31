@@ -41,10 +41,10 @@ const dir = join(RUNS, label); for (const d of ["", "refs", "roots", "stills", "
 const lock = join(dir, ".lock"); if (existsSync(lock)) { const pid = Number(readFileSync(lock, "utf8")); let alive = false; try { process.kill(pid, 0); alive = true; } catch {} if (alive) { console.error(`run "${label}" is already being written by process ${pid}; refusing to start a second one`); process.exit(3); } }
 writeFileSync(lock, String(process.pid)); process.on("exit", () => { try { if (existsSync(lock) && readFileSync(lock, "utf8") === String(process.pid)) unlinkSync(lock); } catch {} });
 const logFile = join(dir, "run.json"), run = { name: label, path: (f) => join(dir, f), log: existsSync(logFile) ? JSON.parse(readFileSync(logFile, "utf8")) : {} };
-run.save = () => writeFileSync(logFile, JSON.stringify(run.log, null, 2));
+run.save = DRY ? () => {} : () => writeFileSync(logFile, JSON.stringify(run.log, null, 2));   // a dry run leaves the record as it was (T-046): its retry bookkeeping is computed and printed, never written
 const L = run.log, jobs = new Jobs(run, { estimate: DRY }), say = (m) => console.log(m), t0 = Date.now();
 L.started_at ??= new Date().toISOString();
-const finish = (code = 0) => { L.summary = { ...(L.summary || {}), credits: jobs.spent(), llm: usage, wall_s: Math.round((Date.now() - t0) / 1000), until: UNTIL }; run.save(); writeResults({ label, L, state, K: L.build || {} }); say(`\nresults: V2/results/${label}/index.html · credits this run ${jobs.spent()}${DRY ? ` · dry run: ${jobs.estimated.reduce((n, e) => n + e.cost, 0)} credits would have been spent on ${jobs.estimated.map((e) => e.key).join(", ") || "nothing"}` : ""} · ${usage.calls} model calls (${usage.cached} cached)`); process.exit(code); };
+const finish = (code = 0) => { L.summary = { ...(L.summary || {}), credits: jobs.spent(), llm: usage, wall_s: Math.round((Date.now() - t0) / 1000), until: UNTIL }; run.save(); if (!DRY) writeResults({ label, L, state, K: L.build || {} }); say(`\n${DRY ? "dry run: the record and the pages are untouched" : `results: V2/results/${label}/index.html`} · credits this run ${jobs.spent()}${DRY ? ` · dry run: ${jobs.estimated.reduce((n, e) => n + e.cost, 0)} credits would have been spent on ${jobs.estimated.map((e) => e.key).join(", ") || "nothing"}` : ""} · ${usage.calls} model calls (${usage.cached} cached)`); process.exit(code); };
 let state = null;
 
 // 1. Story.
@@ -90,7 +90,7 @@ run.save();
 if (!upto("paint")) finish();
 // 6. Paint, with --retry / --accept / --recheck applied first.
 K.painted ??= {}; K.attempts ??= {}; K.made ??= {};
-const dependents = (id) => state.stills.filter((x) => x.env === id).flatMap((x) => [x.id, ...dependents(x.id)]);
+const dependents = (id) => state.dependents(id);   // T-046, the one rule (lib/deps.js): hard = remade (image 1 chain, pinned clips and sequences), soft = kept and marked (the frame before, portraits, prop pictures)
 const known = (id) => id.startsWith("clip-") ? state.clips.some((c) => `clip-${c.n}` === id) : id.startsWith("root-") || id.startsWith("seq-") ? true : !!state.still(id);
 // A regenerated plate (--retry root-<place>) remakes every still painted from it: the stills of that place that start
 // from the plate, and all that was built on them. The ninth film's Meridian Range plate was regenerated without its
@@ -103,8 +103,9 @@ for (const id of [...RETRY, ...ACCEPT, ...RECHECK, ...RESTORE.map((x) => x.split
 for (const spec of RESTORE) {
   const [id, n] = spec.split(":"), i = Number(n), att = K.attempts[id] || [], back = att[i]; if (!back || !back.file || !existsSync(run.path(back.file))) { say(`  ${spec}: no attempt ${n} on record for ${id} (attempts 0–${att.length - 1})`); continue; }
   if (K.painted[id]) att.push(K.painted[id]); K.painted[id] = { ...back, bad: false, accepted: true, restored: i }; if (L.stills?.[id]) { L.stills[id].file = back.file; L.stills[id].gate = "accepted"; }
-  const deps = dependents(id), remade = ONLY.length ? deps.filter((d) => ONLY.includes(d)) : deps, kept = deps.filter((d) => !remade.includes(d) && K.painted[d]);
+  const dep = dependents(id), remade = ONLY.length ? [...dep.hard, ...dep.soft].filter((d) => ONLY.includes(d)) : dep.hard, kept = dep.hard.filter((d) => !remade.includes(d) && K.painted[d]);
   for (const d of kept) K.painted[d].stale = `built on ${id} before attempt ${n} was restored`; if (kept.length) say(`  ${id}: ${kept.join(", ")} built on it and kept as painted (--only); marked`);
+  for (const d of dep.soft) if (K.painted[d] && !remade.includes(d)) K.painted[d].older = `took ${id} as a reference before attempt ${n} was restored`;
   for (const d of remade) { if (K.painted[d]) { (K.attempts[d] ??= []).push(K.painted[d]); delete K.painted[d]; } for (const c of state.clips) if ((c.start === d || c.end === d) && K.made[c.n]) { (K.attempts[`clip-${c.n}`] ??= []).push(K.made[c.n]); delete K.made[c.n]; } }
   say(`  ${id}: attempt ${n} (${back.file}) restored as the still${remade.length ? `; ${remade.join(", ")} will be remade from it` : ""}`);
 }
@@ -122,8 +123,9 @@ for (const id of RETRY) {
     const sameSide = s?.envKind === "master" && state.script.scenes.flatMap((sc) => sc.shots).find((h) => h.n === s.shot)?.camera?.view === state.script.scenes.flatMap((sc) => sc.shots).find((h) => h.n === state.still(s.env)?.shot)?.camera?.view;
     if (p?.file && !p.card && ((p.mode === "edit" && (turned || styleOnly) && !p.repaired) || (p.mode === "paint" && turned && sameSide && !p.repaired) || (p.mode === "repair" && styleOnly)) && base?.file && !base.bad) { (K.repair ??= {})[id] = { from: base.file, kind: "delta" }; say(`  ${id}: ${p.mode === "paint" ? "a paint from the master" : "an edit"} the geometry gate flagged (${(c.geo?.bad || []).slice(0, 2).join("; ") || "finish"}); its retry is a delta edit of ${base.file}: the change list only, nothing turns`); } }
   // What was built on a retried still is remade with it; with --only, just the named dependents, the rest kept and marked.
-  const deps = dependents(id), remade = ONLY.length ? deps.filter((d) => ONLY.includes(d)) : deps, kept = deps.filter((d) => !remade.includes(d) && K.painted[d]);
+  const dep = dependents(id), remade = ONLY.length ? [...dep.hard, ...dep.soft].filter((d) => ONLY.includes(d)) : dep.hard, kept = dep.hard.filter((d) => !remade.includes(d) && K.painted[d]);
   for (const d of kept) { K.painted[d].stale = `built on ${id} before it was repainted`; } if (kept.length) say(`  ${id}: ${kept.join(", ")} built on it and kept as painted (--only); marked`);
+  for (const d of dep.soft) if (K.painted[d] && !remade.includes(d)) K.painted[d].older = `took ${id} as a reference before it was repainted`;   // kept: the frame before, a portrait or a prop picture informs a still, it is not painted into it
   for (const d of [id, ...remade]) { if (K.painted[d]) { (K.attempts[d] ??= []).push(K.painted[d]); delete K.painted[d]; } for (const c of state.clips) if ((c.start === d || c.end === d) && K.made[c.n]) { (K.attempts[`clip-${c.n}`] ??= []).push(K.made[c.n]); delete K.made[c.n]; } }
 }
 for (const id of ACCEPT) { if (id.startsWith("seq-")) { const s = K.sequences?.[id.slice(4)]; if (s?.identity) { s.identity.ok = true; s.accepted = true; for (const n of s.shots || []) if (K.made[n]?.identity) K.made[n].identity.ok = true; } } else if (id.startsWith("clip-")) { const m = K.made[Number(id.slice(5))]; if (m?.identity) { m.identity.ok = true; m.accepted = true; } } else if (K.painted[id]) { K.painted[id].bad = false; K.painted[id].accepted = true; if (L.stills?.[id]) L.stills[id].gate = "accepted"; } }
@@ -152,6 +154,8 @@ say(`== paint`);
 const painted = await paintKeyframes({ state, jobs, medium: L.medium, K, run, say, still: STILL, res: PROF.res, cropDirect: CROP_DIRECT });
 const stale = state.stills.filter((s) => K.painted[s.id]?.stale).map((s) => s.id);
 if (stale.length) say(`STALE (kept as they are; --retry to repaint): ${stale.map((id) => `${id}${/\|/.test(String(K.painted[id].stale)) ? " (the plan changed under this id)" : ` (${K.painted[id].stale})`}`).join(", ")}`);
+const older = state.stills.filter((s) => K.painted[s.id]?.older).map((s) => s.id);
+if (older.length) say(`KEPT WITH AN OLDER REFERENCE (--retry to repaint): ${older.map((id) => `${id} (${K.painted[id].older})`).join(", ")}`);
 if (painted.flagged.length || painted.waiting.length) {
   if (painted.flagged.length) say(`\nREVIEW (stills): ${painted.flagged.map((s) => `${s.id}: ${K.painted[s.id].check.note || ""} ${K.painted[s.id].check.room?.ok === false ? `room: ${K.painted[s.id].check.room.note || ""}` : ""}`.trim()).join(" | ")}`);
   if (painted.waiting.length) say(`not painted yet (${DRY ? "dry run" : "built on a flagged still"}): ${painted.waiting.map((s) => s.id).join(", ")}`);

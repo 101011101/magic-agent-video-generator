@@ -156,6 +156,20 @@ export class State {
     return [first, ...prevRef, ...carriers, ...style];
   }
   // What each host in a frame carries, from the structured `on` of the props (through chains: bomb on pylon on aircraft).
+  // The one rule of dependency (T-046, lib/deps.js): what a change to `id` does to the rest of the film. HARD, remade:
+  // the stills painted into it (image 1), recursively; the clips and the sequences pinned on any of them; the film.
+  // SOFT, kept and marked: the stills that took it as the frame before, a portrait or a prop picture (refs()). For a
+  // plate (`root-<place>`) the hard set is the place's stills that start from it and all built on them. Ids are the
+  // pipeline's own: still ids, clip-N, seq-A-B. The working tree reads the same rule from the run record by edge role.
+  dependents(id) {
+    const K = this.log.build || {}, place = id.startsWith("root-") ? id.slice(5) : null, hard = [];
+    const walk = (x) => { for (const s of this.stills) if (s.env === x && !hard.includes(s.id)) { hard.push(s.id); walk(s.id); } };
+    if (place) { for (const s of this.stills) if (s.place === place && s.envKind === "plate" && !s.card && !hard.includes(s.id)) { hard.push(s.id); walk(s.id); } } else walk(id);
+    const set = new Set([id, ...hard]), clips = this.clips.filter((c) => set.has(c.start) || set.has(c.end)), shots = new Set(clips.map((c) => c.n));
+    const sequences = Object.entries(K.sequences || {}).filter(([, q]) => (q.shots || []).some((n) => shots.has(n))).map(([k]) => `seq-${k}`);
+    const soft = place ? [] : this.stills.filter((s) => !set.has(s.id) && !s.card && this.refs(s).some((r) => [`prev:${id}`, `portrait:${id}`, `prop:${id}`].includes(r.ref))).map((s) => s.id);
+    return { hard, clips: clips.map((c) => `clip-${c.n}`), sequences, film: clips.length > 0, soft };
+  }
   loads(still) {
     const props = still.frame.props.filter(inFrame), hostOf = (p) => p.on && p.on !== "none" ? p.on : null;
     const top = (p) => { let id = hostOf(p); for (let i = 0; i < 6; i++) { const h = props.find((x) => x.id === id), up = h && hostOf(h); if (!up || up === id) return id; id = up; } return id; };

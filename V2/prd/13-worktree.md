@@ -140,8 +140,21 @@ repaint.
 include every attempt (s7-2's ten attempts are 2,000); the remake of s7-2's eleven dependents is eight stills and two
 sequences at the registry's prices, about 2,000 credits, where the view says 8,032.
 
-**Decision (proposed, T-046).** One rule, in the state manager, read by both. An edge is **hard** (image 1; a still to
-the clip or sequence pinned on it; a shot to its stills; a plate to the first still of its place) or **soft** (the
-frame before, a portrait, a prop picture, the style sheet, a voice sample). Re-run remakes the hard closure and marks
-the soft takers "built with an older reference", which is what `--only` does today made the rule; `--retry` and the
-Workflow view show the same set at the same registry-priced cost; a sequence is invalidated like a pinned clip.
+**Built (2026-10-31, later still, T-046).** One rule, read by both. `backend/lib/deps.js` names the two kinds of edge:
+**hard** (image 1; a still to the clip or sequence pinned on it; a shot to its stills; a scene to its shots; a step to
+its input) and **soft** (the frame before, a portrait, a prop picture, the style sheet, a voice sample); an unknown role
+is hard. `State.dependents(id)` returns the hard set (the stills painted into it, recursively; the clips and the
+sequences pinned on any of them; the film) and the soft set (the stills that took it as the frame before, a portrait or
+a prop picture); `--retry`, `--restore` and `--retry root-<place>` remake the hard set and mark the soft set "kept
+with an older reference" (`--only` may still name either). The tree classifies every edge by its role, follows the hard
+ones for `dependents`, lists the soft takers as `informed`, and prices `rerun_credits` from the registry at the run's
+profile (one still, a sequence at its rendered seconds, a card at nothing). On the ninth film the two now agree: s7-2
+has 11 dependents at about 2,200 credits (the view said 8,032); s6-2 has 2 and informs s7-1 and s7-2; s3-1 has 3 and
+informs s4-1; the range plate has 17 and informs the cockpit plate and four cockpit stills. A sequence is now pinned on
+its frames like a clip (`edit.js` records the frame list and compares it; a record from before the rule reads its
+refs), and a dry run writes neither the record nor the pages. Tests: `tests/worktree.test.mjs`, the dependency cases
+in `tests/state.test.mjs`, the sequence cases in `tests/edit.test.mjs`.
+
+One difference remains by design: the tree reads what was sent (the job records), the state manager what the plan
+would send now. A still the plan no longer has (the ninth film's s1-2, from an earlier plan, still in the record's
+stills table) is in the tree and not in the state manager's answer.
