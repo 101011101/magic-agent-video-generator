@@ -78,7 +78,9 @@ select:focus,input:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .car{border-top:1px solid var(--rule);padding-top:8px;display:grid;grid-template-columns:44px 1fr 44px;grid-template-rows:auto 1fr;gap:6px 8px;align-items:stretch} .carnav{grid-column:2;display:flex;align-items:center;justify-content:center} .carnav .cap{font-size:12px;color:var(--mut)}
 .car .side{grid-row:2;border:0;background:var(--grey);border-radius:12px;corner-shape:squircle;cursor:pointer;color:var(--mut);display:flex;align-items:center;justify-content:center;min-height:120px} .car .side:hover{background:var(--inf);color:var(--blue)} .car .side svg{width:26px;height:26px} .car .side.l{grid-column:1} .car .side.r{grid-column:3}
 .carbody{grid-column:2;grid-row:2;min-width:0} .carbody .tool{box-shadow:none}
-.treev .dagbox[hidden]{display:none} .treev .wfx{font-size:11.5px;color:var(--mut);display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:3px 8px;border-radius:6px} .treev .wfx:hover{background:var(--grey)} .treev .wfx svg{transition:transform .15s} .treev .wfx[aria-expanded=true] svg{transform:rotate(90deg)}
+.treev .calls{border-top:1px solid var(--rule);padding-top:8px;display:flex;flex-direction:column;gap:10px} .treev .car{border-top:0;padding-top:0}
+.treev .vw{margin-left:auto} .treev .vw button{display:inline-flex;align-items:center;padding:4px 8px} .view h2 .vw+.ib{margin-left:0}
+.pgroup{display:flex;flex-direction:column;gap:6px} .pver{display:flex;align-items:center;gap:6px;font-size:11.5px} .pver .vn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--rule);background:var(--card);color:var(--mut);font:12px/1 inherit;font-weight:600;cursor:pointer} .pver .vn[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
 .dag-node.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 45%,transparent)}
 /* workflow */
 .wf .stage h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg);margin:8px 0 4px;display:flex;align-items:center;gap:6px} .wf .ex{color:var(--mut);display:inline-flex;cursor:help} .wf .exl{color:var(--mut);font-weight:400;font-size:11.5px;text-transform:none;letter-spacing:0;white-space:normal}
@@ -203,13 +205,34 @@ function renderTurn(t, ti, text) {
   if (t.plan) {
     const n = t.plan.steps.length, done = t.plan.steps.filter((x) => x.state === "done").length;
     if (n > 1) {
-      // one block per working tree: the tree on top, a carousel of its tool calls below; a node clicked in the tree moves the carousel
-      const box = el(`<div class="view treev" data-t="${ti}"><h2>Working tree<small>${n} tool calls · ${done}/${n} made · ${esc(t.plan.dir || "")}</small><span class="wfx" data-x aria-expanded="false" title="Show the tool calls">${I.chev} tool calls</span><button class="ib" data-run title="Run all">${I.play}</button></h2><div class="dagbox"></div><div class="car" hidden><div class="carnav"><span class="cap"></span></div><button class="side l" data-n="-1" title="Previous">${I.left}</button><div class="carbody"></div><button class="side r" data-n="1" title="Next">${I.right}</button></div></div>`);
-      let carOpen = false; try { carOpen = localStorage.getItem("car-open") === "1"; } catch {} const car = box.querySelector(".car"); const xb = box.querySelector("[data-x]"); const setCar = (o) => { car.hidden = !o; xb.setAttribute("aria-expanded", String(o)); try { localStorage.setItem("car-open", o ? "1" : "0"); } catch {} }; xb.addEventListener("click", () => setCar(car.hidden)); setCar(carOpen);
-      add(box); const body = box.querySelector(".carbody"); const blocks = t.plan.steps.map((s, i) => { const b = block(s, i, ti); b.hidden = true; body.appendChild(b); return b; }); let cur = 0;
-      const show = (i) => { cur = (i + n) % n; blocks.forEach((b, k) => (b.hidden = k !== cur)); box.querySelector(".cap").textContent = `${cur + 1} / ${n} · ${t.plan.steps[cur].tool.replace(/-/g, " ")}`; box.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", Number(d.dataset.i) === cur)); };
-      drawDag(box.querySelector(".dagbox"), t.plan.steps, { media: (s) => s.material ? matUrl(s.produces) : s.output ? `/sessions/${SID}/${s.output}` : null, onSelect: (i) => { setCar(true); show(i); } });
-      box.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => show(cur + Number(b.dataset.n)))); box.querySelector("[data-run]").addEventListener("click", () => simulateTurn(ti)); show(t.plan.steps.findIndex((x) => x.state !== "done") >= 0 ? t.plan.steps.findIndex((x) => x.state !== "done") : 0);
+      // one block per working tree: the tree on top; the tool calls below either as a carousel (one at a time) or a list
+      // (all in order). Calls that run in parallel (same tool, same depth, same inputs) are one call with numbered versions.
+      const steps = t.plan.steps, by = {}; steps.forEach((s, i) => (by[s.produces] = i));
+      const level = new Array(n).fill(0); for (let pass = 0; pass < n; pass++) steps.forEach((s, i) => { const l = s.inputs.map((x) => by[x]).filter((j) => j !== undefined && j !== i).map((j) => level[j] + 1); level[i] = l.length ? Math.max(...l) : 0; });
+      const groups = []; steps.forEach((s, i) => { const key = `${level[i]}|${s.tool}|${[...s.inputs].sort().join(",")}`; let g = groups.find((x) => x.key === key); if (!g) { g = { key, idx: [] }; groups.push(g); } g.idx.push(i); });
+      groups.sort((p, q) => Math.min(...p.idx) - Math.min(...q.idx));
+      const box = el(`<div class="view treev" data-t="${ti}"><h2>Working tree<small>${n} tool calls · ${done}/${n} made · ${esc(t.plan.dir || "")}</small><span class="seg vw"><button data-v="carousel" aria-pressed="true" title="One call at a time">${I.right}</button><button data-v="list" title="All calls in order">${I.doc}</button></span><button class="ib" data-run title="Run all">${I.play}</button></h2><div class="dagbox"></div><div class="calls"></div></div>`);
+      const calls = box.querySelector(".calls"); const groupEls = groups.map((g) => {
+        const w = el(`<div class="pgroup"></div>`);
+        if (g.idx.length > 1) w.appendChild(el(`<div class="pver"><span class="mut">parallelized · ${g.idx.length} versions</span>${g.idx.map((i, k) => `<button class="vn" data-k="${k}" title="${esc(steps[i].produces)}">${k + 1}</button>`).join("")}</div>`));
+        const blocks = g.idx.map((i) => { const bl = block(steps[i], i, ti); w.appendChild(bl); return bl; }); let cur = 0;
+        const showV = (k) => { cur = k; blocks.forEach((bl, j) => (bl.hidden = j !== k)); w.querySelectorAll(".vn").forEach((v) => v.setAttribute("aria-pressed", String(Number(v.dataset.k) === k))); };
+        w.querySelectorAll(".vn").forEach((v) => v.addEventListener("click", () => showV(Number(v.dataset.k)))); showV(0);
+        w.showVersion = (i) => { const k = g.idx.indexOf(i); if (k >= 0) showV(k); }; w.idx = g.idx; return w;
+      });
+      let view = "carousel"; try { view = localStorage.getItem("calls-view") || "carousel"; } catch {} let cur = 0;
+      const render = () => {
+        calls.innerHTML = ""; box.querySelectorAll(".vw button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === view)));
+        if (view === "list") { groupEls.forEach((w) => calls.appendChild(w)); return; }
+        const car = el(`<div class="car"><div class="carnav"><span class="cap"></span></div><button class="side l" data-n="-1" title="Previous">${I.left}</button><div class="carbody"></div><button class="side r" data-n="1" title="Next">${I.right}</button></div>`);
+        const body = car.querySelector(".carbody"); groupEls.forEach((w) => { w.hidden = true; body.appendChild(w); });
+        const show = (k) => { cur = (k + groupEls.length) % groupEls.length; groupEls.forEach((w, j) => (w.hidden = j !== cur)); const g = groups[cur]; car.querySelector(".cap").textContent = `${cur + 1} / ${groupEls.length} · ${steps[g.idx[0]].tool.replace(/-/g, " ")}${g.idx.length > 1 ? ` · ${g.idx.length} versions` : ""}`; box.querySelectorAll(".dag-node").forEach((d) => d.classList.toggle("on", g.idx.includes(Number(d.dataset.i)))); };
+        car.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => show(cur + Number(b.dataset.n)))); calls.appendChild(car); show(cur);
+      };
+      box.querySelector(".vw").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; view = b.dataset.v; try { localStorage.setItem("calls-view", view); } catch {} groupEls.forEach((w) => (w.hidden = false)); render(); });
+      box.querySelector("[data-run]").addEventListener("click", () => simulateTurn(ti)); add(box);
+      const first = steps.findIndex((x) => x.state !== "done"); cur = Math.max(0, groups.findIndex((g) => g.idx.includes(first >= 0 ? first : 0))); render();
+      drawDag(box.querySelector(".dagbox"), steps, { media: (s) => s.material ? matUrl(s.produces) : s.output ? `/sessions/${SID}/${s.output}` : null, onSelect: (i) => { const gi = groups.findIndex((g) => g.idx.includes(i)); if (view === "carousel") { cur = gi; render(); } groupEls[gi].showVersion(i); groupEls[gi].scrollIntoView({ block: "center", behavior: "smooth" }); } });
     } else t.plan.steps.forEach((s, i) => add(block(s, i, ti)));
     add(el(`<div class="est" data-t="${ti}">~<b>${t.plan.estimate_credits}</b> Magic Hour credits · ${esc(t.plan.tier)}${t.plan.refuse ? ` · declined: ${esc(t.plan.refuse)}` : ""}${n === 1 ? ` · <a href="#" data-sim="${ti}">run</a>` : ""}</div>`)); chat.querySelector(`[data-sim="${ti}"]`)?.addEventListener("click", (e) => { e.preventDefault(); simulateTurn(ti); });
   }
