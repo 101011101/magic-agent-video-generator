@@ -3,13 +3,14 @@
 // materials and the assets, exec.json is the job log the ledger books under "session-<id>". A film tree hands the six
 // stage nodes to pipeline.mjs as one run under runs/<label>; the nodes follow the run's record as it fills.
 // Tools without a wired endpoint fall back to a placeholder (simulate.js) and say so on the node.
-import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync, readdirSync, renameSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, basename } from "node:path";
 import { spawn } from "node:child_process";
 import { Jobs } from "../lib/jobs.js";
 import { runJob } from "../lib/magichour.js";
 import { STILLS, VIDEOS, TIERS, stillCost, videoRate } from "../lib/models.js";
-import { duration } from "../lib/media.js";
+import { duration, size as imgSize } from "../lib/media.js";
 import { V2, RUNS } from "../lib/env.js";
 import { order, placeholder } from "./simulate.js";
 import { customTool } from "../tools/index.js";
@@ -17,6 +18,19 @@ import { customTool } from "../tools/index.js";
 const WIRED = new Set(["image", "image-edit", "image-to-video", "text-to-video", "music", "face-swap-photo", "face-swap-video", "lip-sync", "talking-photo", "background-remove", "upscale-image", "captions", "story", "assets", "screenplay", "keyframes", "clips", "film"]);
 const FILM = ["story", "assets", "screenplay", "keyframes", "clips", "film"];
 const grid = (model, s) => { const g = VIDEOS[model]?.grid || [5]; return g.includes(s) ? s : g.reduce((a, b) => (Math.abs(b - s) < Math.abs(a - s) ? b : a)); };
+
+// The free models' "16:9" is 640x384 (5:3) for stills and 788x480 for clips; a made picture or clip is cut to the exact
+// aspect asked, by code. A generated clip's own sound is invented (random speech in any language), so it is dropped
+// unless the step says "sound: keep" (dialogue or ambience the user asked for in the clip itself).
+const RATIO = { "1:1": 1, "4:5": 0.8, "9:16": 9 / 16, "16:9": 16 / 9 };
+function finish(file, aspect, { video = false, keepSound = true } = {}) {
+  const r = RATIO[aspect]; let vf = null;
+  if (r) { const [W, H] = imgSize(file); if (Math.abs(W / H / r - 1) > 0.01) { let w = W, h = H; if (W / H > r) w = Math.round(H * r); else h = Math.round(W / r); w -= w % 2; h -= h % 2; vf = `crop=${w}:${h}`; } }
+  if (!vf && (!video || keepSound)) return;
+  const tmp = file.replace(/(\.[a-z0-9]+)$/i, "-fit$1");
+  execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", file, ...(vf ? ["-vf", vf] : []), ...(video ? ["-c:v", "libx264", "-crf", "19", "-pix_fmt", "yuv420p", ...(keepSound ? ["-c:a", "copy"] : ["-an"])] : ["-frames:v", "1"]), tmp]);
+  renameSync(tmp, file);
+}
 
 export async function execute(plan, dir, { id, tier = "free", sheet = null, brief = "", say = () => {}, onStep = () => {}, only = null, assets = [] } = {}) {
   mkdirSync(join(dir, "assets"), { recursive: true });
@@ -52,7 +66,8 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
         const ins = s.inputs.map((n) => ({ name: n, file: file(n) })).filter((x) => x.file).map((x) => ({ ...x, file: join(dir, x.file) }));
         const words = s.inputs.filter((n) => !file(n) && !/\.[a-z0-9]{2,4}$/i.test(n)); const f = out(s, custom.ext ? custom.ext(ins) : custom.makes === "text" ? "txt" : custom.makes === "verdict" ? "json" : "png");
         const at = (s.params.extra || "").match(/at:\s*(top|middle|bottom)/i)?.[1]?.toLowerCase();
-        const text = s.params.text || (words.length ? words.join(" ") : null) || (s.params.prompt_or_change.match(/["“']([^"”']{1,120})["”']/)?.[1]) || s.params.prompt_or_change;
+        const written = ins.find((x) => /\.(txt|md)$/i.test(x.file)); const quoted = [...(s.params.prompt_or_change || "").matchAll(/["“]([^"”]{1,200})["”]/g)].map((m) => m[1]);
+        const text = s.params.text || (written && custom.id !== "voice" && custom.id !== "write" ? readFileSync(written.file, "utf8").trim().replace(/^["“]|["”]$/g, "") : null) || (words.length ? words.join(" ") : null) || (quoted.length ? quoted.join("\n") : null) || s.params.prompt_or_change;
         const res = await custom.run({ inputs: ins, params: { ...s.params, text, at }, out: join(dir, f) });
         run.log.jobs[key] = { endpoint: custom.endpoint, file: f, inputs: ins.map((x) => x.name), prompt: text, model: "code", credits: 0, at: new Date().toISOString() }; run.save();
         set(i, { state: res && res.pass === false ? "flagged" : "done", output: f, credits_spent: 0, error: null, note: res?.text ? res.text.slice(0, 160) : res?.why ? `${res.pass ? "pass" : "flag"}: ${res.why}` : `by code: ${custom.id}` }); say(`${s.tool} → ${s.produces} (0 credits, by code)`); continue;
@@ -68,21 +83,25 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
         const f = out(s, "png"); const model = s.model || (tier === "paid" ? "nano-banana-pro" : "flux-2-klein"); const res = s.resolution || (STILLS[model]?.resolutions || ["640px"])[0];
         const gen = !inputs.length; const asp = s.params.aspect && (gen ? ["1:1", "16:9", "9:16"].includes(s.params.aspect) : true) ? s.params.aspect : gen ? (s.params.aspect === "4:5" || s.params.aspect === "4:3" ? "1:1" : "16:9") : null;
         r = await jobs.image(key, f, s.params.prompt_or_change, inputs.map((x) => x.file), { model, resolution: res, ...(asp ? { aspect_ratio: asp } : {}) });
+        if (gen && s.params.aspect) finish(join(dir, f), s.params.aspect);
         set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else if (s.tool === "image-to-video") {
         const f = out(s, "mp4"); const model = s.model || "minimax-h3"; const res = s.resolution || "480p"; const sec = grid(model, Number(s.params.seconds) || 5);
         const pics = inputs.filter((x) => /\.(png|jpe?g|webp)$/i.test(x.file)); if (!pics.length) throw new Error("image-to-video needs a picture");
         r = await jobs.video(key, f, s.params.prompt_or_change, pics[0].file, pics[1]?.file || null, sec, { model, resolution: res, audio: true });
+        { const keep = /sound:\s*keep/i.test(s.params.extra || ""); finish(join(dir, f), s.params.aspect, { video: true, keepSound: keep }); }
         set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else if (s.tool === "text-to-video") {
         const f = out(s, "mp4"); const model = s.model || "minimax-h3"; const res = s.resolution || "480p"; const sec = grid(model, Number(s.params.seconds) || 5);
         const refs = inputs.slice(0, VIDEOS[model]?.maxRefs || 9).map((x) => { let n = x.name.replace(/\.[a-z0-9]+$/i, "").replace(/[^A-Za-z0-9_-]/g, "_"); if (!/^[A-Za-z]/.test(n)) n = "r_" + n; return { name: n, file: x.file }; });
         let prompt = s.params.prompt_or_change; for (const rf of refs) if (!prompt.includes(`@${rf.name}`)) prompt += ` @${rf.name}`;
         r = await jobs.tvideo(key, f, prompt, refs, sec, { model, resolution: res, audio: true, ...(s.params.aspect ? { aspect_ratio: s.params.aspect } : {}) });
+        { const keep = /sound:\s*keep/i.test(s.params.extra || ""); finish(join(dir, f), s.params.aspect, { video: true, keepSound: keep }); }
         set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else if (s.tool === "music") {
-        const f = out(s, "mp3"); const sec = Math.round(Math.max(15, Math.min(300, Number(s.params.seconds) || 30)));
-        r = await jobs.music(key, f, s.params.prompt_or_change, sec); set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
+        const f = out(s, "mp3"); const want = Number(s.params.seconds) || 30, sec = Math.round(Math.max(15, Math.min(300, want)));
+        r = await jobs.music(key, f, `${s.params.prompt_or_change}. Instrumental only: no vocals, no singing, no speech.`, sec);
+        if (want < sec) { const full = join(dir, f), tmp = full.replace(/\.mp3$/, "-cut.mp3"); execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", full, "-t", String(want), "-af", `afade=t=out:st=${Math.max(0, want - 1)}:d=1`, tmp]); renameSync(tmp, full); } set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null });
       } else {
         // generic endpoints through paid(): the body per the API sheet
         const spec = { "face-swap-photo": { endpoint: "/v1/face-swap-photo", cost: 10, ext: "png", body: (p) => ({ assets: { target_file_path: p[0], source_file_path: p[1], face_swap_mode: "all-faces" } }) },

@@ -22,7 +22,7 @@ export const tool = {
     const pic = inputs.find((x) => /\.(png|jpe?g|webp)$/i.test(x.file) || isClip(x.file)); if (!pic) throw new Error("text-overlay needs a picture or a clip");
     const text = (params.text || params.prompt_or_change || "").trim(); if (!text) throw new Error("text-overlay needs the text");
     const [W, H] = imageSize(pic.file); const at = ["top", "middle", "bottom"].includes(params.at) ? params.at : "bottom";
-    const size = Number(params.size) || Math.round(W / 11);
+    const size = Number(params.size) || Math.max(18, Math.round(Math.min(W, H) / (text.length > 40 ? 16 : 12)));   // sized to the short side, smaller for long text, so it never covers the picture
     const card = join(mkdtempSync(join(tmpdir(), "ovl-")), "card.png"); captionCard(text, card, { w: W, h: H, size, at });
     // on a clip: the words for its whole length, or extra "from: 0; to: 3" seconds
     if (isClip(pic.file)) { const a = num(params.extra, "from"), b = num(params.extra, "to"); ff(["-i", pic.file, "-i", card, "-filter_complex", `[1]format=rgba[c];[0][c]overlay=0:0${a != null || b != null ? `:enable='between(t,${a ?? 0},${b ?? 9999})'` : ""}`, ...ENC, "-map", "0:a?", out]); return { file: out }; }

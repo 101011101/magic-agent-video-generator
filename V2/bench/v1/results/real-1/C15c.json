@@ -1,0 +1,217 @@
+{
+  "id": "C15c",
+  "item": {
+    "id": "C15c",
+    "case": 15,
+    "case_name": "Face swap on a video",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "maybe",
+      "refuse": false
+    },
+    "title": "Two Coworkers Two Replacement Faces",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 10,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "talk-two.mp4",
+          "portrait-man.jpg",
+          "portrait-woman.jpg"
+        ],
+        "text": "Swap both faces in this 10-second office clip: the man's face from the man's portrait, and the woman's from the woman's portrait. Keep their voices and the rest of the video unchanged."
+      }
+    ],
+    "tests": "Tests explicit multi-face mapping and stable identity tracking across a two-person video without changing the original scene or sound.",
+    "answer_sheet": {
+      "Face mapping": "portrait-man.jpg replaces the male coworker's face; portrait-woman.jpg replaces the female coworker's face.",
+      "Length": "All 10 seconds of talk-two.mp4.",
+      "Audio": "Keep both original voices and all original sound, synchronized.",
+      "Framing and resolution": "Keep the source framing and aspect ratio; 480p is fine.",
+      "Other changes": "None. No captions, new music, changed clothes or background edits."
+    },
+    "must_haves": [
+      "The output contains the full 10-second office exchange from talk-two.mp4.",
+      "The male coworker's face recognizably matches portrait-man.jpg and the female coworker's face recognizably matches portrait-woman.jpg.",
+      "The two replacement identities never switch between coworkers or collapse into the same face.",
+      "Both faces stay aligned through head turns and speaking, without conspicuous flickering or original-face reappearance.",
+      "The original office, bodies, clothing, camera movement and shot timing remain unchanged.",
+      "Both original voices remain audible and synchronized, with no added music or narration."
+    ]
+  },
+  "session": "b1-C15c",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Swap both faces in this 10-second office clip: the man's face from the man's portrait, and the woman's from the woman's portrait. Keep their voices and the rest of the video unchanged.",
+      "materials": [
+        "talk-two.mp4",
+        "portrait-man.jpg",
+        "portrait-woman.jpg"
+      ],
+      "dialog": [],
+      "agent": "I'll swap each face separately using its matching portrait, keeping the original voices and the rest of the clip unchanged.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "talk-two.mp4",
+            "field": "asset",
+            "quote": "[attached: talk-two.mp4, portrait-man.jpg, portrait-woman.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "[attached: talk-two.mp4, portrait-man.jpg, portrait-woman.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "Swap the man's face using portrait-man.jpg and the woman's face using portrait-woman.jpg, preserving their voices and everything else.",
+            "field": "change",
+            "quote": "Swap both faces in this 10-second office clip: the man's face from the man's portrait, and the woman's from the woman's portrait. Keep their voices and the rest of the video unchanged.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "identity",
+            "field": "change_kind",
+            "quote": "Swap both faces",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "portrait-man.jpg: reference for the man's face; portrait-woman.jpg: reference for the woman's face.",
+            "field": "reference",
+            "quote": "the man's face from the man's portrait, and the woman's from the woman's portrait",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "Swap both faces in this 10-second office clip",
+            "source": "inferred",
+            "confidence": 0.98
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Keep their voices and the rest of the video unchanged.",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Swap both faces in this 10-second office clip",
+          "source": "stated",
+          "why": "The user requests face replacements in an existing supplied video.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll swap each face separately using its matching portrait, keeping the original voices and the rest of the clip unchanged.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 600,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "face-swap-video",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "talk-two.mp4",
+              "portrait-man.jpg"
+            ],
+            "produces": "talk-man-swapped.mp4",
+            "params": {
+              "extra": "Target: the man only; entire clip; retain original audio and duration.",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Swap only the man's face using the supplied portrait; preserve the woman's face, both voices, and everything else.",
+              "resolution": ""
+            },
+            "credits": 300,
+            "why": "Replace only the man's face throughout the supplied clip."
+          },
+          {
+            "tool": "face-swap-video",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "talk-man-swapped.mp4",
+              "portrait-woman.jpg"
+            ],
+            "produces": "talk-both-swapped.mp4",
+            "params": {
+              "extra": "Target: the woman only; entire clip; retain original audio and duration.",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Swap only the woman's face using the supplied portrait; preserve the man's already-swapped face, both voices, and everything else.",
+              "resolution": ""
+            },
+            "credits": 300,
+            "why": "Replace the woman's face while retaining the completed man's swap and original audio."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "face-swap-video",
+          "state": "done",
+          "output": "assets/tree-1/talk-man-swapped.mp4",
+          "credits": 245,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 188
+        },
+        {
+          "tool": "face-swap-video",
+          "state": "done",
+          "output": "assets/tree-1/talk-both-swapped.mp4",
+          "credits": 245,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 112
+        }
+      ],
+      "spent": 490,
+      "seconds": 302
+    }
+  ],
+  "started": "2026-11-01T05:51:29.367Z",
+  "spent": 490,
+  "seconds": 302,
+  "sessionDir": "sessions/b1-C15c"
+}

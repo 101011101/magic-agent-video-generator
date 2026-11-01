@@ -6,7 +6,7 @@
 import { join } from "node:path";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { duration } from "../lib/media.js";
+import { duration, size } from "../lib/media.js";
 import { ff, FRAME, ENC, isClip, isPic, isSound, hasAudio, word } from "./video-util.js";
 
 export const tool = {
@@ -18,7 +18,8 @@ export const tool = {
   run({ inputs, params, out }) {
     const vis = inputs.filter((x) => isPic(x.file) || isClip(x.file)), snd = inputs.filter((x) => isSound(x.file));
     if (!vis.length) throw new Error("assemble needs at least one picture or clip");
-    const asp = FRAME[params.aspect] ? params.aspect : "9:16"; const [W, H] = FRAME[asp];
+    const near = (f) => { const [w, h] = size(f); const r = w / h; return Object.keys(FRAME).reduce((a, k) => (Math.abs(FRAME[k][0] / FRAME[k][1] - r) < Math.abs(FRAME[a][0] / FRAME[a][1] - r) ? k : a), "16:9"); };
+    const asp = FRAME[params.aspect] ? params.aspect : near(vis[0].file); const [W, H] = FRAME[asp];   // no aspect asked: keep the first piece's shape
     const T = Number(params.seconds) || 0, sndLen = snd.length ? duration(snd[0].file) : 0;
     const lens = vis.map((v) => (isClip(v.file) ? duration(v.file) : null));
     let each = vis.map((v, k) => lens[k] ?? 2.5);

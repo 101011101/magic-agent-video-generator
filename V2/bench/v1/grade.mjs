@@ -34,6 +34,8 @@ function deliverables(rec) {
   let sinks = t.ran.map((s, i) => ({ ...s, produces: plan.steps[i].produces, inputs: plan.steps[i].inputs })).filter((s) => !consumed.has(s.produces));
   // a check node is not a deliverable: what it looked at is
   sinks = sinks.flatMap((s) => (s.tool === "check" ? t.ran.map((x, i) => ({ ...x, produces: plan.steps[i].produces })).filter((x) => s.inputs.includes(x.produces)) : [s]));
+  // a pack (several deliverables): a finished piece that also feeds another (the poster that becomes the reel) counts too
+  if ((rec.item.spec.outputs || 1) > 1) { const fin = t.ran.map((x, i) => ({ ...x, produces: plan.steps[i].produces, inputs: plan.steps[i].inputs })).filter((x) => ["text-overlay", "crop", "place", "assemble"].includes(x.tool) && !sinks.some((y) => y.produces === x.produces) && !t.ran.some((y, j) => plan.steps[j].inputs.includes(x.produces) && ["text-overlay", "crop", "place"].includes(y.tool) && y.tool !== "crop")); sinks = [...sinks, ...fin]; }
   const sess = join(V2, rec.sessionDir);
   return { turn: t, files: sinks.map((s) => ({ ...s, path: s.output && !s.output.startsWith("../../") ? join(sess, s.output) : s.output ? join(sess, s.output) : null })) };
 }
@@ -68,7 +70,9 @@ async function grade(rec) {
       add(det, `a ${it.spec.kind} was made`, kindOk, real.map((f) => extname(f.path)), "wrong-kind");
       if (it.spec.outputs > 1) add(det, `${it.spec.outputs} outputs`, real.length >= it.spec.outputs, real.length, "too-few-outputs");
       const visual = [...media.images, ...media.videos];
-      if (ratio(it.spec.aspect) && visual.length) { const bad = visual.filter((f) => { const [w, h] = size(f.path); return Math.abs(w / h / ratio(it.spec.aspect) - 1) > 0.04; }); add(det, `aspect ${it.spec.aspect}`, !bad.length, visual.map((f) => size(f.path).join("x")), "wrong-aspect"); }
+      // an edit keeps the user's picture's shape: the attachment's own ratio passes too
+      const inRatios = [...new Set(rec.turns.flatMap((t) => t.materials))].map((m) => join(V2, "bench/v1/fixtures", m)).filter((f) => IMG.test(f) || VID.test(f)).map((f) => { const [w, h] = size(f); return w / h; });
+      if (ratio(it.spec.aspect) && visual.length) { const bad = visual.filter((f) => { const [w, h] = size(f.path); return Math.abs(w / h / ratio(it.spec.aspect) - 1) > 0.04 && !inRatios.some((r) => Math.abs(w / h / r - 1) < 0.02); }); add(det, `aspect ${it.spec.aspect}`, !bad.length, visual.map((f) => size(f.path).join("x")), "wrong-aspect"); }
       const timed = [...media.videos, ...media.audio];
       if (it.spec.seconds && timed.length) { const d = duration(timed[0].path); add(det, `about ${it.spec.seconds} s`, Math.abs(d - it.spec.seconds) <= Math.max(1.5, it.spec.seconds * 0.2), Math.round(d * 10) / 10, "wrong-length"); }
       if (it.spec.audio === "required") { const a = [...media.videos, ...media.audio].find((f) => hasAudio(f.path)); add(det, "sound present and audible", a && (peakDb(a.path) ?? -99) > -45, a ? peakDb(a.path) : "no audio track", "no-audio"); }
