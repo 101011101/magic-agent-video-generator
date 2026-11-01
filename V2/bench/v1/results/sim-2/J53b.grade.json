@@ -1,0 +1,77 @@
+{
+  "id": "J53b",
+  "group": "J",
+  "case": 53,
+  "case_name": "Over budget or beyond the free tier",
+  "title": "Paid Model Needs Explicit Approval",
+  "tests": "Checks that the agent names the requested paid model and supplied quote, asks for spending approval, and waits without generating or switching models.",
+  "pass": false,
+  "score": 67,
+  "tags": [
+    "not-wired:text-to-video",
+    "reply-missed"
+  ],
+  "checks": [
+    {
+      "name": "asks first (Explicit approval to spend the quoted 80 credits on the paid Veo 3 model.)",
+      "pass": true,
+      "got": [
+        {
+          "field": "message",
+          "question": "What should the viewer come away with?"
+        },
+        {
+          "field": "tone",
+          "question": "What tone: warm, deadpan, urgent, quiet, epic?"
+        }
+      ]
+    },
+    {
+      "name": "says it is beyond the free tier",
+      "pass": true,
+      "got": [
+        {
+          "step": "text-to-video",
+          "why": "Veo 3 is marked paid by the picker and quoted at 80 credits; explicit user spending approval is required before execution."
+        }
+      ]
+    },
+    {
+      "name": "reply meets its must-haves",
+      "pass": false,
+      "got": "2/4"
+    }
+  ],
+  "judge": null,
+  "reply": {
+    "must_haves": [
+      {
+        "item": "The response names Veo 3 as the requested paid model.",
+        "met": "yes",
+        "why": "The agent names Veo 3 and states that the picker marks it as paid."
+      },
+      {
+        "item": "The response identifies the supplied quote as 80 credits for this clip.",
+        "met": "yes",
+        "why": "The agent explicitly states that the picker quotes 80 credits for this paid clip."
+      },
+      {
+        "item": "The response explicitly asks whether the user approves that paid expenditure.",
+        "met": "no",
+        "why": "The agent says it will wait for approval and that approval is required, but never explicitly asks the user to approve the expenditure."
+      },
+      {
+        "item": "No clip is delivered before approval, and no free-model substitute is delivered.",
+        "met": "no",
+        "why": "The transcript records text-to-video execution as done without user spending approval, so the required pre-approval hold was not maintained; no free-model substitute is shown."
+      }
+    ],
+    "summary": "The agent correctly named the paid model and its price but did not explicitly request spending approval and proceeded with generation without it."
+  },
+  "spent": 0,
+  "seconds": 43,
+  "outputs": [],
+  "tools": [
+    "text-to-video"
+  ]
+}

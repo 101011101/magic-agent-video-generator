@@ -1,0 +1,315 @@
+{
+  "id": "C16b",
+  "item": {
+    "id": "C16b",
+    "case": 16,
+    "case_name": "The same character across pictures",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "My Dog In Three Places",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "images",
+      "seconds": null,
+      "outputs": 3,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "dog.jpg"
+        ],
+        "text": "Can you make three square photos of my dog: on a sandy beach, on a snowy forest trail, and in a cosy living room? It should look like this same dog in every one, not just any golden retriever. Keep him natural, no clothes or text."
+      }
+    ],
+    "tests": "Maintains the individual identity of a reference dog while changing its surroundings across three photorealistic images.",
+    "answer_sheet": {
+      "Dog reference": "The golden retriever in dog.jpg; keep his individual facial features, coat colour and build.",
+      "Locations and output count": "Three separate photos: a sandy beach, a snowy forest trail, and a cosy living room.",
+      "Style and size": "Photorealistic square images; standard free-tier resolution is fine.",
+      "Clothing and text": "No clothes or text.",
+      "Pose, lighting and room decor": "your call"
+    },
+    "must_haves": [
+      "Three separate square, photorealistic images are delivered.",
+      "The dog's face, ears, muzzle, coat colour and build remain recognisably consistent with dog.jpg in all three.",
+      "The locations are visibly a sandy beach, a snowy forest trail, and a cosy living room, one per image.",
+      "The dog is naturally integrated into each setting with plausible scale, lighting and ground contact.",
+      "The dog wears no clothes and the images contain no text."
+    ]
+  },
+  "session": "b1-C16b",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Can you make three square photos of my dog: on a sandy beach, on a snowy forest trail, and in a cosy living room? It should look like this same dog in every one, not just any golden retriever. Keep him natural, no clothes or text.",
+      "materials": [
+        "dog.jpg"
+      ],
+      "dialog": [],
+      "agent": "I'll use image edits to place your dog in each setting, keeping its appearance natural. I'll then check that each photo matches your dog's identity.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "The user's dog on a sandy beach, on a snowy forest trail, and in a cosy living room; the same dog in every photo, natural, with no clothes or text.",
+            "field": "subject",
+            "quote": "my dog: on a sandy beach, on a snowy forest trail, and in a cosy living room? It should look like this same dog in every one, not just any golden retriever. Keep him natural, no clothes or text.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "stated",
+            "field": "direction",
+            "quote": "Keep him natural, no clothes or text.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "style",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "1:1",
+            "field": "size",
+            "quote": "square photos",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "dog.jpg — reference photo of the user's dog, whose identity must be preserved in all three photos.",
+            "field": "materials",
+            "quote": "It should look like this same dog in every one, not just any golden retriever. Keep him natural, no clothes or text. [attached: dog.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "3",
+            "field": "count",
+            "quote": "three square photos",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "image",
+          "quote": "Can you make three square photos of my dog",
+          "source": "stated",
+          "why": "The request is for three new pictures using the attached dog photo as an identity reference.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "tree",
+        "say": "I'll use image edits to place your dog in each setting, keeping its appearance natural. I'll then check that each photo matches your dog's identity.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 15,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "image-edit",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [
+              "dog.jpg"
+            ],
+            "produces": "dog_beach.jpg",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Place the exact dog from the reference on a sandy beach in a natural photorealistic scene; preserve its facial features, markings, fur colour, build and proportions, with no clothes or text.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Change the setting using the supplied dog rather than generate a different dog."
+          },
+          {
+            "tool": "check",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "dog_beach.jpg",
+              "dog.jpg"
+            ],
+            "produces": "dog_beach_check.txt",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Does the beach photo depict the same dog as dog.jpg, preserving facial features, markings, fur colour and build, naturally and without clothes or text? Give yes or no with reasons.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Verify that the beach photo preserves the reference dog's identity."
+          },
+          {
+            "tool": "image-edit",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [
+              "dog.jpg"
+            ],
+            "produces": "dog_snowy_trail.jpg",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Place the exact dog from the reference on a snowy forest trail in a natural photorealistic scene; preserve its facial features, markings, fur colour, build and proportions, with no clothes or text.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Make the snowy setting directly from the original identity reference."
+          },
+          {
+            "tool": "check",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "dog_snowy_trail.jpg",
+              "dog.jpg"
+            ],
+            "produces": "dog_snowy_trail_check.txt",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Does the snowy trail photo depict the same dog as dog.jpg, preserving facial features, markings, fur colour and build, naturally and without clothes or text? Give yes or no with reasons.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Verify that the snowy trail photo preserves the reference dog's identity."
+          },
+          {
+            "tool": "image-edit",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [
+              "dog.jpg"
+            ],
+            "produces": "dog_living_room.jpg",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Place the exact dog from the reference in a cosy living room in a natural photorealistic scene; preserve its facial features, markings, fur colour, build and proportions, with no clothes or text.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Make the indoor setting directly from the original identity reference."
+          },
+          {
+            "tool": "check",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "dog_living_room.jpg",
+              "dog.jpg"
+            ],
+            "produces": "dog_living_room_check.txt",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Does the living room photo depict the same dog as dog.jpg, preserving facial features, markings, fur colour and build, naturally and without clothes or text? Give yes or no with reasons.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Verify that the living room photo preserves the reference dog's identity."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "image-edit",
+          "state": "done",
+          "output": "assets/tree-1/dog_beach.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "check",
+          "state": "done",
+          "output": "assets/tree-1/dog_beach_check.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "image-edit",
+          "state": "done",
+          "output": "assets/tree-1/dog_snowy_trail.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "check",
+          "state": "done",
+          "output": "assets/tree-1/dog_snowy_trail_check.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "image-edit",
+          "state": "done",
+          "output": "assets/tree-1/dog_living_room.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "check",
+          "state": "done",
+          "output": "assets/tree-1/dog_living_room_check.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T04:53:28.581Z",
+  "spent": 0,
+  "seconds": 17,
+  "sessionDir": "sessions/b1-C16b"
+}

@@ -1,0 +1,210 @@
+{
+  "id": "A05a",
+  "item": {
+    "id": "A05a",
+    "case": 5,
+    "case_name": "Headshot from the user's photo",
+    "group": "A",
+    "group_name": "Single images",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "LinkedIn Headshot From Park Photo",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg"
+        ],
+        "text": "Can you turn this into a square LinkedIn headshot? A navy blazer and a plain light grey background, please."
+      }
+    ],
+    "tests": "Creates a polished LinkedIn headshot from the supplied photo while preserving the subject's identity.",
+    "answer_sheet": {
+      "Person and source": "Me, the woman in portrait-woman.jpg.",
+      "Platform and size": "LinkedIn; square, 640 × 640 is fine.",
+      "Clothing and background": "Navy blazer and plain light grey background.",
+      "Lighting and expression": "Natural, approachable and professional; keep my smile.",
+      "Text": "No text."
+    },
+    "must_haves": [
+      "The woman is recognisably the same person as in portrait-woman.jpg, with her curly dark hair retained.",
+      "She wears a navy blazer.",
+      "The park is replaced with a plain light grey background.",
+      "The square image has a centred head-and-shoulders composition with the full top of her hair visible.",
+      "Lighting and skin texture look natural, without obvious facial or clothing artifacts."
+    ]
+  },
+  "session": "b1-A05a",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Can you turn this into a square LinkedIn headshot? A navy blazer and a plain light grey background, please.",
+      "materials": [
+        "portrait-woman.jpg"
+      ],
+      "dialog": [],
+      "agent": "I'll use an image edit to give your portrait a navy blazer and plain light grey background, then crop it square for LinkedIn.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "portrait-woman.jpg",
+            "field": "asset",
+            "quote": "[attached: portrait-woman.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "MATERIALS the user has: portrait-woman.jpg",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Turn the portrait into a square LinkedIn headshot with a navy blazer and a plain light grey background.",
+            "field": "change",
+            "quote": "Can you turn this into a square LinkedIn headshot? A navy blazer and a plain light grey background, please.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "content",
+            "field": "change_kind",
+            "quote": "A navy blazer and a plain light grey background",
+            "source": "inferred",
+            "confidence": 0.96
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "turn this into a square LinkedIn headshot",
+            "source": "inferred",
+            "confidence": 0.95
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "turn this into a square LinkedIn headshot",
+            "source": "inferred",
+            "confidence": 0.9
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Can you turn this into a square LinkedIn headshot?",
+          "source": "stated",
+          "why": "The user requests changes to an attached existing portrait.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll use an image edit to give your portrait a navy blazer and plain light grey background, then crop it square for LinkedIn.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 5,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "image-edit",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [
+              "portrait-woman.jpg"
+            ],
+            "produces": "linkedin-headshot-edited.png",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Replace the woman's clothing with a professional navy blazer and the background with plain light grey; preserve her identity, facial features, hairstyle, expression and natural appearance, with room for a square head-and-shoulders crop.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Change the clothing and background while retaining the supplied portrait."
+          },
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "linkedin-headshot-edited.png"
+            ],
+            "produces": "linkedin-headshot-square.png",
+            "params": {
+              "extra": "anchor: center",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Crop to a square head-and-shoulders portrait.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Guarantee the requested square format without regenerating the image."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "image-edit",
+          "state": "done",
+          "output": "assets/tree-1/linkedin-headshot-edited.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-1/linkedin-headshot-square.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T04:50:07.231Z",
+  "spent": 0,
+  "seconds": 20,
+  "sessionDir": "sessions/b1-A05a"
+}

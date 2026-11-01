@@ -1,0 +1,223 @@
+{
+  "id": "A05d",
+  "item": {
+    "id": "A05d",
+    "case": 5,
+    "case_name": "Headshot from the user's photo",
+    "group": "A",
+    "group_name": "Single images",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which person in the photo is the user: the bearded man on the left or the short-haired blonde woman on the right?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Choose The Right Headshot Subject",
+    "sub": "d",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "two-friends.jpg"
+        ],
+        "text": "Can you make me a square professional headshot from this?"
+      }
+    ],
+    "tests": "Clarifies the intended person in a two-person source before producing a single identity-preserving headshot.",
+    "answer_sheet": {
+      "Which person": "I'm the woman with short blonde hair on the right.",
+      "Clothing and background": "your call",
+      "Style and expression": "Natural and professional; keep my smile.",
+      "Platform and size": "No particular platform; square, 640 × 640 is fine.",
+      "Text": "No text."
+    },
+    "must_haves": [
+      "The only person in the final portrait is the short-haired blonde woman from the right of two-friends.jpg.",
+      "Her face, short blonde hairstyle and smile remain recognisable from the source.",
+      "The man is entirely absent, including any partial face, shoulder or arm.",
+      "The beach setting and casual presentation are replaced with professional clothing and an unobtrusive backdrop.",
+      "The output is a square head-and-shoulders portrait with natural-looking lighting and no visible editing artifacts."
+    ]
+  },
+  "session": "b1-A05d",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Can you make me a square professional headshot from this?",
+      "materials": [
+        "two-friends.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "I’ll use the supplied photo to make a square professional headshot.\nBefore I go on I need one thing:\n· Which person in two-friends.jpg should the headshot feature—the person on the left or the right?",
+          "asked": [
+            "plan-1"
+          ],
+          "user": "I'm the woman with short blonde hair on the right."
+        }
+      ],
+      "agent": "I'll crop the photo around the woman on the right, then use an image edit to give her headshot a polished, professional look while preserving her appearance.",
+      "firstQuestions": [
+        {
+          "field": "plan-1",
+          "question": "Which person in two-friends.jpg should the headshot feature—the person on the left or the right?"
+        }
+      ],
+      "turnIndex": 1,
+      "sheet": {
+        "fields": [
+          {
+            "value": "two-friends.jpg",
+            "field": "asset",
+            "quote": "Can you make me a square professional headshot from this? [attached: two-friends.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "MATERIALS the user has: two-friends.jpg",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Make a square professional headshot featuring the woman with short blonde hair on the right.",
+            "field": "change",
+            "quote": "Can you make me a square professional headshot from this? / I'm the woman with short blonde hair on the right.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "form",
+            "field": "change_kind",
+            "quote": "square professional headshot",
+            "source": "inferred",
+            "confidence": 0.94
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "make me a square professional headshot from this",
+            "source": "inferred",
+            "confidence": 0.92
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "professional headshot from this",
+            "source": "inferred",
+            "confidence": 0.85
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Can you make me a square professional headshot from this?",
+          "source": "session",
+          "why": "The settled goal remains an edit of the supplied photograph; the latest reply identifies the person to feature.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll crop the photo around the woman on the right, then use an image edit to give her headshot a polished, professional look while preserving her appearance.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 5,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "two-friends.jpg"
+            ],
+            "produces": "woman-square.jpg",
+            "params": {
+              "extra": "anchor: center; center the crop on the woman with short blonde hair on the right, retaining her head and shoulders",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Crop around the woman with short blonde hair on the right for a head-and-shoulders portrait.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Isolate the intended subject and guarantee a square format without regenerating her appearance."
+          },
+          {
+            "tool": "image-edit",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [
+              "woman-square.jpg"
+            ],
+            "produces": "professional-headshot.jpg",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Make this a professional headshot of the short-blonde-haired woman, preserving her facial features, hairstyle, expression and clothing; use flattering natural studio lighting and a clean neutral background, remove any remaining traces of the other person, and retain natural skin texture and square head-and-shoulders framing.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Polish the existing portrait rather than generate a new person."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-2/woman-square.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "image-edit",
+          "state": "done",
+          "output": "assets/tree-2/professional-headshot.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T04:50:25.918Z",
+  "spent": 0,
+  "seconds": 31,
+  "sessionDir": "sessions/b1-A05d"
+}

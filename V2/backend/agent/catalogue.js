@@ -20,7 +20,6 @@ export const TOOLS = [
   { id: "image", group: "make", takes: [], makes: "picture", endpoint: "/v1/ai-image-generator", kind: "still", needs: ["subject"], cannot: ["legible text"] },
   { id: "text-to-video", group: "make", takes: ["optional references"], makes: "clip", endpoint: "/v1/text-to-video", kind: "video", needs: ["subject", "seconds"] },
   { id: "music", group: "make", takes: [], makes: "sound", endpoint: "/v1/ai-music-generator", kind: "none", credits: "1 per second", needs: ["cue", "seconds"] },
-  { id: "voice", group: "make", takes: ["text"], makes: "sound", endpoint: "/v1/ai-voice-generator", kind: "none", needs: ["text", "voice"] },
   { id: "story", group: "compose", takes: ["the brief sheet"], makes: "story", endpoint: "pipeline.mjs --until story", kind: "pipeline", needs: ["kind", "audience", "direction"] },
   { id: "assets", group: "compose", takes: ["story", "materials as records"], makes: "bank", endpoint: "pipeline.mjs --until assets", kind: "pipeline", needs: ["story"] },
   { id: "screenplay", group: "compose", takes: ["story", "bank"], makes: "screenplay", endpoint: "pipeline.mjs --until screenplay", kind: "pipeline", needs: ["story", "platform", "length"] },

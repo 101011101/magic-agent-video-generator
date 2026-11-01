@@ -14,7 +14,7 @@ import { V2, RUNS } from "../lib/env.js";
 import { order, placeholder } from "./simulate.js";
 import { customTool } from "../tools/index.js";
 
-const WIRED = new Set(["image", "image-edit", "image-to-video", "text-to-video", "music", "face-swap-photo", "background-remove", "upscale-image", "captions", "story", "assets", "screenplay", "keyframes", "clips", "film"]);
+const WIRED = new Set(["image", "image-edit", "image-to-video", "text-to-video", "music", "face-swap-photo", "face-swap-video", "lip-sync", "talking-photo", "background-remove", "upscale-image", "captions", "story", "assets", "screenplay", "keyframes", "clips", "film"]);
 const FILM = ["story", "assets", "screenplay", "keyframes", "clips", "film"];
 const grid = (model, s) => { const g = VIDEOS[model]?.grid || [5]; return g.includes(s) ? s : g.reduce((a, b) => (Math.abs(b - s) < Math.abs(a - s) ? b : a)); };
 
@@ -36,7 +36,7 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
   };
   const sub = plan.dir ? `assets/${plan.dir}` : "assets"; mkdirSync(join(dir, sub), { recursive: true });
   const out = (s, ext) => `${sub}/${s.produces.replace(/\.[a-z0-9]+$/i, "")}${s.attempt ? `-r${s.attempt}` : ""}.${ext}`;
-  const set = (i, patch) => { Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };
+  const set = (i, patch) => { if (["done", "failed", "flagged"].includes(patch.state)) patch.ran_at = Date.now(); Object.assign(plan.steps[i], patch); onStep(i, plan.steps[i]); };
   let filmStarted = false;
   // everything that will run and whose inputs are not made yet waits, visibly, until its turn
   const todo = order(plan.steps).filter((i) => (!only || only.includes(i)) && !["skipped", "paused", "done"].includes(plan.steps[i].state) || (only && only.includes(i) && plan.steps[i].state === "stale"));
@@ -50,7 +50,7 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
       const custom = customTool(s.tool);
       if (custom) {
         const ins = s.inputs.map((n) => ({ name: n, file: file(n) })).filter((x) => x.file).map((x) => ({ ...x, file: join(dir, x.file) }));
-        const words = s.inputs.filter((n) => !file(n) && !/\.[a-z0-9]{2,4}$/i.test(n)); const f = out(s, custom.makes === "text" ? "txt" : custom.makes === "verdict" ? "json" : "png");
+        const words = s.inputs.filter((n) => !file(n) && !/\.[a-z0-9]{2,4}$/i.test(n)); const f = out(s, custom.ext ? custom.ext(ins) : custom.makes === "text" ? "txt" : custom.makes === "verdict" ? "json" : "png");
         const at = (s.params.extra || "").match(/at:\s*(top|middle|bottom)/i)?.[1]?.toLowerCase();
         const text = s.params.text || (words.length ? words.join(" ") : null) || (s.params.prompt_or_change.match(/["“']([^"”']{1,120})["”']/)?.[1]) || s.params.prompt_or_change;
         const res = await custom.run({ inputs: ins, params: { ...s.params, text, at }, out: join(dir, f) });
@@ -89,6 +89,15 @@ export async function execute(plan, dir, { id, tier = "free", sheet = null, brie
           "background-remove": { endpoint: "/v1/image-background-remover", cost: 5, ext: "png", body: (p) => ({ assets: { image_file_path: p[0], ...(p[1] ? { background_image_file_path: p[1] } : {}) } }) },
           "upscale-image": { endpoint: "/v1/ai-image-upscaler", cost: 25, ext: "png", body: (p) => ({ assets: { image_file_path: p[0] }, scale_factor: 2, style: { mode: "preserve" } }) },
           captions: (() => { let len = Number(s.params.seconds) || 0; try { if (!len && inputs[0]) len = Math.ceil(duration(join(dir, inputs[0].file))); } catch {} len = len || 10; return { endpoint: "/v1/auto-subtitle-generator", cost: Math.round(4.8 * len), ext: "mp4", seconds: len, body: (p) => ({ assets: { video_file_path: p[0] }, start_seconds: 0, end_seconds: len, style: { template: "minimalist" } }) }; })() }[s.tool];
+        // video face swap, lip sync, talking photo: a clip or picture plus a face or a sound; paid per frame (about 30 a second)
+        const clipIn = inputs.find((x) => /\.(mp4|mov)$/i.test(x.file)), picIn = inputs.find((x) => /\.(png|jpe?g|webp)$/i.test(x.file)), sndIn = inputs.find((x) => /\.(mp3|wav|m4a)$/i.test(x.file));
+        const lenOf = (x) => { try { return Math.min(60, Math.ceil(duration(join(dir, x.file)) * 10) / 10); } catch { return 10; } };
+        const MORE = {
+          "face-swap-video": () => { if (!clipIn || !picIn) throw new Error("a video face swap needs the clip and a picture of the face"); const len = lenOf(clipIn); return { endpoint: "/v1/face-swap", cost: Math.ceil(30 * len), ext: "mp4", seconds: len, ordered: [clipIn, picIn], body: (p) => ({ start_seconds: 0, end_seconds: len, assets: { face_swap_mode: "all-faces", video_source: "file", video_file_path: p[0], image_file_path: p[1] } }) }; },
+          "lip-sync": () => { if (!clipIn || !sndIn) throw new Error("lip sync needs the clip and the sound"); const len = Math.min(lenOf(clipIn), lenOf(sndIn)); return { endpoint: "/v1/lip-sync", cost: Math.ceil(30 * len), ext: "mp4", seconds: len, ordered: [clipIn, sndIn], body: (p) => ({ start_seconds: 0, end_seconds: len, style: { generation_mode: "lite" }, assets: { video_source: "file", video_file_path: p[0], audio_file_path: p[1] } }) }; },
+          "talking-photo": () => { if (!picIn || !sndIn) throw new Error("a talking photo needs the picture and the sound"); const len = lenOf(sndIn); return { endpoint: "/v1/ai-talking-photo", cost: Math.ceil(30 * len), ext: "mp4", seconds: len, ordered: [picIn, sndIn], body: (p) => ({ start_seconds: 0, end_seconds: len, resolution: "480p", style: { generation_mode: "realistic" }, assets: { image_file_path: p[0], audio_file_path: p[1] } }) }; },
+        };
+        if (MORE[s.tool]) { const m = MORE[s.tool](); const f = out(s, m.ext); r = await jobs.paid(key, f, { endpoint: m.endpoint, prompt: s.params.prompt_or_change || "", model: s.tool, seconds: m.seconds }, m.ordered.map((x) => x.file), m.cost, (paths, onCreate) => runJob(m.endpoint, { name: `${run.name} ${key}`, ...m.body(paths) }, { kind: "video", onCreate })); set(i, { state: "done", output: f, credits_spent: r.credits, cached: !!r.cached, error: null }); say(`${s.tool} → ${s.produces} (${r.credits ?? 0} credits)`); continue; }
         if (s.tool === "face-swap-photo" && inputs.length < 2) throw new Error("a face swap needs the picture and the face");
         const f = out(s, spec.ext); const kind = spec.ext === "mp4" ? "video" : "image";
         // the target comes first for a swap: the picture, then the face

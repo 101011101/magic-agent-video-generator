@@ -12,10 +12,10 @@ export const GOALS = ["video", "image", "change", "sound", "find"];
 // The branches, in the order their questions are asked. `ask` is how the field is put to the user when unknown.
 export const BRANCHES = {
   video: [
-    { field: "kind", ask: "What kind of video: an ad, a short, a drama, a podcast, an explainer, a documentary, a music video, a trailer?", default: "short" },
+    { field: "kind", ask: null, default: "short" },
     { field: "platform", ask: "Where will it play (TikTok, Reels, Shorts, YouTube, broadcast, a deck)? It decides portrait or landscape.", default: "youtube, 16:9" },
     { field: "length_s", ask: "How long, in seconds?", default: "30" },
-    { field: "audience", ask: "Who is it for?", default: "general" },
+    { field: "audience", ask: null, default: "general" },
     { field: "direction", ask: null, default: "needed", values: ["stated", "free", "needed"] },
     { field: "message", ask: "What should the viewer come away with?", default: null, when: "direction=needed" },
     { field: "tone", ask: "What tone: warm, deadpan, urgent, quiet, epic?", default: null, when: "direction=needed" },
@@ -27,7 +27,7 @@ export const BRANCHES = {
     { field: "subject", ask: "What should the picture show?", default: null },
     { field: "direction", ask: null, default: "needed", values: ["stated", "free", "needed"] },
     { field: "style", ask: "What style or mood?", default: null, when: "direction=needed" },
-    { field: "size", ask: "What size or aspect (square, portrait, landscape; for which platform)?", default: "1:1" },
+    { field: "size", ask: null, default: "1:1" },
     { field: "materials", ask: "Is there a picture we must start from (a product, a person, a logo)?", default: "none", when: "real-thing-only-the-user-has" },
     { field: "count", ask: null, default: "1" },
   ],
@@ -92,6 +92,9 @@ async function fillSheetRaw({ messages, materials = [], session = [], goalHint =
 - direction: "stated" when tone, ending, style or message is given; "free" when the user says surprise me / your call / you decide; "needed" otherwise. message and tone are ALWAYS filled when the text gives them (stated, with the quote); they are unknown, not not_applicable, when it does not; code decides whether to ask.
 - kind: if the user's words name it (ad, commercial, short, trailer, podcast, documentary, explainer, music video, drama), that is stated with that word as the quote; "ad" and "commercial" are kind "ad".
 - platform: stated when the platform's name is in the text (TikTok, Reels, Instagram, Shorts, YouTube); the aspect that follows from it is part of the value, not a reason to call it inferred.
+- aspect words state the size and the platform's shape: "vertical", "portrait", "for Stories/Reels/TikTok" → 9:16; "widescreen", "landscape", "horizontal", "16:9" → 16:9; "square" → 1:1. Then platform and size are "stated" (quote the word), never unknown.
+- delegation: when the user says "your call", "you pick", "up to you", "surprise me", "whatever you think" about a field or about everything, those fields are "inferred" with confidence 1 and a sensible value you choose; they are never unknown.
+- kind, audience and size are never asked: infer them (an image with no size is 1:1 unless the use implies otherwise; a clip with no aspect is 16:9).
 - materials: the files the user has (listed below) and which real thing each is the record of; ask only when a real thing only the user has (their product, their relative, their pet, their truck) is in the request and no file covers it; a public, documented thing (a landmark, a historical person, a famous aircraft) is researched, never asked for.
 - change_kind: identity (a face, head, body, character), content (add, remove, alter something), look (style, colour), form (upscale, reframe, background), speech (captions, dub, lip-sync), time (cut, trim).
 - provenance: "made-here" when the asset is one this session produced (see session), else "supplied".
