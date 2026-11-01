@@ -199,3 +199,12 @@ The middle panel is a **workbench**: one surface for every working tree, panned 
   message is about that node (a change, a question, "this one"); if so the plan changes that node and the new tree
   lands beside the one it edits, labelled with what it is about; if not, a new tree as usual.
 - **The test panel floats**: dragged anywhere by its title, remembered, never part of the product.
+
+## Two layouts: chat first, the workbench on request (revised 2026-10-31; supersedes "Three panels" and "The workbench" for the default view)
+
+The default is the chat. The canvas and tool panel are an expansion the user opens, collapsed until then.
+
+- **Chat only (the default).** The conversation fills the middle, with the directory on the right. Each turn's working tree appears in the chat under the agent's message: its graph (nodes, wires, ports, drag to wire), then its tool blocks, the same editable blocks the tool panel shows. Each block lets the user change the model, size, prompt and inputs, and run, pause, skip, remake or remove that step. Clicking a node opens and highlights its block. Each tree has its own "+ tool" and run controls.
+- **Wide (the workbench).** A button in the chat header opens the canvas and tool panel in the middle. The trees move onto the canvas and the chat goes back to words and one-line summaries, as described under "The workbench".
+- The choice is remembered per browser. Switching layouts rebuilds the session in the other one, so the trees, outputs and focus are the same in both.
+- On a narrow screen only the chat shows.
