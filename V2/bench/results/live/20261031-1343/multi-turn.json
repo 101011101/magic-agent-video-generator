@@ -1,0 +1,378 @@
+{
+  "name": "multi-turn",
+  "mode": "ask",
+  "budget": 50,
+  "what": "Multi-turn editing: \"it\", \"the first one\", \"the vignette one\" resolve to the right asset",
+  "steps": [
+    {
+      "do": "import",
+      "from": "runs/topgun9/refs/vega-f35c-3.jpg",
+      "name": "jet.jpg"
+    },
+    {
+      "do": "send",
+      "text": "Make this black and white.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "expect": {
+        "tools": [
+          "image-edit"
+        ]
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Now add a soft vignette to it.",
+      "expect": {
+        "tools": [
+          "image-edit"
+        ],
+        "refers": "last"
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Upscale the first one you made, not the vignette.",
+      "expect": {
+        "tools": [
+          "upscale-image"
+        ],
+        "refers": "first"
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Put the word 'NAVY' at the bottom of the vignette one.",
+      "expect": {
+        "tools": [
+          "text-overlay"
+        ],
+        "credits_max": 0
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Crop that to a square.",
+      "expect": {
+        "tools": [
+          "crop"
+        ],
+        "credits_max": 0
+      }
+    },
+    {
+      "do": "run"
+    }
+  ],
+  "session": "live-multi-turn",
+  "turns": [
+    {
+      "text": "Make this black and white.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "agent": "I'll use an image edit to make your jet photo black and white while keeping everything else unchanged.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "tools": [
+          "image-edit"
+        ]
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "image-edit",
+            "inputs": [
+              "jet.jpg"
+            ],
+            "produces": "jet_black_and_white.jpg",
+            "credits": 5
+          }
+        ],
+        "estimate": 5
+      },
+      "checks": [
+        {
+          "name": "tools image-edit",
+          "pass": true,
+          "got": [
+            "image-edit"
+          ]
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        }
+      ],
+      "turnIndex": 0,
+      "ran": [
+        {
+          "tool": "image-edit",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    },
+    {
+      "text": "Now add a soft vignette to it.",
+      "materials": [],
+      "agent": "I'll add a soft vignette to the black-and-white jet picture with one image edit, keeping everything else unchanged.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "tools": [
+          "image-edit"
+        ],
+        "refers": "last"
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "image-edit",
+            "inputs": [
+              "jet_black_and_white.jpg"
+            ],
+            "produces": "jet_black_and_white_vignette.jpg",
+            "credits": 5
+          }
+        ],
+        "estimate": 5
+      },
+      "checks": [
+        {
+          "name": "tools image-edit",
+          "pass": true,
+          "got": [
+            "image-edit"
+          ]
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        },
+        {
+          "name": "takes the previous output",
+          "pass": true,
+          "got": [
+            [
+              "jet_black_and_white.jpg"
+            ]
+          ]
+        }
+      ],
+      "turnIndex": 1,
+      "ran": [
+        {
+          "tool": "image-edit",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    },
+    {
+      "text": "Upscale the first one you made, not the vignette.",
+      "materials": [],
+      "agent": "I'll upscale the black-and-white jet picture with the image upscaler, keeping its appearance and composition unchanged.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "tools": [
+          "upscale-image"
+        ],
+        "refers": "first"
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "upscale-image",
+            "inputs": [
+              "jet_black_and_white.jpg"
+            ],
+            "produces": "jet_black_and_white_upscaled.jpg",
+            "credits": 25
+          }
+        ],
+        "estimate": 25
+      },
+      "checks": [
+        {
+          "name": "tools upscale-image",
+          "pass": true,
+          "got": [
+            "upscale-image"
+          ]
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        },
+        {
+          "name": "takes the first output",
+          "pass": true,
+          "got": [
+            [
+              "jet_black_and_white.jpg"
+            ]
+          ]
+        }
+      ],
+      "turnIndex": 2,
+      "ran": [
+        {
+          "tool": "upscale-image",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    },
+    {
+      "text": "Put the word 'NAVY' at the bottom of the vignette one.",
+      "materials": [],
+      "agent": "I'll add “NAVY” at the bottom of the vignette picture with a text overlay, leaving the rest unchanged.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "tools": [
+          "text-overlay"
+        ],
+        "credits_max": 0
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "text-overlay",
+            "inputs": [
+              "jet_black_and_white_vignette.jpg"
+            ],
+            "produces": "jet_black_and_white_vignette_navy.jpg",
+            "credits": 0
+          }
+        ],
+        "estimate": 0
+      },
+      "checks": [
+        {
+          "name": "tools text-overlay",
+          "pass": true,
+          "got": [
+            "text-overlay"
+          ]
+        },
+        {
+          "name": "spent ≤ 0",
+          "pass": true,
+          "got": 0
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        }
+      ],
+      "turnIndex": 3,
+      "ran": [
+        {
+          "tool": "text-overlay",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    },
+    {
+      "text": "Crop that to a square.",
+      "materials": [],
+      "agent": "I'll use the crop tool to make the existing picture square, keeping the crop centered without regenerating anything.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "tools": [
+          "crop"
+        ],
+        "credits_max": 0
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "crop",
+            "inputs": [
+              "jet_black_and_white_vignette_navy.jpg"
+            ],
+            "produces": "jet_black_and_white_vignette_navy_square.jpg",
+            "credits": 0
+          }
+        ],
+        "estimate": 0
+      },
+      "checks": [
+        {
+          "name": "tools crop",
+          "pass": true,
+          "got": [
+            "crop"
+          ]
+        },
+        {
+          "name": "spent ≤ 0",
+          "pass": true,
+          "got": 0
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        }
+      ],
+      "turnIndex": 4,
+      "ran": [
+        {
+          "tool": "crop",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    }
+  ],
+  "spent": 0
+}

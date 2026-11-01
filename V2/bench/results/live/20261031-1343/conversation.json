@@ -1,0 +1,275 @@
+{
+  "name": "conversation",
+  "mode": "ask",
+  "budget": 40,
+  "what": "Conversational: asks only for what is missing, then acts on the answer",
+  "steps": [
+    {
+      "do": "import",
+      "from": "runs/topgun9/refs/vega-f35c-3.jpg",
+      "name": "jet.jpg"
+    },
+    {
+      "do": "import",
+      "from": "runs/topgun9/stills/s3-1.png",
+      "name": "cockpit.png"
+    },
+    {
+      "do": "send",
+      "text": "Put some text on this.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "answer": "\"Open Daily\", at the bottom.",
+      "expect": {
+        "asks": true,
+        "tools": [
+          "text-overlay"
+        ],
+        "credits_max": 0
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Upscale it.",
+      "materials": [
+        "cockpit.png",
+        "jet.jpg"
+      ],
+      "answer": "The cockpit one.",
+      "expect": {
+        "asks": true,
+        "tools": [
+          "upscale-image"
+        ],
+        "credits_max": 25
+      }
+    },
+    {
+      "do": "run"
+    },
+    {
+      "do": "send",
+      "text": "Make this photo warmer.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "expect": {
+        "asks": false,
+        "tools": [
+          "image-edit"
+        ],
+        "credits_max": 5
+      }
+    },
+    {
+      "do": "run"
+    }
+  ],
+  "session": "live-conversation",
+  "turns": [
+    {
+      "text": "Put some text on this.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "agent": "I'll add your words to the jet image with a text overlay, leaving the photo unchanged. What exact words would you like?",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "asks": true,
+        "tools": [
+          "text-overlay"
+        ],
+        "credits_max": 0
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "text-overlay",
+            "inputs": [
+              "jet.jpg"
+            ],
+            "produces": "jet_with_text.jpg",
+            "credits": 0
+          }
+        ],
+        "estimate": 0
+      },
+      "checks": [
+        {
+          "name": "asks first",
+          "pass": false,
+          "got": []
+        },
+        {
+          "name": "tools text-overlay",
+          "pass": true,
+          "got": [
+            "text-overlay"
+          ]
+        },
+        {
+          "name": "spent ≤ 0",
+          "pass": true,
+          "got": 0
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        }
+      ],
+      "turnIndex": 0,
+      "ran": [
+        {
+          "tool": "text-overlay",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    },
+    {
+      "text": "Upscale it.",
+      "materials": [
+        "cockpit.png",
+        "jet.jpg"
+      ],
+      "agent": "I'll upscale the jet picture with the image upscaler, keeping the picture and its existing text intact.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "asks": true,
+        "tools": [
+          "upscale-image"
+        ],
+        "credits_max": 25
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "upscale-image",
+            "inputs": [
+              "jet_with_text.jpg"
+            ],
+            "produces": "jet_with_text_upscaled.jpg",
+            "credits": 25
+          }
+        ],
+        "estimate": 25
+      },
+      "checks": [
+        {
+          "name": "asks first",
+          "pass": false,
+          "got": []
+        },
+        {
+          "name": "tools upscale-image",
+          "pass": true,
+          "got": [
+            "upscale-image"
+          ]
+        },
+        {
+          "name": "spent ≤ 25",
+          "pass": true,
+          "got": 0
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        }
+      ],
+      "turnIndex": 1,
+      "ran": [
+        {
+          "tool": "upscale-image",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    },
+    {
+      "text": "Make this photo warmer.",
+      "materials": [
+        "jet.jpg"
+      ],
+      "agent": "I'll warm up the supplied jet photo with one image edit, keeping everything else unchanged.",
+      "asked": [],
+      "answered": null,
+      "expect": {
+        "asks": false,
+        "tools": [
+          "image-edit"
+        ],
+        "credits_max": 5
+      },
+      "plan": {
+        "shape": "single",
+        "steps": [
+          {
+            "tool": "image-edit",
+            "inputs": [
+              "jet.jpg"
+            ],
+            "produces": "jet_warmer.jpg",
+            "credits": 5
+          }
+        ],
+        "estimate": 5
+      },
+      "checks": [
+        {
+          "name": "asks nothing",
+          "pass": true,
+          "got": []
+        },
+        {
+          "name": "tools image-edit",
+          "pass": true,
+          "got": [
+            "image-edit"
+          ]
+        },
+        {
+          "name": "spent ≤ 5",
+          "pass": true,
+          "got": 0
+        },
+        {
+          "name": "every node made",
+          "pass": false,
+          "got": [
+            "failed"
+          ]
+        }
+      ],
+      "turnIndex": 2,
+      "ran": [
+        {
+          "tool": "image-edit",
+          "state": "failed",
+          "error": "sub is not defined",
+          "thumb": null
+        }
+      ],
+      "spent": 0
+    }
+  ],
+  "spent": 0
+}
