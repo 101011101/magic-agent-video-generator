@@ -100,3 +100,18 @@ refusal; on a single picture both pass and the judge prefers the MCP's, which th
 | mcp-1 | 152 | 10,115 | the micro groups A–H and J, 4 at a time, 142 min of item time; 62 pass (41%), mean 60; graded with `bench/v1/grade.mjs`, report in `results/mcp-1/report.md`, audit page `results/mcp-1/index.html`; the first pass stopped at a 6,000 cap after 123 items and the last 29 (H, J) ran in a second pass with the same prefix |
 | mcp-film-2 | 4 | 984 | the bench's film briefs I45a–I48a: one text-to-video call each (minimax-h3 or ltx-2.5, 8–15 s, 480p); I47a and I48a pass, I45a and I46a fail (garbled labels, wrong aircraft; dialogue where silence was asked) |
 | mcp-film-1 | 2 | 960 | the economists' podcast (30 s, ltx-2.5, 720 credits; the first call was refused by the API for a prompt over 2,000 characters) and Cabin Coffee (10 s, ltx-2.5, 240; "Cabin Cofee" on the end card) |
+
+## The direct arms (2026-11-01, T-058)
+
+`pipeline.mjs --until film` now defaults to direct generation (one text-to-video generation with the model's own audio,
+or a few continuing from each other's last frame); `--chain` runs the keyframe chain. The film driver passes the flags:
+`sh V2/bench/mcp/film/drive.sh I92a direct3-I92a "--clips direct --model minimax-h3"`. Arms under `film/`: `agent` (the
+chain), `direct-v1` (the first planner, from the story's rewrite), `direct` (the planner from the brief), `direct-mm`
+(the citric acid cycle on minimax in two segments, last frame fed forward), `direct-anchors` (the planner names the
+hard constraints, a lettered diagram painted on qwen-image-2.1 and attached as `@cycle`). Items added: `I92a` (a 60 s
+explainer, the citric acid cycle), `I93a` (a 60 s single take the free plan makes in two generations: continuity).
+MCP runs: `results/mcp-film-3` (I92a), `mcp-film-4` (I93a). Pages: `compare-film-direct` (direct vs MCP),
+`compare-film-chain-direct` (direct vs chain, `--names "Direct,Chain"`), `compare-all-1` (direct films, chain films,
+micro tasks). Rules learned: a reference is bound by its `@name` in the prompt (422 otherwise); the planner must plan
+from the brief, not the story's rewrite; the prompt is capped at 2,000 characters; the minimax-h3 hand-off between
+segments is near exact.
