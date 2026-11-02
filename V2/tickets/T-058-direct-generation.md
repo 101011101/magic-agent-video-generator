@@ -149,3 +149,26 @@ that keep the four films from passing; the levers are in "Built" above.
   dialogue, generate with `audio: false` and lay an ambience track by code (the music generator asked for a texture,
   or silence where the brief says no music); when narration is asked, keep the model's audio, which spoke the right
   words on three of four pieces. Not run yet (a paid rerun).
+
+## The join between generations, measured (2026-11-02, commit d7ad222)
+
+Three continuation modes (`--continue ref|frame|clip`). On the night ride (minimax-h3, 2 × 30 s), the similarity (SSIM)
+between segment 1's last frame and segment 2 at 0 / 0.5 / 1 / 2 s: **ref** (the last frame as `@previous` in a
+text-to-video call) 0.53 / 0.35 / 0.21 / 0.18; **frame** (the last frame as the start frame of an image-to-video
+call) 0.93 / 0.34 / 0.30 / 0.18; a tracking shot moves 0.33 on its own in half a second. So the frame is the right
+one in both modes (not the first frame of clip 1: 0.22), the start-frame call makes the first frame exact, and neither
+carries motion: by half a second both have re-staged the shot, which the eye reads as a freeze-then-restart (frame) or
+a jump (ref). **clip** (the last five seconds as a video reference `@motion` beside `@previous`, the join cut at the
+best-matching pair of frames within three seconds either side) is built and unrun: the ledger reached the 100,000 cap.
+The audio restarts at every join in every mode (babble in another language when no speech was asked), see "The route
+and the anchors". `results/night-ride/` shows the frames and the numbers.
+
+The chain on the citric acid cycle (`runs/chain-I92a`): 18 stills, 10 clips, a music bed, 2,660 credits, 36 passes of
+the driver (a sheet gate flagged every molecule root, a style gate flagged most stills); recorded in `film/agent`.
+
+Over-complication, counted on the fresh comparison (`compare-mcp-2`): where both passed (53 items) the agent used more
+steps than the MCP made create calls on 13, cheaper on 7 of them; where the MCP passed in one call (36) the agent also
+took one step on 25, two on 8 (the VELORA bottle: a klein picture, a klein edit to print the name, a check; the MCP one
+qwen generation with the name in the prompt, both 100), three or more on 2 (talking photos: write, voice, animate).
+The rule that would fold the 8 into one call is the planner's: one generation on the lettering model when the piece is
+one picture with a few words (plan.js, the other session's).
