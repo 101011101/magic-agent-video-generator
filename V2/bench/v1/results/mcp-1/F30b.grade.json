@@ -1,0 +1,95 @@
+{
+  "id": "F30b",
+  "group": "F",
+  "case": 30,
+  "case_name": "Music bed",
+  "title": "Upbeat Reel Music Default",
+  "tests": "Checks whether the agent turns a vague music request into a usable upbeat audio bed using sensible defaults rather than blocking on optional preferences.",
+  "pass": false,
+  "score": 20,
+  "tags": [
+    "wrong-length",
+    "must-have-missed",
+    "major-fault",
+    "not-usable"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "generate_music:done"
+      ]
+    },
+    {
+      "name": "a audio was made",
+      "pass": true,
+      "got": [
+        ".wav"
+      ]
+    },
+    {
+      "name": "about 10 s",
+      "pass": false,
+      "got": 15
+    },
+    {
+      "name": "sound present and audible",
+      "pass": true,
+      "got": -1
+    },
+    {
+      "name": "must-haves met",
+      "pass": false,
+      "got": "0/1"
+    },
+    {
+      "name": "asks nothing",
+      "pass": true,
+      "got": []
+    }
+  ],
+  "judge": {
+    "usable_as_is": false,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "major",
+        "what": "The audio contains unsolicited spoken dialogue, “大家好，我是小明。” (“Hello everyone, I’m Xiaoming”), which is unrelated to the request and interferes with use as a general-purpose reel music bed."
+      }
+    ],
+    "score": 2,
+    "summary": "A 15-second audio file was delivered, but it contains unrelated spoken dialogue, and the supplied evidence does not establish the requested upbeat musical qualities.",
+    "must_haves": [
+      {
+        "item": "One playable music audio file is delivered, not merely a description or song recommendation.",
+        "met": "cannot_tell",
+        "why": "A 15-second WAV file is supplied, but the transcript establishes speech rather than confirming that the file contains music."
+      },
+      {
+        "item": "The music sounds upbeat, with a clear rhythmic pulse and lively energy.",
+        "met": "cannot_tell",
+        "why": "The transcript and peak level do not establish musical mood, rhythm, or energy."
+      },
+      {
+        "item": "The opening establishes the music promptly without a long silent lead-in.",
+        "met": "cannot_tell",
+        "why": "No timing information about the start of music or any opening silence is provided."
+      },
+      {
+        "item": "The short excerpt is usable as a reel music bed, without audible glitches or an abrupt mid-note cutoff.",
+        "met": "no",
+        "why": "The unrelated spoken self-introduction compromises its use as the requested music bed; glitches and the ending cannot be assessed from the supplied evidence."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 15,
+  "seconds": 52,
+  "outputs": [
+    "sessions/mcp-m1-F30b/assets/01-generate_music.wav"
+  ],
+  "tools": [
+    "generate_music"
+  ]
+}

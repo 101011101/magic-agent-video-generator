@@ -1,0 +1,107 @@
+{
+  "id": "C14b",
+  "group": "C",
+  "case": 14,
+  "case_name": "Face swap on a photo",
+  "title": "Which Friend Gets My Face",
+  "tests": "Tests clarification of an ambiguous target face and preservation of the unselected person.",
+  "pass": false,
+  "score": 90,
+  "tags": [
+    "wrong-aspect"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "detect_faces:done",
+        "detect_faces:done",
+        "swap_face_in_photo:done"
+      ]
+    },
+    {
+      "name": "a image was made",
+      "pass": true,
+      "got": [
+        ".png",
+        ".png",
+        ".jpg"
+      ]
+    },
+    {
+      "name": "aspect 16:9",
+      "pass": false,
+      "got": [
+        "204x285",
+        "180x228",
+        "640x384"
+      ]
+    },
+    {
+      "name": "must-haves met",
+      "pass": true,
+      "got": "5/5"
+    },
+    {
+      "name": "asks first (Which person in two-friends.jpg should receive the user's face: the bearded man on the left or the blonde woman on the right?)",
+      "pass": true,
+      "got": [
+        {
+          "field": "question",
+          "question": "Which person should I swap your face onto—the person on the left or the person on the right? I’ll leave the other face and the rest of the photo unchanged."
+        }
+      ]
+    }
+  ],
+  "judge": {
+    "usable_as_is": true,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "minor",
+        "what": "The swapped face is slightly softer and smoother than the surrounding photograph, subtly reducing facial detail."
+      }
+    ],
+    "score": 4,
+    "summary": "The correct woman's face was swapped with a convincing blend, while the man and the rest of the beach photo remain unchanged, with only slight softness in the edited face.",
+    "must_haves": [
+      {
+        "item": "Only the woman on the right receives the face from portrait-woman.jpg.",
+        "met": "yes",
+        "why": "The right woman's facial features are changed toward the source portrait, while her blonde hair remains intact."
+      },
+      {
+        "item": "The bearded man's face on the left remains unchanged.",
+        "met": "yes",
+        "why": "His features, expression, beard, and lighting match the original beach photo."
+      },
+      {
+        "item": "The replaced face is recognizable and blended to match the beach lighting and head angle.",
+        "met": "yes",
+        "why": "The source's eyes, brows, and nose are recognizable, and the replacement follows the target head angle with warm beach lighting and no obvious seams."
+      },
+      {
+        "item": "The original bodies, clothing, beach background and wide framing remain unchanged.",
+        "met": "yes",
+        "why": "The bodies, clothing straps, hair, ocean, sand, and landscape composition match the original."
+      },
+      {
+        "item": "No text is added.",
+        "met": "yes",
+        "why": "No text is visible in the output."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 10,
+  "seconds": 43,
+  "outputs": [
+    "sessions/mcp-m1-C14b/assets/01-detect_faces.png",
+    "sessions/mcp-m1-C14b/assets/02-detect_faces.png",
+    "sessions/mcp-m1-C14b/assets/03-swap_face_in_photo.jpg"
+  ],
+  "tools": [
+    "detect_faces→detect_faces→swap_face_in_photo"
+  ]
+}
