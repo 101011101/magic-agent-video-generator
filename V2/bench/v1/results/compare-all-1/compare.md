@@ -1,33 +1,33 @@
 # Agent vs the Magic Hour MCP · the films (direct generation, then the chain), then the micro tasks
 
-161 items, the same prompt to both. Agent records from direct and agent and real-1 and latest; MCP baseline from mcp-film-1 and mcp-film-2 and mcp-film-3 and mcp-1 (an off-the-shelf chat model with Magic Hour's hosted MCP connected, free plan as a gate). Joined from compare-film-direct (the films, direct generation, 5) and compare-film-1 (the films, the keyframe chain, 4) and compare-mcp-1 (the micro tasks, 152), in that order.
+162 items, the same prompt to both. Agent records from direct and agent and real-1 and latest; MCP baseline from mcp-film-1 and mcp-film-2 and mcp-film-3 and mcp-film-4 and mcp-1 (an off-the-shelf chat model with Magic Hour's hosted MCP connected, free plan as a gate). Joined from compare-film-direct (the films, direct generation, 6) and compare-film-1 (the films, the keyframe chain, 4) and compare-mcp-1 (the micro tasks, 152), in that order.
 
-**Head to head: the agent wins 69, the MCP wins 76, 16 ties → win rate 48% of decided items (pairwise judge where both delivered; otherwise made-vs-not or the grader's score).**
+**Head to head: the agent wins 69, the MCP wins 77, 16 ties → win rate 47% of decided items (pairwise judge where both delivered; otherwise made-vs-not or the grader's score).**
 
 | | Agent | MCP |
 |---|---|---|
-| pass | 92 (57%) | 64 (40%) |
+| pass | 93 (57%) | 64 (40%) |
 | mean score | 74 | 61 |
-| delivered a file | 147 | 136 |
-| credits | 13781 | 14243 |
-| minutes of item time | 92 | 156 |
+| delivered a file | 148 | 137 |
+| credits | 15241 | 15683 |
+| minutes of item time | 92 | 161 |
 | questions asked (for information) | 14 | 16 |
 | asked the user to approve or proceed | 0 | 1 |
 | calls refused by the free-plan gate | — | 3 |
-| steps planned / tool calls | 373 | 685 |
+| steps planned / tool calls | 374 | 691 |
 
 | Part | Items | Agent wins | MCP wins | Ties | Win rate | Agent pass | MCP pass | Agent mean | MCP mean | Agent credits | MCP credits |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| The films, direct generation (compare-film-direct) | 5 | 2 | 3 | 0 | 40% | 0 | 1 | 42 | 52 | 2784 | 2784 |
+| The films, direct generation (compare-film-direct) | 6 | 2 | 4 | 0 | 33% | 0 | 1 | 43 | 50 | 4234 | 4224 |
 | The films, the keyframe chain (compare-film-1) | 4 | 0 | 4 | 0 | 0% | 0 | 1 | 42 | 59 | 1719 | 1344 |
-| The micro tasks (compare-mcp-1) | 152 | 67 | 69 | 16 | 49% | 92 | 62 | 76 | 61 | 9278 | 10115 |
+| The micro tasks (compare-mcp-1) | 152 | 67 | 69 | 16 | 49% | 93 | 62 | 76 | 61 | 9288 | 10115 |
 
 | Group | Items | Agent pass | MCP pass | Agent mean | MCP mean | Agent wins | MCP wins | Ties | Win rate | Agent credits | MCP credits |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | I. Longer stories (film) | 4 | 0 | 1 | 42 | 59 | 0 | 4 | 0 | 0% | 1719 | 1344 |
 | A. Single images | 24 | 24 | 20 | 98 | 89 | 7 | 17 | 0 | 29% | 190 | 290 |
 | B. Image edits | 26 | 24 | 16 | 94 | 80 | 8 | 16 | 2 | 33% | 130 | 295 |
-| C. Faces and characters | 12 | 9 | 8 | 81 | 88 | 1 | 7 | 4 | 13% | 1818 | 759 |
+| C. Faces and characters | 12 | 10 | 8 | 86 | 88 | 1 | 7 | 4 | 13% | 1828 | 759 |
 | D. Short video | 18 | 3 | 3 | 53 | 51 | 10 | 8 | 0 | 56% | 2086 | 2828 |
 | E. Editing the user's video | 18 | 7 | 0 | 54 | 12 | 13 | 2 | 3 | 87% | 324 | 707 |
 | F. Sound | 7 | 1 | 1 | 59 | 26 | 5 | 1 | 1 | 83% | 45 | 65 |
@@ -37,17 +37,18 @@
 
 ## What the MCP side did
 
-Models it chose: qwen-image-2.1 ×67, ltx-2.5 ×33, minimax-h3 ×17, flux-schnell ×10, flux-2-klein ×6.
-Tools it called (steps): edit_image ×83, generate_image ×46, create_video_from_text ×38, create_video_from_image ×13, detect_faces ×8, add_subtitles_to_video ×6, generate_music ×6, edit_video ×3, remove_image_background ×2, swap_face_in_photo ×2, swap_face_in_video ×2, upscale_image ×1, create_meme ×1.
+Models it chose: qwen-image-2.1 ×67, ltx-2.5 ×34, minimax-h3 ×17, flux-schnell ×10, flux-2-klein ×6.
+Tools it called (steps): edit_image ×83, generate_image ×46, create_video_from_text ×40, create_video_from_image ×13, detect_faces ×8, add_subtitles_to_video ×6, generate_music ×6, edit_video ×3, remove_image_background ×2, swap_face_in_photo ×2, swap_face_in_video ×2, upscale_image ×1, create_meme ×1.
 
 Calls the free-plan gate refused:
 - 3× insufficient credits: this call needs about n credits and n remain of 
 
-## Where the MCP won (76)
+## Where the MCP won (77)
 
 - **I47a** Seed Growth With Supplied Narration · agent 37 (192 cr) vs MCP 100 pass (192 cr) · A offers a clear, simple widescreen soil cutaway with downward roots, an upward shoot, visible light, and no text. B includes conspicuous, malformed captions, d
 - **I90a** Two economists, a 30 s video podcast · agent 58 (720 cr) vs MCP 42 (720 cr) · Both show consistent, live-action-looking hosts at microphones in warm, widescreen studios. B has a slightly stronger video-podcast presentation through headpho
 - **I91a** Cabin Coffee, 10 s YouTube ad · agent 58 (240 cr) vs MCP 58 (240 cr) · Both show steaming coffee on wood and the exact closing words in widescreen. A better sustains the warm, quiet specialty-coffee mood with its rustic mug, golden
+- **I93a** Night ride, a 60 s single take · agent 37 (1440 cr) vs MCP 39 (1440 cr) · A visibly delivers the bridge opening and a café-door arrival with the rider putting a foot down, while retaining a similar yellow jacket and bicycle. B has con
 - **I46a** Meet the Real F-35A · agent 29 (287 cr) vs MCP 34 (192 cr) · B better conveys a conventional runway takeoff followed by flight, with more realistic aircraft proportions and broadly consistent views. A has two correct labe
 - **I47a** Seed Growth With Supplied Narration · agent 37 (242 cr) vs MCP 100 pass (192 cr) · A is a much clearer simple animated explainer: the soil cutaway shows water at the seed, downward roots, and an upward shoot reaching toward visible sunlight. B
 - **I90a** Two economists, a 30 s video podcast · agent 42 (775 cr) vs MCP 42 (720 cr) · B offers a cleaner, more convincing live-action podcast presentation, with consistent hosts, prominent microphones, and a cosy studio. A’s captions provide stro
@@ -85,8 +86,8 @@ Calls the free-plan gate refused:
 - **B12d** Left Edge Sneaker Stays Visible · agent 100 pass (0 cr) vs MCP 52 (10 cr) · Both outputs are square and retain the complete sneaker, but B presents it larger and centrally with consistent, unobtrusive padding. A's patchwork background a
 - **B13a** Restore a Faded Family Scan · agent 94 pass (5 cr) vs MCP 43 (10 cr) · A provides clearer facial features, clothing, and architectural detail with stronger, more natural contrast while retaining sepia. Both depict the same visible 
 - **B13b** Sharpen a Blurry Dog Photo · agent 94 pass (5 cr) vs MCP 52 (10 cr) · A provides substantially clearer eyes, nose, muzzle, and fur while retaining a natural appearance without pronounced sharpening halos. Both show the same seated
-- **C15a** Five Second Talking Face Swap · agent 41 (240 cr) vs MCP 84 (270 cr) · A meets the explicit five-second duration and maintains consistent framing, kitchen and clothing. Neither convincingly demonstrates the requested identity throu
-- **C15c** Two Coworkers Two Replacement Faces · agent 24 (735 cr) vs MCP 3 (0 cr) · the MCP side delivered a file; the agent delivered nothing
+- **C15a** Five Second Talking Face Swap · agent 94 pass (240 cr) vs MCP 84 (270 cr) · A meets the explicit five-second duration and maintains consistent framing, kitchen and clothing. Neither convincingly demonstrates the requested identity throu
+- **C15c** Two Coworkers Two Replacement Faces · agent 37 (735 cr) vs MCP 3 (0 cr) · the MCP side delivered a file; the agent delivered nothing
 - **C16a** Fox Mascot Across Three Scenes · agent 94 pass (15 cr) vs MCP 100 pass (30 cr) · Both deliver three separate square, text-free scenes with a consistent fox and orange hoodie. B has more convincing activity poses: mixing cookie dough, riding 
 - **C16b** My Dog In Three Places · agent 100 pass (15 cr) vs MCP 100 pass (30 cr) · Both deliver three square, photorealistic images with the requested settings, no clothes and no text. B slightly wins through more consistent facial features an
 - **C16c** Invent A Courier Then Reuse · agent 35 (25 cr) vs MCP 91 (25 cr) · B preserves its original robot’s single amber eye, separate round head, torso details, articulated limbs, red boots and yellow shoulder bag across both follow-u
@@ -142,12 +143,12 @@ Calls the free-plan gate refused:
 - **I46a** Meet the Real F-35A · agent: The clip shows a runway departure with correct factual narration, but the aircraft is inaccurate and inconsist · MCP: The widescreen clip shows a runway departure and flight with correct English narration, but garbled labels and
 - **I90a** Two economists, a 30 s video podcast · agent: A convincing, cosy two-host video podcast delivers the economic disagreement and friendly ending, but a garble · MCP: The clip looks like a polished, cosy two-host video podcast, but its supplied speech omits Leo's position and 
 - **I91a** Cabin Coffee, 10 s YouTube ad · agent: The visuals deliver the warm coffee ritual and correct branded end card, but unsolicited Japanese dialogue pre · MCP: A warm, visually polished coffee ad delivers the requested mug lift and closing slogan, but the brand name is 
-- **I92a** Citric acid cycle, a 60 s explainer · agent: The 60-second widescreen clip shows a largely unchanged mitochondrion-like diagram with the correct title, but · MCP: The 60-second widescreen clip shows a circular diagram, but garbled labels and incoherent narration make it un
+- **I92a** Citric acid cycle, a 60 s explainer · agent: A widescreen mitochondrion diagram has the requested title and loop, but corrupted labels, misleading pathway  · MCP: The 60-second widescreen clip shows a circular diagram, but garbled labels and incoherent narration make it un
+- **I93a** Night ride, a 60 s single take · agent: The clip shows a yellow-jacketed courier cycling along wet nighttime streets, but contains forbidden speech an · MCP: The clip depicts the requested rainy bicycle journey and café arrival, but prohibited speech and dusk-like lig
 - **I46a** Meet the Real F-35A · agent: The widescreen clip presents the three correct labels, but shows a distorted aircraft suspended over a runway  · MCP: The widescreen clip shows a runway departure and flight with correct English narration, but garbled labels and
 - **I90a** Two economists, a 30 s video podcast · agent: The film achieves a warm, live-action podcast setting with consistent hosts, but delivers only one audible lin · MCP: The clip looks like a polished, cosy two-host video podcast, but its supplied speech omits Leo's position and 
 - **I91a** Cabin Coffee, 10 s YouTube ad · agent: A warm coffee spot with the correct branded closing line, but an unrequested two-mug pouring sequence replaces · MCP: A warm, visually polished coffee ad delivers the requested mug lift and closing slogan, but the brand name is 
-- **C15a** Five Second Talking Face Swap · agent: The portrait identity is recognizable across the output frames, but the edit also replaces the woman's clothin · MCP: The five-second clip shows a consistent, recognizable face swap while preserving the kitchen and framing, with
-- **C15c** Two Coworkers Two Replacement Faces · agent: The clip shows a recognizable female replacement, but the male portrait identity is missing and the woman's ha · MCP: The agent produced only face-detection previews and clarification requests, leaving the requested two-face vid
+- **C15c** Two Coworkers Two Replacement Faces · agent: The woman resembles her supplied portrait, but neither male coworker matches the man's portrait, leaving half  · MCP: The agent produced only face-detection previews and clarification requests, leaving the requested two-face vid
 - **C16c** Invent A Courier Then Reuse · agent: The two attractive storybook scenes fulfill the requested settings, but the mushroom scene changes the robot i · MCP: The two follow-up pictures clearly depict the requested scenes in a consistent storybook style, but the initia
 - **D18b** Portrait With Subtle Natural Motion · agent: The portrait remains recognizable and visually consistent, but noticeable sideways sway exceeds the requested  · MCP: The woman remains recognizable and shows a blink-like eyelid movement, but a pronounced zoom violates the requ
 - **D18c** Lake Clouds and Water Moving · agent: The lake scene remains recognizable and stable with gentle water motion, but rapid cloud evolution, changing s · MCP: The lake has gentle animated ripples and moving clouds, but a pronounced push-in, changing light, and incorrec
