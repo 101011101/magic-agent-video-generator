@@ -6,12 +6,12 @@
 
 | | Agent | MCP |
 |---|---|---|
-| pass | 90 (58%) | 63 (40%) |
-| mean score | 74 | 61 |
-| delivered a file | 141 | 131 |
-| credits | 9994 | 11459 |
+| pass | 92 (59%) | 63 (40%) |
+| mean score | 75 | 61 |
+| delivered a file | 142 | 131 |
+| credits | 10249 | 11459 |
 | minutes of item time | 88 | 146 |
-| questions asked (for information) | 16 | 16 |
+| questions asked (for information) | 14 | 16 |
 | asked the user to approve or proceed | 0 | 1 |
 | calls refused by the free-plan gate | — | 3 |
 | steps planned / tool calls | 368 | 662 |
@@ -19,14 +19,14 @@
 | Part | Items | Agent wins | MCP wins | Ties | Win rate | Agent pass | MCP pass | Agent mean | MCP mean | Agent credits | MCP credits |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | The films (compare-film-1) | 4 | 0 | 4 | 0 | 0% | 0 | 1 | 42 | 59 | 1719 | 1344 |
-| The micro tasks (compare-mcp-1) | 152 | 67 | 69 | 16 | 49% | 90 | 62 | 75 | 61 | 8275 | 10115 |
+| The micro tasks (compare-mcp-1) | 152 | 67 | 69 | 16 | 49% | 92 | 62 | 76 | 61 | 8530 | 10115 |
 
 | Group | Items | Agent pass | MCP pass | Agent mean | MCP mean | Agent wins | MCP wins | Ties | Win rate | Agent credits | MCP credits |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | I. Longer stories (film) | 4 | 0 | 1 | 42 | 59 | 0 | 4 | 0 | 0% | 1719 | 1344 |
-| A. Single images | 24 | 23 | 20 | 97 | 89 | 7 | 17 | 0 | 29% | 180 | 290 |
+| A. Single images | 24 | 24 | 20 | 98 | 89 | 7 | 17 | 0 | 29% | 190 | 290 |
 | B. Image edits | 26 | 24 | 16 | 94 | 80 | 8 | 16 | 2 | 33% | 130 | 295 |
-| C. Faces and characters | 12 | 8 | 8 | 74 | 88 | 1 | 7 | 4 | 13% | 825 | 759 |
+| C. Faces and characters | 12 | 9 | 8 | 81 | 88 | 1 | 7 | 4 | 13% | 1070 | 759 |
 | D. Short video | 18 | 3 | 3 | 53 | 51 | 10 | 8 | 0 | 56% | 2086 | 2828 |
 | E. Editing the user's video | 18 | 7 | 0 | 54 | 12 | 13 | 2 | 3 | 87% | 324 | 707 |
 | F. Sound | 7 | 1 | 1 | 59 | 26 | 5 | 1 | 1 | 83% | 45 | 65 |
@@ -81,8 +81,8 @@ Calls the free-plan gate refused:
 - **B12d** Left Edge Sneaker Stays Visible · agent 100 pass (0 cr) vs MCP 52 (10 cr) · Both outputs are square and retain the complete sneaker, but B presents it larger and centrally with consistent, unobtrusive padding. A's patchwork background a
 - **B13a** Restore a Faded Family Scan · agent 94 pass (5 cr) vs MCP 43 (10 cr) · A provides clearer facial features, clothing, and architectural detail with stronger, more natural contrast while retaining sepia. Both depict the same visible 
 - **B13b** Sharpen a Blurry Dog Photo · agent 94 pass (5 cr) vs MCP 52 (10 cr) · A provides substantially clearer eyes, nose, muzzle, and fur while retaining a natural appearance without pronounced sharpening halos. Both show the same seated
-- **C15a** Five Second Talking Face Swap · agent 30 (150 cr) vs MCP 84 (270 cr) · A meets the explicit five-second duration and maintains consistent framing, kitchen and clothing. Neither convincingly demonstrates the requested identity throu
-- **C15c** Two Coworkers Two Replacement Faces · agent 0 (0 cr) vs MCP 3 (0 cr) · the MCP side delivered a file; the agent delivered nothing
+- **C15a** Five Second Talking Face Swap · agent 94 pass (150 cr) vs MCP 84 (270 cr) · A meets the explicit five-second duration and maintains consistent framing, kitchen and clothing. Neither convincingly demonstrates the requested identity throu
+- **C15c** Two Coworkers Two Replacement Faces · agent 17 (245 cr) vs MCP 3 (0 cr) · the MCP side delivered a file; the agent delivered nothing
 - **C16a** Fox Mascot Across Three Scenes · agent 94 pass (15 cr) vs MCP 100 pass (30 cr) · Both deliver three separate square, text-free scenes with a consistent fox and orange hoodie. B has more convincing activity poses: mixing cookie dough, riding 
 - **C16b** My Dog In Three Places · agent 100 pass (15 cr) vs MCP 100 pass (30 cr) · Both deliver three square, photorealistic images with the requested settings, no clothes and no text. B slightly wins through more consistent facial features an
 - **C16c** Invent A Courier Then Reuse · agent 35 (25 cr) vs MCP 91 (25 cr) · B preserves its original robot’s single amber eye, separate round head, torso details, articulated limbs, red boots and yellow shoulder bag across both follow-u
@@ -130,17 +130,15 @@ Calls the free-plan gate refused:
 - **A06c** Transparent Moon Bakery Logo · agent 94 pass (10 cr) vs MCP 17 (15 cr) · A clearly presents the exact name “Mooncrumb” in dark navy with an intact gold crescent above it. Although its white background raises a transparency concern, i
 - **F31a** Calm Voice Reading Supplied Script · agent 76 (0 cr) vs MCP 0 (0 cr) · the agent delivered a file; the MCP side delivered nothing
 - **J49c** Shorter Clip Same Opening · agent 94 pass (192 cr) vs MCP 20 (192 cr) · B meets the requested five-second duration and retains a widescreen, text-free pond scene. However, its visibly different footage violates the instruction to ch
+- **A03d** Long Venue Address Preserved Exactly · agent 100 pass (20 cr) vs MCP 27 (20 cr) · B provides the requested headline, date, time, and complete address with clear punctuation and no extra wording. Its crisp typography makes the address substant
 - **F30b** Upbeat Reel Music Default · agent 91 (15 cr) vs MCP 20 (15 cr) · by the grader's score (91 vs 20)
-- **G36a** One Coffee Ad Three Shapes · agent 100 pass (30 cr) vs MCP 35 (30 cr) · A delivers all three requested formats with the exact copy, steaming cups, consistent cream-and-dark-green styling, and layouts adapted to each canvas. B is vis
 
-## Both failed (55)
+## Both failed (53)
 
 - **I46a** Meet the Real F-35A · agent: The widescreen clip presents the three correct labels, but shows a distorted aircraft suspended over a runway  · MCP: The widescreen clip shows a runway departure and flight with correct English narration, but garbled labels and
 - **I90a** Two economists, a 30 s video podcast · agent: The film achieves a warm, live-action podcast setting with consistent hosts, but delivers only one audible lin · MCP: The clip looks like a polished, cosy two-host video podcast, but its supplied speech omits Leo's position and 
 - **I91a** Cabin Coffee, 10 s YouTube ad · agent: A warm coffee spot with the correct branded closing line, but an unrequested two-mug pouring sequence replaces · MCP: A warm, visually polished coffee ad delivers the requested mug lift and closing slogan, but the brand name is 
-- **A03d** Long Venue Address Preserved Exactly · agent: A clean, legible black-and-cream 4:5 flyer preserves the full address, but the headline changes the requested  · MCP: The black-and-cream flyer has a clean layout and correct date and time, but adds a year to the headline and fa
-- **C15a** Five Second Talking Face Swap · agent: The early frames show a plausible face replacement in the original kitchen, but the clip runs twice the requir · MCP: The five-second clip shows a consistent, recognizable face swap while preserving the kitchen and framing, with
-- **C15c** Two Coworkers Two Replacement Faces · agent: asked-unneeded, not-made · MCP: The agent produced only face-detection previews and clarification requests, leaving the requested two-face vid
+- **C15c** Two Coworkers Two Replacement Faces · agent: The output shows a 10-second office clip, but neither requested portrait identity is visibly applied. · MCP: The agent produced only face-detection previews and clarification requests, leaving the requested two-face vid
 - **C16c** Invent A Courier Then Reuse · agent: The two attractive storybook scenes fulfill the requested settings, but the mushroom scene changes the robot i · MCP: The two follow-up pictures clearly depict the requested scenes in a consistent storybook style, but the initia
 - **D18b** Portrait With Subtle Natural Motion · agent: The portrait remains recognizable and visually consistent, but noticeable sideways sway exceeds the requested  · MCP: The woman remains recognizable and shows a blink-like eyelid movement, but a pronounced zoom violates the requ
 - **D18c** Lake Clouds and Water Moving · agent: The lake scene remains recognizable and stable with gentle water motion, but rapid cloud evolution, changing s · MCP: The lake has gentle animated ripples and moving clouds, but a pronounced push-in, changing light, and incorrec
@@ -175,4 +173,6 @@ Calls the free-plan gate refused:
 - **G35a** Kitchen Renovation Side by Side · agent: The photos are neatly preserved side by side in a 16:9 image, but the labels are incorrectly combined above th · MCP: The comparison has clear labels and the correct left-to-right order, but it changes the supplied photos instea
 - **G35b** Imagine My Kitchen Renovation · agent: The comparison is neatly presented and mostly matches the requested finishes, but it removes original plumbing · MCP: The labeled comparison delivers the requested renovation finishes, but replaces the original photo with a reco
 - **G36b** Readable Sale Copy Every Size · agent: The three coordinated leafy ads use the requested formats and readable addresses, but the landscape needs corr · MCP: The two supplied ads are readable and visually coordinated, but the requested three-format set is incomplete a
+- **G37b** Rescheduled Event Across All Formats · agent: The poster and story show the revised details correctly, but the reel retains the old date alongside the new o · MCP: The two images clearly show the corrected date in a matching cream-and-burgundy design, but the revised pack i
+- **G38a** Three Matching Mug Listing Photos · agent: The output provides a convincing breakfast-table photo and a soft rim close-up, but omits the required full-mu · MCP: The realistic breakfast-table and rim-detail photos work well, but the three-image set is incomplete because t
 

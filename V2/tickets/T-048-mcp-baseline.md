@@ -94,3 +94,32 @@ records point at, for the agent's owners:
    its structure can show (the paid films did show it).
 
 **Correction (2026-11-01, late):** the first numbers read the MCP as refusing none of the five should-refuse items; it had refused all five in words. The runner wrote an empty `ran` list for a turn with no tool call and the grader reads any `ran` as "something ran"; the runner now leaves the field absent, the 27 affected records were patched and re-graded (MCP 57 → 62 pass, mean 60 → 61; pairwise 73–68–11 → 67–69–16).
+
+## Why the MCP's films look better (2026-11-01, read off the pathways)
+
+The combined page (`results/compare-all-1/`, films first) now opens each side's pathway. The four film pairs differ in the
+same way every time:
+
+- **One generation against a chain.** The MCP makes one `create_video_from_text` call: ltx-2.5 (three of four) or minimax-h3
+  at 480p, `audio: true`, one prompt of 900 to 2,300 characters that the chat model writes itself, with timed beats ("0–4 s …,
+  4–7 s …"), the exact on-screen words, and negative constraints (no cuts, consistent faces, no other text). The video model
+  composes the whole scene. The pipeline makes 2 to 9 stills on flux-2-klein (the free tier's still model; roots first, then
+  keyframes from the plate), pins each clip between two of them on minimax-h3 (3 to 4 s each, `audio: true`), and stitches.
+  Every flaw in a still is baked into its clip (the stubby jet, the oversized red seed, the second mug, the garbled table
+  text) and every join is a chance for continuity to break (the mug and the wardrobe change at the end card).
+- **Sound.** The MCP's narration is generated inside the video model (the grader heard the correct English narration on I46a
+  and the exact voice-over on I47a). The pipeline's clips each generate their own speech, which is gibberish on a 3-second
+  clip (the grader transcribed "Un saluto" and an Arabic fragment), and the narration is mixed on top of it.
+- **Prompting.** The MCP writes prose to the model; the pipeline writes a structured block per clip (FRAMES, MOMENT, BEATS,
+  PEOPLE) that describes 3 seconds of motion between two given frames, so the frames carry the quality ceiling.
+- **Credits are the same order:** MCP 192 to 720 a film, the pipeline 242 to 775.
+
+On the micro items with a video on either side (57) the agent is ahead 34 to 22 with one tie; the MCP wins where the
+agent's klein still is the weak link (D22a two tails, D22b photographic instead of watercolor, D22c 3D instead of cartoon),
+where the video model letters a caption better than the overlay (D23b, J52a), and where one 10-second generation beats
+three 3-second clips stitched (H42a). The agent wins exact text (H44a, H42b, H44b: the MCP garbles dates and venues), two
+formats (H44c), a stationary camera (D18b, D18c: ltx-2.5 and minimax zoom), and every edit of the user's own clip.
+
+The levers, in order: the free tier's still model (qwen-image-2.1: the MCP chose it for 67 image calls; the registry marks
+its text "good" and klein's "poor"; 10 credits against 5 at 640px); one text-to-video generation with audio for short
+films instead of the still chain; the clips' own audio muted under narration.

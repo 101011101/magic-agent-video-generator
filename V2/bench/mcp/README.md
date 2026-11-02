@@ -44,7 +44,11 @@ nothing, the verdict is made-vs-not or the grader's score. It writes `compare.md
 and `index.html` (served by `bench/v1/serve.mjs` at `http://localhost:4748/compare-<run>/`). The agent arm is the newest
 record per item across the folders given (`real-1,latest`). `compare.mjs --from <compare-a>,<compare-b> --out <dir>` joins earlier
 comparisons into one long page in the order given, nothing re-judged: `results/compare-all-1/` is the films first, then the 152
-micro items, the MCP's result on the left of each item and the agent's on the right (`http://localhost:4748/compare-all-1/`).
+micro items, the MCP's result on the left of each item and the agent's on the right (`http://localhost:4748/compare-all-1/`). Each side
+carries its pathway, collapsed (open all / close all in the header): every step with its inputs, parameters and output; the MCP
+side also every call it made with the full arguments; a film's stages from the run folder (story, roots, screenplay, stills with
+their prompts and attempts, clips with their frames, sound, film), which `film/record.mjs` writes into the record. The join keeps
+the verdicts and re-reads the sides from the records the judge saw; a side re-run since is flagged on the item.
 
 ## Film briefs
 
