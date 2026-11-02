@@ -60,7 +60,8 @@ agent's first real pass (`real-1`) was 47 pass (31%), mean 58, 9,314 credits. By
 images (20 vs 13 pass), image edits (16 vs 13), short video (3 vs 1), composed pieces (3 vs 0) and sound (1 vs 0); the
 agent is ahead on editing the user's video (4 vs 0: the MCP has no crop, trim, mix or text-to-speech and said so),
 ads (2 vs 1), conversation (8 vs 7) and refusals (5 of 5 vs 0 of 5). The pairwise comparison and the film pairs are in
-`V2/bench/v1/results/compare-mcp-1/` and `compare-film-1/`. One finding on the pipeline side: run from `--brief`, the
+`V2/bench/v1/results/compare-mcp-1/` and `compare-film-1/`; both joined on one long page, the films first, the MCP's
+result beside the agent's per item, in `compare-all-1/` (`compare.mjs --from`). One finding on the pipeline side: run from `--brief`, the
 film chain makes a 30-second film whatever length the brief states (`--total` defaults to 30 and nothing reads the
 brief's "8-second"); the benchmark's film driver (`bench/mcp/film/drive.sh`) now passes the item's length.
 

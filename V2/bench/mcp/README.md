@@ -42,7 +42,9 @@ calls the gate refused, and a verdict. With `--judge`, a pairwise vision judge s
 (a follow-up item also sees what each side had made before) and picks one; without a judge, or where one side made
 nothing, the verdict is made-vs-not or the grader's score. It writes `compare.md` (the numbers and the lists), `compare.json`
 and `index.html` (served by `bench/v1/serve.mjs` at `http://localhost:4748/compare-<run>/`). The agent arm is the newest
-record per item across the folders given (`real-1,latest`).
+record per item across the folders given (`real-1,latest`). `compare.mjs --from <compare-a>,<compare-b> --out <dir>` joins earlier
+comparisons into one long page in the order given, nothing re-judged: `results/compare-all-1/` is the films first, then the 152
+micro items, the MCP's result on the left of each item and the agent's on the right (`http://localhost:4748/compare-all-1/`).
 
 ## Film briefs
 
