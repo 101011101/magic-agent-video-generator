@@ -55,7 +55,7 @@ the model reported "3 credits remaining, the lowest-cost image needs 5" and made
 
 ## The MCP arm complete (2026-11-01, later)
 
-`mcp-1`: 152 items, 57 pass (38%), mean 60, 10,115 credits (a first pass to a 6,000 cap, then the last 29 items). The
+`mcp-1`: 152 items, 62 pass (41%), mean 60, 10,115 credits (a first pass to a 6,000 cap, then the last 29 items). The
 agent's first real pass (`real-1`) was 47 pass (31%), mean 58, 9,314 credits. By group, the MCP arm is ahead on single
 images (20 vs 13 pass), image edits (16 vs 13), short video (3 vs 1), composed pieces (3 vs 0) and sound (1 vs 0); the
 agent is ahead on editing the user's video (4 vs 0: the MCP has no crop, trim, mix or text-to-speech and said so),
@@ -77,17 +77,19 @@ unreliable (it heard Italian in an English line that measures 10 dB above the be
 
 ## The comparison (2026-11-01, `results/compare-mcp-1/`)
 
-152 items: agent 90 pass (59%) vs MCP 57 (38%); mean 75 vs 60; credits 8,275 vs 10,115; pairwise 73–68, 11 ties. The
+152 items: agent 90 pass (59%) vs MCP 62 (41%); mean 75 vs 61; credits 8,275 vs 10,115; pairwise 67–69, 16 ties. The
 user's bar ("knock the MCP out of the water every single time") is not met: the agent wins where its structure is the
-difference (editing the user's video 13–2, sound 5–1, conversation 11–5, ads 8–4, refusals 5 of 5 vs 0) and loses on
-single images 7–17, edits 8–16 and faces 3–7, where both pass and the judge prefers the MCP's picture. What the
+difference (editing the user's video 13–2, sound 5–1, ads 8–4, short video 10–8) and loses on single images 7–17,
+edits 8–16 and faces 1–7, where both pass and the judge prefers the MCP's picture; both refuse all five should-refuse items. What the
 records point at, for the agent's owners:
 1. **The free tier's still model.** The chat model chose qwen-image-2.1 for 67 of 112 image calls; the agent's free tier
    paints on flux-2-klein (`TIERS.free.still`) unless `params.lettering` is set. qwen is 10 credits, "good" lettering,
    and the judge preferred its product shots and edits. A tier whose default still is qwen-image-2.1 (or a planner rule
    that picks it for product, label and headline work) is the single biggest lever on groups A, B and C.
-2. **Faces.** The MCP calls detect_faces and swaps the right face (7–3); the agent's face work loses on identity.
-3. **Composed pieces** are even (7–8): the agent's overlays and crops win on exact text; the MCP's single edit_image
+2. **Faces.** The MCP calls detect_faces and swaps the right face (7–1); the agent's face work loses on identity.
+3. **Composed pieces** are even (8–8): the agent's overlays and crops win on exact text; the MCP's single edit_image
    wins on the picture.
 4. **Films on the free tier**: four of four to one text-to-video call; the chain needs a better free still model before
    its structure can show (the paid films did show it).
+
+**Correction (2026-11-01, late):** the first numbers read the MCP as refusing none of the five should-refuse items; it had refused all five in words. The runner wrote an empty `ran` list for a turn with no tool call and the grader reads any `ran` as "something ran"; the runner now leaves the field absent, the 27 affected records were patched and re-graded (MCP 57 → 62 pass, mean 60 → 61; pairwise 73–68–11 → 67–69–16).

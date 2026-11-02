@@ -1,34 +1,33 @@
 # Bench v1 · mcp-1
 
-152 items · 57 pass (38%) · mean score 60/100 · something made in 125 · 10115 credits · 142 min of item time
+152 items · 62 pass (41%) · mean score 61/100 · something made in 127 · 10115 credits · 142 min of item time
 
 | Group | Items | Made | Pass | Mean score | Credits |
 |---|---|---|---|---|---|
 | A. Single images | 24 | 24 | 20 (83%) | 89 | 290 |
 | B. Image edits | 26 | 26 | 16 (62%) | 80 | 295 |
-| C. Faces and characters | 12 | 9 | 6 (50%) | 82 | 759 |
+| C. Faces and characters | 12 | 9 | 8 (67%) | 88 | 759 |
 | D. Short video | 18 | 17 | 3 (17%) | 51 | 2828 |
 | E. Editing the user's video | 18 | 7 | 0 (0%) | 12 | 707 |
 | F. Sound | 7 | 4 | 1 (14%) | 26 | 65 |
 | G. Composed pieces | 16 | 16 | 3 (19%) | 53 | 875 |
 | H. Ads and reels | 13 | 12 | 1 (8%) | 46 | 3048 |
-| J. Conversation | 18 | 10 | 7 (39%) | 63 | 1248 |
+| J. Conversation | 18 | 12 | 10 (56%) | 71 | 1248 |
 
-Conversation: asked when it had to 6/7 · asked nothing when it need not 136/143 · stopped asking within 3 rounds 0/1 · refused when it should 0/5 · did not refuse wrongly 0/0 · said when beyond the free tier 2/2 · reply right where the answer is words 11/11
+Conversation: asked when it had to 6/7 · asked nothing when it need not 136/143 · stopped asking within 3 rounds 0/1 · refused when it should 5/5 · did not refuse wrongly 0/0 · said when beyond the free tier 2/2 · reply right where the answer is words 11/11
 
 ## Why items fail
 
-- not-usable: 63
-- major-fault: 61
-- must-have-missed: 56
+- not-usable: 65
+- major-fault: 63
+- must-have-missed: 58
 - text-wrong: 20
-- not-made: 16
+- not-made: 14
 - too-few-outputs: 10
-- wrong-aspect: 7
+- wrong-aspect: 8
 - asked-unneeded: 7
 - wrong-kind: 6
-- not-refused: 5
-- wrong-length: 5
+- wrong-length: 6
 - no-audio: 2
 - kept-asking: 1
 - step-failed:add_subtitles_to_video: 1
@@ -56,7 +55,7 @@ Conversation: asked when it had to 6/7 · asked nothing when it need not 136/143
 Step errors:
 - add_subtitles_to_video ×1: {"type":"mcp_tool_execution_error","content":[{"annotations":null,"meta":null,"type":"text
 
-## Below the mean (60)
+## Below the mean (61)
 
 - **D20d** Mixed Sizes Without Cropping · 0 · not-made
   asked: "These photos are all different shapes. Make one 10-second vertical reel, in this order. Keep each whole photo visible—don't stretch or crop " → 
@@ -88,10 +87,6 @@ Step errors:
   asked: "Can you make one audio-only clip, around 8 seconds, with two clearly different voices? Friendly, natural conversation. A is a lower voice, B" → 
 - **F32b** Tiny Forests Two Host Segment · 0 · not-made
   asked: "Turn this article into a roughly 90-second podcast chat between two hosts. Use two clearly different English voices, one male and one female" → 
-- **J49c** Shorter Clip Same Opening · 0 · not-made
-  asked: "Make an 8-second widescreen video of a paper boat drifting slowly across a pond, fixed camera, soft morning light. Silent, no text." → create_video_from_text | 
-- **J51b** Resize Finished Clip Without Remaking · 0 · not-made
-  asked: "Make an 8-second widescreen cartoon of a little orange robot watering a potted plant. Put 'Small steps' at the top throughout. No sound." → create_video_from_text | 
 - **C15c** Two Coworkers Two Replacement Faces · 3 · asked-unneeded, kept-asking, wrong-kind, no-audio, must-have-missed, major-fault, not-usable
   asked: "Swap both faces in this 10-second office clip: the man's face from the man's portrait, and the woman's from the woman's portrait. Keep their" → detect_faces→detect_faces→detect_faces · judge: The agent produced only face-detection previews and clarification requests, leaving the requested two-face video edit undone.
 - **E27a** Warm Music for Morning Tips · 5 · asked-unneeded, wrong-kind, wrong-length, must-have-missed, major-fault, not-usable
@@ -108,6 +103,8 @@ Step errors:
   asked: "Put this fox in the top-right corner as a small logo for the whole video. Remove its white background, leave a little space around it, and k" → remove_image_background · judge: The output is a large fox image with a blurred background and dark halos, not the requested logo-overlay video.
 - **F30b** Upbeat Reel Music Default · 20 · wrong-length, must-have-missed, major-fault, not-usable
   asked: "Can you make me some music? Something upbeat for a reel." → generate_music · judge: A 15-second audio file was delivered, but it contains unrelated spoken dialogue, and the supplied evidence does not establish the requested upbeat musical qualities.
+- **J49c** Shorter Clip Same Opening · 20 · wrong-length, must-have-missed, major-fault, not-usable
+  asked: "Make an 8-second widescreen video of a paper boat drifting slowly across a pond, fixed camera, soft morning light. Silent, no text." → create_video_from_text |  · judge: The clip shows a paper boat drifting on a softly lit pond, but it remains eight seconds instead of being cut to five.
 - **G37b** Rescheduled Event Across All Formats · 21 · wrong-kind, too-few-outputs, must-have-missed, major-fault, not-usable
   asked: "Make a matching 4:5 poster, vertical story image and 10-second vertical reel for Rooftop Jazz. Put these details on each: 17 October 2027 / " → generate_image→edit_image→create_video_from_image | edit_image→edit_image · judge: The two images clearly show the corrected date in a matching cream-and-burgundy design, but the revised pack is incomplete without the reel.
 - **H44c** Rooftop Jazz in Two Formats · 21 · too-few-outputs, must-have-missed, text-wrong, major-fault, not-usable
@@ -126,6 +123,8 @@ Step errors:
   asked: "Turn this into a 9:16 vertical clip. Show the man when he asks his question, then the woman when she answers, with each centred while talkin" → edit_video · judge: The output keeps a 10-second office scene but fails to make it vertical or centre the speakers individually.
 - **H42b** Gym Promo With Visit Details · 29 · must-have-missed, text-wrong, major-fault, not-usable
   asked: "Make a 10-second vertical promo for Northside Gym. Use a welcoming gym scene, not hardcore bodybuilding, with upbeat music and no voiceover." → create_video_from_text · judge: The vertical promo has a welcoming cycling scene, but garbled business details and unwanted speech prevent it from being usable.
+- **J51b** Resize Finished Clip Without Remaking · 30 · wrong-aspect, must-have-missed, major-fault, not-usable
+  asked: "Make an 8-second widescreen cartoon of a little orange robot watering a potted plant. Put 'Small steps' at the top throughout. No sound." → create_video_from_text |  · judge: The cartoon and title are clearly visible, but the requested vertical resize with navy padding has not been delivered.
 - **H40c** Sneaker Captions Stay Safely Inside · 32 · must-have-missed, text-wrong, major-fault, not-usable
   asked: "Make a silent 15-second 9:16 sneaker ad. No photo—use a plain white leather low-top with white laces and a white sole, no logo. Three moving" → create_video_from_text · judge: The vertical white-sneaker ad has readable captions, but the opening text is garbled and every shown caption violates the requested top safe margin.
 - **G35b** Imagine My Kitchen Renovation · 33 · must-have-missed, major-fault, not-usable

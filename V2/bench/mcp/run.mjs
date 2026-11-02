@@ -233,14 +233,14 @@ async function runItem(it) {
     T.kind = k.kind; T.denied = T.approvals.filter((a) => !a.approve).map((a) => `${a.name}: ${a.reason}`); for (const a of T.approvals) delete a.pending;
     const steps = await buildSteps(T.calls, sess, fixturesByPath, M, rec.turns.length);
     T.plan = { shape: "mcp", say: r.text.slice(0, 400), refuse: k.kind === "refusal" ? r.text.slice(0, 400) : "", tier_move: k.kind === "cannot" ? r.text.slice(0, 400) : null, estimate: null, steps: steps.map((s) => ({ tool: s.tool, model: s.params.model, resolution: s.params.resolution, inputs: s.inputs, produces: s.produces, params: s.params, credits: s.credits })) };
-    T.ran = steps.map((s) => ({ tool: s.tool, state: s.state, output: s.output, credits: s.credits, cached: false, simulated: false, note: s.url ? "downloaded from the job's signed URL" : s.state === "done" && !s.output && !READ_ONLY.includes(s.tool) ? "the job was created but its result was never fetched" : null, error: s.error, seconds: null }));
-    T.spent = steps.reduce((a, s) => a + (s.credits || 0), 0); T.seconds = Math.round((Date.now() - s1) / 1000);
+    if (steps.length) T.ran = steps.map((s) => ({ tool: s.tool, state: s.state, output: s.output, credits: s.credits, cached: false, simulated: false, note: s.url ? "downloaded from the job's signed URL" : s.state === "done" && !s.output && !READ_ONLY.includes(s.tool) ? "the job was created but its result was never fetched" : null, error: s.error, seconds: null }));
+    T.spent = steps.reduce((a, s) => a + (s.credits || 0), 0); T.seconds = Math.round((Date.now() - s1) / 1000);   // (a turn with no steps has no `ran`, see above)
     rec.turns.push(T);
     if (T.kind === "refusal") break;
   }
   rec.spent = rec.turns.reduce((a, t) => a + (t.spent || 0), 0); rec.seconds = Math.round((Date.now() - t0) / 1000); spentRun += rec.spent;
   writeFileSync(join(OUT, `${it.id}.json`), JSON.stringify(rec, null, 2));
-  console.log(`${it.id.padEnd(6)} ${String(rec.spent).padStart(4)} cr ${String(rec.seconds).padStart(4)} s · ${rec.turns.map((t) => `${t.dialog.length ? `${t.dialog.map((d) => d.asked[0]).join("+")} ` : ""}${t.calls.length ? t.calls.map((c) => c.name.replace(/^(create_|generate_|wait_for_|get_)/, "")).join("→") : "no tool"}${t.denied.length ? ` [refused ${t.denied.length}]` : ""} [${t.ran.filter((s) => s.output).length} files]`).join(" | ")}`);
+  console.log(`${it.id.padEnd(6)} ${String(rec.spent).padStart(4)} cr ${String(rec.seconds).padStart(4)} s · ${rec.turns.map((t) => `${t.dialog.length ? `${t.dialog.map((d) => d.asked[0]).join("+")} ` : ""}${t.calls.length ? t.calls.map((c) => c.name.replace(/^(create_|generate_|wait_for_|get_)/, "")).join("→") : "no tool"}${t.denied.length ? ` [refused ${t.denied.length}]` : ""} [${(t.ran || []).filter((s) => s.output).length} files]`).join(" | ")}`);
   return rec;
 }
 

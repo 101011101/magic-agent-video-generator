@@ -2,13 +2,13 @@
 
 152 items, the same prompt to both. Agent records from real-1 and latest; MCP baseline from mcp-1 (an off-the-shelf chat model with Magic Hour's hosted MCP connected, free plan as a gate).
 
-**Head to head: the agent wins 73, the MCP wins 68, 11 ties → win rate 52% of decided items (pairwise judge where both delivered; otherwise made-vs-not or the grader's score).**
+**Head to head: the agent wins 67, the MCP wins 69, 16 ties → win rate 49% of decided items (pairwise judge where both delivered; otherwise made-vs-not or the grader's score).**
 
 | | Agent | MCP |
 |---|---|---|
-| pass | 90 (59%) | 57 (38%) |
-| mean score | 75 | 60 |
-| delivered a file | 137 | 125 |
+| pass | 90 (59%) | 62 (41%) |
+| mean score | 75 | 61 |
+| delivered a file | 137 | 127 |
 | credits | 8275 | 10115 |
 | minutes of item time | 88 | 142 |
 | questions asked (for information) | 16 | 16 |
@@ -20,13 +20,13 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | A. Single images | 24 | 23 | 20 | 97 | 89 | 7 | 17 | 0 | 29% | 180 | 290 |
 | B. Image edits | 26 | 24 | 16 | 94 | 80 | 8 | 16 | 2 | 33% | 130 | 295 |
-| C. Faces and characters | 12 | 8 | 6 | 74 | 82 | 3 | 7 | 2 | 30% | 825 | 759 |
+| C. Faces and characters | 12 | 8 | 8 | 74 | 88 | 1 | 7 | 4 | 13% | 825 | 759 |
 | D. Short video | 18 | 3 | 3 | 53 | 51 | 10 | 8 | 0 | 56% | 2086 | 2828 |
 | E. Editing the user's video | 18 | 7 | 0 | 54 | 12 | 13 | 2 | 3 | 87% | 324 | 707 |
 | F. Sound | 7 | 1 | 1 | 59 | 26 | 5 | 1 | 1 | 83% | 45 | 65 |
 | G. Composed pieces | 16 | 8 | 3 | 72 | 53 | 8 | 8 | 0 | 50% | 840 | 875 |
 | H. Ads and reels | 13 | 3 | 1 | 56 | 46 | 8 | 4 | 1 | 67% | 2674 | 3048 |
-| J. Conversation | 18 | 13 | 7 | 83 | 63 | 11 | 5 | 2 | 69% | 1171 | 1248 |
+| J. Conversation | 18 | 13 | 10 | 83 | 71 | 7 | 6 | 5 | 54% | 1171 | 1248 |
 
 ## What the MCP side did
 
@@ -36,7 +36,7 @@ Tools it called (steps): edit_image ×83, generate_image ×46, create_video_from
 Calls the free-plan gate refused:
 - 3× insufficient credits: this call needs about n credits and n remain of 
 
-## Where the MCP won (68)
+## Where the MCP won (69)
 
 - **A01b** Premium Candle Product Shot · agent 94 pass (5 cr) vs MCP 100 pass (10 cr) · A delivers a more convincing luxury scented-candle advertisement through amber glass, restrained branding, a gold lid, and coordinated warm lighting. Its suppor
 - **A01c** Square White Background Sneaker · agent 100 pass (5 cr) vs MCP 100 pass (5 cr) · Both meet the core requirements, but A offers a more balanced composition and clearer shoe details, making it the stronger marketplace product photo.
@@ -104,21 +104,22 @@ Calls the free-plan gate refused:
 - **J49b** Bigger Headline Same Poster · agent 94 pass (20 cr) vs MCP 94 pass (20 cr) · A better preserves the original serif font, headline centre point, and coffee illustration. Both retain the exact wording and square format, but B noticeably ch
 - **J50a** Make the First One Square · agent 58 (10 cr) vs MCP 100 pass (25 cr) · B preserves its earlier fox illustration, including the curled pose, colours, moon, and meadow details. A introduces an entirely different fox-and-moon composit
 - **J51a** Switch to TikTok Before Making · agent 49 (144 cr) vs MCP 94 pass (144 cr) · A better delivers the cosy atmosphere through warmer wood tones, softer rendering, and a balanced windowsill composition. Both are vertical with visible rain an
+- **J51b** Resize Finished Clip Without Remaking · agent 44 (192 cr) vs MCP 30 (192 cr) · A preserves a complete, readable cartoon composition with the robot, potted plant and exact title visible. B has the vertical shape but sacrifices the full pict
 - **J52a** Night Market Poster and Reel · agent 58 (207 cr) vs MCP 35 (202 cr) · B’s reel is substantially more polished, with all five requested strings clearly readable and visible steam/light animation behind them. A supplies both assets,
 - **J55a** Full Creative Control Within Brief · agent 94 pass (144 cr) vs MCP 94 pass (144 cr) · A delivers the exact six-second duration and clearly shows water reaching the potted sunflower’s soil. Its detailed robot, warm lighting, and rooftop setting al
 
-## The agent's clearest wins (top 12 of 73)
+## The agent's clearest wins (top 12 of 67)
 
 - **E25a** Keep Her Centred in Portrait · agent 100 pass (0 cr) vs MCP 0 (0 cr) · the agent delivered a file; the MCP side delivered nothing
 - **E26a** Pick the Best Ten Seconds · agent 94 pass (0 cr) vs MCP 0 (0 cr) · the agent delivered a file; the MCP side delivered nothing
 - **E27b** Choose Music That Fits · agent 94 pass (30 cr) vs MCP 0 (0 cr) · the agent delivered a file; the MCP side delivered nothing
-- **J49c** Shorter Clip Same Opening · agent 94 pass (192 cr) vs MCP 0 (192 cr) · the agent delivered a file; the MCP side delivered nothing
 - **E27a** Warm Music for Morning Tips · agent 94 pass (30 cr) vs MCP 5 (15 cr) · B delivers a 10.1-second clip showing the woman at the kitchen table, consistent with the requested video and duration. Although the audio requirements cannot b
 - **E27c** Music Beneath the Radio Calls · agent 94 pass (30 cr) vs MCP 5 (15 cr) · B provides a seven-second cockpit clip with visible subtitles including 'Rook, you with me?', whereas A delivers nothing usable. The images alone do not establi
 - **E29a** Fox Logo Throughout the Clip · agent 100 pass (5 cr) vs MCP 20 (5 cr) · B shows the woman at the kitchen table with a small, unclipped fox in the top-right corner, clear margins, no white rectangle, and no obstruction of her face in
 - **G37a** Night Market Event Pack · agent 94 pass (265 cr) vs MCP 16 (260 cr) · B delivers all three requested formats with the exact event details legible and unclipped. Its 10-second reel shows changing lantern imagery while keeping the t
 - **A06c** Transparent Moon Bakery Logo · agent 94 pass (10 cr) vs MCP 17 (15 cr) · A clearly presents the exact name “Mooncrumb” in dark navy with an intact gold crescent above it. Although its white background raises a transparency concern, i
 - **F31a** Calm Voice Reading Supplied Script · agent 76 (0 cr) vs MCP 0 (0 cr) · the agent delivered a file; the MCP side delivered nothing
+- **J49c** Shorter Clip Same Opening · agent 94 pass (192 cr) vs MCP 20 (192 cr) · B meets the requested five-second duration and retains a widescreen, text-free pond scene. However, its visibly different footage violates the instruction to ch
 - **F30b** Upbeat Reel Music Default · agent 91 (15 cr) vs MCP 20 (15 cr) · by the grader's score (91 vs 20)
 - **G36a** One Coffee Ad Three Shapes · agent 100 pass (30 cr) vs MCP 35 (30 cr) · A delivers all three requested formats with the exact copy, steaming cups, consistent cream-and-dark-green styling, and layouts adapted to each canvas. B is vis
 

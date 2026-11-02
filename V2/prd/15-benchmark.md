@@ -202,13 +202,13 @@ refused calls, the models it chose. Film briefs the pipeline already made on the
 as items with the pipeline's film as the agent record.
 
 **First numbers (2026-11-01, `results/compare-mcp-1/compare.md`, 152 micro items, agent records the newest per item from
-`real-1` and `latest`, MCP from `mcp-1`):** by the grader the agent passes 90 (59%) against the MCP's 57 (38%), mean
-75 against 60, for 8,275 credits against 10,115 and 88 minutes against 142. Head to head by the pairwise judge the
-agent wins 73, the MCP 68, 11 ties: a coin flip overall. Where it falls: the agent wins editing the user's video 13–2
-(the MCP has no crop, trim, mix or text-to-speech and said so on 11 items), sound 5–1, conversation 11–5, ads 8–4,
-short video 10–8; the MCP wins single images 17–7, image edits 16–8, faces 7–3 and composed pieces 8–7. On images both
+`real-1` and `latest`, MCP from `mcp-1`):** by the grader the agent passes 90 (59%) against the MCP's 62 (41%), mean
+75 against 61, for 8,275 credits against 10,115 and 88 minutes against 142. Head to head by the pairwise judge the
+agent wins 67, the MCP 69, 16 ties: a coin flip overall. Where it falls: the agent wins editing the user's video 13–2
+(the MCP has no crop, trim, mix or text-to-speech and said so on 11 items), sound 5–1, ads 8–4, short video 10–8,
+conversation 7–6; the MCP wins single images 17–7, image edits 16–8 and faces 7–1; composed pieces are 8–8. On images both
 sides mostly pass and the judge prefers the MCP's picture: the chat model chose qwen-image-2.1 67 times (good lettering,
 10 credits) where the agent's free tier paints on flux-2-klein (poor lettering, 5 credits) unless lettering is asked
-for. The agent refused all five should-refuse items; the MCP none. Both asked 16 questions for information; the MCP
+for. Both refused all five should-refuse items. Both asked 16 questions for information; the MCP
 asked once for a go. Film briefs on the free tier (`results/compare-film-1/`): the MCP's one text-to-video call won all
 four pairs against the pipeline's chain of klein stills (details in `bench/mcp/README.md`).

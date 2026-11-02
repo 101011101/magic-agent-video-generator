@@ -66,10 +66,10 @@ gates that stopped it 6 to 8 times per film on flux-2-klein's failures.
 
 ## What the MCP arm did on the micro groups (mcp-1)
 
-By the grader: A single images 20/24 pass, B edits 16/26, C faces 6/12, D short video 3/18, E editing the user's video
+By the grader: A single images 20/24 pass, B edits 16/26, C faces 8/12, D short video 3/18, E editing the user's video
 0/18 (it said it cannot crop, trim, mix music under a clip or add a voice-over, and did nothing in 11 of 18), F sound
-1/7 (no text-to-speech in the MCP), G composed pieces 3/16, H ads 1/13, J conversation 7/18. It refused none of the
-five should-refuse items (a celebrity's face into an ad, a minor's photo, a trademark). It asked 13 questions for
+1/7 (no text-to-speech in the MCP), G composed pieces 3/16, H ads 1/13, J conversation 10/18. It refused all five should-refuse
+items in words (a celebrity's face into an ad, a minor's photo, a trademark), with an alternative offered each time. It asked 13 questions for
 information over 152 items and asked once for a go. It chose qwen-image-2.1 and flux-schnell for images, ltx-2.5 and
 minimax-h3 for video, on its own; the gate refused no call in the micro pass. Tool calls: 83 edit_image, 46
 generate_image, 26 create_video_from_text, 13 create_video_from_image, 8 detect_faces, 6 subtitles, 6 music, 3
@@ -77,9 +77,9 @@ edit_video, 2 face swaps on photos, 2 on video.
 
 ## Agent vs MCP on the micro groups (`results/compare-mcp-1/`, 2026-11-01)
 
-Agent records: the newest per item from `real-1` and `latest`. By the grader: agent 90 pass (59%) vs MCP 57 (38%);
-mean 75 vs 60; credits 8,275 vs 10,115; 88 vs 142 minutes. Pairwise: agent 73, MCP 68, 11 ties. By group (agent wins–MCP wins): A single images 7–17, B edits 8–16, C faces 3–7,
-D short video 10–8, E editing the user's video 13–2, F sound 5–1, G composed 7–8, H ads 8–4, J conversation 11–5.
+Agent records: the newest per item from `real-1` and `latest`. By the grader: agent 90 pass (59%) vs MCP 62 (41%);
+mean 75 vs 61; credits 8,275 vs 10,115; 88 vs 142 minutes. Pairwise: agent 67, MCP 69, 16 ties. By group (agent wins–MCP wins): A single images 7–17, B edits 8–16, C faces 1–7,
+D short video 10–8, E editing the user's video 13–2, F sound 5–1, G composed 8–8, H ads 8–4, J conversation 7–6.
 Read it as: the agent is far ahead on pass rate and on anything that needs a cut, a crop, a mix, a voice, a chain or a
 refusal; on a single picture both pass and the judge prefers the MCP's, which the chat model made on qwen-image-2.1
 (67 of its image calls) where the agent's free tier paints on flux-2-klein.
@@ -90,6 +90,6 @@ refusal; on a single picture both pass and the judge prefers the MCP's, which th
 |---|---|---|---|
 | mcp-smoke | 3 | 35 | the first pass through the plumbing; A01d pass, B07a and J49a fail |
 | mcp-denytest | 1 | 0 | the gate with a 3-credit cap: the call refused, the model reports it and makes nothing |
-| mcp-1 | 152 | 10,115 | the micro groups A–H and J, 4 at a time, 142 min of item time; 57 pass (38%), mean 60; graded with `bench/v1/grade.mjs`, report in `results/mcp-1/report.md`, audit page `results/mcp-1/index.html`; the first pass stopped at a 6,000 cap after 123 items and the last 29 (H, J) ran in a second pass with the same prefix |
+| mcp-1 | 152 | 10,115 | the micro groups A–H and J, 4 at a time, 142 min of item time; 62 pass (41%), mean 60; graded with `bench/v1/grade.mjs`, report in `results/mcp-1/report.md`, audit page `results/mcp-1/index.html`; the first pass stopped at a 6,000 cap after 123 items and the last 29 (H, J) ran in a second pass with the same prefix |
 | mcp-film-2 | 4 | 984 | the bench's film briefs I45a–I48a: one text-to-video call each (minimax-h3 or ltx-2.5, 8–15 s, 480p); I47a and I48a pass, I45a and I46a fail (garbled labels, wrong aircraft; dialogue where silence was asked) |
 | mcp-film-1 | 2 | 960 | the economists' podcast (30 s, ltx-2.5, 720 credits; the first call was refused by the API for a prompt over 2,000 characters) and Cabin Coffee (10 s, ltx-2.5, 240; "Cabin Cofee" on the end card) |

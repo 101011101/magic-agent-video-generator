@@ -61,9 +61,9 @@ the stage-by-stage spawn with the card's cap, notes in the session, the film car
 
 **2026-11-01 (the MCP baseline, T-048).** `V2/bench/mcp/`: every bench v1 item to the agent's own chat model with Magic Hour's
 hosted MCP and nothing else, the free plan emulated by an approval gate; the same grader; a pairwise judge and a side-by-side
-page (`compare.mjs`). 152 micro items: agent 90 pass (59%) vs MCP 57 (38%), mean 75 vs 60, credits 8,275 vs 10,115; pairwise
-73–68 with 11 ties. The agent wins where its code tools and its conversation are the difference (editing the user's video,
-sound, ads, conversation, refusals); the MCP wins single images and edits because the chat model picks qwen-image-2.1 where
+page (`compare.mjs`). 152 micro items: agent 90 pass (59%) vs MCP 62 (41%), mean 75 vs 61, credits 8,275 vs 10,115; pairwise
+67–69 with 16 ties. The agent wins where its code tools and its conversation are the difference (editing the user's video,
+sound, ads, short video); the MCP wins single images, edits and faces because the chat model picks qwen-image-2.1 where
 the free tier paints on flux-2-klein. Four film briefs on the free tier: the MCP's single text-to-video call won all four
 against the pipeline (`results/compare-film-1/`). Pages: `V2/bench/v1/results/compare-mcp-1/index.html`,
 `compare-film-1/index.html`, `mcp-1/index.html` (served by `bench/v1/serve.mjs` on 4748). Findings for the pipeline: the
