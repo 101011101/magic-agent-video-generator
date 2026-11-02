@@ -3,13 +3,13 @@
 // bench/v1/grade.mjs and bench/mcp/compare.mjs read it like any item. The turn also carries `stages`: the run's whole
 // pathway (story, roots, screenplay, stills with their prompts and attempts, clips with their frames, sound, film) for
 // the comparison page; the grader reads plan and ran only.
-// Usage: node V2/bench/mcp/film/record.mjs --item I91a --run bench-cabin [--items V2/bench/mcp/film/items]
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+// Usage: node V2/bench/mcp/film/record.mjs --item I91a --run bench-cabin [--items V2/bench/mcp/film/items] [--out agent: the arm's folder under film/ (agent = the chain, direct = direct generation)]
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url)), V2 = join(HERE, "../../..");
 const arg = (k, d = null) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
-const id = arg("--item"), label = arg("--run"); if (!id || !label) throw new Error("--item <id> --run <label>");
+const id = arg("--item"), label = arg("--run"), OUT = join(HERE, arg("--out", "agent")); if (!id || !label) throw new Error("--item <id> --run <label>"); mkdirSync(OUT, { recursive: true });
 const itemsDir = arg("--items", join(HERE, "items")), itemFile = [join(itemsDir, `${id}.json`), join(V2, "bench/v1/items", `${id}.json`)].find(existsSync); if (!itemFile) throw new Error(`no item ${id}`);
 const item = JSON.parse(readFileSync(itemFile, "utf8")), run = JSON.parse(readFileSync(join(V2, "runs", label, "run.json"), "utf8"));
 const R = join(V2, "runs", label), has = (f) => existsSync(join(R, f)), rel = (f) => (f ? `runs/${label}/${f}` : null);
@@ -32,10 +32,10 @@ const stages = [
   { stage: "sound", credits: creditsBy(/^(music|voice|tts|narration)-/), items: has("sound") ? readdirSync(join(R, "sound")).filter((f) => /\.(mp3|wav|m4a)$/i.test(f)).map((f) => ({ id: f, file: rel(`sound/${f}`) })) : [], text: run.build?.narration ? `narration: ${typeof run.build.narration === "string" ? run.build.narration : JSON.stringify(run.build.narration)}` : "" },
   { stage: "film", credits: 0, items: ["film-raw.mp4", "film.mp4", "film-music.mp4", "film-narrated.mp4"].filter((f) => has(`clips/${f}`)).map((f) => ({ id: f, file: rel(`clips/${f}`) })) },
 ];
-const rec = { id, item, session: label, sessionDir: `runs/${label}`, baseline: "agent-pipeline", simulated: false, started: run.started_at || new Date().toISOString(),
-  turns: [{ text: item.turns[0].text, materials: item.turns[0].materials || [], dialog: [], agent: `The film pipeline on the ${run.models?.tier || "free"} tier: story → assets → screenplay → keyframes → clips → film. ${note}`, firstQuestions: [],
+const rec = { id, item, session: label, sessionDir: `runs/${label}`, baseline: run.build?.mode === "direct" ? "agent-direct" : "agent-pipeline", simulated: false, started: run.started_at || new Date().toISOString(),
+  turns: [{ text: item.turns[0].text, materials: item.turns[0].materials || [], dialog: [], agent: run.build?.mode === "direct" ? `Direct generation on the ${run.models?.tier || "free"} tier: story → one text-to-video generation${Object.keys(made).length > 1 ? `s (${Object.keys(made).length}, each continuing from the previous last frame)` : ""} on ${run.models?.video} @${run.models?.vres}, audio by the model. ${note}` : `The film pipeline on the ${run.models?.tier || "free"} tier: story → assets → screenplay → keyframes → clips → film. ${note}`, firstQuestions: [],
     plan: { shape: "film", say: "", refuse: "", tier_move: null, estimate: null, steps: [{ tool: "film", model: run.models?.video || null, resolution: run.models?.vres || null, inputs: [], produces: film ? film.split("/").pop() : "film.mp4", params: { models: run.models || null }, credits }] },
     ran: [{ tool: "film", state: film ? "done" : "failed", output: film, credits, cached: false, simulated: false, note, error: film ? null : "the run has no finished film", seconds: null }], stages, spent: credits, seconds: null }],
   spent: credits, seconds: null };
-writeFileSync(join(HERE, "agent", `${id}.json`), JSON.stringify(rec, null, 2));
+writeFileSync(join(OUT, `${id}.json`), JSON.stringify(rec, null, 2));
 console.log(`${id} ← runs/${label}: ${film || "NO FILM"} · ${credits} credits · ${note} · stages: ${stages.map((s) => `${s.stage}${s.items ? ` ${s.items.length}` : ""} (${s.credits} cr)`).join(", ")}`);

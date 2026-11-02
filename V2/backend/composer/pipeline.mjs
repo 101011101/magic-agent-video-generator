@@ -4,6 +4,7 @@
 // (and what was built on a retried still), --accept ids keeps them, --recheck ids runs the gates again on them.
 // Usage: CLEANED_CAP=… node V2/backend/composer/pipeline.mjs --brief "…" --label vanderbilt [--reuse V1/runs/exp-vanderbilt2]
 //        [--until story|assets|screenplay|state|keyframes|paint|film] [--total 30] [--max 15] [--model wan-3.0]
+//        [--clips direct (the default for --until film: one text-to-video generation, or a few continuing from each other's last frame) | --chain (the keyframe chain)] [--refs a.png,b.jpg: reference images for direct generation] [--aspect 16:9] [--max-seg 30: seconds per generation]
 //        [--tier paid|cheap|free] [--still <model>] [--res 640px|1k|2k|4k] [--model <video model>] [--vres 480p|720p|1080p] [--script-from <label>: reuse that run's screenplay, the same film on other models] [--map new-id=old-id,…] [--no-generate] [--crop-direct 0.5] [--retry s1-3,clip-2] [--accept s1-3] [--recheck s1-3] [--restore s1-1:0: make an earlier attempt (its number on the results page) the still again; what was built on the still is treated as after --retry] [--dry: no paid call, each would-be job listed with its cost] [--clips pinned|start|t2v|seq] [--max-seq 15: seconds per sequence] [--seq-across: a sequence may run across scenes] [--speed-up 1.4: fast sequences rendered longer and played faster] [--voice-refs: t2v and seq speak in the bank voices] [--only clip-7,clip-8 | with --retry: the only dependents of a retried still that are remade, the rest kept and marked] [--retry root-<id> | --accept root-<id> for a flagged sheet] [--reactions] [--parallel N: clips at a time, default all at once] [--no-subtitles]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
@@ -18,6 +19,7 @@ import { bars } from "../lib/media.js";
 import { State } from "./state/state.js";
 import { planKeyframes, paintKeyframes } from "./keyframes/keyframes.js";
 import { makeClips, makeSequences, stitchFilm } from "./edit/edit.js";
+import { runDirect } from "./direct/direct.js";
 import { GRID } from "./screenplay/screenplay.js";
 import { narrationTrack, mixNarration, musicBed, mixMusic } from "./sound/sound.js";
 import { subtitlesFromScript } from "../lib/captions.js";
@@ -34,7 +36,11 @@ if (!ORDER.includes(UNTIL)) { console.error(`--until must be one of ${ORDER.join
 let PROF; try { PROF = profile({ tier: opt("--tier", "paid"), still: opt("--still", null), res: opt("--res", null), video: opt("--model", null), vres: opt("--vres", null) }); } catch (e) { console.error(String(e.message || e)); process.exit(2); }
 const TOTAL = num("--total", 30), MAX = num("--max", 15), model = PROF.video, STILL = PROF.still, VID = { model: PROF.video, resolution: PROF.vres, audio: true }, SCRIPT_FROM = opt("--script-from", null), PAR = Math.max(0, Math.round(num("--parallel", 0)));   // 0 = every clip at once (Magic Hour publishes no concurrency cap; the credit guard reserves jobs in flight)
 const reuse = opt("--reuse", null), MAP = Object.fromEntries(list("--map").map((x) => x.split("="))), GENERATE = !args.includes("--no-generate"), RETRY = list("--retry"), ACCEPT = list("--accept"), RECHECK = list("--recheck"), RESTORE = list("--restore"), REACTIONS = args.includes("--reactions"), SUBS = !args.includes("--no-subtitles"), CROP_DIRECT = num("--crop-direct", 0.5), DRY = args.includes("--dry"), CLIPS = opt("--clips", "pinned"), ONLY = list("--only"), VOICE_REFS = args.includes("--voice-refs");
-if (!["pinned", "start", "t2v", "seq"].includes(CLIPS)) { console.error(`--clips must be pinned, start, t2v or seq (got "${CLIPS}")`); process.exit(2); }
+if (!["pinned", "start", "t2v", "seq", "direct"].includes(CLIPS)) { console.error(`--clips must be pinned, start, t2v, seq or direct (got "${CLIPS}")`); process.exit(2); }
+// Direct generation (T-058) is the default for a whole film from a brief: the video model composes the piece itself. The chain
+// (assets, screenplay, keyframes, pinned clips) runs when a constraint forces it: a chain clip mode or --chain asked for, a stage
+// short of the film (--until), an existing run edited (--retry, --accept, --recheck, --restore, --only, --script-from), a reused bank.
+const DIRECT = CLIPS === "direct" || (!args.includes("--clips") && !args.includes("--chain") && UNTIL === "film" && !RETRY.length && !ACCEPT.length && !RECHECK.length && !RESTORE.length && !ONLY.length && !SCRIPT_FROM && !reuse);
 const MAX_SEQ = num("--max-seq", 15), SEQ_ACROSS = args.includes("--seq-across"), SPEED_UP = num("--speed-up", 1);
 
 const dir = join(RUNS, label); for (const d of ["", "refs", "roots", "stills", "clips"]) mkdirSync(join(dir, d), { recursive: true });
@@ -49,6 +55,8 @@ let state = null;
 
 // 1. Story.
 say(`== story`); await runStory({ brief, log: L, run, say, seconds: TOTAL, reuse });
+// 1b. Direct generation: from the story straight to the video model (T-058); the chain only when a constraint forces it.
+if (DIRECT) { L.models = PROF; say(`== direct generation: ${describe(PROF)} (the chain: --chain, or --clips pinned|start|t2v|seq)`); const d = await runDirect({ brief, L, run, jobs, say, seconds: TOTAL, video: VID, aspect: opt("--aspect", "16:9"), refFiles: list("--refs"), maxSeg: args.includes("--max-seg") ? num("--max-seg", 0) : null, dry: DRY }); if (d.ok) say(`film: runs/${label}/${d.film} (${d.seconds} s, ${d.segments} generation${d.segments === 1 ? "" : "s"})`); finish(d.ok || DRY ? 0 : 2); }
 if (!upto("assets")) finish();
 // 2. Assets.
 say(`== assets`); const assets = await runAssets({ log: L, run, jobs, say, reuse, map: MAP, generate: GENERATE, retry: RETRY.filter((x) => x.startsWith("root-")).map((x) => x.slice(5)), accept: ACCEPT.filter((x) => x.startsWith("root-")).map((x) => x.slice(5)) });
@@ -151,7 +159,7 @@ for (const id of RECHECK) {   // the same gates as at paint time: none for a car
 }
 run.save();
 say(`== paint`);
-const painted = await paintKeyframes({ state, jobs, medium: L.medium, K, run, say, still: STILL, res: PROF.res, cropDirect: CROP_DIRECT });
+const painted = await paintKeyframes({ state, jobs, medium: L.medium, K, run, say, still: STILL, res: PROF.res, cropDirect: CROP_DIRECT, tier: opt("--tier", "paid") });
 const stale = state.stills.filter((s) => K.painted[s.id]?.stale).map((s) => s.id);
 if (stale.length) say(`STALE (kept as they are; --retry to repaint): ${stale.map((id) => `${id}${/\|/.test(String(K.painted[id].stale)) ? " (the plan changed under this id)" : ` (${K.painted[id].stale})`}`).join(", ")}`);
 const older = state.stills.filter((s) => K.painted[s.id]?.older).map((s) => s.id);

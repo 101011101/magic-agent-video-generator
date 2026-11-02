@@ -1,0 +1,80 @@
+// Direct generation (T-058): the video model composes the piece from the brief and the story, in one generation when the
+// piece fits the model's grid, else in a few played back to back, each later one continuing from the previous one's last
+// frame (the state's reference, attached as "previous") plus any supplied references. No assets, no screenplay, no
+// keyframes: the chain runs only when a constraint forces it (pipeline.mjs decides). The records are the chain's
+// (L.build.made, L.build.film, L.calls), so the results page, the film record and the comparison page read a direct
+// run like any other.
+import { existsSync, copyFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { join, basename, extname, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { jsonCall, S } from "../../lib/llm.js";
+import { video as videoModel } from "../../lib/models.js";
+import { frame, duration } from "../../lib/media.js";
+
+export const PROMPT_LIMIT = 2000, PROMPT_TARGET = 1700;   // Magic Hour refuses style.prompt over 2000 characters (the MCP baseline's first podcast call)
+
+// As few generations as the model's grid allows: one when the piece fits; else near-equal parts, each snapped to the grid.
+export function segmentsFor(total, model, maxSeg = null) {
+  const g = videoModel(model).grid, top = Math.min(Math.max(...g), maxSeg || Infinity), n = Math.max(1, Math.ceil(total / top)), snap = (w) => (g.includes(w) ? w : g.reduce((b, x) => (Math.abs(x - w) < Math.abs(b - w) ? x : b), g[0]));
+  const out = []; let left = total; for (let k = 0; k < n; k++) { const s = snap(k === n - 1 ? left : Math.round(total / n)); out.push(s); left -= s; } return out;
+}
+
+// The plan: one prose prompt per segment, the narration and the on-screen words exact, written from the story and the facts.
+export async function planDirect({ brief, L, segments, model, resolution, aspect, refs, say }) {
+  const story = L.story || {}, facts = L.research?.facts || [], looks = L.research?.looks || [], n = segments.length;
+  const schema = S.obj({ title: S.str, look: S.str, voice: S.str, segments: S.arr(S.obj({ seconds: S.num, prompt: S.str, narration: S.str, words_on_screen: S.arr(S.str), refs: S.arr(S.str), continuity: S.str })) });
+  const plan = await jsonCall({ name: "direct-plan", effort: "medium", schema, prompt: `You write the prompt(s) for a text-to-video model that makes a whole short piece on its own, picture and sound: it composes the scene, animates it, letters short words on screen when asked, and generates the audio, including spoken narration and dialogue, from the words you give it.
+
+THE BRIEF: ${brief}
+
+THE STORY (already worked out from the brief and the research; keep to it):
+title: ${story.title || ""}; kind: ${story.kind || ""}; style: ${story.style || ""}
+${story.story || ""}
+${facts.length ? `\nFACTS (true to the record; nothing contradicts them):\n${facts.map((f, i) => `${i + 1}. ${typeof f === "string" ? f : f.fact || JSON.stringify(f)}`).join("\n")}` : ""}${looks.length ? `\nLOOKS (how real things look):\n${looks.map((l) => `- ${l.thing}: ${l.look}`).join("\n")}` : ""}
+
+THE MODEL: ${model} at ${resolution}, ${aspect}. It makes the piece in ${n} generation${n === 1 ? "" : "s"} of ${segments.join(", ")} seconds, played back to back${n > 1 ? ". Each generation after the first continues from the previous one's LAST FRAME, which is attached to it as a reference image named \"previous\": the same scene, the same style, the same people and objects, picked up mid-action; it must not re-introduce them" : ""}.${refs.length ? ` Reference images available by name, to attach to a segment when it should match them: ${refs.join(", ")}.` : ""}
+
+WRITE, for each segment in order (seconds exactly as given):
+- prompt: prose, no headings, UNDER ${PROMPT_TARGET} CHARACTERS (the API refuses more than ${PROMPT_LIMIT}). One opening sentence fixes the medium and look, in the same words in every segment. Then timed beats from the segment's start ("0–3 s: …", "3–7 s: …") saying what is seen and what moves. The exact spoken words in quotes, with the voice described once in the first segment and named the same way after ("a calm adult English narrator says exactly: '…'"; a character's line: who, then the words). The exact on-screen words in quotes with where and how they appear; keep each on-screen string short (under 25 characters) and few, the model letters short words well and garbles long ones. Every named person, object and place described the same way in every segment. End with what must not happen: no other text, no cuts when the piece is one continuous shot, no music unless the brief asks for it, no subtitles.${n > 1 ? ` A segment after the first opens with: "Continue directly from the attached frame 'previous': the same scene, style, people and objects, mid-action." and introduces nothing again.` : ""}
+- narration: every spoken word of the segment, exactly as quoted in the prompt, in order (empty if nothing is spoken). Speech runs about 2.3 words a second: a segment's narration must fit its seconds with room to breathe.
+- words_on_screen: the exact on-screen strings of the segment, in order.
+- refs: the names of the reference images this segment should attach (from the list above; none if none).
+- continuity: one line: what the next segment must keep (who is where, what is on screen, the look).
+Also: title (the piece), look (the one opening sentence used in every prompt), voice (the narrator or voices, as described).` });
+  // the API's limit: a prompt over the target is compressed, every quoted string kept
+  for (const seg of plan.segments) if (seg.prompt.length > PROMPT_TARGET + 200) { say(`  prompt of ${seg.prompt.length} characters: compressing`); const c = await jsonCall({ name: "direct-shorten", effort: "low", schema: S.obj({ prompt: S.str }), prompt: `Rewrite this video prompt under ${PROMPT_TARGET} characters. Keep every string in quotes exactly (spoken words and on-screen words), the timed beats, the opening sentence and the closing constraints; cut adjectives and repetition.\n\n${seg.prompt}` }); seg.prompt = c.prompt; }
+  for (const seg of plan.segments) if (seg.prompt.length > PROMPT_LIMIT) seg.prompt = seg.prompt.slice(0, PROMPT_LIMIT - 1);
+  return plan;
+}
+
+// The run: plan (kept in the record), then each segment in order, the last frame extracted and fed to the next, then the film.
+export async function runDirect({ brief, L, run, jobs, say = console.log, seconds, video, aspect = "16:9", refFiles = [], maxSeg = null, dry = false }) {
+  const model = video.model, prof = videoModel(model), maxRefs = prof.maxRefs || 10, segs = segmentsFor(seconds, model, maxSeg);
+  const K = (L.build ??= {}); K.mode = "direct"; K.made ??= {};
+  // supplied references, copied into the run so the record points at them
+  const available = {}; mkdirSync(run.path("refs"), { recursive: true });
+  for (const f of refFiles) { const src = resolve(f); if (!existsSync(src)) { say(`  reference ${f}: not found, skipped`); continue; } const name = basename(f, extname(f)).replace(/[^a-z0-9_-]+/gi, "-"), rel = `refs/${name}${extname(f).toLowerCase()}`; if (!existsSync(run.path(rel))) copyFileSync(src, run.path(rel)); available[name] = rel; }
+  const same = K.plan?.mode === "direct" && K.plan.model === model && K.plan.seconds === seconds && JSON.stringify(K.plan.segments.map((s) => s.seconds)) === JSON.stringify(segs);
+  if (!same) { const p = await planDirect({ brief, L, segments: segs, model, resolution: video.resolution, aspect, refs: Object.keys(available), say }); p.segments.forEach((s, k) => { s.seconds = segs[k]; }); K.plan = { mode: "direct", model, seconds, aspect, title: p.title, look: p.look, voice: p.voice, segments: p.segments.slice(0, segs.length) }; K.made = {}; run.save(); }
+  say(`plan: "${K.plan.title}" · ${segs.length} generation${segs.length === 1 ? "" : "s"} (${segs.join(" + ")} s) on ${model} ${video.resolution} ${aspect}, audio by the model · ${K.plan.segments.map((s) => `${s.prompt.length} chars`).join(", ")}`);
+  const parts = []; let ok = true;
+  for (const [k, seg] of K.plan.segments.entries()) {
+    const n = k + 1, key = `clip-${n}`, file = `clips/direct-${n}.mp4`, prev = k > 0 ? `clips/direct-${k}-last.png` : null;
+    const refs = [...(prev ? [{ name: "previous", file: prev }] : []), ...(seg.refs || []).filter((r) => available[r]).map((r) => ({ name: r, file: available[r] }))].slice(0, maxRefs);
+    if (prev && !dry && !existsSync(run.path(prev))) { say(`  ${key}: the previous segment's last frame is missing; stopping`); ok = false; break; }
+    let r, note = "";
+    try { r = await jobs.tvideo(key, file, seg.prompt, refs, seg.seconds, { ...video, aspect_ratio: aspect }); }
+    catch (e) { if (refs.length && /reference|400|invalid/i.test(String(e))) { note = `references refused by the model (${String(e).slice(0, 140)}); generated without them`; say(`  ${key}: ${note}`); r = await jobs.tvideo(key, file, seg.prompt, [], seg.seconds, { ...video, aspect_ratio: aspect }); } else throw e; }
+    if (!dry && existsSync(run.path(file))) frame(run.path(file), "last", run.path(`clips/direct-${n}-last.png`));
+    K.made[n] = { clip: file, mode: "direct", model, seconds: seg.seconds, rendered: !dry && existsSync(run.path(file)) ? Math.round(duration(run.path(file)) * 10) / 10 : null, prompt: seg.prompt, narration: seg.narration, words: seg.words_on_screen, refs: refs.map((x) => `${x.name}=${x.file}`), start: prev, note: note || null, credits: r?.credits ?? null, cached: !!r?.cached, qa: { seconds: seg.seconds } };
+    run.save(); say(`  ${key}: ${seg.seconds} s${refs.length ? ` with ${refs.map((x) => x.name).join(", ")}` : ""}${r?.cached ? " (cached)" : dry ? " (dry run: estimated)" : ` · ${r?.credits ?? "?"} credits`}`);
+    parts.push(run.path(file));
+  }
+  if (!ok || dry) { K.film = null; return { ok: false, film: null, seconds, segments: segs.length }; }
+  // the film: the one generation as it is, or the segments re-encoded back to back
+  const film = "clips/film.mp4";
+  if (parts.length === 1) copyFileSync(parts[0], run.path(film));
+  else { const list = run.path("clips/concat.txt"); writeFileSync(list, parts.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join("\n") + "\n"); execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", list, "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", run.path(film)]); }
+  K.film = film; L.direct = { model, resolution: video.resolution, aspect, segments: segs, title: K.plan.title }; run.save();
+  return { ok: true, film, seconds: Math.round(duration(run.path(film)) * 10) / 10, segments: segs.length };
+}
