@@ -124,3 +124,28 @@ the mood of the coffee ad, a text-free seed clip). The one-minute diagram defeat
 sides (24 and 24, labels garbled); minimax-h3 in two segments lettered its first half legibly and handed the frame over
 intact, then drifted inside the second generation (34). The model's unasked speech and garbled captions are the faults
 that keep the four films from passing; the levers are in "Built" above.
+
+## The route and the anchors (2026-11-01, commits 071d242, 8c58b76)
+
+- **The route.** After the story, `routeDirect` counts the production (places, scenes, recurring people, shots the brief
+  itself demands, a storyboard) and the rule decides: the chain when the piece needs more than two generations on the
+  model, or a recurring cast across several places, or storyboarded shots; direct generation otherwise. Dry runs: the
+  podcast → direct (one place, one generation); the night ride → direct (one journey, two generations); a three-scene
+  lighthouse short with one keeper → chain ("1 recurring person across 3 places; the brief storyboards its shots").
+  `--chain` and `--clips` override; the decision is kept in `run.json` as `route`.
+- **The anchors.** Specific requirements inside a direct piece are painted first: the planner names the stills a video
+  model gets wrong on its own (a diagram, exact lettering, a product, a layout), they are painted on qwen-image-2.1
+  when words must be spelled, attached as `@name` references, and a later segment that names an anchor gets it again.
+  On the citric acid cycle the planner named one, `@cycle` (the whole lettered diagram); the video model took its
+  layout and most of its large labels, garbled the small tags, and the narration looped: 34 against 24 for one ltx
+  generation and 24 for the MCP; still not usable.
+- **The two-clip continuity test (I93a, a 60 s single take).** Ours: two 30 s minimax-h3 generations, the second bound
+  to the first's last frame; the hand-off is the same rider, jacket, bag, helmet and street, and she reaches the lit café
+  door at the end. The MCP made one 60 s ltx-2.5 generation and never faced a second clip. Grader: ours 37, the MCP 39;
+  both fail on the same fault, speech nobody asked for (Indonesian in ours, German in the MCP's), plus dusk light in the
+  MCP's.
+- **The fault that now decides most pieces** is the model's unasked speech: four of our six pieces and two of the MCP's
+  carry a foreign sentence the grader transcribes. The lever is sound ownership: when no segment has narration or
+  dialogue, generate with `audio: false` and lay an ambience track by code (the music generator asked for a texture,
+  or silence where the brief says no music); when narration is asked, keep the model's audio, which spoke the right
+  words on three of four pieces. Not run yet (a paid rerun).
