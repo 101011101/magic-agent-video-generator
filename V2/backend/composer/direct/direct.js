@@ -19,6 +19,32 @@ export function segmentsFor(total, model, maxSeg = null) {
   const out = []; let left = total; for (let k = 0; k < n; k++) { const s = snap(k === n - 1 ? left : Math.round(total / n)); out.push(s); left -= s; } return out;
 }
 
+// The route: direct generation or the keyframe chain, decided from the brief and the story. The chain is for a production
+// a few generations cannot carry: more than MAX_DIRECT_SEGMENTS generations on the model, a cast that recurs across several
+// places, or more distinct shots demanded than a generation composes on its own. Specific requirements inside a short piece
+// are not a reason for the chain: the planner paints them as anchors (see planDirect). --chain and --clips override this.
+export const MAX_DIRECT_SEGMENTS = 2, MAX_DIRECT_SHOTS = 4;
+export async function routeDirect({ brief, L, seconds, model, maxSeg = null }) {
+  const story = L.story || {}, segs = segmentsFor(seconds, model, maxSeg);
+  const c = await jsonCall({ name: "direct-route", effort: "low", schema: S.obj({ places: S.int, scenes: S.int, recurring_people: S.int, shots_demanded: S.int, storyboarded: S.bool, why: S.str }), prompt: `Read a film brief and its story and count what the production needs. Answer with numbers, not advice.
+
+BRIEF: ${brief}
+STORY: ${story.title || ""}; kind: ${story.kind || ""}; style: ${story.style || ""}
+${story.story || ""}
+
+- places: how many distinct settings the piece moves through (a continuous journey through one city is 1; a studio is 1; a flashback to another room is a second place).
+- scenes: how many separate scenes (a change of place or time).
+- recurring_people: how many named or distinct people must look the same across more than one scene.
+- shots_demanded: how many distinct shots the BRIEF itself demands (explicit cuts, angles, inserts, a storyboard); 1 for a single continuous take; 0 when it says nothing.
+- storyboarded: true when the brief fixes the framing of particular shots (a storyboard, "shot 1 … shot 2 …", "cut to …" lists).
+- why: one line.` });
+  const reasons = [];
+  if (segs.length > MAX_DIRECT_SEGMENTS) reasons.push(`${seconds} s is ${segs.length} generations on ${model}, more than ${MAX_DIRECT_SEGMENTS}`);
+  if (c.places > 1 && c.recurring_people >= 1) reasons.push(`${c.recurring_people} recurring ${c.recurring_people === 1 ? "person" : "people"} across ${c.places} places`);
+  if (c.shots_demanded > MAX_DIRECT_SHOTS || c.storyboarded) reasons.push(c.storyboarded ? "the brief storyboards its shots" : `${c.shots_demanded} distinct shots demanded`);
+  return { mode: reasons.length ? "chain" : "direct", why: reasons.length ? reasons.join("; ") : `${c.places} place${c.places === 1 ? "" : "s"}, ${c.scenes} scene${c.scenes === 1 ? "" : "s"}, ${c.recurring_people} recurring, ${segs.length} generation${segs.length === 1 ? "" : "s"} on ${model}; ${c.why}`, counts: c, segments: segs };
+}
+
 // The plan: one prose prompt per segment. The BRIEF is the contract (its medium, its exact words, its order of events);
 // the research's facts serve it where the subject is real; the story stage's rewrite is flavour only, never the spine.
 export async function planDirect({ brief, L, segments, model, resolution, aspect, refs, say }) {

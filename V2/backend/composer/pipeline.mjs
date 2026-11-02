@@ -19,7 +19,7 @@ import { bars } from "../lib/media.js";
 import { State } from "./state/state.js";
 import { planKeyframes, paintKeyframes } from "./keyframes/keyframes.js";
 import { makeClips, makeSequences, stitchFilm } from "./edit/edit.js";
-import { runDirect } from "./direct/direct.js";
+import { runDirect, routeDirect } from "./direct/direct.js";
 import { GRID } from "./screenplay/screenplay.js";
 import { narrationTrack, mixNarration, musicBed, mixMusic } from "./sound/sound.js";
 import { subtitlesFromScript } from "../lib/captions.js";
@@ -40,7 +40,8 @@ if (!["pinned", "start", "t2v", "seq", "direct"].includes(CLIPS)) { console.erro
 // Direct generation (T-058) is the default for a whole film from a brief: the video model composes the piece itself. The chain
 // (assets, screenplay, keyframes, pinned clips) runs when a constraint forces it: a chain clip mode or --chain asked for, a stage
 // short of the film (--until), an existing run edited (--retry, --accept, --recheck, --restore, --only, --script-from), a reused bank.
-const DIRECT = CLIPS === "direct" || (!args.includes("--clips") && !args.includes("--chain") && UNTIL === "film" && !RETRY.length && !ACCEPT.length && !RECHECK.length && !RESTORE.length && !ONLY.length && !SCRIPT_FROM && !reuse);
+const AUTO = !args.includes("--clips") && !args.includes("--chain") && UNTIL === "film" && !RETRY.length && !ACCEPT.length && !RECHECK.length && !RESTORE.length && !ONLY.length && !SCRIPT_FROM && !reuse;   // nothing forces a mode: the route decides after the story
+let DIRECT = CLIPS === "direct";
 const MAX_SEQ = num("--max-seq", 15), SEQ_ACROSS = args.includes("--seq-across"), SPEED_UP = num("--speed-up", 1);
 
 const dir = join(RUNS, label); for (const d of ["", "refs", "roots", "stills", "clips"]) mkdirSync(join(dir, d), { recursive: true });
@@ -55,8 +56,9 @@ let state = null;
 
 // 1. Story.
 say(`== story`); await runStory({ brief, log: L, run, say, seconds: TOTAL, reuse });
-// 1b. Direct generation: from the story straight to the video model (T-058); the chain only when a constraint forces it.
-if (DIRECT) { L.models = PROF; say(`== direct generation: ${describe(PROF)} (the chain: --chain, or --clips pinned|start|t2v|seq)`); const d = await runDirect({ brief, L, run, jobs, say, seconds: TOTAL, video: VID, aspect: opt("--aspect", "16:9"), refFiles: list("--refs"), maxSeg: args.includes("--max-seg") ? num("--max-seg", 0) : null, dry: DRY }); if (d.ok) say(`film: runs/${label}/${d.film} (${d.seconds} s, ${d.segments} generation${d.segments === 1 ? "" : "s"})`); finish(d.ok || DRY ? 0 : 2); }
+// 1b. The route (T-058): direct generation unless the production needs the chain (many generations, a recurring cast across places, storyboarded shots); then direct generation from the story straight to the video model.
+if (AUTO) { const r = L.route?.model === model && L.route?.seconds === TOTAL ? L.route : (L.route = { ...(await routeDirect({ brief, L, seconds: TOTAL, model, maxSeg: args.includes("--max-seg") ? num("--max-seg", 0) : null })), model, seconds: TOTAL }); run.save(); say(`== route: ${r.mode} (${r.why})`); DIRECT = r.mode === "direct"; }
+if (DIRECT) { L.models = PROF; say(`== direct generation: ${describe(PROF)} (the chain: --chain, or --clips pinned|start|t2v|seq)`); const d = await runDirect({ brief, L, run, jobs, say, seconds: TOTAL, video: VID, still: { model: STILL, resolution: PROF.res }, aspect: opt("--aspect", "16:9"), refFiles: list("--refs"), maxSeg: args.includes("--max-seg") ? num("--max-seg", 0) : null, dry: DRY }); if (d.ok) say(`film: runs/${label}/${d.film} (${d.seconds} s, ${d.segments} generation${d.segments === 1 ? "" : "s"})`); finish(d.ok || DRY ? 0 : 2); }
 if (!upto("assets")) finish();
 // 2. Assets.
 say(`== assets`); const assets = await runAssets({ log: L, run, jobs, say, reuse, map: MAP, generate: GENERATE, retry: RETRY.filter((x) => x.startsWith("root-")).map((x) => x.slice(5)), accept: ACCEPT.filter((x) => x.startsWith("root-")).map((x) => x.slice(5)) });
