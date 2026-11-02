@@ -9,7 +9,7 @@ import { join, basename, extname, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { jsonCall, S } from "../../lib/llm.js";
 import { video as videoModel } from "../../lib/models.js";
-import { frame, duration } from "../../lib/media.js";
+import { frame, duration, ssim } from "../../lib/media.js";
 
 export const PROMPT_LIMIT = 2000, PROMPT_TARGET = 1700;   // Magic Hour refuses style.prompt over 2000 characters (the MCP baseline's first podcast call)
 
@@ -78,7 +78,21 @@ Also: title (the piece), look (the one opening sentence used in every prompt), v
 }
 
 // The run: plan (kept in the record), then each segment in order, the last frame extracted and fed to the next, then the film.
-export async function runDirect({ brief, L, run, jobs, say = console.log, seconds, video, still = null, aspect = "16:9", refFiles = [], maxSeg = null, dry = false }) {
+// How a later segment continues the previous one (T-058, the two-clip test):
+//   ref   the previous segment's last frame attached as a named reference (@previous) to a text-to-video call: the model resembles it, then resets its camera within a second;
+//   frame the previous segment's last frame as the START frame of an image-to-video call: the first frame is exact (no named references in that call, so anchors are not attached);
+//   clip  the last seconds of the previous segment attached as a video reference (@motion) beside the last frame (@previous), so the model sees the motion, not only the pose; then the join is cut
+//         where the two clips' frames match best (the previous clip's last CLIP_OVERLAP seconds against the next clip's first), so the cut lands on the most similar pair.
+export const CONTINUE = ["ref", "frame", "clip"], CLIP_OVERLAP = 5, CUT_WINDOW = 3;
+// the best cut between the end of a and the start of b: the pair of frames (one from a's last window, one from b's first) with the highest similarity
+function bestCut(run, a, b, window = CUT_WINDOW, step = 0.25) {
+  const da = duration(run.path(a)), ta = []; for (let t = Math.max(0, da - window); t <= da - 0.1; t += step) ta.push(t);
+  const tb = []; for (let t = 0; t <= Math.min(window, duration(run.path(b)) - 0.1); t += step) tb.push(t);
+  const fa = ta.map((t, i) => { const o = run.path(`clips/cut-a-${i}.png`); frame(run.path(a), t, o); return o; }), fb = tb.map((t, i) => { const o = run.path(`clips/cut-b-${i}.png`); frame(run.path(b), t, o); return o; });
+  let best = { score: -1, ta: da, tb: 0 }; for (const [i, pa] of fa.entries()) for (const [j, pb] of fb.entries()) { const sc = ssim(pa, pb); if (sc > best.score) best = { score: sc, ta: ta[i], tb: tb[j] }; }
+  return best;
+}
+export async function runDirect({ brief, L, run, jobs, say = console.log, seconds, video, still = null, aspect = "16:9", refFiles = [], maxSeg = null, dry = false, cont = "ref" }) {
   const model = video.model, prof = videoModel(model), maxRefs = prof.maxRefs || 10, segs = segmentsFor(seconds, model, maxSeg);
   const K = (L.build ??= {}); K.mode = "direct"; K.made ??= {}; K.painted ??= {}; K.variants ??= {}; K.anchors ??= {};   // the plan lives under K.direct: K.plan is the chain's keyframe plan, which the results page maps over
   // supplied references, copied into the run so the record points at them
@@ -102,12 +116,14 @@ export async function runDirect({ brief, L, run, jobs, say = console.log, second
     if (prev && !dry && !existsSync(run.path(prev))) { say(`  ${key}: the previous segment's last frame is missing; stopping`); ok = false; break; }
     if (dry) { K.made[n] = { clip: file, mode: "direct", model, seconds: seg.seconds, prompt: seg.prompt, refs: refs.map((x) => `${x.name}=${x.file}`), anchors, start: prev, dry: true }; say(`  ${key}: ${seg.seconds} s${refs.length ? ` with ${refs.map((x) => "@" + x.name).join(", ")}` : ""} (dry run: estimated)`); continue; }
     let r, note = "", prompt = seg.prompt;
+    if (prev && cont === "frame") { prompt = prompt.replace(/Continue directly from @previous[^.]*\.\s*/g, "").replace(/@previous/g, "the first frame"); refs.splice(0, refs.length, ...refs.filter((x) => x.name !== "previous")); if (refs.length) { say(`  ${key}: an image-to-video call takes no named references; ${refs.map((x) => "@" + x.name).join(", ")} not attached`); refs.length = 0; } }
+    if (prev && cont === "clip") { const tail = `clips/direct-${k}-tail.mp4`; if (!dry && !existsSync(run.path(tail))) execFileSync("ffmpeg", ["-v", "error", "-y", "-sseof", String(-CLIP_OVERLAP), "-i", run.path(`clips/direct-${k}.mp4`), "-c", "copy", run.path(tail)]); refs.splice(1, 0, { name: "motion", file: tail }); prompt = prompt.replace(/Continue directly from @previous[^.]*\.\s*/g, "") ; prompt = `Continue the shot of @motion (the last ${CLIP_OVERLAP} seconds of the previous segment) from exactly where it ends, its final frame being @previous: the same camera position, distance and speed, the same motion carried on, nothing re-introduced. ` + prompt; }
     for (const x of refs) if (!prompt.includes(`@${x.name}`)) prompt = (x.name === "previous" ? `Continue directly from @previous, the last frame of the previous segment: the same scene, style, people and objects, mid-action. ` : `Match @${x.name}. `) + prompt;   // the API binds a reference by its @name in the prompt
     if (prompt.length > PROMPT_LIMIT) prompt = prompt.slice(0, PROMPT_LIMIT - 1);
-    try { r = await jobs.tvideo(key, file, prompt, refs, seg.seconds, { ...video, aspect_ratio: aspect }); }
+    try { r = prev && cont === "frame" ? await jobs.video(key, file, prompt, prev, null, seg.seconds, { ...video, aspect_ratio: aspect }) : await jobs.tvideo(key, file, prompt, refs, seg.seconds, { ...video, aspect_ratio: aspect }); }
     catch (e) { if (refs.length && /reference|400|invalid/i.test(String(e))) { note = `references refused by the model (${String(e).slice(0, 140)}); generated without them`; say(`  ${key}: ${note}`); r = await jobs.tvideo(key, file, seg.prompt, [], seg.seconds, { ...video, aspect_ratio: aspect }); } else throw e; }
     if (!dry && existsSync(run.path(file))) frame(run.path(file), "last", run.path(`clips/direct-${n}-last.png`));
-    K.made[n] = { clip: file, mode: "direct", model, seconds: seg.seconds, rendered: !dry && existsSync(run.path(file)) ? Math.round(duration(run.path(file)) * 10) / 10 : null, prompt, narration: seg.narration, words: seg.words_on_screen, refs: refs.map((x) => `${x.name}=${x.file}`), anchors, start: prev, note: note || null, credits: r?.credits ?? null, cached: !!r?.cached, qa: { seconds: seg.seconds } };
+    K.made[n] = { clip: file, mode: prev ? `direct (${cont})` : "direct", model, seconds: seg.seconds, rendered: !dry && existsSync(run.path(file)) ? Math.round(duration(run.path(file)) * 10) / 10 : null, prompt, narration: seg.narration, words: seg.words_on_screen, refs: refs.map((x) => `${x.name}=${x.file}`), anchors, start: prev, note: note || null, credits: r?.credits ?? null, cached: !!r?.cached, qa: { seconds: seg.seconds } };
     run.save(); say(`  ${key}: ${seg.seconds} s${refs.length ? ` with ${refs.map((x) => x.name).join(", ")}` : ""}${r?.cached ? " (cached)" : dry ? " (dry run: estimated)" : ` · ${r?.credits ?? "?"} credits`}`);
     parts.push(run.path(file));
   }
@@ -115,7 +131,9 @@ export async function runDirect({ brief, L, run, jobs, say = console.log, second
   // the film: the one generation as it is, or the segments re-encoded back to back
   const film = "clips/film.mp4";
   if (parts.length === 1) copyFileSync(parts[0], run.path(film));
-  else { const list = run.path("clips/concat.txt"); writeFileSync(list, parts.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join("\n") + "\n"); execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", list, "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", run.path(film)]); }
+  else { const cuts = []; if (cont === "clip") for (let i = 1; i < parts.length; i++) { const c = bestCut(run, `clips/direct-${i}.mp4`, `clips/direct-${i + 1}.mp4`); cuts.push(c); say(`  join ${i}→${i + 1}: cut at ${c.ta.toFixed(2)} s of the first and ${c.tb.toFixed(2)} s of the second (similarity ${c.score.toFixed(3)})`); }
+    const trimmed = parts.map((p, i) => { const inp = cuts[i - 1]?.tb || 0, out = cuts[i] ? cuts[i].ta : null; if (!inp && out == null) return p; const t = run.path(`clips/direct-${i + 1}-cut.mp4`); execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(inp), ...(out != null ? ["-to", String(out)] : []), "-i", p, "-c:v", "libx264", "-crf", "18", "-c:a", "aac", t]); return t; }); K.cuts = cuts;
+    const list = run.path("clips/concat.txt"); writeFileSync(list, trimmed.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join("\n") + "\n"); execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", list, "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", run.path(film)]); }
   K.film = film; L.direct = { model, resolution: video.resolution, aspect, segments: segs, title: K.direct.title }; run.save();
   return { ok: true, film, seconds: Math.round(duration(run.path(film)) * 10) / 10, segments: segs.length };
 }
