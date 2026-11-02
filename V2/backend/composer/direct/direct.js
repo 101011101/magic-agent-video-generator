@@ -50,15 +50,15 @@ Also: title (the piece), look (the one opening sentence used in every prompt), v
 // The run: plan (kept in the record), then each segment in order, the last frame extracted and fed to the next, then the film.
 export async function runDirect({ brief, L, run, jobs, say = console.log, seconds, video, aspect = "16:9", refFiles = [], maxSeg = null, dry = false }) {
   const model = video.model, prof = videoModel(model), maxRefs = prof.maxRefs || 10, segs = segmentsFor(seconds, model, maxSeg);
-  const K = (L.build ??= {}); K.mode = "direct"; K.made ??= {};
+  const K = (L.build ??= {}); K.mode = "direct"; K.made ??= {}; K.painted ??= {}; K.variants ??= {};   // the plan lives under K.direct: K.plan is the chain's keyframe plan, which the results page maps over
   // supplied references, copied into the run so the record points at them
   const available = {}; mkdirSync(run.path("refs"), { recursive: true });
   for (const f of refFiles) { const src = resolve(f); if (!existsSync(src)) { say(`  reference ${f}: not found, skipped`); continue; } const name = basename(f, extname(f)).replace(/[^a-z0-9_-]+/gi, "-"), rel = `refs/${name}${extname(f).toLowerCase()}`; if (!existsSync(run.path(rel))) copyFileSync(src, run.path(rel)); available[name] = rel; }
-  const same = K.plan?.mode === "direct" && K.plan.model === model && K.plan.seconds === seconds && JSON.stringify(K.plan.segments.map((s) => s.seconds)) === JSON.stringify(segs);
-  if (!same) { const p = await planDirect({ brief, L, segments: segs, model, resolution: video.resolution, aspect, refs: Object.keys(available), say }); p.segments.forEach((s, k) => { s.seconds = segs[k]; }); K.plan = { mode: "direct", model, seconds, aspect, title: p.title, look: p.look, voice: p.voice, segments: p.segments.slice(0, segs.length) }; K.made = {}; run.save(); }
-  say(`plan: "${K.plan.title}" · ${segs.length} generation${segs.length === 1 ? "" : "s"} (${segs.join(" + ")} s) on ${model} ${video.resolution} ${aspect}, audio by the model · ${K.plan.segments.map((s) => `${s.prompt.length} chars`).join(", ")}`);
+  const same = K.direct?.mode === "direct" && K.direct.model === model && K.direct.seconds === seconds && JSON.stringify(K.direct.segments.map((s) => s.seconds)) === JSON.stringify(segs);
+  if (!same) { const p = await planDirect({ brief, L, segments: segs, model, resolution: video.resolution, aspect, refs: Object.keys(available), say }); p.segments.forEach((s, k) => { s.seconds = segs[k]; }); K.direct = { mode: "direct", model, seconds, aspect, title: p.title, look: p.look, voice: p.voice, segments: p.segments.slice(0, segs.length) }; K.made = {}; run.save(); }
+  say(`plan: "${K.direct.title}" · ${segs.length} generation${segs.length === 1 ? "" : "s"} (${segs.join(" + ")} s) on ${model} ${video.resolution} ${aspect}, audio by the model · ${K.direct.segments.map((s) => `${s.prompt.length} chars`).join(", ")}`);
   const parts = []; let ok = true;
-  for (const [k, seg] of K.plan.segments.entries()) {
+  for (const [k, seg] of K.direct.segments.entries()) {
     const n = k + 1, key = `clip-${n}`, file = `clips/direct-${n}.mp4`, prev = k > 0 ? `clips/direct-${k}-last.png` : null;
     const refs = [...(prev ? [{ name: "previous", file: prev }] : []), ...(seg.refs || []).filter((r) => available[r]).map((r) => ({ name: r, file: available[r] }))].slice(0, maxRefs);
     if (prev && !dry && !existsSync(run.path(prev))) { say(`  ${key}: the previous segment's last frame is missing; stopping`); ok = false; break; }
@@ -75,6 +75,6 @@ export async function runDirect({ brief, L, run, jobs, say = console.log, second
   const film = "clips/film.mp4";
   if (parts.length === 1) copyFileSync(parts[0], run.path(film));
   else { const list = run.path("clips/concat.txt"); writeFileSync(list, parts.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join("\n") + "\n"); execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", list, "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", run.path(film)]); }
-  K.film = film; L.direct = { model, resolution: video.resolution, aspect, segments: segs, title: K.plan.title }; run.save();
+  K.film = film; L.direct = { model, resolution: video.resolution, aspect, segments: segs, title: K.direct.title }; run.save();
   return { ok: true, film, seconds: Math.round(duration(run.path(film)) * 10) / 10, segments: segs.length };
 }
