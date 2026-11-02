@@ -48,7 +48,8 @@ micro items, the MCP's result on the left of each item and the agent's on the ri
 carries its pathway, collapsed (open all / close all in the header): every step with its inputs, parameters and output; the MCP
 side also every call it made with the full arguments; a film's stages from the run folder (story, roots, screenplay, stills with
 their prompts and attempts, clips with their frames, sound, film), which `film/record.mjs` writes into the record. The join keeps
-the verdicts and re-reads the sides from the records the judge saw; a side re-run since is flagged on the item.
+the verdicts and re-reads the sides from the records the judge saw; a side re-run since is flagged on the item. `--names "Direct,Chain"`
+names the two sides on the page (the second is the `--mcp` side), so the same tool compares the pipeline's two modes.
 
 ## Film briefs
 
