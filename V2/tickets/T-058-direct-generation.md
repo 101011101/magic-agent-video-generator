@@ -172,3 +172,19 @@ took one step on 25, two on 8 (the VELORA bottle: a klein picture, a klein edit 
 qwen generation with the name in the prompt, both 100), three or more on 2 (talking photos: write, voice, animate).
 The rule that would fold the 8 into one call is the planner's: one generation on the lettering model when the piece is
 one picture with a few words (plan.js, the other session's).
+
+## Approach 2 ran (2026-11-02, cap raised to 101,000 for one call, 720 credits)
+
+`--continue clip`: segment 1's last five seconds attached as a video reference `@motion` beside its last frame
+`@previous`; the API accepted both. Result on the night ride: the model took the look (same rider, jacket, bag, street,
+the café door at the end) and none of the staging: the first frame of segment 2 is 0.19 similar to segment 1's last
+frame, below ref (0.53) and frame (0.93), and the best-matching pair of frames across a three-second window either
+side is 0.17, so the cut lands by default (27.7 s of the first, 0 s of the second). Its audio: "Dove siamo rimasti?"
+then Japanese babble. So of the three modes only the start frame carries anything exact, and it carries one frame.
+The page `results/pipeline-night-ride/` renders the run as the pipeline it executed; `pipeline-page.mjs` does that
+for any direct run (`results/pipeline-chemistry-anchors/` is the anchors branch).
+
+Next candidate for the join, unrun: start segment 2 from the frame three seconds BEFORE segment 1's end (image-to-
+video, exact first frame) so both generations contain the same three seconds of action, then cut at the best-matching
+pair inside that overlap; the exactness of the start frame plus an overlap gives the cut search something to find.
+For the sound, the model's audio is never continuous and is babble when unasked: sound by code (see above).
