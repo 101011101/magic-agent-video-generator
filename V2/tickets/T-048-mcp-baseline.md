@@ -123,3 +123,17 @@ formats (H44c), a stationary camera (D18b, D18c: ltx-2.5 and minimax zoom), and 
 The levers, in order: the free tier's still model (qwen-image-2.1: the MCP chose it for 67 image calls; the registry marks
 its text "good" and klein's "poor"; 10 credits against 5 at 640px); one text-to-video generation with audio for short
 films instead of the still chain; the clips' own audio muted under narration.
+
+## The latest loop vs the MCP, every pair judged afresh (2026-11-02, `results/compare-mcp-2/`)
+
+Agent side: the newest record per item across the other session's runs (real-1 to real-14, latest), 105 items re-run
+by the newer loop. MCP side: mcp-1, its failed items re-graded with the current grader (62 → 64 pass). Pairwise judge
+with `--fresh` (no cached verdict): **agent 70, MCP 66, 16 ties → win rate 51%**; pass 97 vs 64; mean 78 vs 63;
+credits 9,130 vs 10,115. Against the first pass (67–69–16, pass 90): 12 verdicts flipped (7 to the agent, 4 to the
+MCP, 1 to a tie); the items that moved most are the loop's fixes landing: D20d mixed sizes 23 → 94, C15a face swap
+30 → 94, D23b name caption 39 → 100, H41a screenshot ad 40 → 94, G35a side by side 48 → 100, C17b talking pitch
+47 → 94, C15c two faces 0 → 37, A03d long address 73 → 100. Groups where the agent gained passes: C 2 → 4, D 2 → 4,
+A 10 → 11, G 8 → 9, H 1 → 2 (of the re-run items). The combined page `results/compare-all-2/` has the films (direct,
+then the chain) above it. The night-ride page `results/night-ride/` shows every intermediary asset of a two-generation
+piece beside the MCP's one call, with each segment's audio transcribed: the model's speech holds about 12 to 15 s of a
+generation and nothing of the sound crosses a join (T-058).
