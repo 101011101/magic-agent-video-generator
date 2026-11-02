@@ -58,3 +58,14 @@ against the pipeline", and T-046.
 `--retry`/`--restore` and by the working tree; a sequence is remade when a frame it was pinned on changed; the re-run estimate
 is priced from the registry; a dry run writes nothing. Six suites pass (`tests/`, `worktree.test.mjs` new). Open in T-046:
 the stage-by-stage spawn with the card's cap, notes in the session, the film card's cost from the run, the explicit go.
+
+**2026-11-01 (the MCP baseline, T-048).** `V2/bench/mcp/`: every bench v1 item to the agent's own chat model with Magic Hour's
+hosted MCP and nothing else, the free plan emulated by an approval gate; the same grader; a pairwise judge and a side-by-side
+page (`compare.mjs`). 152 micro items: agent 90 pass (59%) vs MCP 57 (38%), mean 75 vs 60, credits 8,275 vs 10,115; pairwise
+73–68 with 11 ties. The agent wins where its code tools and its conversation are the difference (editing the user's video,
+sound, ads, conversation, refusals); the MCP wins single images and edits because the chat model picks qwen-image-2.1 where
+the free tier paints on flux-2-klein. Four film briefs on the free tier: the MCP's single text-to-video call won all four
+against the pipeline (`results/compare-film-1/`). Pages: `V2/bench/v1/results/compare-mcp-1/index.html`,
+`compare-film-1/index.html`, `mcp-1/index.html` (served by `bench/v1/serve.mjs` on 4748). Findings for the pipeline: the
+film length is `--total` (default 30) and nothing reads the brief's; the free tier's still model loses product shots and
+lettering to qwen-image-2.1 at twice the price; the grader's transcription of a short mix is unreliable.

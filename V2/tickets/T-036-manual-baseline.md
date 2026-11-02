@@ -32,3 +32,9 @@ acceptance:
 `node V2/bench/run.mjs --dry` producing the comparison page with the agent's transcript beside the manual record for
 all twenty cases; then one paid run of the ten cheapest cases on the free tier under 1,000 credits with outputs on
 both sides.
+
+## 2026-11-01
+
+The user's bar moved from a person on the tools to the product's own MCP in a chat client: T-048 runs every bench v1
+item through an off-the-shelf chat model with the Magic Hour MCP and compares it with the agent, pairwise. The 34 hand
+baselines in `bench/baseline/` stay as the record of what a careful person chose.

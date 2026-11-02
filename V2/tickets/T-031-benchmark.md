@@ -60,3 +60,8 @@ The ten cases in the tree with their checks; one full run on the free tier at or
 cases are the bulk, about 1,000 for the ad at 480p); the results page and the trend row; then a second run after one
 change (for example T-030) showing the diff. The zero-credit subset finishes in under five minutes and runs before
 every commit that touches `V2/backend`.
+
+## 2026-11-01
+
+Bench v1 exists (`V2/bench/v1/`, 163 items from `bench/USER-CASES.md`, runner, grader, report, pages; first real pass
+`real-1`: 152 items, 47 pass, 9,314 credits), built in the parallel session; the MCP baseline and the comparison are T-048.

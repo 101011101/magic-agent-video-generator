@@ -137,9 +137,10 @@ minutes.
 | **One-shot** | the brief pasted straight into the single most fitting Magic Hour tool, free tier, no agent | what the agent adds over doing nothing clever |
 | **Manual** | a person (or Claude by hand) using Magic Hour's tools step by step (T-036; 34 hand baselines exist) | how close the agent gets to a careful human |
 | **Last version** | the previous agent version on the same bench version | whether this change helped or hurt |
+| **The MCP as is** (added 2026-11-01, T-048) | the same prompt, word for word, to an off-the-shelf chat model with Magic Hour's hosted MCP connected and nothing else; the free plan emulated by a gate on every paid call; the same proxy user | what the agent adds over the product's own MCP in a chat client; the user's bar: "yours should knock the MCP out of the water every single time" |
 
-The headline number per suite is the **win rate against one-shot** (pairwise judge) plus the **pass rate** on the
-deterministic checks.
+The headline number per suite is the **win rate against the MCP baseline** (pairwise judge) plus the **pass rate** on the
+deterministic checks; one-shot is the MCP's degenerate case (one call) and is read off the same records.
 
 ## Where the cases come from
 
@@ -180,3 +181,34 @@ Links to the outputs are at the bottom for anyone who wants them; the assessment
 3. **The judge model.** A stronger judge is more expensive but the judge cost is small next to generation credits.
 4. **Whether S4 runs end to end at all for now,** or only stage by stage from frozen upstream, until the stages pass on
    their own.
+
+## Built (2026-11-01): bench v1 and the MCP baseline
+
+**Bench v1** (`V2/bench/v1/`, built in the parallel session): 163 items from `bench/USER-CASES.md` (55 user cases, one
+item per sub-case; group I, the film briefs, run apart), fixtures with a manifest, a runner through the agent server on
+the free tier with the proxy user, a three-layer grader (deterministic checks, a vision judge against the item's
+must-haves and exact text, the conversation), a text report, an audit page. First real pass `real-1`: 152 items, 47
+pass, mean 58, 9,314 credits.
+
+**The MCP baseline** (`V2/bench/mcp/`, T-048): `run.mjs` gives every item's messages, untouched, to the agent's own
+chat model with Magic Hour's hosted MCP (48 tools) connected through OpenAI's remote-MCP tool; the free plan is
+emulated with an approval gate that refuses paid models, higher resolutions, 4x upscales and spend past a free
+account's 400 credits, with the reason a free key would get; the balance and delete tools are hidden, everything else
+offered; the proxy user answers from the same sheet and says "go ahead" when asked for a go. The record has the agent
+runner's shape, so the same grader, report and pages read it. `compare.mjs` puts the two arms side by side per item
+with a pairwise judge (both outputs in a fixed random order; a follow-up item also shows what each side had made
+before) and totals per group: pass, mean, wins, win rate, credits, time, questions, the MCP's approval rounds and
+refused calls, the models it chose. Film briefs the pipeline already made on the free tier sit in `bench/mcp/film/`
+as items with the pipeline's film as the agent record.
+
+**First numbers (2026-11-01, `results/compare-mcp-1/compare.md`, 152 micro items, agent records the newest per item from
+`real-1` and `latest`, MCP from `mcp-1`):** by the grader the agent passes 90 (59%) against the MCP's 57 (38%), mean
+75 against 60, for 8,275 credits against 10,115 and 88 minutes against 142. Head to head by the pairwise judge the
+agent wins 73, the MCP 68, 11 ties: a coin flip overall. Where it falls: the agent wins editing the user's video 13–2
+(the MCP has no crop, trim, mix or text-to-speech and said so on 11 items), sound 5–1, conversation 11–5, ads 8–4,
+short video 10–8; the MCP wins single images 17–7, image edits 16–8, faces 7–3 and composed pieces 8–7. On images both
+sides mostly pass and the judge prefers the MCP's picture: the chat model chose qwen-image-2.1 67 times (good lettering,
+10 credits) where the agent's free tier paints on flux-2-klein (poor lettering, 5 credits) unless lettering is asked
+for. The agent refused all five should-refuse items; the MCP none. Both asked 16 questions for information; the MCP
+asked once for a go. Film briefs on the free tier (`results/compare-film-1/`): the MCP's one text-to-video call won all
+four pairs against the pipeline's chain of klein stills (details in `bench/mcp/README.md`).
