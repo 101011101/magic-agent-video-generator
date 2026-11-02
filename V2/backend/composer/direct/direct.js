@@ -23,8 +23,8 @@ export function segmentsFor(total, model, maxSeg = null) {
 // the research's facts serve it where the subject is real; the story stage's rewrite is flavour only, never the spine.
 export async function planDirect({ brief, L, segments, model, resolution, aspect, refs, say }) {
   const story = L.story || {}, facts = L.research?.facts || [], looks = L.research?.looks || [], n = segments.length;
-  const schema = S.obj({ title: S.str, requirements: S.arr(S.str), look: S.str, voice: S.str, segments: S.arr(S.obj({ seconds: S.num, prompt: S.str, narration: S.str, words_on_screen: S.arr(S.str), refs: S.arr(S.str), continuity: S.str })) });
-  const plan = await jsonCall({ name: "direct-plan-v2", effort: "medium", schema, prompt: `You write the prompt(s) for a text-to-video model that makes a whole short piece on its own, picture and sound: it composes the scene, animates it, letters short words on screen when asked, and generates the audio, including spoken narration and dialogue, from the words you give it. The client reads the result against their brief, word by word.
+  const schema = S.obj({ title: S.str, requirements: S.arr(S.str), look: S.str, voice: S.str, segments: S.arr(S.obj({ seconds: S.num, prompt: S.str, narration: S.str, words_on_screen: S.arr(S.str), refs: S.arr(S.str), anchors: S.arr(S.obj({ name: S.str, what: S.str, lettering: S.bool, why: S.str })), continuity: S.str })) });
+  const plan = await jsonCall({ name: "direct-plan-v3", effort: "medium", schema, prompt: `You write the prompt(s) for a text-to-video model that makes a whole short piece on its own, picture and sound: it composes the scene, animates it, letters short words on screen when asked, and generates the audio, including spoken narration and dialogue, from the words you give it. The client reads the result against their brief, word by word.
 
 THE BRIEF (the contract; every explicit ask in it is a requirement: the medium and look, the length, the events in order, the exact spoken words, the exact on-screen words, what must not appear):
 ${brief}
@@ -42,6 +42,7 @@ For each segment in order (seconds exactly as given):
 - narration: every spoken word of the segment, exactly as quoted in the prompt, in order (empty if nothing is spoken). Speech runs about 2.3 words a second: a segment's narration must fit its seconds with room to breathe; a line the brief gives verbatim is kept whole.
 - words_on_screen: the exact on-screen strings of the segment, in order; every on-screen string the brief asks for appears here in some segment.
 - refs: the names of the reference images this segment should attach (from the list above; none if none).
+- anchors: stills to paint first and attach to this segment as references, for what a video model gets wrong on its own: a diagram, chart or map; more than a couple of exact words on screen; a specific product, logo or layout that must be right. Each: name (one lowercase word; the prompt refers to it as @name), what (the complete description to paint, every exact word in quotes, the layout, the colours; the picture stands on its own), lettering (true when words must be spelled exactly), why (the hard constraint). The segment's prompt then says what the picture does with it ("the diagram matches @diagram exactly; the highlight moves clockwise from label to label"). At most two per segment; none for live action the model composes well; a later segment reuses an earlier anchor by naming it again.
 - continuity: one line: what the next segment must keep (who is where, what is on screen, the look).
 Also: title (the piece), look (the one opening sentence used in every prompt), voice (the narrator or voices, as described).` });
   // the API's limit: a prompt over the target is compressed, every quoted string kept
@@ -51,28 +52,36 @@ Also: title (the piece), look (the one opening sentence used in every prompt), v
 }
 
 // The run: plan (kept in the record), then each segment in order, the last frame extracted and fed to the next, then the film.
-export async function runDirect({ brief, L, run, jobs, say = console.log, seconds, video, aspect = "16:9", refFiles = [], maxSeg = null, dry = false }) {
+export async function runDirect({ brief, L, run, jobs, say = console.log, seconds, video, still = null, aspect = "16:9", refFiles = [], maxSeg = null, dry = false }) {
   const model = video.model, prof = videoModel(model), maxRefs = prof.maxRefs || 10, segs = segmentsFor(seconds, model, maxSeg);
-  const K = (L.build ??= {}); K.mode = "direct"; K.made ??= {}; K.painted ??= {}; K.variants ??= {};   // the plan lives under K.direct: K.plan is the chain's keyframe plan, which the results page maps over
+  const K = (L.build ??= {}); K.mode = "direct"; K.made ??= {}; K.painted ??= {}; K.variants ??= {}; K.anchors ??= {};   // the plan lives under K.direct: K.plan is the chain's keyframe plan, which the results page maps over
   // supplied references, copied into the run so the record points at them
   const available = {}; mkdirSync(run.path("refs"), { recursive: true });
   for (const f of refFiles) { const src = resolve(f); if (!existsSync(src)) { say(`  reference ${f}: not found, skipped`); continue; } const name = basename(f, extname(f)).replace(/[^a-z0-9_-]+/gi, "-"), rel = `refs/${name}${extname(f).toLowerCase()}`; if (!existsSync(run.path(rel))) copyFileSync(src, run.path(rel)); available[name] = rel; }
   const same = K.direct?.mode === "direct" && K.direct.model === model && K.direct.seconds === seconds && JSON.stringify(K.direct.segments.map((s) => s.seconds)) === JSON.stringify(segs);
   if (!same) { const p = await planDirect({ brief, L, segments: segs, model, resolution: video.resolution, aspect, refs: Object.keys(available), say }); p.segments.forEach((s, k) => { s.seconds = segs[k]; }); K.direct = { mode: "direct", model, seconds, aspect, title: p.title, requirements: p.requirements || [], look: p.look, voice: p.voice, segments: p.segments.slice(0, segs.length) }; K.made = {}; run.save(); }
   say(`plan: "${K.direct.title}" · ${segs.length} generation${segs.length === 1 ? "" : "s"} (${segs.join(" + ")} s) on ${model} ${video.resolution} ${aspect}, audio by the model · ${K.direct.segments.map((s) => `${s.prompt.length} chars`).join(", ")}`);
-  if (dry) { say(`requirements:\n${(K.direct.requirements || []).map((r) => `  - ${r}`).join("\n")}`); for (const [k, seg] of K.direct.segments.entries()) say(`--- segment ${k + 1} (${seg.seconds} s, ${seg.prompt.length} chars) on screen: ${JSON.stringify(seg.words_on_screen)}\n${seg.prompt}\nNARRATION: ${seg.narration}`); }
+  if (dry) { say(`requirements:\n${(K.direct.requirements || []).map((r) => `  - ${r}`).join("\n")}`); for (const [k, seg] of K.direct.segments.entries()) say(`--- segment ${k + 1} (${seg.seconds} s, ${seg.prompt.length} chars) on screen: ${JSON.stringify(seg.words_on_screen)}${seg.anchors?.length ? `\nANCHORS: ${seg.anchors.map((a) => `@${a.name} (${a.lettering ? "lettered" : "picture"}): ${a.what}`).join("\n  ")}` : ""}\n${seg.prompt}\nNARRATION: ${seg.narration}`); }
   const parts = []; let ok = true;
   for (const [k, seg] of K.direct.segments.entries()) {
     const n = k + 1, key = `clip-${n}`, file = `clips/direct-${n}.mp4`, prev = k > 0 ? `clips/direct-${k}-last.png` : null;
-    const refs = [...(prev ? [{ name: "previous", file: prev }] : []), ...(seg.refs || []).filter((r) => available[r]).map((r) => ({ name: r, file: available[r] }))].slice(0, maxRefs);
+    // the anchors: the hard constraints of this segment painted as stills (exact lettering on the model that spells), once per name, attached as @name
+    const anchors = []; for (const a of seg.anchors || []) { const name = String(a.name || "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `anchor${anchors.length + 1}`; if (name === "previous") continue;
+      if (!K.anchors[name]) { const m = still ? (a.lettering && still.model === "flux-2-klein" ? "qwen-image-2.1" : still.model) : null; if (!m) { say(`  anchor @${name}: no still model given, skipped`); continue; }
+        const file = `refs/anchor-${name}.png`; if (!dry) { const j = await jobs.image(`anchor-${name}`, file, a.what, [], { model: m, resolution: still.resolution, aspect_ratio: aspect }); say(`  anchor @${name}: painted on ${m}${j?.cached ? " (cached)" : ` · ${j?.credits ?? "?"} credits`} · ${a.why || ""}`); } else say(`  anchor @${name}: would be painted on ${m} (dry run) · ${a.why || ""}`);
+        K.anchors[name] = { file, prompt: a.what, model: m, lettering: !!a.lettering, why: a.why || "" }; run.save(); }
+      anchors.push({ name, file: K.anchors[name].file }); }
+    for (const [name, a] of Object.entries(K.anchors)) if (!anchors.some((x) => x.name === name) && new RegExp(`@${name}\\b`).test(seg.prompt)) anchors.push({ name, file: a.file });   // an earlier anchor named in this prompt is attached again
+    const refs = [...(prev ? [{ name: "previous", file: prev }] : []), ...anchors, ...(seg.refs || []).filter((r) => available[r]).map((r) => ({ name: r, file: available[r] }))].slice(0, maxRefs);
     if (prev && !dry && !existsSync(run.path(prev))) { say(`  ${key}: the previous segment's last frame is missing; stopping`); ok = false; break; }
+    if (dry) { K.made[n] = { clip: file, mode: "direct", model, seconds: seg.seconds, prompt: seg.prompt, refs: refs.map((x) => `${x.name}=${x.file}`), anchors, start: prev, dry: true }; say(`  ${key}: ${seg.seconds} s${refs.length ? ` with ${refs.map((x) => "@" + x.name).join(", ")}` : ""} (dry run: estimated)`); continue; }
     let r, note = "", prompt = seg.prompt;
     for (const x of refs) if (!prompt.includes(`@${x.name}`)) prompt = (x.name === "previous" ? `Continue directly from @previous, the last frame of the previous segment: the same scene, style, people and objects, mid-action. ` : `Match @${x.name}. `) + prompt;   // the API binds a reference by its @name in the prompt
     if (prompt.length > PROMPT_LIMIT) prompt = prompt.slice(0, PROMPT_LIMIT - 1);
     try { r = await jobs.tvideo(key, file, prompt, refs, seg.seconds, { ...video, aspect_ratio: aspect }); }
     catch (e) { if (refs.length && /reference|400|invalid/i.test(String(e))) { note = `references refused by the model (${String(e).slice(0, 140)}); generated without them`; say(`  ${key}: ${note}`); r = await jobs.tvideo(key, file, seg.prompt, [], seg.seconds, { ...video, aspect_ratio: aspect }); } else throw e; }
     if (!dry && existsSync(run.path(file))) frame(run.path(file), "last", run.path(`clips/direct-${n}-last.png`));
-    K.made[n] = { clip: file, mode: "direct", model, seconds: seg.seconds, rendered: !dry && existsSync(run.path(file)) ? Math.round(duration(run.path(file)) * 10) / 10 : null, prompt, narration: seg.narration, words: seg.words_on_screen, refs: refs.map((x) => `${x.name}=${x.file}`), start: prev, note: note || null, credits: r?.credits ?? null, cached: !!r?.cached, qa: { seconds: seg.seconds } };
+    K.made[n] = { clip: file, mode: "direct", model, seconds: seg.seconds, rendered: !dry && existsSync(run.path(file)) ? Math.round(duration(run.path(file)) * 10) / 10 : null, prompt, narration: seg.narration, words: seg.words_on_screen, refs: refs.map((x) => `${x.name}=${x.file}`), anchors, start: prev, note: note || null, credits: r?.credits ?? null, cached: !!r?.cached, qa: { seconds: seg.seconds } };
     run.save(); say(`  ${key}: ${seg.seconds} s${refs.length ? ` with ${refs.map((x) => x.name).join(", ")}` : ""}${r?.cached ? " (cached)" : dry ? " (dry run: estimated)" : ` · ${r?.credits ?? "?"} credits`}`);
     parts.push(run.path(file));
   }
