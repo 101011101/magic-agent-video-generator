@@ -211,4 +211,5 @@ sides mostly pass and the judge prefers the MCP's picture: the chat model chose 
 10 credits) where the agent's free tier paints on flux-2-klein (poor lettering, 5 credits) unless lettering is asked
 for. Both refused all five should-refuse items. Both asked 16 questions for information; the MCP
 asked once for a go. Film briefs on the free tier (`results/compare-film-1/`): the MCP's one text-to-video call won all
-four pairs against the pipeline's chain of klein stills (details in `bench/mcp/README.md`).
+four pairs against the pipeline's chain of klein stills (details in `bench/mcp/README.md`). One long page with the films
+first and then the micro items, MCP beside agent: `results/compare-all-1/` (`compare.mjs --from`).
