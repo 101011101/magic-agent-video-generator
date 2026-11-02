@@ -73,3 +73,32 @@ The four film briefs (`bench/mcp/film/items`, the I-group items) on `--clips dir
 About 250 to 750 credits a film on the free tier. Acceptance: on the free tier the direct films beat or tie the MCP's
 single call on the pairwise judge, the chain runs only when case 3's constraints are present, and nothing regresses on
 D and H.
+
+## Built (2026-11-01, commits 20105ce, 374cb21, 162badc, 77a33b3)
+
+- `backend/composer/direct/direct.js`, hooked into `pipeline.mjs`: a whole film from a brief (`--until film`) now goes
+  story → direct generation by default; the chain runs only when a constraint forces it: `--chain` or a chain clip mode
+  (`--clips pinned|start|t2v|seq`), a stage short of the film, an existing run edited (`--retry`, `--accept`, `--recheck`,
+  `--restore`, `--only`, `--script-from`), a reused bank. Flags: `--clips direct`, `--refs a.png,b.jpg`, `--aspect`,
+  `--max-seg 30`, `--dry` (prints the requirements and every prompt, pays nothing).
+- The planner (`direct-plan-v2`): the BRIEF is the contract. It lists the requirements in the brief's own words first
+  (medium, exact on-screen strings, exact spoken lines, the events in order, the length, every "no"), then writes one
+  prose prompt per segment of 1,100 to 1,700 characters with timed beats, the quoted words, and the closing constraints;
+  the research's facts serve what is shown; the story stage's rewrite is flavour. The first planner (v1) planned from
+  the story's rewrite and lost the brief: a live-action documentary for "simple animation", no end card for the ad that
+  ends on one. v1 scored 34/23/42/39 on the four films, v2 34/37/58/58 (the chain 29/37/42/58, the MCP 34/100/42/58).
+- Segments: as few generations as the model's grid allows (ltx-2.5 up to 60 s, minimax-h3 up to 30 s), each later one
+  continuing from the previous one's last frame. **The API binds a reference by its `@name` in the prompt** (422 "The
+  prompt must include @previous" otherwise; the chain's `@start`/`@end`/`@id` is the same rule). On minimax-h3 the
+  hand-off is near exact: segment 2's first frame reproduces segment 1's last frame, labels included
+  (`runs/direct-I92a-mm`). The drift that remains is inside a 30-second generation, the model's own continuity.
+- Records: `build.direct` (the plan with its requirements), `build.made[n]` per generation (prompt, refs, the previous
+  frame as `start`), `build.film`; `bench/mcp/film/record.mjs --out <arm>` writes the bench record (`film/direct-v1`,
+  `film/direct`, `film/direct-mm`); the comparison page's pathway shows the generations and their frames.
+- What the model still gets wrong at 480p, read off the grader: speech nobody asked for (Japanese in the silent coffee
+  ad, "You call 391 soon?" in the podcast), garbled captions where the brief said no text, dense diagrams lettered
+  wrongly over 60 seconds (the MCP's and ours both 24 on the citric acid cycle on ltx-2.5). Next levers, in order:
+  mute the generated track when the brief asks for no speech (room tone or the music bed instead); narration by the
+  voice tool mixed by code for explainers and documentaries, the model asked for ambience only (dialogue stays with the
+  model, it needs the lips); the exact on-screen strings by the code overlay at the planned times instead of by the
+  model; minimax-h3 for lettered diagrams (its labels were legible), ltx-2.5 for live action.
