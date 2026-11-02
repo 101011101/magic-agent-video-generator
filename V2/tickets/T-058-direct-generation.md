@@ -102,3 +102,25 @@ D and H.
   voice tool mixed by code for explainers and documentaries, the model asked for ambience only (dialogue stays with the
   model, it needs the lips); the exact on-screen strings by the code overlay at the planned times instead of by the
   model; minimax-h3 for lettered diagrams (its labels were legible), ltx-2.5 for live action.
+
+## First numbers (2026-11-01, the free tier, 480p)
+
+| film | chain | direct v1 | direct v2 | MCP | judge, direct v2 vs MCP | judge, direct v2 vs chain |
+|---|---|---|---|---|---|---|
+| I46a F-35 8 s | 29 | 34 | 34 | 34 | direct (clear) | direct (clear) |
+| I47a seed 8 s | 37 | 23 | 37 | 100 pass | MCP (clear) | chain (slight) |
+| I90a podcast 30 s | 42 | 42 | 58 | 42 | MCP (slight) | direct (slight) |
+| I91a coffee ad 10 s | 58 | 39 | 58 | 58 | MCP (slight) | direct (clear) |
+| I92a citric acid cycle 60 s | — | 24 (ltx, one generation) · 34 (minimax, 2 × 30 s, last frame fed forward) | 24 (ltx) | 24 (ltx, one generation) | direct (slight) | — |
+
+Credits a film, direct: 192 / 192 / 720 / 240 / 1,440 (the same as the MCP's: one generation at 24 a second); the chain
+287 / 242 / 775 / 415. Pages: `results/compare-film-direct/` (direct vs MCP), `results/compare-film-chain-direct/`
+(direct vs chain, `--names "Direct,Chain"`), and the combined page `results/compare-all-1/` (the direct films first, then
+the chain's, then the micro tasks).
+
+Read: direct v2 is level with the chain or above it on every film at a third less credit, and level with the MCP on
+three of five by the grader; the judge still prefers the MCP's pictures on three (headphones and staging in the podcast,
+the mood of the coffee ad, a text-free seed clip). The one-minute diagram defeats one ltx-2.5 generation on both
+sides (24 and 24, labels garbled); minimax-h3 in two segments lettered its first half legibly and handed the frame over
+intact, then drifted inside the second generation (34). The model's unasked speech and garbled captions are the faults
+that keep the four films from passing; the levers are in "Built" above.
