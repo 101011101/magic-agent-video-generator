@@ -194,6 +194,52 @@ const BAS = IDS.map(basics);
 const tally = { V4: 0, MCP: 0, tie: 0 }; for (const id of IDS) { const v = verdicts[id]; if (v) tally[v.winner_side] = (tally[v.winner_side] || 0) + 1; }
 const basSummary = `<table class="sum"><tr><th>item</th><th>brief</th><th>MCP</th><th>credits</th><th>V4</th><th>credits</th><th>verdict</th></tr>${IDS.map((id) => { const it = items[id], f = full(id), m = mv(id), v = verdicts[id], mc = m.turns[0].calls.filter((c) => creation(c.name)).map((c) => { const a = mcpArgs(c); return `${c.name}${a.model ? ` (${a.model})` : ""}`; }); const job = Object.values(f.jobs || {})[0]; return `<tr><td><a href="#b-${id}">${id}</a></td><td>${esc(it.title)}</td><td>${esc(mc.join(" → ") || "nothing made")}</td><td>${m.spent}</td><td>${esc(f.turns.at(-1)?.intent?.tool)}${job ? ` (${esc(job.model)})` : ""}</td><td>${f.credits}</td><td>${v ? `${esc(v.winner_side)} <span class=mut>(${esc(v.strength)})</span>` : "–"}</td></tr>`; }).join("")}</table>`;
 
+// ---- part 4: stage 1, existing assets: every file each side made, and the other session's intention judge per point
+const S1 = ["D01", "D02", "D06", "D07", "D08", "E01"], S1_EXTRA = { D08: ["D08-v2"] }, MS1 = join(V2, "bench/v1/results/mcp-stage1");
+const judge = existsSync(join(RUNS, "judge-stage1.json")) ? J(join(RUNS, "judge-stage1.json")) : {};
+const s1Items = Object.fromEntries(S1.filter((id) => existsSync(join(ITEMS, `${id}.json`))).map((id) => [id, J(join(ITEMS, `${id}.json`))]));
+for (const id of S1) syncV4(id); for (const x of Object.values(S1_EXTRA).flat()) syncV4(x);
+const dim = (abs) => { try { return sh("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", abs]).trim().split("\n")[0].replace(",", "×"); } catch { return ""; } };
+const secs = (abs) => { try { return `${dur(abs).toFixed(1)} s`; } catch { return ""; } };
+const mediaEl = (url, file) => (/\.mp4$/i.test(file) ? `<video class="v" src="${url}" controls preload="metadata"></video>` : `<a href="${url}" target="_blank"><img class="out" src="${url}" alt=""></a>`);
+const v4Files = (label) => { const d = join(MEDIA, `full-${label}`); return existsSync(d) ? readdirSync(d).filter((f) => /\.(png|jpg|jpeg|mp4)$/i.test(f) && !/^in-|^peek|\.card\.png$/.test(f)).sort() : []; };
+const inputsOf = (label) => { const d = join(MEDIA, `full-${label}`); return existsSync(d) ? readdirSync(d).filter((f) => /^in-.*\.(png|jpg|jpeg|mp4)$/i.test(f)) : []; };
+function v4Side(label, title) {
+  const f = full(label), files = v4Files(label), delivered = f.result?.file, tool = f.turns.at(-1)?.intent?.tool, look = (f.turns.at(-1)?.intent?.params || []).find((p) => p.name === "look");
+  const steps = (f.result?.campaign || []).map((s) => `${s.n}. ${s.tool} → ${s.file} (${s.credits} cr)`).join(" · ");
+  return `<div class="side"><h4>${esc(title)} <span class="mut">· ${esc(tool)}${steps ? ` · ${esc(steps)}` : ""}${f.result?.strategy ? ` · strategy: ${esc(f.result.strategy)}` : ""} · ${f.credits} credits · ${new Date(f.at).toISOString().replace("T", " ").slice(0, 16)} UTC</span></h4>
+${look ? `<div class="mut">look: ${esc(look.value)} <span class="src ${esc(look.source)}">${esc(look.source)}</span> ${esc(look.from)}</div>` : ""}
+<div class="files">${files.map((x) => { const abs = join(MEDIA, `full-${label}`, x); return `<div class="file"><div class="mut">${esc(x)}${x === delivered ? " · <b>delivered</b>" : ""} · ${dim(abs)}${/\.mp4$/i.test(x) ? ` · ${secs(abs)}` : ""}</div>${mediaEl(`/sessions/v4-report/full-${label}/${x}`, x)}</div>`; }).join("") || "<div class=none>nothing made</div>"}</div>
+${Object.values(f.jobs || {}).length ? `<details><summary>its prompts</summary>${Object.entries(f.jobs).map(([k, v]) => `<h4>${esc(k)} · ${esc(v.model)} · ${v.credits} cr</h4><pre>${esc(v.prompt)}</pre>`).join("")}</details>` : ""}</div>`;
+}
+function mcpSide(id) {
+  const p = join(MS1, `M${id}.json`); if (!existsSync(p)) return `<div class="side"><h4>MCP</h4><div class="none">no MCP run</div></div>`;
+  const m = J(p), T = m.turns[0], dir = join(SESS, m.session, "assets"), assets = existsSync(dir) ? readdirSync(dir).filter((x) => /\.(png|jpg|jpeg|mp4)$/i.test(x)).sort() : [];
+  const calls = T.calls.filter((c) => creation(c.name)).map((c) => { const a = mcpArgs(c); return `${c.name}${a.model ? ` (${a.model}${a.aspect_ratio ? `, ${a.aspect_ratio}` : ""})` : ""}${c.error ? " ✗" : ""}`; });
+  return `<div class="side"><h4>MCP <span class="mut">· ${calls.length ? esc(calls.join(" → ")) : "no creation call"} · ${m.spent} credits</span></h4>
+<div class="files">${assets.map((x) => { const abs = join(dir, x); return `<div class="file"><div class="mut">${esc(x)} · ${dim(abs)}${/\.mp4$/i.test(x) ? ` · ${secs(abs)}` : ""}</div>${mediaEl(`/sessions/${m.session}/assets/${x}`, x)}</div>`; }).join("") || `<div class="none">nothing made</div><pre>${esc((T.agent || "").slice(0, 1500))}</pre>`}</div>
+${calls.length ? `<details><summary>its prompt${calls.length > 1 ? "s" : ""}</summary>${T.calls.filter((c) => creation(c.name)).map((c) => { const a = mcpArgs(c); return `<h4>${esc(c.name)}</h4><pre>${esc(a.style?.prompt || a.prompt || JSON.stringify(a, null, 1))}</pre>`; }).join("")}</details>` : ""}</div>`;
+}
+function judgeBlock(id) {
+  const j = judge[id]; if (!j) return "";
+  const row = (side) => (j[side]?.results || []).map((r) => `<tr><td>${mk(r.met === "yes" ? "ok" : r.met === "partly" ? "part" : r.met === "no" ? "bad" : "na")} ${esc(r.met)}</td><td>${esc(r.point)}</td><td class="mut">${esc(r.evidence)}</td></tr>`).join("");
+  return `<details><summary>the other session's intention judge: MCP ${j.mcp?.overall ?? "–"} · V4 ${j.v4?.overall ?? "–"} (${j.checklist.points.length} points written from the user's words)</summary><div class="row"><div class="side"><h4>MCP · ${j.mcp?.overall ?? "–"}</h4><table class="pt">${row("mcp")}</table></div><div class="side"><h4>V4 · ${j.v4?.overall ?? "–"}</h4><table class="pt">${row("v4")}</table></div></div></details>`;
+}
+const S1_NOTE = {
+  D01: "Measured with ffprobe, both outputs are exactly 5.000 s (the judge marked the trim point n/a from stills). The MCP's only route was a regenerating video edit; no frame of its clip carries the caption. V4 cut with ffmpeg and overlaid the words by code.",
+  D07: "The brief asked for the whole poster kept with padding, no cropping, no regeneration. V4's first run padded with ffmpeg for 0 credits; the revised resize rule (a vision model picks crop, pad or reflow) chose reflow, which re-composes on the free image editor at 10 credits a shape: the square is a faithful re-layout, the 9:16 is the poster between dark bars, the 16:9 is redrawn canyon art with the words kept. The judge's checklist then demanded no padding or bars, the opposite of the brief, and docked V4 for them. The MCP refused and offered a script.",
+  D08: "Neither brief says anything about the look. V4's sheet filled look as a default, 'clean, bold, high-contrast typography, simple readable layout', and its image guide wrote a typeset page with no illustration: the plainness is V4's, not the user's. The other session changed both rules two minutes after this run (a poster must be designed, not typeset; a default look may never be 'clean, simple, readable'); the rerun below is the same brief under the changed rules. The MCP designed both deliverables on its own.",
+};
+const stage1 = `<section class="stage" id="stage1"><h2>4 · Stage 1, existing assets: every file each side made</h2>
+<p>The other session's stage-1 items (V4/runs/full-D*, full-E01; the MCP arm in results/mcp-stage1) with every output file shown, not one per item, and its intention judge's points under each pair. MCP on the left, V4 on the right.</p>
+${S1.filter((id) => s1Items[id] && existsSync(join(RUNS, `full-${id}`, "run.json"))).map((id) => { const it = s1Items[id], ins = inputsOf(id), extras = (S1_EXTRA[id] || []).filter((x) => existsSync(join(RUNS, `full-${x}`, "run.json"))); return `<section class="item" id="s1-${id}"><h3>${id} · ${esc(it.title)}</h3>
+<div class="brief"><b>The brief:</b> ${esc(it.full)}${ins.length ? `<div class="ins">${ins.map((x) => (/\.mp4$/i.test(x) ? `<video class="in" src="/sessions/v4-report/full-${id}/${x}" controls preload="metadata"></video>` : `<a href="/sessions/v4-report/full-${id}/${x}" target="_blank"><img src="/sessions/v4-report/full-${id}/${x}" alt=""></a>`)).join("")}<span class="mut">attached</span></div>` : ""}</div>
+${S1_NOTE[id] ? `<p class="note">${esc(S1_NOTE[id])}</p>` : ""}
+<div class="row">${mcpSide(id)}${v4Side(id, "V4")}</div>
+${extras.map((x) => `<div class="row"><div class="side"><h4>MCP <span class="mut">· unchanged, above</span></h4></div>${v4Side(x, `V4 rerun · ${x}`)}</div>`).join("")}
+${judgeBlock(id)}</section>`; }).join("")}
+</section>`;
+
 // ---- the page
 const TITLE = "V4 against the MCP: the conversation, the zoo, the basics";
 const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(TITLE)}</title><style>
@@ -207,9 +253,9 @@ table{border-collapse:collapse;font-size:13px;margin:6px 0}td,th{border:1px soli
 .chart{width:100%;height:auto;display:block;background:#fff;border:1px solid #eee;border-radius:6px;margin:4px 0}.chart .rms{fill:#cbd5e1;stroke:none}.chart .sp{fill:#2f5d8a}.chart .axis{stroke:#999;stroke-width:1}.chart .tick{stroke:#999}.chart .tl{font-size:10px;fill:#666}.chart .lbl{font-size:10px;fill:#888}.chart .grid{stroke:#eee}.chart .ssim{fill:none;stroke:#2f5d8a;stroke-width:1.5}.chart .join{stroke:#b91c1c;stroke-width:1.5;stroke-dasharray:4 3}.chart .planned{stroke:#999;stroke-dasharray:2 3}
 .strip{overflow-x:auto}.strip table{border:0}.strip td,.strip th{border:0;padding:2px;font-size:11px;color:#666;text-align:center}.strip img{width:150px;display:block;border:1px solid #ddd}.f3{display:flex;gap:4px;margin:4px 0}.f3 img{width:32%;border:1px solid #ddd}.ins{margin-top:6px}.ins img{height:70px;border:1px solid #ddd;margin-right:6px;vertical-align:middle}
 .verdict{border-top:1px dashed #ddd;margin-top:6px;padding-top:4px;font-size:13px}.none{color:#999;font-style:italic;padding:12px;border:1px dashed #ccc;border-radius:6px}.grid.four{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.cell{min-width:0}.kpi{display:flex;flex-wrap:wrap;gap:14px;margin:6px 0}.kpi div{background:#fafaf9;border:1px solid #e5e5e5;border-radius:6px;padding:6px 10px;font-size:13px}.kpi b{font-size:16px}
-nav a{margin-right:14px}
+nav a{margin-right:14px}.files{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}.file{min-width:180px;max-width:48%}.file img.out{max-height:320px}.file video.v{max-height:260px;min-width:280px}.ins video.in{height:90px;border:1px solid #ddd;margin-right:6px;vertical-align:middle;background:#000}.note{background:#fffbeb;border-left:3px solid #f59e0b;padding:6px 10px;margin:6px 0;font-size:13px}
 </style></head><body><header><h1>${esc(TITLE)}</h1><div class="mut">MCP on the left of every pair, V4 on the right. MCP = the agent's chat model with Magic Hour's 44 MCP tools and nothing else, the free plan emulated by an approval gate, the same proxy user answering from the same answer sheet (bench/mcp/run.mjs: mcp-intent, mcp-v4). V4 = the small agent in V4/: an intent sheet with a source for every parameter, plain questions for what is missing, code guards, one call, a vision review (V4/runs: dry-*, full-*). Built by bench/mcp/v4-report.mjs on ${new Date().toISOString().slice(0, 10)}.</div>
-<nav><a href="#conv">1 · the conversation</a><a href="#zoo">2 · the zoo ad</a><a href="#basics">3 · the thirteen basics</a></nav></header><main>
+<nav><a href="#conv">1 · the conversation</a><a href="#zoo">2 · the zoo ad</a><a href="#basics">3 · the thirteen basics</a><a href="#stage1">4 · stage 1, existing assets</a></nav></header><main>
 
 <section class="stage" id="conv"><h2>1 · The conversation: thirteen vague briefs, the same proxy user, the same answers available to both</h2>
 <p>Each brief is deliberately vague ("make a poster for our open mic night"). The proxy user holds an answer sheet (the words, where it will be shown, how long, what sound) and answers only what it is asked. The MCP side ran with the gate at 0 credits, so its <b>attempted call</b> is the record of what it would have made; V4's dry run ends in its sheet and the tool it would call. Neither spent credits here. The table marks each side's result against the sheet: ${mk("ok")} matches what the user wanted, ${mk("bad")} a guess that missed (or a value never asked for), ${mk("part")} near (tall but not A4's 3:4), ${mk("na")} the sheet had nothing to say.</p>
@@ -227,6 +273,7 @@ ${zoo}
 ${basSummary}
 ${BAS.join("")}
 </section>
+${stage1}
 </main></body></html>`;
 writeFileSync(join(OUT, "index.html"), html);
 console.log(`${OUT}/index.html (${(html.length / 1024).toFixed(0)} KB) → http://localhost:4748/${OUT.split("/").pop()}/`);
