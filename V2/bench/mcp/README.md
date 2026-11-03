@@ -115,3 +115,16 @@ MCP runs: `results/mcp-film-3` (I92a), `mcp-film-4` (I93a). Pages: `compare-film
 micro tasks). Rules learned: a reference is bound by its `@name` in the prompt (422 otherwise); the planner must plan
 from the brief, not the story's rewrite; the prompt is capped at 2,000 characters; the minimax-h3 hand-off between
 segments is near exact.
+
+## V4 against the MCP, one page (2026-11-03, `results/v4-report/`)
+
+`v4-report.mjs` reads the other session's V4 runs (`V4/runs/dry-*`, `full-*`, the items and verdicts) and the MCP runs on the
+same briefs (`results/mcp-intent`, vague briefs with the gate at 0 credits so the attempted call is the record; `results/mcp-v4`,
+the full briefs) and writes one page in three parts, the MCP on the left of every pair: (1) the conversation on thirteen vague
+briefs, both threads side by side, each side's call marked parameter by parameter against the answer sheet (the MCP asked on 3 of
+13 and guessed the rest, 8 parameters wrong; V4 asked on 9 of 13 by rule, 4 wrong, all four the shape of an edit or an animation
+its sheet has no field for); (2) the zoo ad, one 45-second generation against four joined, both films with the audio transcribed
+(the MCP's narration stops at 9 s, V4's TTS runs to 39 s) and measured, the frames at the same seconds, the frame-to-frame
+similarity with the joins marked (the MCP's scene changes are dissolves the model made itself, V4's are hard joins at 15, 30 and
+40 s), the end cards (garbled against exact), the prompts; (3) the thirteen full briefs side by side with the recorded verdicts
+(V4 4, MCP 7, tie 1). V4's outputs are copied into `V2/sessions/v4-report/` (gitignored) so `serve.mjs` serves both sides.

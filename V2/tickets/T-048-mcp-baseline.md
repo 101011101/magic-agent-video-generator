@@ -137,3 +137,12 @@ A 10 → 11, G 8 → 9, H 1 → 2 (of the re-run items). The combined page `resu
 then the chain) above it. The night-ride page `results/night-ride/` shows every intermediary asset of a two-generation
 piece beside the MCP's one call, with each segment's audio transcribed: the model's speech holds about 12 to 15 s of a
 generation and nothing of the sound crosses a join (T-058).
+
+## V4 against the MCP on one page (2026-11-03, `results/v4-report/`)
+
+The other session's V4 (intent sheet, plain questions, guards, one call, a review) against the MCP on its own thirteen briefs,
+read off the records by `bench/mcp/v4-report.mjs`: the conversation (the MCP asks on its own judgement, 3 of 13, and guesses
+the rest: a 1:1 banner, 5-second clips, a landscape TikTok clip, its own sale copy; V4 asks by rule, 9 of 13, and misses only
+the shape of edits and animations, which its sheet has no field for), the zoo ad (the MCP's one generation: a coherent look,
+dissolves of its own, 9 s of narration, a garbled card; V4's four generations: the full narration by TTS, the card exact, hard
+joins at 15, 30 and 40 s) and the thirteen basics with the recorded verdicts (V4 4, MCP 7, tie 1).
