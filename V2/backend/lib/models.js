@@ -15,7 +15,7 @@ export const WIDTH = { "640px": 640, "1k": 1024, "2k": 2048, "4k": 4096, "360p":
 // Still models. inputs = the editor's cap on additional input images (image 1 counts as one of them). cost per resolution in
 // credits for one image; "from" prices from the sheet, measured where we have paid.
 export const STILLS = {
-  "nano-banana-pro": { inputs: 9, generate: true, edit: true, resolutions: ["1k", "2k", "4k"], cost: { "1k": 150, "2k": 200, "4k": 400 }, measured: ["2k", "4k"], plan: "creator" },
+  "nano-banana-pro": { text: "good", inputs: 9, generate: true, edit: true, resolutions: ["1k", "2k", "4k"], cost: { "1k": 150, "2k": 200, "4k": 400 }, measured: ["2k", "4k"], plan: "creator" },
   "nano-banana-2.1": { inputs: 9, generate: true, edit: true, resolutions: ["640px", "1k", "2k", "4k"], cost: { "640px": 50, "1k": 50, "2k": 100, "4k": 150 }, measured: [], plan: "creator" },
   "nano-banana-2": { inputs: 9, generate: true, edit: true, resolutions: ["640px", "1k", "2k", "4k"], cost: { "640px": 100, "1k": 100, "2k": 100, "4k": 200 }, measured: [], plan: "creator" },
   "gpt-image-2": { inputs: 9, generate: true, edit: true, resolutions: ["640px", "1k", "2k", "4k"], cost: { "640px": 50, "1k": 100, "2k": 200, "4k": 400 }, measured: ["2k"], plan: "creator" },
@@ -23,8 +23,8 @@ export const STILLS = {
   "seedream-v5-pro": { inputs: 9, generate: true, edit: true, resolutions: ["640px", "1k", "2k"], cost: { "640px": 75, "1k": 75, "2k": 150 }, measured: ["2k"], plan: "creator" },
   "seedream-v4.5": { inputs: 9, generate: false, edit: true, resolutions: ["640px", "1k", "2k", "4k"], cost: { "640px": 50, "1k": 50, "2k": 100, "4k": 200 }, measured: [], plan: "creator" },
   "seedream-v4": { inputs: 9, generate: true, edit: true, resolutions: ["640px", "1k", "2k", "4k"], cost: { "640px": 40, "1k": 40, "2k": 80, "4k": 160 }, measured: [], plan: "creator" },
-  "flux-2-klein": { inputs: 5, generate: true, edit: true, resolutions: ["640px", "1k", "2k"], cost: { "640px": 5, "1k": 5, "2k": 10 }, measured: ["2k"], plan: "free" },
-  "qwen-image-2.1": { inputs: 2, generate: true, edit: true, resolutions: ["640px", "1k", "2k"], cost: { "640px": 10, "1k": 10, "2k": 20 }, measured: ["2k"], plan: "free" },
+  "flux-2-klein": { text: "poor", inputs: 5, generate: true, edit: true, resolutions: ["640px", "1k", "2k"], cost: { "640px": 5, "1k": 5, "2k": 10 }, measured: ["2k"], plan: "free" },
+  "qwen-image-2.1": { text: "good", inputs: 2, generate: true, edit: true, resolutions: ["640px", "1k", "2k"], cost: { "640px": 10, "1k": 10, "2k": 20 }, measured: ["2k"], plan: "free" },
   "qwen-edit": { inputs: 2, generate: false, edit: true, resolutions: ["640px", "1k", "2k"], cost: { "640px": 10, "1k": 10, "2k": 20 }, measured: [], plan: "free" },
   "krea-2": { inputs: 1, generate: true, edit: true, resolutions: ["640px", "1k"], cost: { "640px": 10, "1k": 10 }, measured: [], plan: "free" },
   "flux-schnell": { inputs: 0, generate: true, edit: false, resolutions: ["640px", "1k", "2k"], cost: { "640px": 5, "1k": 5, "2k": 10 }, measured: [], plan: "free" },
@@ -60,6 +60,11 @@ export const TIERS = {
 
 const need = (table, name, kind) => { const m = table[name]; if (!m) throw new Error(`unknown ${kind} model "${name}" (known: ${Object.keys(table).join(", ")})`); return m; };
 export const still = (name) => need(STILLS, name, "still");
+// Lettering: "good" spells designed words exactly, "poor" invents or misspells them, unrated = not measured (treated as poor).
+// qwen-image-2.1 4 of 4 exact, flux-2-klein 2 of 4 (V2/runs/probe-lettering, 2026-11-01); nano-banana-pro from the paid films.
+export const lettersWell = (name) => STILLS[name]?.text === "good";
+// The models a tier may use for stills: the free tier only the free-plan models; the others every model.
+export const stillsFor = (tier) => Object.entries(STILLS).filter(([, m]) => tier !== "free" || m.plan === "free").map(([id, m]) => ({ id, ...m }));
 export const video = (name) => need(VIDEOS, name, "video");
 
 // Costs. A still at a resolution; a clip of `seconds` at a resolution with or without audio; a music bed.

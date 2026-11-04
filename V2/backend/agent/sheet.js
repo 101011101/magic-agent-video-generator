@@ -127,6 +127,7 @@ export function questionsFor(sheet) {
     const f = sheet.fields.find((x) => x.field === q.field);
     if (!f || f.source === "not_applicable") continue;
     if (q.when && /^(\w+)=(\w+)$/.test(q.when)) { const [, k, v] = q.when.match(/^(\w+)=(\w+)$/); if (val(k) !== v) continue; }   // asked only under the condition; filled regardless
+    if (q.field === "style" && /\bmeme|joke|funny|caption (it|this)|reaction (image|pic)/i.test(JSON.stringify(sheet.fields.map((x) => [x.value, x.quote])))) continue;   // a meme's style is its template, never asked (G39b)
     if (f.source === "unknown" || (f.source === "inferred" && f.confidence < THRESHOLD)) qs.push({ field: q.field, question: q.ask, default: q.default });
   }
   return qs.slice(0, MAX_QUESTIONS);

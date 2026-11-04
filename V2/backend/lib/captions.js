@@ -13,23 +13,26 @@ function run(argv) {
   const ctx = $.NSGraphicsContext.graphicsContextWithBitmapImageRep(rep);
   $.NSGraphicsContext.saveGraphicsState; $.NSGraphicsContext.setCurrentContext(ctx);
   $.NSColor.clearColor.set; $.NSRectFill($.NSMakeRect(0, 0, W, H));
-  const ps = $.NSMutableParagraphStyle.alloc.init; ps.alignment = $.NSTextAlignmentCenter;
-  const attrs = $.NSDictionary.dictionaryWithObjectsForKeys($([$.NSFont.fontWithNameSize('HelveticaNeue', size), $.NSColor.whiteColor, ps]), $([$.NSFontAttributeName, $.NSForegroundColorAttributeName, $.NSParagraphStyleAttributeName]));
+  const hex = argv[6] || 'ffffff', box = argv[7] !== '0', font = argv[8] || 'HelveticaNeue', align = argv[9] || 'center', mg = Number(argv[10] || 0.08);
+  const col = $.NSColor.colorWithCalibratedRedGreenBlueAlpha(parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255, 1);
+  const ps = $.NSMutableParagraphStyle.alloc.init; ps.alignment = align === 'left' ? $.NSTextAlignmentLeft : align === 'right' ? $.NSTextAlignmentRight : $.NSTextAlignmentCenter;
+  const attrs = $.NSDictionary.dictionaryWithObjectsForKeys($([($.NSFont.fontWithNameSize(font, size) || $.NSFont.fontWithNameSize('HelveticaNeue', size)), col, ps]), $([$.NSFontAttributeName, $.NSForegroundColorAttributeName, $.NSParagraphStyleAttributeName]));
   // Greedy word wrap to 80% of the width, measured with the same attributes (no wrapping call is bridged).
   const width = (s) => $(s).sizeWithAttributes(attrs).width, lines = [];
   for (const para of text.split('\\n')) { let line = ''; for (const w of para.split(' ')) { const t = line ? line + ' ' + w : w; if (line && width(t) > W * 0.8) { lines.push(line); line = w; } else line = t; } lines.push(line); }
   const str = $(lines.join('\\n')), measured = str.sizeWithAttributes(attrs), tw = Math.ceil(measured.width), th = Math.ceil(measured.height);
-  const pad = Math.round(size * 0.5), bw = tw + 2 * pad, bh = th + 2 * pad, bx = Math.round((W - bw) / 2), by = argv[5] === 'top' ? H - bh - Math.round(H * 0.08) : argv[5] === 'middle' ? Math.round((H - bh) / 2) : Math.round(H * 0.08);
-  $.NSColor.colorWithCalibratedWhiteAlpha(0, 0.55).set; $.NSRectFillUsingOperation($.NSMakeRect(bx, by, bw, bh), $.NSCompositingOperationSourceOver);
+  const pad = Math.round(size * 0.5), bw = tw + 2 * pad, bh = th + 2 * pad, bx = align === 'left' ? Math.round(W * Math.max(mg, 0.03)) : align === 'right' ? Math.round(W * (1 - Math.max(mg, 0.03)) - bw) : Math.round((W - bw) / 2), by = argv[5] === 'top' ? H - bh - Math.round(H * mg) : argv[5] === 'middle' ? Math.round((H - bh) / 2) : Math.round(H * mg);
+  if (box) { $.NSColor.colorWithCalibratedWhiteAlpha(0, 0.55).set; $.NSRectFillUsingOperation($.NSMakeRect(bx, by, bw, bh), $.NSCompositingOperationSourceOver); }
   str.drawInRectWithAttributes($.NSMakeRect(bx + pad, by + pad, tw, th), attrs);
   $.NSGraphicsContext.restoreGraphicsState;
   rep.representationUsingTypeProperties($.NSBitmapImageFileTypePNG, $.NSDictionary.dictionary).writeToFileAtomically($(out), true);
 }`;
 
 // One card: text (may hold newlines) → transparent PNG of the film's size, the text boxed near the bottom (or the top).
-export function captionCard(text, out, { w = 1280, h = 720, size = 30, at = "bottom" } = {}) {
+// color (hex, default white), box (the dark band; default on), font (a system font name), align (left | center | right)
+export function captionCard(text, out, { w = 1280, h = 720, size = 30, at = "bottom", color = "ffffff", box = true, font = "HelveticaNeue", align = "center", margin = 0.08 } = {}) {
   const script = join(mkdtempSync(join(tmpdir(), "cap-")), "card.js"); writeFileSync(script, JXA);
-  execFileSync("osascript", ["-l", "JavaScript", script, text, out, String(w), String(h), String(size), at]);
+  execFileSync("osascript", ["-l", "JavaScript", script, text, out, String(w), String(h), String(size), at, String(color).replace(/^#|^0x/i, "").padEnd(6, "f").slice(0, 6), box ? "1" : "0", font, align, String(margin)]);
   return out;
 }
 

@@ -2,6 +2,8 @@
 // ask and stop; else plan, price, and show. `runCase` drives a benchmark case with a proxy user who answers from the
 // case's answer sheet. `node V2/backend/agent/agent.mjs --brief "…" [--materials a.jpg,b.png] [--tier free]` runs one
 // message and prints the questions or the plan; the benchmark runner is V2/bench/run.mjs.
+import { materialFacts } from "./facts.js";
+import { preflight } from "./preflight.js";
 import { fillSheet, asked, THRESHOLD } from "./sheet.js";
 import { plan } from "./plan.js";
 import { jsonCall, S } from "../lib/llm.js";
@@ -9,14 +11,29 @@ import { jsonCall, S } from "../lib/llm.js";
 const MAX_ROUNDS = 3;
 
 // One turn: returns {sheet, questions} or {sheet, plan}.
-export async function turn({ messages, materials = [], attached = null, session = [], tier = "free", goalHint = null, liberty = false, focus = null }) {
+export async function turn({ messages, materials = [], dir = null, attached = null, session = [], tier = "free", goalHint = null, liberty = false, focus = null }) {
   const sheet = await fillSheet({ messages, materials, attached, session, goalHint, liberty, focus });
+  // the materials' facts decide some questions: no language question for a clip with no sound (E24c asked, then said "no speech")
+  const facts0 = dir && materials.length ? await materialFacts(dir, materials) : {};
+  const clips = Object.values(facts0).filter((o) => o.kind === "clip");
+  if (clips.length && clips.every((o) => o.sound === "none" || o.sound === "silent")) sheet.questions = sheet.questions.filter((q) => q.field !== "language");
   if (sheet.questions.length) return { sheet, questions: sheet.questions };
-  const p = await plan({ sheet, materials, session, tier, focus: sheet.about_focus ? focus : null });
+  const facts = dir ? (Object.keys(facts0).length ? facts0 : await materialFacts(dir, materials)) : {};
+  const p = await plan({ sheet, materials, facts, session, tier, focus: sheet.about_focus ? focus : null });
   // the planner may still need something the sheet did not ask (the exact words, a photo only the user has): that is a question, not an empty plan
+  // the plan on paper before any tool runs: types and properties through the chain, against the goal (findings, not a gate)
+  const session2 = Object.fromEntries((session || []).filter((a) => a.facts).map((a) => [a.label, a.facts])), request = [...messages].reverse().find((m) => m.who === "user")?.text || "";
+  if (p.steps?.length) p.preflight = preflight(p, { facts, session: session2, sheet, request });
+  // one revision when the end will not meet the goal on paper (kind, size, length, transparency, the user's words): the
+  // findings go back to the planner; the second plan is kept with its own pre-flight and the first one's findings
+  if (p.steps?.length && p.preflight?.end?.length) { const first = p.preflight; const p2 = await plan({ sheet, materials, facts, session, tier, focus: sheet.about_focus ? focus : null, review: first.end.join("; ") });
+    if (p2.steps?.length) { p2.preflight = preflight(p2, { facts, session: session2, sheet, request }); if (p2.preflight.end.length <= first.end.length) return finish({ ...p2, revised_from: first.end }); } }
+  return finish(p);
+  function finish(p) {
   if (p.refuse) return { sheet, plan: p };
   if ((p.questions_left || []).length) return { sheet, questions: p.questions_left.map((q, i) => ({ field: `plan-${i + 1}`, question: q, default: null })), say: p.say };
   return { sheet, plan: p };
+  }
 }
 
 // The proxy user: answers only what is asked, from the answer sheet, in one short message; "your call" when the sheet
@@ -43,7 +60,7 @@ export async function runCase(c, { tier = c.tier || "free", session = [] } = {})
     const q = asked(result.questions); messages.push({ who: "agent", text: q });
     const a = await proxyUser({ answerSheet: c.answer_sheet, questions: result.questions, brief: c.brief }); messages.push({ who: "user", text: a });
   }
-  const t = { id: c.id, group: c.group, brief: c.brief, materials, messages, rounds, sheet: result.sheet, plan: result.plan || null, unresolved: !!result.questions };
+  const t = { id: c.id, group: c.group, brief: c.brief, materials, messages, rounds, sheet: result.sheet, plan: result.plan || null, say: result.say || "", session_labels: session.map((a) => a.label), unresolved: !!result.questions };
   t.checks = check(c, t);
   return t;
 }
@@ -79,6 +96,29 @@ export function check(c, t) {
   if (e.tier_move) add("names a paid model and waits", !!(t.plan && t.plan.tier_move), t.plan?.tier_move);
   if (e.paid != null || e.paid_before_answers != null || e.paid_before_yes != null) add("nothing paid (dry)", true, 0);
   if (e.asks_for_materials === false) add("does not ask for materials", !askedFields.includes("materials"), askedFields);
+  if (e.refuse != null) add(e.refuse ? "refuses" : "does not refuse", !!t.plan?.refuse === !!e.refuse, t.plan?.refuse || "");
+  // The agent's words, before anything runs: the plan's say, the questions, the message that came with a question.
+  const words = [t.plan?.say || "", t.say || "", ...t.messages.filter((m) => m.who === "agent").map((m) => m.text)].join(" ");
+  if (e.says) for (const w of e.says) add(`says ${w}`, new RegExp(w, "i").test(words), words.slice(0, 160));
+  if (e.asks_about) for (const w of e.asks_about) add(`asks about ${w}`, t.rounds.flatMap((r) => r.questions).some((q) => new RegExp(w, "i").test(q.question || "")), t.rounds.flatMap((r) => r.questions.map((q) => q.question)));
+  // Honest and exact, after Imagination Studio's agent bench (T-050, item 3). Honest: every file the agent names is one the
+  // user supplied, one an earlier turn made, or one this plan makes. Exact: the deliverable matches what the answer sheet
+  // fixes (size, length, count) and the plan has no more nodes than the case allows; a setting the brief left open is the
+  // agent's call and is not checked.
+  if (t.plan) {
+    const known = new Set([...(t.materials || []), ...(t.session_labels || []), ...t.plan.steps.map((s) => s.produces)]);
+    const named = [...new Set(words.match(/\b[\w-]+\.(?:png|jpe?g|webp|mp4|mov|mp3|wav|svg|txt|json)\b/gi) || [])];
+    add("honest: names only files that exist or that the plan makes", named.every((f) => known.has(f)), named.filter((f) => !known.has(f)));
+  }
+  if (e.nodes_max != null) add(`nodes ≤ ${e.nodes_max}`, tools.length <= e.nodes_max, tools.length);
+  if (e.exact && t.plan) {
+    const a = c.answer_sheet || {}, steps = t.plan.steps, consumed = new Set(steps.flatMap((s) => s.inputs));
+    const finals = steps.filter((s) => !consumed.has(s.produces) && !["check", "estimate", "search", "write", "gate"].includes(s.tool));
+    const size = a.size || a.aspect; if (size) add(`exact: size ${size}`, finals.length > 0 && finals.every((s) => (s.params.aspect || "") === size), finals.map((s) => s.params.aspect || "(none)"));
+    if (a.length_s) { const want = Number(a.length_s); const got = finals.map((s) => Number(s.params.seconds) || 0); add(`exact: length ${want} s (±20%)`, got.some((g) => Math.abs(g - want) <= Math.max(1, want * 0.2)), got); }
+    const count = Number(a.count || 1); const made = finals.length || steps.length; const inParam = steps.some((s) => Number(s.params.count) === count || new RegExp(`\\b${count}\\b`).test(`${s.params.extra || ""}`));
+    add(`exact: ${count} deliverable${count === 1 ? "" : "s"}, not more`, made === count || (count > 1 && inParam), { deliverables: made, finals: finals.map((s) => s.produces) });
+  }
   if (t.unresolved) add("resolved within 3 rounds", false, "still asking");
   return out;
 }

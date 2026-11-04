@@ -19,7 +19,7 @@ export const AUDIO_EXTRA = { "kling-3.0": 24, "veo3.1": 24, "veo3.1-lite": 24, "
 export const COST = { image: stillCost(IMAGE.model, IMAGE.resolution), still: (model = IMAGE.model, res = IMAGE.resolution) => stillCost(model, res), video: (seconds, model = VIDEO.model, audio = true, res = VIDEO.resolution) => videoCost(seconds, model, res, audio), music: (seconds) => seconds };
 export const CAP = Number(process.env.CLEANED_CAP || 8000);
 if (!Number.isFinite(CAP) || CAP < 0) throw new Error(`CLEANED_CAP must be a non-negative number of credits (got "${process.env.CLEANED_CAP}")`);   // a typo must not remove the only spend guard
-const LEDGER = join(RUNS, "ledger.json"), LOCK = join(RUNS, "ledger.lock");
+const LEDGER = process.env.CLEANED_LEDGER || join(RUNS, "ledger.json"), LOCK = LEDGER.replace(/\.json$/, ".lock");   // a test gives its own ledger; the lock sits beside it
 // The ledger is shared by every run label, so reads and writes of it happen under a lock (an atomic mkdir, held for
 // milliseconds; a lock older than a minute is taken over), and each process writes its in-flight reservations into it, so
 // two labels running at once cannot jointly overshoot the cap.
@@ -30,8 +30,8 @@ function locked(fn) {
 }
 
 export class Jobs {
-  constructor(run, { estimate = false } = {}) {
-    this.run = run; this.estimate = estimate; this.reserved = 0; this.estimated = []; this.uploads = {};
+  constructor(run, { estimate = false, image = IMAGE } = {}) {
+    this.run = run; this.estimate = estimate; this.imageDefault = image; this.reserved = 0; this.estimated = []; this.uploads = {};
     run.log.jobs ??= {}; run.log.calls ??= []; run.log.pending ??= {};
   }
   hash(f) { return existsSync(this.run.path(f)) ? createHash("sha256").update(readFileSync(this.run.path(f))).digest("hex").slice(0, 16) : `missing:${f}`; }
@@ -50,7 +50,8 @@ export class Jobs {
   release(cost) { this.reserved -= cost; locked(() => { const l = this.ledger(); (l.inflight ??= {})[this.run.name] = this.reserved; this.write(l); }); }
 
   // One image job. inputs: run-relative image files (empty → generator, else editor).
-  async image(key, file, prompt, inputs = [], image = IMAGE) {
+  // Without an image profile the run's own (the tier's still model) is used, never the paid default.
+  async image(key, file, prompt, inputs = [], image = this.imageDefault) {
     const endpoint = inputs.length ? "/v1/ai-image-editor" : "/v1/ai-image-generator";
     return this.paid(key, file, { endpoint, ...image, prompt }, inputs, stillCost(image.model, image.resolution), async (paths, onCreate) => {
       const body = { name: `${this.run.name} ${key}`, image_count: 1, ...image, style: { prompt }, ...(paths.length ? { assets: { image_file_paths: paths } } : {}) };

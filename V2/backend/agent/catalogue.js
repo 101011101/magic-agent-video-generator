@@ -14,10 +14,11 @@ export const GROUPS = {
 };
 
 import { CUSTOM_TOOLS } from "../tools/index.js";
+import { skillsText, CHOOSE } from "./skills.js";
 
 export const TOOLS = [
   ...CUSTOM_TOOLS,
-  { id: "image", group: "make", takes: [], makes: "picture", endpoint: "/v1/ai-image-generator", kind: "still", needs: ["subject"], cannot: ["legible text"] },
+  { id: "image", group: "make", takes: [], makes: "picture", endpoint: "/v1/ai-image-generator", kind: "still", needs: ["subject"], guarantees: ["designed lettering spelled exactly when params.lettering is true (runs on qwen-image-2.1)"] },
   { id: "text-to-video", group: "make", takes: ["optional references"], makes: "clip", endpoint: "/v1/text-to-video", kind: "video", needs: ["subject", "seconds"] },
   { id: "music", group: "make", takes: [], makes: "sound", endpoint: "/v1/ai-music-generator", kind: "none", credits: "1 per second", needs: ["cue", "seconds"] },
   { id: "story", group: "compose", takes: ["the brief sheet"], makes: "story", endpoint: "pipeline.mjs --until story", kind: "pipeline", needs: ["kind", "audience", "direction"] },
@@ -32,10 +33,10 @@ export const TOOLS = [
   { id: "audio-to-video", group: "animate", takes: ["sound", "optional picture"], makes: "clip", endpoint: "/v1/audio-to-video", kind: "video", needs: ["sound"] },
   { id: "face-swap-photo", group: "change-identity", takes: ["picture", "face"], makes: "picture", endpoint: "/v1/face-swap-photo", kind: "none", needs: ["picture", "face"] },
   { id: "face-swap-video", group: "change-identity", takes: ["clip", "face"], makes: "clip", endpoint: "/v1/face-swap", kind: "none", needs: ["clip", "face"] },
-  { id: "character-replace", group: "change-identity", takes: ["clip", "character"], makes: "clip", endpoint: "/v1/character-replace", kind: "video", needs: ["clip", "character"] },
+  { id: "character-replace", group: "change-identity", takes: ["clip", "picture of the person"], makes: "clip", endpoint: "/v1/character-replace (wan-animate 480p)", kind: "none", needs: ["clip", "picture of the person"] },
   { id: "head-swap", group: "change-identity", takes: ["picture", "head"], makes: "picture", endpoint: "/v1/head-swap", kind: "none", needs: ["picture", "head"] },
   { id: "clothes-changer", group: "change-identity", takes: ["picture", "garment"], makes: "picture", endpoint: "/v1/ai-clothes-changer", kind: "none", needs: ["picture", "garment"] },
-  { id: "image-edit", group: "change-content", takes: ["picture", "up to 9 more pictures"], makes: "picture", endpoint: "/v1/ai-image-editor", kind: "still", needs: ["picture", "change"], cannot: ["legible text (a model cannot spell reliably)"] },
+  { id: "image-edit", group: "change-content", takes: ["picture", "up to 9 more pictures"], makes: "picture", endpoint: "/v1/ai-image-editor", kind: "still", needs: ["picture", "change"], guarantees: ["lettering on the picture spelled exactly when params.lettering is true (qwen-image-2.1, up to 2 pictures)"] },
   { id: "video-edit", group: "change-content", takes: ["clip"], makes: "clip", endpoint: "/v1/ai-video-editor", kind: "video", needs: ["clip", "change"] },
   { id: "video-style", group: "change-content", takes: ["clip"], makes: "clip", endpoint: "/v1/animation (video-to-video)", kind: "none", needs: ["clip", "style"] },
   { id: "edit-run", group: "change-content", takes: ["a run this session made", "shots or seconds"], makes: "film", endpoint: "pipeline.mjs --retry/--only", kind: "pipeline", needs: ["run", "change"] },
@@ -52,11 +53,15 @@ export const TOOLS = [
   { id: "gate", group: "inspect", takes: ["asset", "what to check"], makes: "verdict", endpoint: "vision call", kind: "none", needs: ["asset"] },
 ];
 
+// The Magic Hour tools the executor can call. The planner is offered only these and the code tools: offered unwired tools
+// (colorize, video-edit) were planned in the rerun and made nothing.
+export const WIRED = new Set(["character-replace", "head-swap", "image", "image-edit", "image-to-video", "text-to-video", "music", "face-swap-photo", "face-swap-video", "lip-sync", "talking-photo", "background-remove", "upscale-image", "captions", "story", "assets", "screenplay", "keyframes", "clips", "film"]);
+export const OFFERED = TOOLS.filter((t) => t.custom || WIRED.has(t.id));
 export const tool = (id) => TOOLS.find((t) => t.id === id);
 
 // The catalogue as text for the planner's prompt.
 export function catalogueText() {
   const byGroup = {};
-  for (const t of TOOLS) (byGroup[t.group] ??= []).push(t);
-  return Object.entries(GROUPS).map(([g, what]) => `${g}: ${what}\n${(byGroup[g] || []).map((t) => `  - ${t.id}: takes ${t.takes.length ? t.takes.join(", ") : "nothing"}; makes a ${t.makes}; needs ${t.needs.join(", ")}${t.guarantees ? `; GUARANTEES ${t.guarantees.join(", ")}` : ""}${t.cannot ? `; CANNOT give ${t.cannot.join(", ")}` : ""}${t.custom ? "; by code, 0 credits" : ""}`).join("\n")}`).join("\n");
+  for (const t of OFFERED) (byGroup[t.group] ??= []).push(t);
+  return Object.entries(GROUPS).map(([g, what]) => `${g}: ${what}\n${(byGroup[g] || []).map((t) => `  - ${t.id}: takes ${t.takes.length ? t.takes.join(", ") : "nothing"}; makes a ${t.makes}; needs ${t.needs.join(", ")}${t.guarantees ? `; GUARANTEES ${t.guarantees.join(", ")}` : ""}${t.cannot ? `; CANNOT give ${t.cannot.join(", ")}` : ""}${t.custom ? "; by code, 0 credits" : ""}${skillsText(t.id)}`).join("\n")}`).join("\n") + `\nCHOOSING BETWEEN TOOLS:\n${CHOOSE.map((c) => `- ${c}`).join("\n")}`;
 }

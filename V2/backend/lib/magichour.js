@@ -4,7 +4,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { key } from "./env.js";
 
-const BASE = "https://api.magichour.ai";
+const BASE = process.env.MAGIC_HOUR_BASE || "https://api.magichour.ai";   // a test points this at tests/fake-magichour.mjs
 
 // Retries: GETs and idempotent POSTs (asking for an upload URL creates no job and costs nothing) are retried on a network
 // error, a 429 or a 5xx, three times with a growing wait; a POST that creates a job is never retried blindly, because a
@@ -61,4 +61,16 @@ export async function upload(file) {
   const put = await fetch(item.upload_url, { method: "PUT", body: readFileSync(file), headers: { "content-type": mime } });
   if (!put.ok) throw new Error(`upload PUT ${put.status} for ${file}`);
   return item.file_path;
+}
+
+// Faces in an uploaded picture or clip (free): [{ path (the original_face of a face_mappings entry), url (a crop) }]
+export async function detectFaces(filePath, { timeoutS = 180 } = {}) {
+  const { id } = await request("POST", "/v1/face-detection", { assets: { target_file_path: filePath }, confidence_score: 0.5 });
+  for (const t0 = Date.now(); ; ) {
+    const p = await request("GET", `/v1/face-detection/${id}`);
+    if (p.status === "complete") return p.faces || [];
+    if (p.status === "error") throw new Error(`face detection ${id} error`);
+    if ((Date.now() - t0) / 1000 > timeoutS) throw new Error(`face detection ${id} timed out`);
+    await new Promise((r) => setTimeout(r, 2500));
+  }
 }

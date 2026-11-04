@@ -64,7 +64,7 @@ createServer(async (req, res) => {
       const foc = b.focus && s.turns[b.focus.turn]?.plan?.steps?.[b.focus.index] ? { ...b.focus, step: s.turns[b.focus.turn].plan.steps[b.focus.index] } : null;
       s.messages.push({ who: "user", text: b.text, at: Date.now(), attached: b.materials || [], focus: foc ? { turn: foc.turn, index: foc.index, produces: foc.step.produces } : null });
       s.materials = [...new Set([...(s.materials || []), ...(b.materials || [])])];
-      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card").map((m) => ({ who: m.who, text: `${m.attached?.length ? `${m.text} [attached: ${m.attached.join(", ")}]` : m.text}${m.focus ? ` [looking at: ${m.focus.produces}, a ${s.turns[m.focus.turn]?.plan?.steps?.[m.focus.index]?.tool || "node"} in turn ${m.focus.turn + 1}]` : ""}` })), materials: s.materials, attached: b.materials || [], session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null, focus: foc });
+      const r = await turn({ messages: s.messages.filter((m) => m.who !== "card").map((m) => ({ who: m.who, text: `${m.attached?.length ? `${m.text} [attached: ${m.attached.join(", ")}]` : m.text}${m.focus ? ` [looking at: ${m.focus.produces}, a ${s.turns[m.focus.turn]?.plan?.steps?.[m.focus.index]?.tool || "node"} in turn ${m.focus.turn + 1}]` : ""}` })), materials: s.materials, dir: sdir(s.id), attached: b.materials || [], session: s.assets, tier: s.tier, liberty: s.mode === "auto", goalHint: s.goal || null, focus: foc });
       s.goal = r.questions ? r.sheet.goal.value : null;   // the goal carries only while questions are open; a new request after a plan starts fresh
       s.request = s.request || b.text;   // the message that started this request; questions and answers do not replace it
       const ti = s.turns.length, d = sdir(s.id);
@@ -112,8 +112,9 @@ createServer(async (req, res) => {
       const only = Array.isArray(b.indices) ? b.indices : t.plan.steps.map((x, i) => (x.state === "done" || x.state === "paused" || x.state === "skipped" ? -1 : i)).filter((i) => i >= 0);
       t.plan.turn = ti; running[id] = true; save(s);
       const brief = t.brief || s.messages.find((m) => m.who === "user")?.text || "";
-      const merge = (i, st) => { const cur = load(id); const target = cur.turns[ti].plan.steps[i]; for (const k of ["state", "output", "credits_spent", "cached", "error", "note", "simulated", "run", "page", "started_at", "ran_at", "attempt", "attempts"]) if (st[k] !== undefined) target[k] = st[k]; const a = cur.assets.find((x) => x.label === st.produces); if (a && st.output) { a.file = st.output; a.planned = false; } return cur; };
+      const merge = (i, st) => { const cur = load(id); const target = cur.turns[ti].plan.steps[i]; for (const k of ["state", "output", "credits_spent", "cached", "error", "note", "simulated", "run", "page", "started_at", "ran_at", "attempt", "attempts", "facts", "faceMap", "lettering_left", "predicted", "preflight"]) if (st[k] !== undefined) target[k] = st[k]; const a = cur.assets.find((x) => x.label === st.produces); if (a && st.output) { a.file = st.output; a.planned = false; if (st.facts) a.facts = st.facts; } return cur; };
       execute(t.plan, sdir(id), { id, tier: s.tier, sheet: t.sheet, brief, only, assets: s.assets, say: (m) => { const cur = load(id); cur.messages.push({ who: "agent", text: m, at: Date.now(), turn: ti, exec: true }); save(cur); }, onStep: (i, st) => { save(merge(i, st)); } })
+        .then((pl) => { if (pl?.goal_check) { const cur = load(id); cur.turns[ti].plan.goal_check = pl.goal_check; save(cur); } })
         .catch((e) => { const cur = load(id); cur.messages.push({ who: "agent", text: `Stopped: ${String(e.message || e).slice(0, 200)}`, at: Date.now(), turn: ti, exec: true }); save(cur); })
         .finally(() => { delete running[id]; });
       return json(res, 200, { started: true, only });

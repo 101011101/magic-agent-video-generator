@@ -9,7 +9,8 @@ export const tool = {
   ext: () => "mp4",
   run({ inputs, params, out }) {
     const c = inputs.find((x) => isClip(x.file)); if (!c) throw new Error("trim needs a clip");
-    const L = duration(c.file), from = Math.max(0, num(params.extra, "from") ?? 0), to = Math.min(L, num(params.extra, "to") ?? (Number(params.seconds) ? from + Number(params.seconds) : L));
+    const rg = String(params.extra || "").match(/^\s*(\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)\s*s?\s*$/);   // "0-5" too, not only "from: 0; to: 5" (it was silently ignored)
+    const L = duration(c.file), from = Math.max(0, num(params.extra, "from") ?? (rg ? Number(rg[1]) : 0)), to = Math.min(L, num(params.extra, "to") ?? (rg ? Number(rg[2]) : Number(params.seconds) ? from + Number(params.seconds) : L));
     if (to - from < 0.3) throw new Error(`trim range ${from}-${to} is empty (clip is ${L.toFixed(1)} s)`);
     ff(["-ss", String(from), "-i", c.file, "-t", String(to - from), ...ENC, out]);
     return { file: out, text: `${from}-${Math.round(to * 10) / 10} s of ${Math.round(L * 10) / 10} s` };

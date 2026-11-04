@@ -10,6 +10,8 @@ import { tool as trim } from "./trim.js";
 import { tool as frame } from "./frame.js";
 import { tool as voice } from "./voice.js";
 import { tool as place } from "./place.js";
+import { tool as compose } from "./compose.js";
+import { tool as filter } from "./filter.js";
 
-export const CUSTOM_TOOLS = [textOverlay, write, check, crop, assemble, trim, frame, voice, place];
+export const CUSTOM_TOOLS = [textOverlay, write, check, crop, assemble, trim, frame, voice, place, compose, filter];
 export const customTool = (id) => CUSTOM_TOOLS.find((t) => t.id === id);

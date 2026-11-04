@@ -1,9 +1,10 @@
 # tests — small runnable checks
 
-Run any of them from the repository root:
+Run them all from the repository root, or any one of them:
 
 ```
-node V2/tests/<name>.mjs
+node V2/tests/run.mjs            # every *.test.mjs, one line each, one total; exit 1 if any failed
+node V2/tests/<name>.test.mjs    # one file; each "ok" line is a check
 ```
 
 They spend no credits and make no model calls; everything they need is in `fixtures/`.
@@ -39,3 +40,23 @@ What the scripts check, by subsystem:
   master is the wide sharing the most elements; the music bed mixes under a film with a duck window and an arc cut.
 
 A test prints what it checked and exits non-zero on the first failure. Add a fixture rather than calling a model.
+- **execute** (`execute.test.mjs`, a picture made by ffmpeg, the cap set from the ledger so nothing reaches Magic
+  Hour): a code tool that throws fails the step with the tool's words and the run goes on without crashing; a step
+  whose input is missing is refused before any call; an unwired tool writes a placeholder marked simulated; the cap
+  refuses a 120-credit clip with the figures; a bare text in `inputs` is moved into the prompt; the paid gate refuses
+  before reserving, releases a reservation when the provider fails and records the error, returns a cached result
+  without a call, and lists costs in estimate mode. Its `note` lines record what the executor does where T-051 is
+  still open: an independent step after a failure is left "proposed", a dependent one "waiting", a cap refusal and a
+  tool error are both "failed", a placeholder is "done".
+- **execution** (`execution.test.mjs`, against `fake-magichour.mjs`: a stand-in Magic Hour on 127.0.0.1 that answers
+  the client's routes at once, hands back real small media, charges the catalogue's credits, and can be scripted per
+  route to error, stay queued for n looks, return an empty download, or refuse an upload; a temporary ledger through
+  `CLEANED_LEDGER`, the fake through `MAGIC_HOUR_BASE`): the happy chain picture → clip → crop with the bodies, the
+  one upload, the charges per step, the ledger and exec.json as they should be; the same plan again is two cache hits;
+  a provider error fails the step, charges nothing, leaves the job pending, and the rerun resumes it, reads the error
+  and posts anew; a job whose poll died is resumed with one charge and no second post; the cap halfway through a
+  plan; a slow job polled twice; an empty download that was charged; a failed upload that posts nothing; a face swap
+  in all-faces mode with two uploads; music and captions priced by the seconds. About ten seconds, no network beyond
+  localhost. Its `note` lines: a resumed step shows 0 credits while the ledger took the charge; "failed" covers both
+  an unpaid refusal and a paid job with no usable file.
+
