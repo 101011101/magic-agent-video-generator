@@ -1,0 +1,121 @@
+{
+ "id": "D20d",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness",
+  "grader"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent sent the five raw photos straight into assemble and wrote the fitting rule into extra ('foreground: contain ... background: enlarged soft-blurred duplicate'). assemble reads none of that: it always scales to fill and centre-crops, then adds a push-in. The catalogue's CHOOSING line covers this exact case: keep ALL of a picture in a new size, 'blurred copy behind', means crop with extra 'fit: contain'. The agent skipped that per-photo step. It was probably misled by assemble's catalogue guarantee, 'the user's photos used as they are', which reads as 'never cropped', and by the habit of putting any requirement into extra as if the tool would honour free text. I would contain-fit each photo to 9:16 over a blurred copy first, then assemble the five fitted frames in order: 10 s, 9:16, no sound. The grader is wrong on one point. It failed 'silent' because the transcript reported a 'speech fragment' at -91 dB. That level is digital silence from the anullsrc track assemble adds. The cropping failures it reported are real.",
+ "your_plan": {
+  "say": "I'll fit each whole photo into a vertical frame over a soft blurred copy of itself, then join the five in your order into a silent 10-second reel.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-storefront.jpg"
+    ],
+    "produces": "storefront-916.png",
+    "params": {
+     "prompt_or_change": "Fit the whole photo inside a 9:16 frame, scaled without stretching, with a soft blurred copy of the same photo filling the space around it.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Landscape 640x384 photo: kept whole at full width, blurred copy above and below."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-latte.jpg"
+    ],
+    "produces": "latte-916.png",
+    "params": {
+     "prompt_or_change": "Fit the whole photo inside a 9:16 frame, scaled without stretching, with a soft blurred copy of the same photo filling the space around it.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Square photo: kept whole, blurred copy above and below."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-pastries.jpg"
+    ],
+    "produces": "pastries-916.png",
+    "params": {
+     "prompt_or_change": "Fit the whole photo inside a 9:16 frame, scaled without stretching, with a soft blurred copy of the same photo filling the space around it.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Portrait 384x640 photo: kept whole, with thin blurred bands as needed."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-barista.jpg"
+    ],
+    "produces": "barista-916.png",
+    "params": {
+     "prompt_or_change": "Fit the whole photo inside a 9:16 frame, scaled without stretching, with a soft blurred copy of the same photo filling the space around it.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Landscape photo kept whole over a blurred copy."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-interior.jpg"
+    ],
+    "produces": "interior-916.png",
+    "params": {
+     "prompt_or_change": "Fit the whole photo inside a 9:16 frame, scaled without stretching, with a soft blurred copy of the same photo filling the space around it.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Landscape photo kept whole over a blurred copy."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "storefront-916.png",
+     "latte-916.png",
+     "pastries-916.png",
+     "barista-916.png",
+     "interior-916.png"
+    ],
+    "produces": "cafe-reel.mp4",
+    "params": {
+     "prompt_or_change": "Join the five fitted photos in this order, 2 seconds each, straight cuts, no sound, no text.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 10,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Pieces already at 9:16 survive assemble's fill-crop untouched. The exact order and the 10 s total are guaranteed, and with no sound input the reel is silent."
+   }
+  ]
+ },
+ "fix": "(1) Catalogue: assemble's guarantee 'the user's photos used as they are' is false for any photo whose shape differs from the frame. Change it to 'pictures are cropped to fill the frame, with a slow push-in; to keep a whole photo, crop each with fit: contain first'. (2) assemble.js: honour 'fit: contain' or 'blur' in extra (reuse crop.js's contain filter), and when pictures are contain-fitted, turn off the 8% push-in, which still trims about 4% off each side of a full-width photo by the end of its shot. (3) Planner guard: if the sheet says 'keep the whole photo', 'don't crop' or 'blurred background' and a picture's aspect differs from the target, insert crop fit:contain before assemble. (4) Grader: anything below about -60 dB is silence; do not trust a transcript fragment from a silent track.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "Inputs: storefront, barista and interior are 640x384, latte is 640x640, pastries is 384x640. The output cafe-reel.mp4 is 720x1280 and 10.0 s. Its AAC track measures -91.0 dB mean and max: true digital silence. Frames at 1 fps show every photo filling the frame edge to edge. The storefront has lost both sides, the latte is cut through the cup handle and saucer, and the barista frame shows only hands and a pitcher. No blurred background appears anywhere. assemble.js builds every picture as 'scale=...:force_original_aspect_ratio=increase,crop=...' plus a zoompan push-in and has no code path for contain. crop.js already implements 'fit: contain' with a boxblur background."
+}

@@ -1,0 +1,167 @@
+{
+ "id": "D20c",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent recorded \"Make it fun! You pick the vibe\" as tone=fun and then planned only the mechanics: one assemble of the five photos in input order, 1.6 s each, with no music, no captions and no comic beat. When the user hands over the vibe, making it fun is the producer's job: an upbeat track, a joke timed to each picture, cuts on the beat. The rule it followed (\"photos for a reel go straight into assemble, no image-to-video unless they ask for motion\") is about not animating needlessly. It says nothing about dropping the music, and the reel template next to it includes music. Its extra \"fit full photos within the vertical canvas with padding rather than cropping\" is also something assemble does not do: assemble crops every picture to fill 9:16. So the 5:3 beach photo was cut to its middle third, clipping both friends' faces at the sides, and the 5:3 lake was blown up soft. The catalogue's \"the user's photos used as they are\" made the agent think otherwise. I would fit the two landscape photos first with crop fit: contain, lay a bouncy instrumental under the cut, and chain one comic caption per picture.",
+ "your_plan": {
+  "say": "I'll cut your five pictures into an 8-second vertical reel with a bouncy upbeat track and a funny caption on each picture, keeping the beach and lake shots whole.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "crop",
+    "inputs": [
+     "two-friends.jpg"
+    ],
+    "produces": "friends_9x16.png",
+    "params": {
+     "prompt_or_change": "Keep the whole beach photo, both friends complete, with a blurred copy filling the rest of the vertical frame.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "assemble crops every picture to fill 9:16. On this 5:3 photo that cuts both faces at the sides."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "lake.jpg"
+    ],
+    "produces": "lake_9x16.png",
+    "params": {
+     "prompt_or_change": "Keep the whole lake photo inside the vertical frame, blurred copy behind.",
+     "extra": "fit: contain",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Same treatment for the other 5:3 picture. Filling the frame would also blow it up soft."
+   },
+   {
+    "tool": "music",
+    "inputs": [],
+    "produces": "fun_bed.mp3",
+    "params": {
+     "prompt_or_change": "Bouncy, playful upbeat pop instrumental with ukulele, hand claps and whistling, cheerful and a little silly, a strong beat from the first second; no vocals.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Most of the fun comes from the track. 15 s is the model's minimum; assemble trims it to 8 s and fades the end."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "dog.jpg",
+     "cat-surprised.jpg",
+     "friends_9x16.png",
+     "portrait-woman.jpg",
+     "lake_9x16.png",
+     "fun_bed.mp3"
+    ],
+    "produces": "reel_base.mp4",
+    "params": {
+     "prompt_or_change": "The five pictures in this order, 1.6 s each, hard cuts on the beat, the track under it.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Joins the pictures (code gives each still a slow push-in) and lays the music at full level, since nobody speaks. The square photos fill 9:16 with their subjects centred."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "reel_base.mp4"
+    ],
+    "produces": "reel_c1.mp4",
+    "params": {
+     "prompt_or_change": "\"Who's a good boy?\"",
+     "extra": "at: bottom; from: 0; to: 1.6",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Comic caption timed to the dog. One caption per node, because the overlay draws one card for one window."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "reel_c1.mp4"
+    ],
+    "produces": "reel_c2.mp4",
+    "params": {
+     "prompt_or_change": "\"Wait... WHAT?!\"",
+     "extra": "at: bottom; from: 1.6; to: 3.2",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The punchline on the shocked cat."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "reel_c2.mp4"
+    ],
+    "produces": "reel_c3.mp4",
+    "params": {
+     "prompt_or_change": "\"Beach squad\"",
+     "extra": "at: bottom; from: 3.2; to: 4.8",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Sits on the blurred band below the friends, so no face is covered."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "reel_c3.mp4"
+    ],
+    "produces": "reel_c4.mp4",
+    "params": {
+     "prompt_or_change": "\"Main character energy\"",
+     "extra": "at: bottom; from: 4.8; to: 6.4",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Caption on the portrait, kept low, below her face."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "reel_c4.mp4"
+    ],
+    "produces": "fun_reel.mp4",
+    "params": {
+     "prompt_or_change": "\"And... relax.\"",
+     "extra": "at: bottom; from: 6.4; to: 8",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Comic sign-off on the calm lake."
+   }
+  ]
+ },
+ "fix": "Add a planner rule: \"fun / playful / you pick the vibe\" on a photo reel means music plus a playful treatment (comic captions timed to each photo, or short image-to-video moves), never bare slides. Correct the catalogue's assemble line: it crops every picture to fill the aspect and gives stills a slow push-in, so the user's photos are not \"used as they are\". Keeping a whole landscape photo needs crop fit: contain first; alternatively make assemble honour \"fit: contain\" in extra. The same gap affects every 'make it fun/punchy' reel and every mixed-aspect photo reel.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "photo-montage.mp4 is 720x1280, 8.0 s, with cuts at 1.6/3.2/4.8/6.4 s. Its audio track peaks at -91 dB (silent): no music. I extracted the frame at 4 s: the beach photo is centre-cropped, cutting off the man's left side and the woman's right side. The grader sampled 1/3/5/7 s and never saw it. The lake frame is visibly soft (a 384 px-tall picture stretched to 1280). There are no captions, music or transitions. The judge's 'not usable, no playful treatment' is fair."
+}

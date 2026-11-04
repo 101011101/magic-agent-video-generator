@@ -1,0 +1,53 @@
+{
+ "id": "G35b",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "model-limit"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The structure was right, and it is mine. One image-edit of the user's photo on klein keeps the room layout (qwen would reframe it). Then the code compose puts the untouched original beside it with exact 'Before'/'After' labels at 16:9. The two failures trace to the edit prompt. First, it said 'remove all clutter' without saying what clutter is. klein took the taps, the second sink on the right-hand counter and the rear sink's faucet as clutter and erased them, which broke the 'major fixture positions' must-have. Second, 'white subway tiles' was never described as a shape. klein, faithful to the existing square grid, re-coloured the square tiles white. An expert writing an edit prompt says exactly what must survive (both sinks with their taps, the window, the sockets, the appliance) and which loose items count as clutter. It describes the target finish concretely (3:1 rectangles in a staggered brick bond). The planner rule 'for an edit, say what must stay unchanged' was followed only generically ('preserve the room layout').",
+ "your_plan": {
+  "say": "I'll restyle a copy of your kitchen with white shaker cabinets, light oak counters and white subway tiles, keeping the same layout, fixtures and camera angle. Then I'll put it beside your untouched original, labelled Before and After.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image-edit",
+    "inputs": [
+     "kitchen-before.jpg"
+    ],
+    "produces": "kitchen-after.png",
+    "params": {
+     "prompt_or_change": "Photorealistic renovation of this exact kitchen: same room, same camera position, angle and framing, same layout. Change only the finishes. Every cabinet door and drawer front becomes a white shaker-style cabinet with simple dark bar handles. All countertops become light oak butcher-block. The beige square wall tiles become glossy white subway tiles: horizontal 3:1 rectangles laid in a staggered brick pattern. Clear only the loose clutter off the counters (dishes, cups, bottles, kettle, dish rack, packets, plastic bags). Keep every fixture exactly where it is: the main steel sink with its tap under the upper cabinets, the second double sink with its tap on the right-hand counter, the window on the right, the wall sockets and the white appliance under the right counter.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The supplied room must change, so it is an edit of it. klein (fidelity off) keeps the room's layout. Naming the fixtures stops 'declutter' from erasing the sinks and taps, and describing the tile shape gets real subway tiles."
+   },
+   {
+    "tool": "compose",
+    "inputs": [
+     "kitchen-before.jpg",
+     "kitchen-after.png"
+    ],
+    "produces": "kitchen-before-after.png",
+    "params": {
+     "prompt_or_change": "Side by side: the original on the left labelled \"Before\", the renovation on the right labelled \"After\".",
+     "extra": "layout: row; labels: Before | After",
+     "aspect": "16:9",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The user's photo is kept exactly as it is, beside the edit. Exact labels and order, at 16:9, by code."
+   }
+  ]
+ },
+ "fix": "Planner prompt rule for clean-ups and renovations by image-edit: 'never write remove all clutter or tidy up alone. List the loose items to remove, and name every fixture that must stay (sinks, taps, hob, window, sockets, appliances, doors) with where it is. Describe a requested finish by its shape and pattern (subway tile = 3:1 rectangle in a brick bond; shaker = flat recessed panel).' Optionally add a check node after the edit ('are both sinks and taps present in the same places?') that triggers one redo on failure.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "kitchen-before.jpg (640x384) has brown cabinets, square beige tiles, a steel sink with tap under the upper cabinets, and a second double sink with tap on the right counter over a white unit. kitchen-after.png (640x384, klein, 5 cr) has white shaker doors and light oak counters, keeps the geometry and viewpoint, and clears the counters. But the right-hand double sink and its tap became plain oak counter, the rear sink has no tap, and the tiles are a white square grid matching the old layout. The final 1280x720 compose shows the untouched original left and the edit right under readable 'Before'/'After' labels. The judge's two failures are accurate."
+}

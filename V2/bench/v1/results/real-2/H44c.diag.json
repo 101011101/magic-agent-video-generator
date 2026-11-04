@@ -1,0 +1,69 @@
+{
+  "id": "H44c",
+  "best_tools": "yes",
+  "explanation": "The plan correctly adds text separately after reframing, but it center-crops an ensemble spread across the widescreen image; centering the main musician does not protect the other musicians’ faces, especially during a push-in. The portrait composition needed checking and recomposing before delivery. The speech finding does not establish a planning error: generated clip audio is discarded, and assembly explicitly uses only the instrumental music, which the crop should preserve unchanged.",
+  "better_chain": "image (create the widescreen rooftop ensemble) → image-edit (create matching portrait compositions with every visible face safely inside the frame) → check (verify both compositions and allow room for motion and overlays) → image-to-video (animate each format with restrained motion, discarding generated audio) → music (generate mellow instrumental jazz without speech) → assemble (make each version exactly 10 seconds using only the same music track) → text-overlay (add all three exact lines together for 10 seconds, sized independently for each format) → gate (verify both videos’ framing, text, duration and speech-free audio)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "grader"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate scene-generation tool and a sensible crop-safe prompt, but the returned ensemble extends outside the central portrait-safe region; that output needed inspection before reuse.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate five-second animation of the supplied still. The push-in increases the need to verify face clearance before portrait reframing.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "Image-edit appropriately creates a related detail shot. Centering the saxophonist does not establish that the surrounding musicians are safe for a portrait crop.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 4,
+      "issue": "Appropriate restrained animation and duration for the second shot; generated audio is discarded by default.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 5,
+      "issue": "The prompt explicitly requests mellow instrumental jazz without vocals or speech and specifies a 10-second result.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 6,
+      "issue": "Correctly joins two five-second shots and explicitly selects only the supplied music, excluding generated clip speech.",
+      "verdict": "ok",
+      "tool": "assemble"
+    },
+    {
+      "n": 7,
+      "issue": "The widescreen master is not a safe input for a fixed center crop: peripheral musicians intersect the portrait boundaries. Cropping cannot reposition them or restore excluded faces.",
+      "verdict": "bad-inputs",
+      "tool": "crop"
+    },
+    {
+      "n": 8,
+      "issue": "Text-overlay is appropriate for exact event information over footage; all three lines are requested together throughout the video with safe margins.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 9,
+      "issue": "Correctly adds independently fitted portrait text after cropping, avoiding cropped lettering. It cannot repair the underlying face cropping.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "Verify portrait-safe framing throughout both moving shots and recompose unsuitable source images before animation; inspect final audio for speech rather than attributing it to generated clip audio that the plan explicitly excludes."
+}

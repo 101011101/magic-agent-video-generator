@@ -1,0 +1,70 @@
+{
+  "id": "H44b",
+  "best_tools": "yes",
+  "explanation": "The countdown timing, sequential overlays, and five-second event hold are sensible, and text-overlay is appropriate for these simple numerals and event details. However, the plan never explicitly removes the video model’s generated audio, leaving a route for unwanted speech, and it requests a musical buildup without accents timed to each numeral change. Large numerals were explicitly requested, so their reported small appearance is partly an execution failure; sparse frame sampling does not establish that the other numerals or neon changes were absent.",
+  "better_chain": "image (create a clear-centered neon backdrop) → image-to-video (animate neon with specified changes at countdown boundaries) → music (eight-second instrumental build with accents at 0, 1, and 2 seconds and a reveal hit at 3 seconds) → assemble (use three seconds of animation followed by a five-second neon-backed still hold; discard all source-video audio and use only the music; output exactly eight seconds in 9:16) → text-overlay (add dominant, explicitly sized 3, 2, and 1 during successive one-second intervals) → text-overlay (show all event details together from 3–8 seconds within safe margins) → gate (verify numeral scale and order, changing neon, synchronized accents, readable reveal, and no speech)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params",
+    "model-quality"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate backdrop generation with a clear center and requested vertical aspect.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate animation tool and input, but the pulses are not tied to the one-second countdown boundaries. Its generated audio must also be excluded downstream.",
+      "verdict": "bad-params",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "A calm five-second animated background is suitable for the readable reveal. Its generated audio needs removal at assembly.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 4,
+      "issue": "Specifies instrumental music, a three-second build, and a reveal hit, but omits explicit audible accents at the numeral changes.",
+      "verdict": "bad-params",
+      "tool": "music"
+    },
+    {
+      "n": 5,
+      "issue": "Correct duration, aspect, ordering, and segment selection, but does not explicitly discard the source clips’ generated sound. Adding music alone does not establish a speech-free soundtrack.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    },
+    {
+      "n": 6,
+      "issue": "Correct tool, input wiring, numeral, and interval; large bold type is explicitly requested. More concrete sizing would make dominance less ambiguous.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 7,
+      "issue": "Correctly adds 2 during the next second while preserving the previous overlay. The reported small result falls short of the explicit large-type instruction.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 8,
+      "issue": "Correctly completes the sequential countdown with 1 from two to three seconds.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 9,
+      "issue": "Correct event wording, safe-margin instruction, input wiring, and five-second hold. Plain readable text is appropriate here.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "Explicit exclusion of generated clip audio; musical accents aligned to countdown changes; final audiovisual verification of numeral dominance, timed neon changes, synchronized beats, and absence of speech."
+}

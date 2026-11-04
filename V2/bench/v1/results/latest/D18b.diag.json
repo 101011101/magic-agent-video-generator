@@ -1,0 +1,28 @@
+{
+  "id": "D18b",
+  "best_tools": "no",
+  "explanation": "The animation tool, source photo, duration, framing and motion prompt were appropriate; the reported sideways sway occurred despite explicit instructions against head movement, making the primary failure model quality. The verification step also used a picture-only checker on a video, so it could not assess temporal consistency or catch and trigger correction of the unwanted motion.",
+  "better_chain": "image-to-video (animate the supplied portrait for 5 seconds, square and silent, with one blink, tiny breathing and no head or camera movement) → gate (inspect the video for identity consistency, unwanted sway, a complete blink, subtle breathing, duration and silence; regenerate and recheck if it fails)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "tool-fit",
+    "state-solving"
+  ],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correct tool and source photo, with appropriate duration, square aspect, audio removal and explicit restrictions on motion and identity changes. The reported sway was contrary to the prompt rather than caused by an evident planning mistake.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 2,
+      "issue": "Check accepts a picture, not a source-photo/video comparison or temporal inspection. Its flagged result explicitly says it could not verify the requested properties, and the chain provides no recovery from that failed verification.",
+      "verdict": "wrong-tool",
+      "tool": "check"
+    }
+  ],
+  "missing": "A video-capable validation step covering blink, breathing, unwanted head/body motion, identity consistency, framing, duration and silence, with regeneration if validation fails."
+}

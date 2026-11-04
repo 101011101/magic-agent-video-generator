@@ -1,0 +1,86 @@
+{
+ "id": "E28b",
+ "root_cause": "missing-tool",
+ "contributing": [
+  "harness",
+  "agent-reasoning"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent \"watched\" the clip the only way its catalogue allows: three frames and three vision checks, then a script from what they show (\"Two men and a woman smile toward the camera... then turn toward one another\"). In a 10 s clip of two coworkers talking, what is happening is what they say (a schedule change; Mondays now start at nine), and frames cannot reveal it. No tool in the catalogue hears a clip. The only stand-in is a detour (captions, about 48 cr, then frame, then check to read the burned subtitles), and the agent did not think of it. It also never noticed that its narration said nothing about the conversation it was replacing. The second failure is in the harness. The agent asked assemble to \"remove all original audio\", but assemble always keeps a clip's own sound, and because the clip has speech it lays the added voice at 0.25 as if it were music. The original dialogue is still there at full level, louder than the narration. The judge marked that must-have cannot_tell; it is actually a miss.",
+ "your_plan": {
+  "say": "I'll get what the two coworkers say, write a short, friendly narration explaining it, voice it, and use it to replace the original conversation over the unchanged 10 seconds of footage.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "transcribe",
+    "inputs": [
+     "talk-two.mp4"
+    ],
+    "produces": "dialogue.txt",
+    "params": {
+     "prompt_or_change": "Transcribe the speech in the clip with times.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "MISSING TOOL (speech-to-text of a clip, code, 0 cr). The story is in the dialogue, not in the frames. Today's only stand-in is captions (about 48 cr), then frame at 7 s and 9 s, then check to read the burned subtitles."
+   },
+   {
+    "tool": "write",
+    "inputs": [
+     "dialogue.txt"
+    ],
+    "produces": "narration.txt",
+    "params": {
+     "prompt_or_change": "Write friendly, matter-of-fact English narration explaining what happens in this 10-second office clip: two coworkers walk up together, he asks about the new schedule, and she confirms the change: Mondays now start at nine. Use only what the dialogue says: no names, roles or other changes. At most 22 words.",
+     "extra": "language: English; at most 22 words (about 9 s at 2.5 words a second)",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A script grounded in what is said, short enough to finish inside 10 s."
+   },
+   {
+    "tool": "voice",
+    "inputs": [
+     "narration.txt"
+    ],
+    "produces": "narration.mp3",
+    "params": {
+     "prompt_or_change": "Read the script exactly.",
+     "extra": "voice: calm, friendly, matter-of-fact; English",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A neutral synthetic narrator."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "talk-two.mp4",
+     "narration.mp3"
+    ],
+    "produces": "talk-two-narrated.mp4",
+    "params": {
+     "prompt_or_change": "The footage unchanged, with the narration as the only sound; no music, no captions.",
+     "extra": "clip sound: drop; the voice replaces it at full level",
+     "aspect": "",
+     "seconds": 10,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Needs assemble to drop a clip's own sound on request. Today it keeps the dialogue at full level and lays the voice 12 dB under it."
+   }
+  ]
+ },
+ "fix": "(1) Add a transcribe tool: clip or sound to .txt with segment times (gpt-4o-transcribe, as the grader already uses), with the catalogue line \"WELL: what people in a clip say, with times: a voice-over that explains a conversation, a recut by speaker\". Add a planner rule: \"explain what's happening / what they say\" on a clip with speech means transcribe, then write. (2) Change assemble: accept \"clip sound: drop|duck\", and treat a voice input as speech on top, not as music under the clip's speech. The tool line already promises \"music under speech, not over it\". Both changes also serve E25b's speaker timing and any dub or voice-over request.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "narration.txt reads 'Two men and a woman smile toward the camera in a bright office, then turn toward one another as one man looks on.', built from three frame descriptions with no audio consulted. Half-second RMS: the narration alone is -17 to -28 dB. In the output it is -32 to -40 dB during 0–6 s (×0.25), while the original dialogue at 6–10 s stays at -20 to -29 dB, identical to the source. The conversation was not removed and is louder than the narration. The judge's content verdict is right."
+}

@@ -1,0 +1,70 @@
+{
+ "id": "E24b",
+ "root_cause": "missing-tool",
+ "contributing": [
+  "agent-reasoning",
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "Translated subtitles need the clip's words and their timing as TEXT. Nothing in the catalogue produces that. captions 'makes a clip' (English burned into pixels, ignores the language), write cannot hear audio, and text-overlay draws one text with one from/to. The agent papered over the gap by inventing capabilities the catalogue never offered: captions 'export timed subtitles as SRT', write 'preserve SRT timestamps', text-overlay 'use subtitle-file timings throughout'. The harness then failed silently at each step. The non-existent input 'english-subtitles.srt' was resolved to the burned-in english-subtitles.mp4 through the file-variant lookup. write, which only reads .txt/.md/.json context, ran with no words and returned 'Envía los subtítulos en inglés que quieres traducir.' ('Send the English subtitles you want to translate'). text-overlay burned that sentence over all 10 s. An expert would see that the catalogue cannot get a transcript out of the clip. The options are a transcription step, or telling the user that only English captions are possible today. The agent should not have planned a chain whose middle link carries no data.",
+ "your_plan": {
+  "say": "I'll transcribe her English with its timing, translate each line into natural Spanish, and put the Spanish subtitles on the video in time with her speech, leaving her English voice and the footage unchanged.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "transcribe",
+    "inputs": [
+     "talk-one.mp4"
+    ],
+    "produces": "talk-one-en.srt",
+    "params": {
+     "prompt_or_change": "Transcribe the English speech with a timestamp per subtitle cue.",
+     "extra": "language: English; format: srt; max 42 characters per line",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "MISSING TOOL. A code speech-to-text step (OpenAI whisper or gpt-4o-transcribe with segment timestamps, 0 Magic Hour credits, like voice). It is the only way to get her words and their timing as text."
+   },
+   {
+    "tool": "write",
+    "inputs": [
+     "talk-one-en.srt"
+    ],
+    "produces": "talk-one-es.srt",
+    "params": {
+     "prompt_or_change": "Translate each subtitle cue into natural, neutral Spanish. Keep every cue number and timestamp exactly as given, translate only what she says and add nothing.",
+     "extra": "language: Spanish; format: srt; at most 2 lines of 42 characters per cue",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A faithful translation that keeps the timing. write needs to accept .srt as context."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "talk-one.mp4",
+     "talk-one-es.srt"
+    ],
+    "produces": "talk-one-es-subs.mp4",
+    "params": {
+     "prompt_or_change": "Burn in the Spanish subtitle cues at their own times, plain white text on a translucent band.",
+     "extra": "at: bottom; cues: from the .srt",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Words laid over the user's clip go through text-overlay, with the original audio and frames kept. This needs text-overlay to take a timed .srt (lib/captions.js burnCaptions already composites timed cards)."
+   }
+  ]
+ },
+ "fix": "(1) Add a 'transcribe' code tool: clip to timed .srt via OpenAI speech-to-text, 0 Magic Hour credits. (2) Let write read .srt context. (3) Let text-overlay take a .srt input and burn each cue at its time, reusing captionCard and burnCaptions from lib/captions.js. With these three, the plan above is 'likely'; with today's catalogue the honest outcome is 'no'. (4) Harness: a declared input that does not exist must fail the step, not resolve to another extension's file (english-subtitles.srt became english-subtitles.mp4). A write node given an input it cannot read must fail. Flag a write output that is a request for input instead of the asked text before anything consumes it. (5) Catalogue: captions 'CANNOT: give back the words as text; translate'. text-overlay: 'one text, one time range per node'.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "spanish-subtitles.txt holds exactly 'Envía los subtítulos en inglés que quieres traducir.' The job log shows write ran with inputs ['english-subtitles.srt'], a file that never existed, and text-overlay used that sentence as its text. The captions output english-subtitles.mp4 (858x480, 10.1 s, 53 cr) has correct burned English cues: 'Hi everyone.' at about 1-2 s, 'Today I want to show you three easy' at about 2-6 s, and 'ways to make your mornings less stressful.' at about 6-10 s. That proves the speech is recoverable, but only as pixels. The final talk-one-spanish-subtitles.mp4 keeps the original footage and audio (10.13 s) with the one unrelated Spanish sentence throughout. The judge's verdicts match."
+}

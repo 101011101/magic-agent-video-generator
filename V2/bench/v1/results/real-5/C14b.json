@@ -1,0 +1,223 @@
+{
+  "id": "C14b",
+  "item": {
+    "id": "C14b",
+    "case": 14,
+    "case_name": "Face swap on a photo",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which person in two-friends.jpg should receive the user's face: the bearded man on the left or the blonde woman on the right?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Which Friend Gets My Face",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "two-friends.jpg"
+        ],
+        "text": "Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone."
+      }
+    ],
+    "tests": "Tests clarification of an ambiguous target face and preservation of the unselected person.",
+    "answer_sheet": {
+      "Which person to replace": "The blonde woman on the right. Leave the bearded man on the left alone.",
+      "Source face": "Use my face from portrait-woman.jpg.",
+      "Style": "Keep it looking like the original beach photo.",
+      "Size and platform": "Keep the original wide 16:9 framing; free-tier size is fine.",
+      "Other edits or text": "No text or other edits."
+    },
+    "must_haves": [
+      "Only the woman on the right receives the face from portrait-woman.jpg.",
+      "The bearded man's face on the left remains unchanged.",
+      "The replaced face is recognizable and blended to match the beach lighting and head angle.",
+      "The original bodies, clothing, beach background and wide framing remain unchanged.",
+      "No text is added."
+    ]
+  },
+  "session": "b5-C14b",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.",
+      "materials": [
+        "portrait-woman.jpg",
+        "two-friends.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "I can swap just one face and leave everything else alone once you choose the person.\nBefore I go on I need one thing:\n· Whose face should I replace: the man on the left or the woman on the right?",
+          "asked": [
+            "plan-1"
+          ],
+          "user": "The blonde woman on the right. Leave the bearded man on the left alone."
+        }
+      ],
+      "agent": "I'll use the photo face-swap tool to replace only the blonde woman's face on the right with yours, leaving the rest alone.",
+      "firstQuestions": [
+        {
+          "field": "plan-1",
+          "question": "Whose face should I replace: the man on the left or the woman on the right?"
+        }
+      ],
+      "turnIndex": 1,
+      "sheet": {
+        "fields": [
+          {
+            "value": "two-friends.jpg",
+            "field": "asset",
+            "quote": "this beach photo",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "[attached: portrait-woman.jpg, two-friends.jpg]",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Replace the blonde woman on the right's face with the user's face from the park selfie.",
+            "field": "change",
+            "quote": "The blonde woman on the right.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "identity",
+            "field": "change_kind",
+            "quote": "Just swap one face",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "portrait-woman.jpg — the user's face in the park selfie",
+            "field": "reference",
+            "quote": "my face from the park selfie",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Only the face of the blonde woman on the right",
+            "field": "range",
+            "quote": "The blonde woman on the right.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Just swap one face and leave everything else alone.",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Can you put my face from the park selfie onto someone in this beach photo?",
+          "source": "session",
+          "why": "The user is specifying the target of the previously requested face swap on a supplied photo.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll use the photo face-swap tool to replace only the blonde woman's face on the right with yours, leaving the rest alone.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 10,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "face-swap-photo",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "two-friends.jpg",
+              "portrait-woman.jpg"
+            ],
+            "produces": "two-friends-face-swapped.jpg",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Replace only the face of the blonde woman on the right in two-friends.jpg with the user's face from portrait-woman.jpg. Leave her blonde hair, body, clothing, the man on the left, the beach background, and the original framing unchanged."
+            },
+            "credits": 10,
+            "why": "Swap the selected face directly without changing the other person or the surrounding photo."
+          }
+        ],
+        "preflight": {
+          "goal": {
+            "kind": null,
+            "aspect": null,
+            "seconds": null,
+            "alpha": null,
+            "sound": null
+          },
+          "steps": [],
+          "end": [],
+          "ok": true
+        }
+      },
+      "ran": [
+        {
+          "tool": "face-swap-photo",
+          "state": "done",
+          "output": "assets/two-friends-face-swapped.png",
+          "credits": 10,
+          "cached": false,
+          "simulated": false,
+          "note": "2 faces found; face picture 1: The instruction specifies replacing the blonde woman's face on the right, which is detected face 2.",
+          "facts": {
+            "exists": true,
+            "kind": "picture",
+            "bytes": 64785,
+            "w": 640,
+            "h": 384,
+            "aspect": "5:3",
+            "alpha": false
+          },
+          "error": null,
+          "seconds": 12
+        }
+      ],
+      "goal_check": [
+        "matches the request's length and size"
+      ],
+      "spent": 10,
+      "seconds": 15
+    }
+  ],
+  "started": "2026-11-01T23:56:01.037Z",
+  "spent": 10,
+  "seconds": 47,
+  "sessionDir": "sessions/b5-C14b"
+}

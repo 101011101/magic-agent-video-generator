@@ -1,0 +1,53 @@
+{
+ "id": "C15a",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "spec"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent read 'in the first 5 seconds' as an edit range inside the full 10.1 s video. It read 'keep ... everything else' as 'keep the rest of the timeline', so it trimmed the remainder and spliced it back. The deliverable became a 10.1 s video in which the woman's face switches back to the original at 5 s. An expert would weigh three things. First, a face that changes identity halfway through a clip is never a usable result. Second, 'keep the original sound, framing and everything else' lists properties of the frame (the audio, the framing, the kitchen), not the timeline. Third, video face swap costs about 30 credits a second on the free tier, which explains why a user caps it at 5 s. The deliverable is the first 5 s, swapped. The sheet schema pushed the agent wrong: the change branch only has 'range' (default whole) and 'keep_rest' (default yes), with no notion of 'deliver only that range'. So range=0-5 plus keep_rest=yes became a splice. The planner had no rule against an identity switch mid-clip. Steps 1 and 2 were exactly right: opening-swapped.mp4 was 5.0 s, the face was swapped in every sample, and the original audio was intact. Steps 3 and 4 broke the result.",
+ "your_plan": {
+  "say": "I'll cut the first five seconds of your video and swap the woman's face for the one in your portrait, keeping the original sound and framing.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "trim",
+    "inputs": [
+     "talk-one.mp4"
+    ],
+    "produces": "opening.mp4",
+    "params": {
+     "prompt_or_change": "Cut the first five seconds, frames and audio unchanged.",
+     "extra": "from: 0; to: 5",
+     "aspect": "",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The user wants only the first 5 s. Trimming first also means the face swap is paid for 5 s, not 10."
+   },
+   {
+    "tool": "face-swap-video",
+    "inputs": [
+     "opening.mp4",
+     "portrait-woman.jpg"
+    ],
+    "produces": "talk-one-swapped-5s.mp4",
+    "params": {
+     "prompt_or_change": "Put the face from portrait-woman.jpg onto the woman in the clip; keep her hair, clothing, movements, the kitchen and the framing.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "One face onto a clip with one person. The endpoint returns the clip's own audio in sync, so no assemble is needed and nothing is re-encoded or upscaled."
+   }
+  ]
+ },
+ "fix": "Two changes. (1) Sheet: add a 'deliver' field to the change branch, either 'whole asset' or 'only the range', inferred from the words. 'Swap the face in the first 5 seconds' means only the range. 'Change only the first 5 seconds and leave the rest' means the whole asset. (2) Planner rule: 'An identity change (face swap, lip-sync, dub) on part of a clip delivers that part alone unless the user says the rest of the clip must stay. Never splice a swapped section back into the unswapped original: the face would change mid-clip. keep_rest means keep the picture's other content (sound, framing, background), not the remainder of the timeline.'",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "talk-one.mp4 is 10.125 s, 858x480, 24 fps, with AAC speech. opening-swapped.mp4 is 5.0 s, 858x480, with audio. Its audio matches the original's first 5 s with a cross-correlation of 0.9994 at 0 ms lag, and its loudness is identical (-14.4 dB mean). Face crops every 0.5 s across 0-5 s show the portrait's features in all 10 samples: dark heavy brows, brown eyes, a younger rounder face. The original woman's face is visibly different, and the hair stays the target's, as a face swap should. The final output talk-one-face-replaced.mp4 is 10.1 s at 1280x720 (upscaled by assemble) and reverts to the original face after 5 s. The judge's length failure and its 'reverts to the original face' failure are both correct."
+}

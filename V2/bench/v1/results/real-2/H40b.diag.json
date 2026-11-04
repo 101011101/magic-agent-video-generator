@@ -1,0 +1,61 @@
+{
+  "id": "H40b",
+  "best_tools": "yes",
+  "explanation": "The plan uses one reference candle for consistent shots, specifies gentle motion, assembles exactly 15 seconds vertically, and adds the two messages in the correct order. It explicitly excludes generated clip audio and requests instrumental piano without speech, so the reported speech is an output failure rather than a planning error. Still frames cannot verify camera movement, but that limitation does not establish a flaw in the motion prompts.",
+  "better_chain": "image (establish the candle in 9:16) → image-to-video ×3 (three gentle 5-second shots from the same reference; discard generated audio) → music (15-second instrumental soft piano) → assemble (shots in order, piano only, 15 seconds, 9:16) → text-overlay (opening message, 0–5 seconds) → text-overlay (closing message, 10–15 seconds) → gate (verify motion, consistency, text, duration, and speech-free piano; retry any failed asset)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate reference-image generation with all requested candle features, warm lighting, and vertical framing.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Uses the established candle reference for a gentle 5-second push-in and explicitly preserves its design.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "Uses the same reference for a gentle 5-second lateral drift, supporting product consistency.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 4,
+      "issue": "Uses the same reference for a gentle 5-second closing pullback and preserves the specified product.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 5,
+      "issue": "Correct tool and duration; explicitly requests soft solo piano with no vocals or speech. Any generated speech violates the supplied prompt.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 6,
+      "issue": "Correctly joins three 5-second shots into a 15-second 9:16 ad, using piano only and explicitly excluding generated clip audio.",
+      "verdict": "ok",
+      "tool": "assemble"
+    },
+    {
+      "n": 7,
+      "issue": "Plain exact text over footage is an appropriate use of text-overlay; opening timing and placement are specified.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 8,
+      "issue": "Correctly takes the already-captioned ad and adds the exact closing message during the final five seconds.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": ""
+}

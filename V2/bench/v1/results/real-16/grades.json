@@ -1,0 +1,182 @@
+[
+  {
+    "id": "E24c",
+    "group": "E",
+    "case": 24,
+    "case_name": "Subtitles",
+    "title": "Silent Clip Subtitle Check",
+    "tests": "Tests recognizing absent speech and reporting it instead of fabricating subtitles from visible mouth movements or a related source.",
+    "pass": true,
+    "score": 100,
+    "tags": [],
+    "checks": [
+      {
+        "name": "asks nothing",
+        "pass": true,
+        "got": []
+      },
+      {
+        "name": "reply meets its must-haves",
+        "pass": true,
+        "got": "4/4"
+      }
+    ],
+    "judge": null,
+    "reply": {
+      "must_haves": [
+        {
+          "item": "The response clearly states that the supplied clip has no audible speech to transcribe.",
+          "met": "yes",
+          "why": "The agent explicitly says the clip has no audio and no speech to subtitle."
+        },
+        {
+          "item": "No dialogue is inferred from the woman's mouth movements or borrowed from another clip.",
+          "met": "yes",
+          "why": "The response contains no dialogue or inferred speech."
+        },
+        {
+          "item": "No subtitled video, fabricated transcript, or replacement voice is presented.",
+          "met": "yes",
+          "why": "The agent only provides a brief statement that there is no speech to subtitle."
+        },
+        {
+          "item": "The response does not claim the silent file contains recognizable spoken words.",
+          "met": "yes",
+          "why": "The agent states the opposite: there is no audio or speech."
+        }
+      ],
+      "summary": "The agent meets all four must-haves by stating that there is no speech to subtitle and presenting no invented content."
+    },
+    "spent": 0,
+    "seconds": 4,
+    "outputs": [],
+    "tools": [
+      ""
+    ]
+  },
+  {
+    "id": "F31b",
+    "group": "F",
+    "case": 31,
+    "case_name": "Voice-over alone",
+    "title": "Two Voices Trading Short Lines",
+    "tests": "Tests distinct speaker assignment and ordered dialogue in one audio-only output, and recognition that standalone speech synthesis is outside the listed free-tier tools.",
+    "pass": false,
+    "score": 18,
+    "tags": [
+      "must-have-missed",
+      "text-wrong",
+      "major-fault",
+      "not-usable"
+    ],
+    "checks": [
+      {
+        "name": "something was made",
+        "pass": true,
+        "got": [
+          "voice:done"
+        ]
+      },
+      {
+        "name": "a audio was made",
+        "pass": true,
+        "got": [
+          ".mp3"
+        ]
+      },
+      {
+        "name": "about 8 s",
+        "pass": true,
+        "got": 8
+      },
+      {
+        "name": "sound present and audible",
+        "pass": true,
+        "got": -3.7
+      },
+      {
+        "name": "must-haves met",
+        "pass": false,
+        "got": "0/4"
+      },
+      {
+        "name": "asks nothing",
+        "pass": true,
+        "got": []
+      }
+    ],
+    "judge": {
+      "usable_as_is": false,
+      "exact_text": [
+        {
+          "seen": "missing",
+          "text": "Ready to go?",
+          "read_as": ""
+        },
+        {
+          "seen": "missing",
+          "text": "Almost. Have you got the tickets?",
+          "read_as": ""
+        },
+        {
+          "seen": "missing",
+          "text": "Right here.",
+          "read_as": ""
+        },
+        {
+          "seen": "missing",
+          "text": "Great, let's go!",
+          "read_as": ""
+        }
+      ],
+      "faults": [
+        {
+          "severity": "major",
+          "what": "The audio speaks an instruction, \"Read only the dialogue lines, not the speaker labels,\" instead of any of the four requested dialogue lines."
+        },
+        {
+          "severity": "major",
+          "what": "The complete two-character exchange is absent."
+        }
+      ],
+      "score": 1,
+      "summary": "The output is an 8-second audio file that reads an instruction instead of the requested conversation.",
+      "must_haves": [
+        {
+          "item": "All four lines are spoken exactly as supplied, in the supplied order, without reading the labels.",
+          "met": "no",
+          "why": "The supplied transcript contains only an instruction and none of the four requested lines."
+        },
+        {
+          "item": "Two clearly distinguishable voices are audible, with A lower and B higher.",
+          "met": "cannot_tell",
+          "why": "The transcript does not indicate voice count or pitch, and the audio cannot be heard."
+        },
+        {
+          "item": "Each voice consistently reads its assigned lines: A first and third, B second and fourth.",
+          "met": "no",
+          "why": "None of the assigned dialogue lines is spoken."
+        },
+        {
+          "item": "The conversation sounds friendly and natural, lasts approximately 8 seconds, and has no overlapping or cut-off lines.",
+          "met": "no",
+          "why": "The file lasts 8 seconds, but the requested conversation is absent; delivery, overlap, and cut-offs cannot be assessed from the transcript."
+        },
+        {
+          "item": "One standalone audio file contains the complete exchange, with no music or sound effects.",
+          "met": "no",
+          "why": "One audio file is reported, but it does not contain the exchange. The provided information does not establish whether music or sound effects are present."
+        }
+      ]
+    },
+    "reply": null,
+    "spent": 0,
+    "seconds": 14,
+    "outputs": [
+      "sessions/b16-F31b/assets/dialogue.mp3"
+    ],
+    "tools": [
+      "voice"
+    ]
+  }
+]

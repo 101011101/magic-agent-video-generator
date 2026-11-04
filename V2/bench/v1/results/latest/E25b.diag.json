@@ -1,0 +1,21 @@
+{
+  "id": "E25b",
+  "best_tools": "yes",
+  "explanation": "Crop is the right tool for lossless portrait reframing, but a single code crop does not provide speaker recognition or automatic speaker tracking just because the prompt requests it. The plan never established the speakers’ positions or the turn-change time, nor implemented separate crops for their turns; the audio concern is unverified rather than proven loss.",
+  "better_chain": "gate (inspect the source to identify both speakers, their positions, and the exact turn-change time) → trim (split into contiguous question and answer segments, retaining all footage and original audio) → crop (question segment to 9:16 with an explicit anchor on the questioner) → crop (answer segment to 9:16 with an explicit anchor on the woman) → assemble (join in original order without stretching, captions, or audio changes) → gate (verify framing, full duration, both speaking turns, and audio sync)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "The source and target aspect are correct, but 'anchor: active speaker' delegates speaker identification and time-varying reframing to a code crop without establishing that capability. No explicit speaker positions or timed crop changes were supplied.",
+      "verdict": "bad-params",
+      "tool": "crop"
+    }
+  ],
+  "missing": "Identify the actual questioner and respondent and their turn boundary, then implement explicitly anchored crops for both turns and rejoin them while retaining the entire original audio and duration."
+}

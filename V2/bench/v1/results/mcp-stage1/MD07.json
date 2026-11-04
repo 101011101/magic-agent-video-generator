@@ -1,0 +1,74 @@
+{
+  "id": "MD07",
+  "item": {
+    "id": "MD07",
+    "case": 107,
+    "case_name": "Stage 1 on the MCP: Resize to three sizes",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resize to three sizes",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "v4-poster.jpg"
+        ],
+        "text": "Resize this poster into three files: 1:1 for a feed post, 9:16 for a story, 16:9 for a banner; keep the whole poster visible with padding, no cropping, no regeneration."
+      }
+    ],
+    "tests": "pure ffmpeg; the MCP has no resize",
+    "answer_sheet": {
+      "Look": "your call",
+      "Budget": "go ahead"
+    },
+    "must_haves": [
+      "The deliverable matches the request."
+    ]
+  },
+  "session": "mcp-s1-MD07",
+  "sessionDir": "sessions/mcp-s1-MD07",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Resize this poster into three files: 1:1 for a feed post, 9:16 for a story, 16:9 for a banner; keep the whole poster visible with padding, no cropping, no regeneration.",
+      "materials": [
+        "v4-poster.jpg"
+      ],
+      "dialog": [],
+      "agent": "The connected Magic Hour tools don’t support **resize-and-pad without regeneration**, so I can’t create those three files here while respecting your instructions. I won’t use an AI editor to redraw your poster.\n\nThis Pillow script creates all three locally, keeping the **entire poster visible**, centered on cream padding, with no cropping or AI generation:\n\n```python\nfrom PIL import Image, ImageOps\n\nposter = ImageOps.exif_transpose(Image.open(\"v4-poster.jpg\")).convert(\"RGB\")\n\noutputs = {\n    \"poster-feed-1x1.png\": (1080, 1080),\n    \"poster-story-9x16.png\": (1080, 1920),\n    \"poster-banner-16x9.png\": (1920, 1080),\n}\n\nfor filename, size in outputs.items():\n    fitted = ImageOps.contain(poster, size, Image.Resampling.LANCZOS)\n    canvas = Image.new(\"RGB\", size, \"#E8DFC5\")\n    canvas.paste(\n        fitted,\n        ((size[0] - fitted.width) // 2, (size[1] - fitted.height) // 2),\n    )\n    canvas.save(filename)\n```\n\nRun `pip install Pillow` first, then run the script in the same folder as `v4-poster.jpg`.",
+      "calls": [],
+      "approvals": [],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "The connected Magic Hour tools don’t support **resize-and-pad without regeneration**, so I can’t create those three files here while respecting your instructions. I won’t use an AI editor to redraw your poster.\n\nThis Pillow script creates all three locally, keeping the **entire poster visible**, centered on cream padding, with no cropping or AI generation:\n\n```python\nfrom PIL import Image, ImageOp",
+        "refuse": "",
+        "tier_move": "The connected Magic Hour tools don’t support **resize-and-pad without regeneration**, so I can’t create those three files here while respecting your instructions. I won’t use an AI editor to redraw your poster.\n\nThis Pillow script creates all three locally, keeping the **entire poster visible**, centered on cream padding, with no cropping or AI generation:\n\n```python\nfrom PIL import Image, ImageOp",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 17
+    }
+  ],
+  "started": "2026-11-03T05:55:26.415Z",
+  "spent": 0,
+  "seconds": 17
+}

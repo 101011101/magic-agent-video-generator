@@ -1,0 +1,21 @@
+{
+  "id": "E25b",
+  "best_tools": "yes",
+  "explanation": "Crop is the right primitive for non-stretched portrait reframing, but the plan treated a crop operation as an automatic speaker-tracking editor without supplying speaker positions or a timed transition. It needed separate, explicitly positioned crops for the two speaking turns; the evidence establishes framing failure, but does not establish that the original audio was lost.",
+  "better_chain": "gate (inspect the source to identify the questioner, woman, and exact speaker-change time) → trim (split into contiguous question and answer segments, retaining source audio) → crop (crop each segment to 9:16 using explicit positions that centre the correct speaker and keep their face fully visible) → assemble (join question then answer with original synced audio, preserving all 10 seconds and adding no captions) → gate (verify framing, duration, audio continuity, and sync)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "The correct source and aspect ratio were supplied, but the crop was asked to infer speaker identities and perform a timed reframing change. No verified transition time or explicit crop positions were provided, and the chain lacked separate segment crops and reassembly.",
+      "verdict": "bad-params",
+      "tool": "crop"
+    }
+  ],
+  "missing": "Inspect the source for speaker identities and the turn boundary, then split and explicitly crop each speaking turn before reassembling the full timeline with its original audio. Verify both faces and audio continuity afterward."
+}

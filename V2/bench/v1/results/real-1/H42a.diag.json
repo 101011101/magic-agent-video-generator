@@ -1,0 +1,57 @@
+{
+  "id": "H42a",
+  "best_tools": "yes",
+  "explanation": "The chain correctly orders the photos and adds the exact titles, but it never explicitly discards the animation model’s generated audio before adding music; saying “no speech” is not a reliable audio-replacement instruction. The animation prompts also leave zoom magnitude and mixed-aspect framing underspecified, allowing the latte shot to become too tightly cropped.",
+  "better_chain": "image-to-video (each supplied photo; tiny, bounded camera movement, preserve identifying details, fit without stretching or aggressive cropping) → music (9-second soft upbeat instrumental, no vocals) → assemble (first 3 seconds of each clip, storefront first; fit proportionally in 9:16; discard all source-clip audio and use only the music; total 9 seconds) → text-overlay (Maple Street Café, 0–3 seconds) → text-overlay (Your morning starts here, 6–9 seconds) → gate (verify no speech, gentle movement, preserved photo details, framing, titles and duration)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate animation tool and source photo, but requesting 9:16 from a wide storefront photo without explicit proportional fitting and protection of the awning and tables leaves framing underspecified.",
+      "verdict": "bad-params",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 2,
+      "issue": "Correct source and tool, but “gentle, slow camera push” does not bound enlargement or require the entire cup to remain visible. The square-to-vertical framing is also unspecified.",
+      "verdict": "bad-params",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "Correct tool and photo, but the drift lacks explicit movement bounds and a proportional-fit instruction to keep the pastry counter recognisable throughout.",
+      "verdict": "bad-params",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 4,
+      "issue": "The music request specifies the correct duration, mood and instrumental-only soundtrack.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 5,
+      "issue": "Order, shot ranges and final duration are correct, but the assembly does not explicitly mute or discard source-clip audio. Adding music does not ensure that minimax-generated speech is removed.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    },
+    {
+      "n": 6,
+      "issue": "Correct tool, exact opening text, correct timing and correctly wired base reel.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 7,
+      "issue": "Correct tool, exact closing text and timing; uses the already titled reel so the opening is retained.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "Explicit removal of all generated clip audio before music-only assembly, plus final verification of silence from speech and restrained, non-stretched framing."
+}

@@ -1,0 +1,33 @@
+{
+  "id": "B12c",
+  "best_tools": "no",
+  "explanation": "The original-photo inputs and independent branches were correct, and the square crop preserves the car. However, crop is documented only to cut/reframe, not build blurred padding; requesting that unsupported operation in prose did not prevent the feed and stories versions from clipping the car.",
+  "better_chain": "crop (make the square from the original, retaining the complete car) → deterministic padding/compositing capability (needed beyond the documented crop tool: independently fit the unchanged original onto 4:5 and 9:16 canvases over blurred, fill-sized copies of the source) → check (verify all three ratios, complete car, unchanged proportions, and no added text) → deliver three separate images",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving"
+  ],
+  "cause": "tool-fit",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "A centered square crop can retain the complete car and does so here. The padding instruction is unsupported but unnecessary for this version.",
+      "verdict": "ok",
+      "tool": "crop"
+    },
+    {
+      "n": 2,
+      "issue": "The centered 4:5 crop clips the rear. Crop has no documented contain-and-blurred-padding capability; that operation needs an actual padding/compositing implementation.",
+      "verdict": "wrong-tool",
+      "tool": "crop"
+    },
+    {
+      "n": 3,
+      "issue": "The narrow 9:16 crop cannot retain the complete car at this framing. Unsupported padding instructions do not turn crop into a canvas-extension tool.",
+      "verdict": "wrong-tool",
+      "tool": "crop"
+    }
+  ],
+  "missing": "An executable, non-generative blurred-padding operation for the portrait versions, followed by a whole-car visibility check before delivery."
+}

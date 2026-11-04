@@ -1,0 +1,109 @@
+{
+  "id": "C14b",
+  "group": "C",
+  "case": 14,
+  "case_name": "Face swap on a photo",
+  "title": "Which Friend Gets My Face",
+  "tests": "Tests clarification of an ambiguous target face and preservation of the unselected person.",
+  "pass": false,
+  "score": 49,
+  "tags": [
+    "wrong-aspect",
+    "major-fault",
+    "not-usable"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "detect_faces:done",
+        "detect_faces:done",
+        "swap_face_in_photo:done"
+      ]
+    },
+    {
+      "name": "a image was made",
+      "pass": true,
+      "got": [
+        ".png",
+        ".png",
+        ".jpg"
+      ]
+    },
+    {
+      "name": "aspect 16:9",
+      "pass": false,
+      "got": [
+        "204x285",
+        "180x228",
+        "640x384"
+      ]
+    },
+    {
+      "name": "must-haves met",
+      "pass": true,
+      "got": "4/5"
+    },
+    {
+      "name": "asks first (Which person in two-friends.jpg should receive the user's face: the bearded man on the left or the blonde woman on the right?)",
+      "pass": true,
+      "got": [
+        {
+          "field": "question",
+          "question": "Which person should I swap your face onto—the person on the left or the person on the right? I’ll leave the other face and the rest of the photo unchanged."
+        }
+      ]
+    }
+  ],
+  "judge": {
+    "usable_as_is": false,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "major",
+        "what": "The swapped face retains too much of the original blonde woman's appearance. Although the eyes and eyebrows have changed, the overall face is not convincingly recognisable as the woman in portrait-woman.jpg."
+      }
+    ],
+    "score": 3,
+    "summary": "The edit cleanly preserves the beach photo and changes only the right woman's face, but the resemblance to the supplied portrait is too weak.",
+    "must_haves": [
+      {
+        "item": "Only the woman on the right receives the face from portrait-woman.jpg.",
+        "met": "yes",
+        "why": "Visible facial changes are confined to the woman on the right; the man is unchanged."
+      },
+      {
+        "item": "The bearded man on the left still looks like the same person (small drift from a redrawn photo is acceptable).",
+        "met": "yes",
+        "why": "His facial features, beard, hair and expression appear unchanged."
+      },
+      {
+        "item": "The woman on the right is recognisably the person in portrait-woman.jpg (her hair may come with the face), blended to the beach lighting and head angle.",
+        "met": "no",
+        "why": "Lighting and head alignment are natural, but the result looks more like a modified version of the original beach woman's face than the supplied portrait."
+      },
+      {
+        "item": "The bodies, clothing, beach background and wide framing look the same at a glance.",
+        "met": "yes",
+        "why": "The clothing, poses, ocean, sand and framing are preserved."
+      },
+      {
+        "item": "No text is added.",
+        "met": "yes",
+        "why": "No text is visible in the output."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 10,
+  "seconds": 43,
+  "outputs": [
+    "sessions/mcp-m1-C14b/assets/01-detect_faces.png",
+    "sessions/mcp-m1-C14b/assets/02-detect_faces.png",
+    "sessions/mcp-m1-C14b/assets/03-swap_face_in_photo.jpg"
+  ],
+  "tools": [
+    "detect_faces→detect_faces→swap_face_in_photo"
+  ]
+}

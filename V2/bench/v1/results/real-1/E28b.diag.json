@@ -1,0 +1,69 @@
+{
+  "id": "E28b",
+  "best_tools": "no",
+  "explanation": "The chain inspected silent frames but never inspected the original dialogue, so the writer lacked the evidence needed to explain the schedule change and Monday’s nine o’clock start. The assembly step also omitted an explicit source aspect ratio, allowing a portrait output despite instructions to preserve the landscape footage. The narration and audio replacement instructions were otherwise appropriate; the grader’s uncertain audio findings do not establish that the original conversation remained audible.",
+  "better_chain": "gate (inspect the original clip’s dialogue, duration, and aspect ratio; report the supported schedule details) → write (a short, grounded English narration explaining the schedule change and that Mondays now start at nine) → voice (friendly neutral delivery comfortably under 10 seconds) → assemble (original clip plus narration; discard all source audio, explicitly retain the source landscape aspect and every frame for 10 seconds, no music or captions) → gate (verify unchanged framing and sequence, narration content and ending, and absence of original dialogue, music, and captions)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correctly extracts an unchanged opening frame for visual inspection.",
+      "verdict": "ok",
+      "tool": "frame"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate visual check with sensible limits on inference, but it cannot establish the conversation’s content.",
+      "verdict": "ok",
+      "tool": "check"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly extracts the midpoint frame.",
+      "verdict": "ok",
+      "tool": "frame"
+    },
+    {
+      "n": 4,
+      "issue": "Valid inspection of visible activity; it supplies no evidence about the schedule discussion.",
+      "verdict": "ok",
+      "tool": "check"
+    },
+    {
+      "n": 5,
+      "issue": "Correctly extracts a frame near the end.",
+      "verdict": "ok",
+      "tool": "frame"
+    },
+    {
+      "n": 6,
+      "issue": "Valid visual inspection without unsupported dialogue inference.",
+      "verdict": "ok",
+      "tool": "check"
+    },
+    {
+      "n": 7,
+      "issue": "Receives only still-image observations, not the original dialogue. Its resulting visual description omits the schedule change and Monday start time.",
+      "verdict": "bad-inputs",
+      "tool": "write"
+    },
+    {
+      "n": 8,
+      "issue": "Suitable voice tool, tone, and duration settings; the five-second delivery fits, although it inherits the inadequate script.",
+      "verdict": "ok",
+      "tool": "voice"
+    },
+    {
+      "n": 9,
+      "issue": "Correct assets and explicit source-audio removal, but no explicit source aspect ratio despite assemble requiring one. The reported 9:16 output does not preserve the landscape composition.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    }
+  ],
+  "missing": "Inspect the original audio before writing to establish the schedule change and Mondays starting at nine; explicitly carry the source aspect ratio into assembly; verify the final framing, narration, and audio replacement."
+}

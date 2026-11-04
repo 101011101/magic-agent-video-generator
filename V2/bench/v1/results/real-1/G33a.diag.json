@@ -1,0 +1,27 @@
+{
+  "id": "G33a",
+  "best_tools": "yes",
+  "explanation": "The image-plus-overlay approach fits this request, and the overlay was explicitly told to stay in the left half; its centered, face-covering output violates those instructions rather than revealing a misunderstood brief. The plan also relied on an aspect setting without a deterministic crop, allowing the generated non-16:9 canvas to survive into the final thumbnail.",
+  "better_chain": "image (invent a shocked face on the right with empty space on the left) → crop (enforce exact 16:9 while preserving the face) → text-overlay (place ONE\\nLAST\\nTRY entirely within the left half) → check (verify exact wording, no face overlap, and final layout)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving"
+  ],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate tool and composition prompt, including the requested aspect. The returned artwork provides the requested face and clear left-side space, but its actual aspect needs correction.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "A plain high-contrast headline can appropriately use text-overlay. The supplied wording and left-half placement are correct, but the tool failed to honor that placement; its aspect parameter also does not replace an explicit crop.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "A crop step to guarantee exact 16:9, plus a final layout check to catch the overlay's failure to remain off the face."
+}

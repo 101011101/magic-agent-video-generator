@@ -1,0 +1,64 @@
+{
+  "id": "H40a",
+  "best_tools": "yes",
+  "explanation": "The duration, shot sequence, and caption wiring are correct, but the chain reuses a studio image whose lid and finish already differ visibly from the reference. It also relies on “no speech” prompts without explicitly discarding the video model’s generated audio, allowing unwanted speech into the assembled ad. The image model’s fidelity failure contributed, but validation and soundtrack replacement were missing from the plan.",
+  "better_chain": "image-edit (change only the background; explicitly preserve matte finish and open lid loop) → check (compare with the original; reject and redo if identity changes) → image-to-video ×3 (three five-second studio camera moves) → gate (verify product fidelity and usable close-ups) → music (15-second mellow instrumental) → assemble (three shots, exactly 15 seconds at 9:16; discard all source audio and use only the music) → text-overlay (opening wording, 0–3 seconds) → text-overlay (closing wording, 12–15 seconds) → gate (verify duration, captions, product identity, music, and absence of speech)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "model-quality",
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate tool and reference, with an explicit preservation instruction. The resulting image nevertheless changes the open lid loop and matte finish; that is an execution failure that should have been caught before animation.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 2,
+      "issue": "The animation tool and five-second motion settings fit, but the supplied studio image already depicts an altered lid and finish.",
+      "verdict": "bad-inputs",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "A moving cap close-up is appropriate, but it uses the same unvalidated reference with the incorrect cap and finish, emphasizing the mismatch.",
+      "verdict": "bad-inputs",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 4,
+      "issue": "The closing hero movement is appropriate, but its source image already fails product fidelity.",
+      "verdict": "bad-inputs",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 5,
+      "issue": "A 15-second mellow instrumental with no vocals directly addresses the requested soundtrack.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 6,
+      "issue": "Correct order, duration, and aspect, but adding music underneath does not remove generated clip audio. The plan needed explicit replacement of all source audio with the instrumental track, rather than another 'no talking' instruction.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    },
+    {
+      "n": 7,
+      "issue": "Correct tool for an exact standalone caption, applied to the assembled ad for the opening interval.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 8,
+      "issue": "Correct exact closing caption and timing; it consumes the opening-caption version, preserving prior work.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "A product-fidelity check before animating the edited reference, explicit removal of all generated clip audio during assembly, and a final audiovisual verification gate."
+}

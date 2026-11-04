@@ -1,0 +1,35 @@
+{
+ "id": "C14b",
+ "root_cause": "harness",
+ "contributing": [],
+ "grader_right": true,
+ "agent_vs_you": "The agent did what I would do. It asked the one question that mattered (which person, the expected question), took the answer, picked face-swap-photo with the beach photo as the target and the selfie as the face, and wrote \"Target only the blonde woman on the right; exclude the bearded man on the left\" in extra. No code reads that line. execute.js always calls /v1/face-swap-photo with `face_swap_mode: \"all-faces\"`, so Magic Hour put her features on both faces: the man kept his beard and hair but got her eyes, brows, nose and mouth. The catalogue's \"POORLY: choosing one of several faces\" suggested a hint might work. With the current wiring it is a CANNOT, as the face-swap-video line already says. I checked a workaround with today's tools (crop the woman out, swap, then compose the halves back): it fails here because the two faces touch around x=325 of a 640x384 photo and compose rescales and pads each panel, so the seams would show. The swap has to target one face in the API.",
+ "your_plan": {
+  "say": "I'll put your face from the park selfie onto the blonde woman on the right only, and leave the man on the left and the rest of the beach photo as they are.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "face-swap-photo",
+    "inputs": [
+     "two-friends.jpg",
+     "portrait-woman.jpg"
+    ],
+    "produces": "two-friends-swapped.png",
+    "params": {
+     "prompt_or_change": "Swap only the face of the blonde woman on the right for the face in portrait-woman.jpg; keep the bearded man on the left, both bodies, the beach and the wide framing unchanged.",
+     "extra": "target face: right (the blonde woman); leave the left face untouched",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "One swap on the user's own photo. This needs Magic Hour's individual-faces mode: detect the faces, map only the right-hand one to the selfie. Today's all-faces wiring changes both people."
+   }
+  ]
+ },
+ "fix": "Wire face-swap-photo and face-swap-video with Magic Hour's individual-faces mode. Run face detection on the target, choose the face named in extra (\"target face: left|right|largest|n\"), and send face_mappings for that face only. If a picture has several faces and no target was given, ask which one. Until this is wired, change the catalogue line to \"CANNOT: one face among several: it changes every face\" so the planner tells the user instead of delivering a double swap.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "I opened two-friends.jpg (640x384: bearded man on the left, blonde woman on the right, faces almost touching near x=325), portrait-woman.jpg (dark curly hair, park) and the output. In the output the man's face has become feminine: smooth skin and her eyes, brows and mouth under his own beard and hair. The woman's face also changed (darker brows), and the beach and framing are intact. execute.js hard-codes `face_swap_mode: \"all-faces\"` in the face-swap-photo body. The judge is right: the man's face was altered."
+}

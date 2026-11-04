@@ -1,0 +1,381 @@
+{
+  "id": "J50a",
+  "item": {
+    "id": "J50a",
+    "case": 50,
+    "case_name": "Refer back",
+    "group": "J",
+    "group_name": "How the conversation goes (applies on top of any case above)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Make the First One Square",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make two tall 4:5 illustrations, no text. First: a fox sleeping under a crescent moon. Second: a lighthouse in a storm. Both soft watercolours."
+      },
+      {
+        "materials": [],
+        "text": "Make the first one square instead. Keep the same art and make sure the fox and moon both fit."
+      }
+    ],
+    "tests": "Resolves 'the first one' to the first generated illustration and changes its format without substituting the second image or making unrelated art.",
+    "answer_sheet": {
+      "Which image does 'the first one' mean?": "The watercolour fox sleeping under a crescent moon.",
+      "Final format and number": "One square image.",
+      "Style and continuity": "Keep the existing first illustration's soft watercolour appearance, fox, moon and colours; only reframe or extend it to fit.",
+      "Text": "No text."
+    },
+    "must_haves": [
+      "The final deliverable is one square image.",
+      "It shows the sleeping fox and crescent moon from the first generated illustration, both fully visible.",
+      "The existing watercolour artwork remains recognisable, with matching character details and colours.",
+      "It does not substitute the lighthouse scene or combine the two illustrations.",
+      "There is no visible text."
+    ]
+  },
+  "session": "b4-J50a",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Make two tall 4:5 illustrations, no text. First: a fox sleeping under a crescent moon. Second: a lighthouse in a storm. Both soft watercolours.",
+      "materials": [],
+      "dialog": [],
+      "agent": "I'll generate the two pictures separately, then crop each to 4:5.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "First: a fox sleeping under a crescent moon. Second: a lighthouse in a storm. No text.",
+            "field": "subject",
+            "quote": "no text. First: a fox sleeping under a crescent moon. Second: a lighthouse in a storm.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "stated",
+            "field": "direction",
+            "quote": "Both soft watercolours.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "style",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "4:5",
+            "field": "size",
+            "quote": "tall 4:5",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "materials",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "2",
+            "field": "count",
+            "quote": "two",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "image",
+          "quote": "Make two tall 4:5 illustrations, no text.",
+          "source": "stated",
+          "why": "The user requests two illustrations.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "tree",
+        "say": "I'll generate the two pictures separately, then crop each to 4:5.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 10,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "image",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [],
+            "produces": "sleeping_fox_source.png",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "A fox sleeping under a crescent moon; keep both the fox and moon within the central 80% of the picture's width for a portrait crop. No text."
+            },
+            "credits": 5,
+            "why": "Create the first picture with the subject safely inside the intended crop."
+          },
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "sleeping_fox_source.png"
+            ],
+            "produces": "sleeping_fox_4x5.png",
+            "params": {
+              "extra": "anchor: center",
+              "seconds": 0,
+              "aspect": "4:5",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Crop to 4:5, retaining the sleeping fox and crescent moon."
+            },
+            "credits": 0,
+            "why": "Deliver the first picture in the requested aspect ratio without regenerating it."
+          },
+          {
+            "tool": "image",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [],
+            "produces": "storm_lighthouse_source.png",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "A lighthouse in a storm; keep the lighthouse within the central 80% of the picture's width for a portrait crop. No text."
+            },
+            "credits": 5,
+            "why": "Create the second picture with room for the intended portrait crop."
+          },
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "storm_lighthouse_source.png"
+            ],
+            "produces": "storm_lighthouse_4x5.png",
+            "params": {
+              "extra": "anchor: center",
+              "seconds": 0,
+              "aspect": "4:5",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Crop to 4:5, retaining the lighthouse and surrounding storm."
+            },
+            "credits": 0,
+            "why": "Deliver the second picture in the requested aspect ratio without regenerating it."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "image",
+          "state": "done",
+          "output": "assets/tree-1/sleeping_fox_source.png",
+          "credits": 5,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 7
+        },
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-1/sleeping_fox_4x5.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "by code: crop",
+          "error": null,
+          "seconds": 0
+        },
+        {
+          "tool": "image",
+          "state": "done",
+          "output": "assets/tree-1/storm_lighthouse_source.png",
+          "credits": 5,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 7
+        },
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-1/storm_lighthouse_4x5.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "by code: crop",
+          "error": null,
+          "seconds": 0
+        }
+      ],
+      "spent": 10,
+      "seconds": 15
+    },
+    {
+      "text": "Make the first one square instead. Keep the same art and make sure the fox and moon both fit.",
+      "materials": [],
+      "dialog": [],
+      "agent": "I'll reframe the artwork to square without cutting anything off, keeping both the fox and moon visible.",
+      "firstQuestions": [],
+      "turnIndex": 1,
+      "sheet": {
+        "fields": [
+          {
+            "value": "sleeping_fox_4x5.png",
+            "field": "asset",
+            "quote": "Make the first one square instead.",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "made-here",
+            "field": "provenance",
+            "quote": "AGENT: crop → sleeping_fox_4x5.png (0 credits, by code)",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Reframe to square (1:1), retaining the same art and ensuring both the fox and moon fit.",
+            "field": "change",
+            "quote": "Make the first one square instead. Keep the same art and make sure the fox and moon both fit.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "form",
+            "field": "change_kind",
+            "quote": "Make the first one square instead.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "Make the first one square instead.",
+            "source": "inferred",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Keep the same art",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Make the first one square instead.",
+          "source": "stated",
+          "why": "The user requests reframing an existing session image.",
+          "confidence": 1
+        },
+        "refers_to": "sleeping_fox_4x5.png",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll reframe the artwork to square without cutting anything off, keeping both the fox and moon visible.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 0,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "sleeping_fox_4x5.png"
+            ],
+            "produces": "sleeping_fox_square.png",
+            "params": {
+              "extra": "fit: contain; plain; anchor: center",
+              "seconds": 0,
+              "aspect": "1:1",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Fit the complete artwork into a square, preserving the fox and moon fully and keeping the art unchanged; fill any padding with the picture's own plain background colour."
+            },
+            "credits": 0,
+            "why": "Fit the entire existing artwork within a square without regenerating or cutting off either subject."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/sleeping_fox_square.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "by code: crop",
+          "error": null,
+          "seconds": 0
+        }
+      ],
+      "spent": 0,
+      "seconds": 3
+    }
+  ],
+  "started": "2026-11-01T10:55:56.990Z",
+  "spent": 10,
+  "seconds": 42,
+  "sessionDir": "sessions/b4-J50a"
+}

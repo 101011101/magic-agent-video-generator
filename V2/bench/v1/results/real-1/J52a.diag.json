@@ -1,0 +1,39 @@
+{
+  "id": "J52a",
+  "best_tools": "yes",
+  "explanation": "The shared-background approach and adding exact text after animation correctly preserve matching artwork and readable event details. The failure was treating requested aspect ratios and a 'silent output' instruction as enforced properties: the plan lacked deterministic 9:16 normalization and audio removal, even though the video model generates its own sound.",
+  "better_chain": "image (warm illustrated market background, with blank stall signs) → crop (enforce 9:16 on the shared background) → branch: text-overlay (all five exact strings, producing the finished poster); image-to-video (animate the same background for eight seconds) → assemble (normalize to exactly eight seconds and 9:16, explicitly discard source audio and add no sound) → text-overlay (same five strings and layout throughout 0–8 seconds) → gate (verify both assets’ dimensions, text, matching design, reel motion, duration and silence)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "model-quality"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate shared illustration and composition prompt. Requesting 9:16 did not enforce the actual output dimensions; a crop was needed before branching.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correct input and exact event strings. A static text overlay fits this readability requirement, but its aspect setting does not replace a guaranteed crop.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly animates the text-free shared background, preserving the lettering for a later step. However, this model generates audio, so requesting silence requires a downstream audio-removal step.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 4,
+      "issue": "Correctly places matching, exact text over the entire reel after animation. It neither removes generated audio nor guarantees correction of the incoming clip’s dimensions.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "Guaranteed 9:16 cropping before poster lettering and final reel normalization; explicit removal of generated audio; final verification of dimensions, eight-second duration and silence."
+}

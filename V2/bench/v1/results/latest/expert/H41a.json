@@ -1,0 +1,100 @@
+{
+ "id": "H41a",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness",
+  "grader"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "This is the same mistake as D20d. The agent fed the two portrait screenshots (720x1280) straight into assemble and wrote 'fit screenshots without cropping or stretching on a clean neutral background' into extra. assemble never reads that: it always fills the 16:9 frame and centre-crops, which keeps only the middle third of each phone screen. The 'FitTrack' and 'Workout' headers and the first and last rows were lost. The catalogue's CHOOSING line ('Keep ALL of a picture in a new size, crop with fit: contain') covers this exactly, and assemble's guarantee 'the user's photos used as they are' misled it. Second divergence: 'finish with the app name' is an end card. The catalogue routes title and end cards to an image node with lettering true. The agent instead laid a small plain text-overlay band over the last 2 s of the cropped workout screen (the judge's 'weak, cluttered brand finish'). I would contain-fit each screenshot on a plain background in its own header colour, add a lettered 'FitTrack' end card as a third piece, lay a 10 s instrumental beat under it, and let assemble cut the three in order. The 'speech' verdict ('すべての人に') looks like a transcription artefact: the beat's spectrogram shows fixed-pitch synth stabs, not vocal formants. I cannot rule out a vocal chop without listening.",
+ "your_plan": {
+  "say": "I'll fit both screenshots whole into the widescreen frame, home first then workout, finish on a clean FitTrack end card, and lay an upbeat instrumental beat under all 10 seconds, with no voiceover.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "crop",
+    "inputs": [
+     "app-home.png"
+    ],
+    "produces": "home-169.png",
+    "params": {
+     "prompt_or_change": "Fit the whole home screenshot inside a 16:9 frame, unscaled in shape, on a plain background in the screenshot's own header colour.",
+     "extra": "fit: contain; plain",
+     "aspect": "16:9",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The whole portrait screen is kept readable (headers and all rows), with a clean solid background, by code."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "app-workout.png"
+    ],
+    "produces": "workout-169.png",
+    "params": {
+     "prompt_or_change": "Fit the whole workout screenshot inside a 16:9 frame on a plain background in its own header colour.",
+     "extra": "fit: contain; plain",
+     "aspect": "16:9",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Same treatment for the second screen, kept whole."
+   },
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "fittrack-endcard.png",
+    "params": {
+     "prompt_or_change": "A clean, energetic 16:9 app-ad end card: the word \"FitTrack\" in large bold white sans-serif letters centred on a vivid blue (#2F7BE6) background with one subtle diagonal green (#27AE60) accent stripe; no other text, no phone, no people.",
+     "extra": "",
+     "aspect": "16:9",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "Finishing with the app name is a designed end card: lettering true runs on qwen and is read back. The colours echo the two screens' headers."
+   },
+   {
+    "tool": "music",
+    "inputs": [],
+    "produces": "fittrack-beat.mp3",
+    "params": {
+     "prompt_or_change": "Upbeat, energetic instrumental workout beat at about 124 BPM: punchy electronic drums, bright synth stabs and bass, building quickly and staying high-energy. Strictly instrumental, no vocals, no vocal chops, no speech.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 10,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The requested upbeat bed. The code cuts the 15 s minimum to 10 s with a fade."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "home-169.png",
+     "workout-169.png",
+     "fittrack-endcard.png",
+     "fittrack-beat.mp3"
+    ],
+    "produces": "fittrack-ad.mp4",
+    "params": {
+     "prompt_or_change": "Home screen, then workout screen, then the FitTrack end card, with the beat under all of it.",
+     "extra": "music: full",
+     "aspect": "16:9",
+     "seconds": 10,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Exact order, exactly 10 s at 16:9 (about 3.3 s per piece). Pieces already at 16:9 are not cropped further, and there is no voice."
+   }
+  ]
+ },
+ "fix": "Same fix as D20d, which generalises to every reel or ad built from supplied photos or screenshots. (1) Correct assemble's catalogue guarantee: it crops pictures to fill and pushes in, so a whole picture needs crop fit: contain first. (2) Make assemble honour 'fit: contain' in extra and switch off the 8% push-in on contained pictures; otherwise the top header of a contained portrait screenshot gets shaved by up to 3.7%. (3) Planner guard: a supplied picture whose aspect differs from the target by more than 10% gets a crop fit:contain before assemble unless the user asked for a crop. (4) Planner: 'finish with the name or logo' becomes an end-card image node with lettering true, not a text-overlay. (5) Grader: confirm a speech claim on a music bed with a vocal-presence check before failing.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "app-home.png and app-workout.png are 720x1280 mock screens with a blue 'FitTrack' header and green 'Workout' header over grey row labels. In fittrack-ad-final.mp4 frames at 1 fps, each screen is cover-cropped to its middle: only 'Workout 32 min / Sleep 7 h 10 min / Water...' and 'Squats / Push-ups / Plank...' are visible, with headers and top and bottom rows cut. A small 'FitTrack' band appears over the workout crop at 8-10 s. fittrack-beat.mp3 is 10.0 s. Its 100-4000 Hz spectrogram shows rhythmic fixed-pitch synth chords from 2 s on, with no gliding vocal formants. assemble.js has no contain path."
+}

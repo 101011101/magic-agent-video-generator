@@ -1,0 +1,34 @@
+{
+  "id": "C16c",
+  "best_tools": "yes",
+  "explanation": "The initial image prompt omitted the requested storybook style, producing a glossy robot with a realistic station background that became the reference for both follow-ups. The reference-based edits were correctly wired, but model errors introduced two bags initially and inconsistent rendering across scenes; preserving the reference also carried its unwanted accessory forward. The grader additionally misreported the initial picture as missing, although it is supplied here.",
+  "better_chain": "image (square storybook illustration, style specified first; robot with exactly one yellow mailbag at a recognisable train station, no text) → check (verify style, character features and accessory count; image-edit to correct if needed) → image-edit (use the approved initial picture for the cottage delivery, preserving design and style; clearly wrapped parcel) + image-edit (independently use the same approved picture for mushroom shelter, keeping rain outside the sheltered area) → check (compare all three for design, style, square format and no text)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [
+    "model-quality",
+    "grader"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correct tool and square format, but the prompt entirely omits storybook illustration style, a central requirement and the visual foundation for subsequent edits.",
+      "verdict": "bad-params",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correctly edits the original reference into a separate square cottage scene, explicitly requesting the same design and illustration style. Parcel ambiguity and rendering drift are output shortcomings rather than incorrect tool selection or wiring.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly uses the original reference independently for the square mushroom scene and requests falling rain, shelter and design preservation. The duplicated bag already exists in the reference; rain crossing the sheltered robot is an execution defect.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    }
+  ],
+  "missing": "Explicit storybook illustration styling in the initial generation prompt."
+}

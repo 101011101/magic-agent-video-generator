@@ -1,0 +1,267 @@
+{
+  "id": "C15a",
+  "item": {
+    "id": "C15a",
+    "case": 15,
+    "case_name": "Face swap on a video",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "maybe",
+      "refuse": false
+    },
+    "title": "Five Second Talking Face Swap",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 5,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "talk-one.mp4",
+          "portrait-woman.jpg"
+        ],
+        "text": "Put the face from this portrait onto the woman in the first 5 seconds of the video. Keep the original sound, framing and everything else."
+      }
+    ],
+    "tests": "Tests a short video face swap with source identity, temporal consistency and original audio preserved, without misrepresenting free-tier capabilities.",
+    "answer_sheet": {
+      "Source face and target": "Use portrait-woman.jpg as the replacement face for the woman in talk-one.mp4.",
+      "Length and segment": "The first 5 seconds only.",
+      "Framing and resolution": "Keep the original framing and aspect ratio; 480p is fine.",
+      "Audio and added text": "Keep the original audio in sync. No captions, music or added text."
+    },
+    "must_haves": [
+      "The delivered video is 5 seconds long and follows the first 5 seconds of talk-one.mp4.",
+      "The woman's face recognizably matches portrait-woman.jpg throughout, rather than reverting to the original face between frames.",
+      "The original kitchen, clothing, body motion and framing remain unchanged.",
+      "Original speech is audible and synchronized with the video.",
+      "The face remains aligned during mouth and head movement, without conspicuous flicker or doubled facial features."
+    ]
+  },
+  "session": "b9-C15a",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Put the face from this portrait onto the woman in the first 5 seconds of the video. Keep the original sound, framing and everything else.",
+      "materials": [
+        "talk-one.mp4",
+        "portrait-woman.jpg"
+      ],
+      "dialog": [],
+      "agent": "I'll trim the video to its first five seconds, then swap in the portrait face while keeping the original sound and framing.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "talk-one.mp4",
+            "field": "asset",
+            "quote": "talk-one.mp4",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "[attached: talk-one.mp4, portrait-woman.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "Replace the woman's face with the face from portrait-woman.jpg.",
+            "field": "change",
+            "quote": "Put the face from this portrait onto the woman in the first 5 seconds of the video.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "identity",
+            "field": "change_kind",
+            "quote": "Put the face from this portrait onto the woman",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "portrait-woman.jpg",
+            "field": "reference",
+            "quote": "portrait-woman.jpg",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "0–5 seconds",
+            "field": "range",
+            "quote": "the first 5 seconds of the video",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Keep the original sound, framing and everything else.",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Put the face from this portrait onto the woman in the first 5 seconds of the video.",
+          "source": "stated",
+          "why": "The user requests a face replacement in an existing supplied video.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "preflight": {
+          "goal": {
+            "kind": null,
+            "aspect": null,
+            "seconds": 5,
+            "alpha": null,
+            "sound": null
+          },
+          "steps": [],
+          "end": [],
+          "ok": true
+        },
+        "shape": "tree",
+        "say": "I'll trim the video to its first five seconds, then swap in the portrait face while keeping the original sound and framing.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 150,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "trim",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "talk-one.mp4"
+            ],
+            "produces": "talk-one-first-5s.mp4",
+            "params": {
+              "extra": "from: 0; to: 5; sound: keep",
+              "seconds": 5,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Keep only the first five seconds, preserving original sound and framing."
+            },
+            "credits": 0,
+            "why": "Limit the source to exactly the required five seconds before replacing the face.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "16:9",
+              "seconds": 5,
+              "sound": "present",
+              "lettering": false
+            },
+            "preflight": []
+          },
+          {
+            "tool": "face-swap-video",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "talk-one-first-5s.mp4",
+              "portrait-woman.jpg"
+            ],
+            "produces": "talk-one-face-replaced-5s.mp4",
+            "params": {
+              "extra": "sound: keep",
+              "seconds": 5,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": true,
+              "lettering": false,
+              "prompt_or_change": "Replace the centred woman's face with the face from portrait-woman.jpg throughout this five-second clip. Keep her hair, clothing, body, actions, the kitchen, original sound, framing and all other content unchanged."
+            },
+            "credits": 150,
+            "why": "Replace the sole woman's face on the already trimmed clip without extending its duration.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "16:9",
+              "seconds": 5,
+              "sound": "present",
+              "lettering": false
+            },
+            "preflight": []
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "trim",
+          "state": "done",
+          "output": "assets/tree-1/talk-one-first-5s.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "0-5 s of 10.1 s",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 545917,
+            "w": 858,
+            "h": 480,
+            "aspect": "16:9",
+            "seconds": 5,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 1
+        },
+        {
+          "tool": "face-swap-video",
+          "state": "done",
+          "output": "assets/tree-1/talk-one-face-replaced-5s.mp4",
+          "credits": 150,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 440995,
+            "w": 858,
+            "h": 480,
+            "aspect": "16:9",
+            "seconds": 5,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 56
+        }
+      ],
+      "goal_check": [
+        "matches the request's length and size"
+      ],
+      "spent": 150,
+      "seconds": 58
+    }
+  ],
+  "started": "2026-11-02T01:37:05.743Z",
+  "spent": 150,
+  "seconds": 58,
+  "sessionDir": "sessions/b9-C15a"
+}

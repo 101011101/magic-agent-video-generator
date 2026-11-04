@@ -1,0 +1,33 @@
+{
+  "id": "G38b",
+  "best_tools": "yes",
+  "explanation": "The tools and source-image wiring were appropriate, but the crop settings did not specify a smaller crop region: applying a square aspect to an already-square photo can leave it unchanged. The white-background prompt explicitly requested the original matte finish, so its increased gloss is a model-output failure rather than a missing instruction.",
+  "better_chain": "image-edit (source photo → white-background square, preserving the bottle and matte finish) → image-edit (original source → gym-bench square) → crop (original source → explicit square region around the lid and upper body, approximately x=350, y=45, width=350, height=350 in the 1024px source) → check (verify three separate squares, product fidelity, matte finish, and actual close-up; correct any failures)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [
+    "model-quality"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate source, tool, square aspect, and preservation instructions. The glossier result contradicts the explicit matte-finish instruction rather than exposing a planning error.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate source-based edit with clear gym-bench placement, product-preservation instructions, square aspect, and no added branding or text.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "Crop is the right tool, but aspect 1:1 and a top anchor do not define a tighter crop of an already-square image. The natural-language close-up request needed explicit reduced bounds or an equivalent zoom setting.",
+      "verdict": "bad-params",
+      "tool": "crop"
+    }
+  ],
+  "missing": ""
+}

@@ -1,0 +1,50 @@
+{
+ "id": "D22b",
+ "root_cause": "harness",
+ "contributing": [
+  "model-limit"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "Turn 2 was planned sensibly: one image-to-video of the turn-1 picture, 6 s, locked camera, waves and a sweeping beam, sound dropped. But it animated a photograph, because the turn-1 prompt never said watercolour. The planner never saw the word: the sheet stored \"watercolor\" only as the quote of direction=stated, and the planner prompt prints `direction: stated (stated)`. Its turn-1 desired_state reads \"One 16:9 image of a red-and-white striped lighthouse on a rocky coast at dusk\". So the planner's STYLE rule (\"lead with the style when one is asked\") never had a style to lead with. A photographic start frame cannot become a watercolour clip. Separately, minimax lit the lamp and put a glow on the water but drew no sweeping beam. \"The lighthouse beam slowly sweeping\" needs a concrete visual (a pale shaft of light rotating from left to right), and even then a moving beam is a weak spot for this model. The harness also left the clip at 6.58 s, and the judge counted that against the 6 s ask.",
+ "your_plan": {
+  "say": "Turn 1: I'll paint a wide watercolour of the red-and-white lighthouse on its rocky coast at dusk, with no writing. Turn 2: I'll bring that same watercolour to life for 6 silent seconds, with waves rolling onto the rocks and the beam sweeping across the water.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "lighthouse_dusk.png",
+    "params": {
+     "prompt_or_change": "Soft watercolour painting with loose washes, soft bleeding edges and visible paper texture: a red-and-white striped lighthouse on a rocky coast at dusk, pink and violet sky, calm sea; wide landscape composition; no writing or lettering anywhere.",
+     "extra": "",
+     "aspect": "16:9",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 1. The style leads the prompt, since flux drifts to photographic otherwise. This only happens if the planner is given the word watercolour."
+   },
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "lighthouse_dusk.png"
+    ],
+    "produces": "lighthouse_dusk_animated.mp4",
+    "params": {
+     "prompt_or_change": "The watercolour painting comes alive, locked camera: small waves roll in and break gently against the rocks with soft white foam, and a pale shaft of light from the lit lighthouse lamp slowly rotates from left to right, sweeping across the water; the washes, colours, dusk sky and composition stay exactly as painted.",
+     "extra": "",
+     "aspect": "16:9",
+     "seconds": 6,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 2 animates the turn-1 picture itself. The beam is described as a visible rotating shaft, the part the model missed. Sound is dropped by code, and the 16:9 cut keeps the shape."
+   }
+  ]
+ },
+ "fix": "Same path as A06d. Print stated fields' quotes to the planner (or fill `style` whenever direction=stated), and fix the STYLE guard regex in plan.js so it also matches plurals. Also trim generated clips to params.seconds in execute.js (minimax returned 6.58 s for 6). In the catalogue's image-to-video POORLY line, add: \"moving light beams: describe them as a visible shaft that rotates; still unreliable\".",
+ "fix_generalises": true,
+ "would_pass": "unlikely",
+ "evidence": "lighthouse_dusk.png (640x360) is a photograph: photoreal rocks and lighthouse, a smooth sky gradient, no washes or paper texture. The turn-1 prompt contains no style word. The sheet's direction quote is 'watercolor'. The animated clip is 858x480, 6.58 s, with no audio. In the grader frame at 2.5 s the lamp is lit with a glowing reflection, but there is no beam, and the waves break on the rocks. The judge is right on watercolour and the beam."
+}

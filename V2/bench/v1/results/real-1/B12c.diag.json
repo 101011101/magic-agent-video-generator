@@ -1,0 +1,33 @@
+{
+  "id": "B12c",
+  "best_tools": "no",
+  "explanation": "The original photo was correctly used independently for all three outputs, and a square crop can preserve the complete car. However, the narrower formats require padding: the crop tool only promises cropping, so requesting blurred compositing in its prompt does not supply that capability.",
+  "better_chain": "crop (make the square while retaining the complete car) → fit/pad compositor (a capability missing from this catalogue: independently fit the unchanged source onto 4:5 and 9:16 canvases backed by blurred copies of the source) → check (verify all three ratios, complete-car visibility, unchanged proportions, and no added text) → deliver (three separate images)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving"
+  ],
+  "cause": "tool-fit",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Cropping to square is suitable here: the complete car fits within the square frame without padding.",
+      "verdict": "ok",
+      "tool": "crop"
+    },
+    {
+      "n": 2,
+      "issue": "A 4:5 crop cannot retain the complete car at the source's full height. The requested fit-over-blurred-background operation is not a documented crop capability.",
+      "verdict": "wrong-tool",
+      "tool": "crop"
+    },
+    {
+      "n": 3,
+      "issue": "The 9:16 version requires fitting and padding rather than cropping. The prompt asks the crop tool to perform unsupported compositing, leaving both ends of the car outside the frame.",
+      "verdict": "wrong-tool",
+      "tool": "crop"
+    }
+  ],
+  "missing": "An actual aspect-preserving fit-and-blurred-padding operation for the feed and stories images, followed by a completeness check before delivery."
+}

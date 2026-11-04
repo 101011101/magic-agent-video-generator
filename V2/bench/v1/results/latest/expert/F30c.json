@@ -1,0 +1,35 @@
+{
+ "id": "F30c",
+ "root_cause": "harness",
+ "contributing": [
+  "model-limit",
+  "grader"
+ ],
+ "grader_right": false,
+ "agent_vs_you": "The plan is the obvious one and matches mine: one music node, 15 s, an instrumental prompt (the harness also appends 'no vocals, no singing, no speech'). The judge failed it on 'audible speech', a single Khmer word ('អ្នកភូមិ។'). That is the classic speech-to-text hallucination on instrumental music. The spectrogram shows only steady pad harmonics and percussion transients, with no gliding formant contours. The real defect is one nobody flagged. The track's music stops abruptly at about 12.9 s, and the last 2.1 s sit at -50 to -60 dB (digital silence from 14.17 s). The model composed a shorter piece inside the 15 s it was asked for, so the bed does not fill its length. The agent could not have prevented it with catalogue tools: no code tool cuts a sound (trim takes only clips, and assemble needs two sounds). The harness asks the model for exactly the target length whenever it is 15 s or more, and cuts only when the target is under 15 s. I would write the prompt to discourage an ending ('plays right through, no ending, no fade, no silence'). The robust fix is in code: overshoot and cut.",
+ "your_plan": {
+  "say": "I'll make a 15-second warm ambient instrumental bed with soft synths and a gentle pulse that plays right to the end, with no vocals.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "music",
+    "inputs": [],
+    "produces": "ambient-bed.mp3",
+    "params": {
+     "prompt_or_change": "Warm ambient electronic instrumental bed: soft synth pads, a gentle steady pulse and light percussion, even energy that continues right through to the very end with no ending, no fade-out and no silence. Strictly instrumental: no vocals, no voice, no choir, no humming, no speech.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Music by mood and genre for a standalone bed. With the harness fix it is generated longer and cut to exactly 15.00 s with a short fade, so the music fills the whole duration."
+   }
+  ]
+ },
+ "fix": "Harness, music node in execute.js: always generate more than asked (sec = max(15, want + 5)) and cut to exactly want seconds with a short 0.3-0.5 s fade. Today it cuts only when want < 15. Trim trailing near-silence (below -45 dB) before measuring, and if music under -45 dB starts before want, generate again. Grader: do not treat a one-word transcript in an unrelated language on music as speech; require a sustained run of words, or confirm with a vocal-presence check. Also check the RMS envelope for a silent tail (here 13.0-15.0 s), which is what must-have 3 asks.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "ambient_bed.mp3 is actually PCM WAV, 48 kHz stereo, exactly 15.000 s, mean -16 dB. RMS per 0.5 s is -9.6 to -30 dB through 13.0 s, then -49.6, -52.6, -54.2 and -60.1 dB for the last 2 s. silencedetect at -45 dB finds 14.17-15.0 s. The 150-3500 Hz linear spectrogram shows constant-pitch pad lines at about 820 Hz, 1.0 kHz and 2.5 kHz with regular percussive transients, and no vocal harmonics or pitch glides. The music cuts off sharply at about 12.86 s. The judge's only failing verdict (speech) is a transcription artefact, while the dead tail it marked cannot_tell is the real problem."
+}
