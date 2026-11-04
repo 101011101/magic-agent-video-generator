@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8"><title>Stage 1 · existing assets · V4 vs MCP · final results</title><style>:root{--bg:#faf8f4;--fg:#1d1a16;--mut:#6b655c;--line:#e4ded3;--card:#fff;--acc:#2f5d8a}@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15130f;--fg:#ece7de;--mut:#a39c90;--line:#2d2922;--card:#1d1a15;--acc:#8ab4e8;color-scheme:dark}}:root[data-theme=dark]{--bg:#15130f;--fg:#ece7de;--mut:#a39c90;--line:#2d2922;--card:#1d1a15;--acc:#8ab4e8;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,Inter,system-ui,sans-serif;margin:0;padding-block:22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1500px;margin-inline:auto}h1{font-size:21px;margin:0 0 8px}h3{font-size:13.5px;margin:0 0 6px}.mut{color:var(--mut);font-size:12.5px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0}.head{grid-column:1/-1}.side{min-width:0}figure{margin:0 0 6px}figure img,figure video{width:100%;max-height:340px;object-fit:contain;background:#000;border-radius:6px}figcaption{font-size:11px;color:var(--mut)}.ins{display:flex;gap:4px;margin-bottom:6px}.ins img{width:60px;height:60px;object-fit:cover;border-radius:4px}.said{font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;white-space:pre-wrap}img[data-zoom]{cursor:zoom-in}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}#lb img{max-width:96vw;max-height:92vh;object-fit:contain}#lb.on{display:flex}</style>
+<h1>Stage 1 · existing assets · V4 vs MCP · final results</h1><div class="row"><div class="head"><b>D01 · Trim, then add a caption with exact words</b><div class="mut">Trim this clip to the first 5 seconds and put the words 'Clean rooms. Clear minds.' at the bottom, exactly, readable throughout.</div></div>
+<div class="side"><h3>V4 <span class="mut">trim_video → trim_video → text_overlay · 0 cr · asked: nothing</span></h3><figure><video controls preload="metadata" src="full-D01/d2-overlay.mp4"></video></figure></div>
+<div class="side"><h3>MCP <span class="mut">edit_video (ltx-2.5) · 120 cr · 60 s</span></h3><figure><video controls preload="metadata" src="../../V2/sessions/mcp-s1-MD01/assets/01-edit_video.mp4"></video><figcaption>01-edit_video.mp4</figcaption></figure></div></div><div class="row"><div class="head"><b>D02 · Join two clips with a dissolve</b><div class="mut">Join these two clips in this order with a soft dissolve between them.</div></div>
+<div class="side"><h3>V4 <span class="mut">join_videos · 0 cr · asked: nothing</span></h3><figure><video controls preload="metadata" src="full-D02/joined.mp4"></video></figure></div>
+<div class="side"><h3>MCP <span class="mut">no creation call · 0 cr · 14 s</span></h3><div class="said"><b>made nothing; it said:</b><br>I can’t directly join clips with the connected Magic Hour tools—they don’t support timeline editing or dissolves.
+
+In a video editor, place **barber-seed.mp4** first, then **v4-classroom-wipe.mp4**, and add a **0.5-second cross-dissolve** at the cut. This will blend them softly in the requested order.</div></div></div><div class="row"><div class="head"><b>D06 · Warmer, pixel-identical otherwise</b><div class="mut">Make this photo slightly warmer in tone; everything else must stay pixel-identical: same person, framing, background.</div></div>
+<div class="side"><h3>V4 <span class="mut">adjust_image · 0 cr · asked: nothing</span></h3><figure><img src="full-D06/adjusted.jpg" data-zoom></figure></div>
+<div class="side"><h3>MCP <span class="mut">no creation call · 0 cr · 15 s</span></h3><div class="said"><b>made nothing; it said:</b><br>To keep everything else pixel-identical, this needs a **non-generative color adjustment**. The connected Magic Hour editor regenerates pixels, so I can’t guarantee your exact-preservation requirement with it.
+
+In a photo editor, increase **Temperature/Warmth slightly**—about +3 to +5 on a −100 to +100 scale—and leave all other controls unchanged. Export as PNG to avoid additional JPEG compression changes.
+
+I haven’t modified your photo.</div></div></div><div class="row"><div class="head"><b>D07 · Resize to three sizes</b><div class="mut">Resize this poster into three files: 1:1 for a feed post, 9:16 for a story, 16:9 for a banner; keep the whole poster visible with padding, no cropping, no regeneration.</div></div>
+<div class="side"><h3>V4 <span class="mut">resize_image · 30 cr · asked: nothing</span></h3><figure><img src="full-D07/reflow-1x1.png" data-zoom><figcaption>1:1</figcaption></figure><figure><img src="full-D07/reflow-9x16.png" data-zoom><figcaption>9:16</figcaption></figure><figure><img src="full-D07/reflow-16x9.png" data-zoom><figcaption>16:9</figcaption></figure><p class="mut">reflow: This illustrated poster must be re-composed for each shape to preserve its canyon artwork, emblem, and every word without cropping.</p></div>
+<div class="side"><h3>MCP <span class="mut">no creation call · 0 cr · 17 s</span></h3><div class="said"><b>made nothing; it said:</b><br>The connected Magic Hour tools don’t support **resize-and-pad without regeneration**, so I can’t create those three files here while respecting your instructions. I won’t use an AI editor to redraw your poster.
+
+This Pillow script creates all three locally, keeping the **entire poster visible**, centered on cream padding, with no cropping or AI generation:
+
+```python
+from PIL import Image, ImageOps
+
+poster = ImageOps.exif_transpose(Image.open(&quot;v4-poster.jpg&quot;)).convert(&quot;RGB&quot;)
+
+outputs = {
+    &quot;poster-feed-1x1.png&quot;: (1080, 1080),
+    &quot;poster-story-9x16.png&quot;: (1080, 1920),
+    &quot;poster-banner-16x9.png&quot;: (1920, 1080),
+}
+
+for filename, size in outputs.items():
+    fitted = ImageOps.contain(poster,</div></div></div><div class="row"><div class="head"><b>D08 · Underspecified poster: must ask for the words and the size before spending</b><div class="mut">A printed poster (portrait) and a Facebook post version for a garage sale; the words exactly: 'Garage Sale', 'Saturday 9am', '14 Elm St'.</div></div>
+<div class="side"><h3>V4 <span class="mut">generate_image → generate_image → resize_image · 40 cr · asked: nothing</span></h3><figure><img src="full-D08/d2-reflow-1x1.png" data-zoom></figure><figure><img src="full-D08/d2-reflow-16x9.png" data-zoom><figcaption>reflow-16x9.png</figcaption></figure><figure><img src="full-D08/d2-reflow-9x16.png" data-zoom><figcaption>reflow-9x16.png</figcaption></figure></div>
+<div class="side"><h3>MCP <span class="mut">generate_image (qwen-image-2.1) → generate_image (qwen-image-2.1) · 20 cr · 39 s</span></h3><figure><img src="../../V2/sessions/mcp-s1-MD08/assets/01-generate_image.png" data-zoom><figcaption>01-generate_image.png</figcaption></figure><figure><img src="../../V2/sessions/mcp-s1-MD08/assets/02-generate_image.png" data-zoom><figcaption>02-generate_image.png</figcaption></figure></div></div><div class="row"><div class="head"><b>E01 · Edit existing clips together with music and a title</b><div class="mut">Edit these four clips into one video in this order: lions, penguins, giraffe, logo card; soft dissolves between them; light upbeat family music underneath; the title 'Ridgeview Zoo · This weekend' at the start.</div></div>
+<div class="side"><h3>V4 <span class="mut">join_videos · 44 cr · asked: nothing</span></h3><figure><video controls preload="metadata" src="full-E01/joined.mp4"></video></figure></div>
+<div class="side"><h3>MCP <span class="mut">no creation call · 0 cr · 22 s</span></h3><div class="said"><b>made nothing; it said:</b><br>I can help plan this, but the connected Magic Hour tools don’t support joining multiple clips, adding timeline dissolves, or mixing music beneath them. I can’t produce the finished edit here without recreating rather than preserving your footage.
+
+For a video editor such as CapCut, iMovie, or Premiere, use this edit plan:
+
+- **Sequence:** lions → penguins → giraffe → logo card.
+- **Transitions:** 0.5-second cross-dissolves between clips.
+- **Opening title:** “Ridgeview Zoo · This weekend” over the first 3 seconds, with a gentle fade in/out.
+- **Music:** light, upbeat instrumental—acoustic guitar, ukulele, or soft percussion—kept low beneath any animal sounds.
+- **Ending:** hold the logo card</div></div></div><div id="lb"><img></div><script>const lb=document.getElementById('lb'),li=lb.querySelector('img');document.querySelectorAll('img[data-zoom]').forEach(i=>i.addEventListener('click',()=>{li.src=i.src;lb.classList.add('on')}));lb.addEventListener('click',()=>lb.classList.remove('on'));document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on')});</script>
