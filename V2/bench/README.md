@@ -31,3 +31,20 @@ Three groups:
 
 Zero-credit cases (everything that ends in a question, a cost stop or a plan) run on every change. Paid cases run
 under one cap on the free tier.
+
+## Checks added 2026-11-01 (after a review of Imagination Studio's agent bench, T-050 item 3)
+
+- **honest** (every case with a plan, dry and live): every file the agent names in its words is a material, an earlier
+  turn's output, or something this plan makes. Live, after a run: the closing messages name every node that was made,
+  and name no file that is not on disk. The live runner now keeps the closing messages on the turn (`closing`).
+- **exact** (`"exact": true`): the deliverables (nodes nothing else consumes) match the answer sheet's `size`, `length_s`
+  (±20 %) and `count` (default 1: one picture asked, four made is a fail); zero-credit code steps do not count as extra.
+- `nodes_max`, `refuse` (true: the plan refuses; the key was in cases before and was never checked), `says` (regexes
+  the agent's words must match), `asks_about` (regexes a question's text must match), `outcomes` (live: `{tool: state}`).
+- **rescore**: `node V2/bench/run.mjs --rescore <results dir>` and `node V2/bench/live.mjs --rescore <results dir>`
+  score saved transcripts again with the current checks and cases. No model call, no run. Rescoring `results/shape`
+  took it from 71/82 to 85/96: the 14 new honest checks all passed there.
+- Group `edge` (11 cases, `results/edge-1`: 69/73 at first run): the user waives choices ("your call"), two goals in
+  one message, a change of platform after the plan, 4K on the free tier, a poster missing its date, "it" with two
+  pictures attached, a minor's face and a trademark (refusals), exact count one and four.
+

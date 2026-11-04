@@ -36,6 +36,11 @@ function deliverables(rec) {
   sinks = sinks.flatMap((s) => (s.tool === "check" ? t.ran.map((x, i) => ({ ...x, produces: plan.steps[i].produces })).filter((x) => s.inputs.includes(x.produces)) : [s]));
   // a pack (several deliverables): a finished piece that also feeds another (the poster that becomes the reel) counts too
   if ((rec.item.spec.outputs || 1) > 1) { const fin = t.ran.map((x, i) => ({ ...x, produces: plan.steps[i].produces, inputs: plan.steps[i].inputs })).filter((x) => ["text-overlay", "crop", "place", "assemble"].includes(x.tool) && !sinks.some((y) => y.produces === x.produces) && !t.ran.some((y, j) => plan.steps[j].inputs.includes(x.produces) && ["text-overlay", "crop", "place"].includes(y.tool) && y.tool !== "crop")); sinks = [...sinks, ...fin]; }
+  // still short of the pictures asked for: the made pictures that fed another step (the white-background shot the lifestyle
+  // edit was made from, G38a) count, then the earlier turns' finished pieces (the first robot of C16c, made in turn 1)
+  const want = rec.item.spec.outputs || 1;
+  if (sinks.length < want) { const extra = t.ran.map((x, i) => ({ ...x, produces: plan.steps[i].produces, inputs: plan.steps[i].inputs })).filter((x) => x.output && ["image", "image-edit", "filter", "background-remove", "head-swap", "face-swap-photo", "upscale-image"].includes(x.tool) && !sinks.some((y) => y.produces === x.produces)); sinks = [...sinks, ...extra.slice(0, want - sinks.length)]; }
+  if (sinks.length < want) for (const pt of [...rec.turns].reverse()) { if (pt === t || !pt.ran || sinks.length >= want) continue; const pc = new Set(pt.plan.steps.flatMap((x) => x.inputs)); sinks = [...sinks, ...pt.ran.map((x, i) => ({ ...x, produces: pt.plan.steps[i].produces, inputs: pt.plan.steps[i].inputs })).filter((x) => x.output && !pc.has(x.produces)).slice(0, want - sinks.length)]; }
   const sess = join(V2, rec.sessionDir);
   return { turn: t, files: sinks.map((s) => ({ ...s, path: s.output && !s.output.startsWith("../../") ? join(sess, s.output) : s.output ? join(sess, s.output) : null })) };
 }
@@ -49,7 +54,7 @@ async function grade(rec) {
   if (it.expect.asks === "required") add(conv, `asks first (${it.expect.asks_about})`, askedFirst, T0.firstQuestions, "didnt-ask");
   if (it.expect.asks === "never") add(conv, "asks nothing", !askedFirst, T0.firstQuestions, "asked-unneeded");
   for (const t of rec.turns) if (t.stillAsking && it.spec.kind !== "none") add(conv, "stops asking within 3 rounds", false, t.stillAsking, "kept-asking");   // when nothing should be made (waiting for a yes), still asking is the outcome
-  const made = rec.turns.some((t) => (t.ran || []).some((s) => s.state === "done" && !s.simulated));
+  const made = rec.turns.some((t) => (t.ran || []).some((s) => ["done", "flagged"].includes(s.state) && !s.simulated));
   if (it.expect.refuse) add(conv, "refuses", !made && rec.turns.every((t) => !t.ran), rec.turns.map((t) => t.plan?.refuse || t.agent), "not-refused");
   else if (rec.turns.some((t) => t.plan?.refuse)) add(conv, "does not refuse", false, rec.turns.map((t) => t.plan?.refuse), "refused-wrongly");
   if (it.expect.beyond_free === "yes") add(conv, "says it is beyond the free tier", rec.turns.some((t) => t.plan?.tier_move || /free (tier|plan)|paid|upgrade/i.test(t.agent || "")), rec.turns.map((t) => t.plan?.tier_move), "beyond-free-unsaid");
@@ -82,9 +87,16 @@ async function grade(rec) {
       const pics = [], legend = [];
       const atts = [...new Set(rec.turns.flatMap((t) => t.materials))].map((m) => join(V2, "bench/v1/fixtures", m));
       for (const a of atts.slice(0, 3)) { if (IMG.test(a)) { pics.push(a); legend.push(`image ${pics.length}: the user's attachment ${a.split("/").pop()}`); } else if (VID.test(a)) { const f = framesOf(a, `${it.id}-in`, 1)[0]; pics.push(f.file); legend.push(`image ${pics.length}: a frame of the user's attached clip ${a.split("/").pop()}`); } }
-      for (const f of media.images.slice(0, 5)) { pics.push(f.path); legend.push(`image ${pics.length}: OUTPUT from ${f.tool} (${f.produces})`); }
+      // a transparent picture is shown on a light and a dark ground side by side (flattened, it read as a tan box)
+      const onGrounds = (f) => { const pf = execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", f]).toString().trim(); if (!/a/.test(pf) || !/rgba|ya|gbrap|pal/.test(pf)) return null;
+        const al = execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-i", f, "-vf", "alphaextract,scale=64:64", "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "gray", "-"]); if (![...al].some((x) => x < 250)) return null;   // an alpha channel that is all opaque is not transparent
+        const o = f.replace(/\.png$/i, "-grounds.jpg"); execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", f, "-filter_complex", "[0]split[a][b];color=c=white:s=16x16[w];color=c=0x202020:s=16x16[k];[w][a]scale2ref[w2][a2];[k][b]scale2ref[k2][b2];[w2][a2]overlay=format=auto[l];[k2][b2]overlay=format=auto[r];[l][r]hstack", "-frames:v", "1", o]); return o; };
+      for (const f of media.images.slice(0, 5)) { const g = (() => { try { return onGrounds(f.path); } catch { return null; } })(); pics.push(g || f.path); legend.push(`image ${pics.length}: OUTPUT from ${f.tool} (${f.produces})${g ? ", a TRANSPARENT picture shown twice side by side, on white (left) and on near-black (right); the grounds are not part of it" : ""}`); }
       for (const [k, v] of media.videos.slice(0, 2).entries()) for (const fr of framesOf(v.path, `${it.id}-o${k}`, 4)) { pics.push(fr.file); legend.push(`image ${pics.length}: OUTPUT clip ${v.produces}, frame at ${fr.at} s of ${Math.round(duration(v.path) * 10) / 10} s`); }
-      const sound = []; for (const f of [...media.audio, ...media.videos.filter((v) => hasAudio(v.path))].slice(0, 2)) { const tr = await transcribe(f.path).catch(() => null); sound.push(`${f.produces}: ${Math.round(duration(f.path))} s, peak ${peakDb(f.path)} dB, speech heard: ${tr ? `"${tr.slice(0, 400)}"` : "none"}`); }
+      const sound = []; for (const f of [...media.audio, ...media.videos.filter((v) => hasAudio(v.path))].slice(0, 2)) { // the transcriber invents words on silence and on music ("C'est la vie" on a silent reel, "うんうん" on a beat): a track
+        // that is nearly silent is reported silent, and a transcript of fewer than four words is not counted as speech
+        const pk = peakDb(f.path), tr = (pk ?? -99) < -45 ? null : await transcribe(f.path).catch(() => null), words = (tr || "").trim().split(/\s+/).filter(Boolean).length;
+        sound.push(`${f.produces}: ${Math.round(duration(f.path))} s, peak ${pk} dB, ${(pk ?? -99) < -40 ? "silent (no audible sound)" : words < 4 ? "no clear speech (music or ambience; the transcriber's stray fragments are not speech)" : `speech heard: "${tr.slice(0, 2500)}"`}`); }
       const texts = media.text.map((f) => `${f.produces}: """${readFileSync(f.path, "utf8").slice(0, 1500)}"""`);
       const dialog = rec.turns.map((t, k) => `USER (message ${k + 1}): ${t.text}${t.materials.length ? ` [attached ${t.materials.join(", ")}]` : ""}${t.dialog.map((d) => `\nAGENT asked: ${d.agent}\nUSER answered: ${d.user}`).join("")}`).join("\n");
       judge = await jsonCall({ name: "bench-v1-judge", effort: "medium", images: pics.slice(0, 12), schema: S.obj({

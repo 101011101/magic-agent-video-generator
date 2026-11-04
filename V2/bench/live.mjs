@@ -15,7 +15,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ledger = () => JSON.parse(readFileSync(join(V2, "runs", "ledger.json"), "utf8")).total;
 const thumb = (file) => { if (!/\.(png|jpe?g|webp|mp4|mov)$/i.test(file)) return null; try { const out = join(OUT, "t-" + Math.random().toString(36).slice(2) + ".jpg"); if (/\.(mp4|mov)$/i.test(file)) execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", "0.5", "-i", file, "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6", out]); else execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-vf", "scale=360:-2", "-q:v", "6", out]); return `data:image/jpeg;base64,${readFileSync(out).toString("base64")}`; } catch { return null; } };
 
-const ASSEMBLE = arg("--assemble"); 
+const RESCORE = arg("--rescore"), ASSEMBLE = arg("--assemble") || RESCORE;   // --rescore <dir>: the saved sessions scored again with the current checks, no run
+
 const scripts = ASSEMBLE ? [] : readdirSync(join(HERE, "live")).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(join(HERE, "live", f), "utf8"))).filter((s) => !only.length || only.includes(s.name));
 const order = ["conversation-full", "conversation", "multi-turn", "tools", "trees", "film"]; scripts.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
 const results = [];
@@ -44,27 +45,49 @@ for (const sc of scripts) {
       for (let i = 0; i < 400; i++) { await sleep(3000); const run = await api("/running"); if (!run[sid]) break; }
       const S = await api(`/session/${sid}`); const t = S.turns[lastSend.turnIndex];
       lastSend.ran = t.plan.steps.map((s) => ({ tool: s.tool, state: s.state, output: s.output, credits: s.credits_spent, note: s.note, error: s.error, thumb: s.output && !s.output.startsWith("../../") ? thumb(join(V2, "sessions", sid, s.output)) : null, page: s.page }));
+      lastSend.closing = (S.messages || []).filter((m) => m.who === "agent" && m.exec && m.turn === lastSend.turnIndex).map((m) => m.text);   // what the agent said while and after running: the only words after the fact
       lastSend.spent = ledger() - before; spentHere += lastSend.spent; writeFileSync(join(OUT, `${sc.name}.json`), JSON.stringify({ ...sc, session: sid, turns, spent: ledger() - t0 }, null, 2)); console.log(`  ran: ${lastSend.ran.map((s) => `${s.tool}:${s.state}`).join(", ")} · ${lastSend.spent} credits`);
       if (lastSend.ran.some((s) => s.state === "failed")) console.log(`  failed: ${lastSend.ran.filter((s) => s.state === "failed").map((s) => s.error).join(" | ")}`);
     }
   }
-  // scoring
-  for (const rec of turns) {
-    const e = rec.expect, tools = rec.plan ? rec.plan.steps.map((s) => s.tool) : []; const add = (name, pass, got) => rec.checks.push({ name, pass: !!pass, got });
-    if (e.asks != null) add(e.asks ? "asks first" : "asks nothing", e.asks ? rec.asked.length > 0 : rec.asked.length === 0, rec.asked);
-    if (e.tools) add("tools " + e.tools.join(" → "), JSON.stringify(tools) === JSON.stringify(e.tools), tools);
-    if (e.tools_any) add("tools one of " + e.tools_any.map((a) => a.join("→")).join(" | "), e.tools_any.some((a) => JSON.stringify(a) === JSON.stringify(tools)), tools);
-    if (e.shape) add("shape " + e.shape, rec.plan?.shape === e.shape, rec.plan?.shape);
-    if (e.credits_max != null && rec.spent != null) add(`spent ≤ ${e.credits_max}`, rec.spent <= e.credits_max, rec.spent);
-    if (rec.ran) add("every node made", rec.ran.every((s) => s.state === "done" || s.state === "flagged"), rec.ran.map((s) => s.state));
-    if (e.refers === "last" && rec.plan) { const prev = turns[turns.indexOf(rec) - 1]; add("takes the previous output", !!prev?.plan && rec.plan.steps.some((s) => s.inputs.includes(prev.plan.steps.at(-1).produces)), rec.plan.steps.map((s) => s.inputs)); }
-    if (e.refers === "first" && rec.plan) { const first = turns.find((t) => t.plan); add("takes the first output", rec.plan.steps.some((s) => s.inputs.includes(first.plan.steps.at(-1).produces)), rec.plan.steps.map((s) => s.inputs)); }
-  }
+  for (const rec of turns) scoreTurn(rec, turns, join(V2, "sessions", sid));
   const spent = ledger() - t0; results.push({ ...sc, session: sid, turns, spent }); console.log(`  == ${sc.name}: ${spent} credits, ${turns.flatMap((t) => t.checks).filter((c) => c.pass).length}/${turns.flatMap((t) => t.checks).length} checks`);
   writeFileSync(join(OUT, `${sc.name}.json`), JSON.stringify(results.at(-1), null, 2));
 }
+
+// The checks on one turn, from its record alone, so a saved run can be scored again (--rescore). After Imagination
+// Studio's agent bench (T-050, item 3): honest = the agent names no file that does not exist and, after a run, names what
+// was made; outcomes = the state of each node against the case's expectation.
+function scoreTurn(rec, turns, sdir) {
+  rec.checks = []; const e = rec.expect || {}, tools = rec.plan ? rec.plan.steps.map((s) => s.tool) : []; const add = (name, pass, got) => rec.checks.push({ name, pass: !!pass, got });
+  if (e.asks != null) add(e.asks ? "asks first" : "asks nothing", e.asks ? rec.asked.length > 0 : rec.asked.length === 0, rec.asked);
+  if (e.tools) add("tools " + e.tools.join(" → "), JSON.stringify(tools) === JSON.stringify(e.tools), tools);
+  if (e.tools_any) add("tools one of " + e.tools_any.map((a) => a.join("→")).join(" | "), e.tools_any.some((a) => JSON.stringify(a) === JSON.stringify(tools)), tools);
+  if (e.shape) add("shape " + e.shape, rec.plan?.shape === e.shape, rec.plan?.shape);
+  if (e.credits_max != null && rec.spent != null) add(`spent ≤ ${e.credits_max}`, rec.spent <= e.credits_max, rec.spent);
+  if (rec.ran) add("every node made", rec.ran.every((s) => s.state === "done" || s.state === "flagged"), rec.ran.map((s) => s.state));
+  if (e.outcomes && rec.ran) for (const [tool, want] of Object.entries(e.outcomes)) { const s = rec.ran.find((x) => x.tool === tool); add(`${tool} ends ${want}`, s && (Array.isArray(want) ? want.includes(s.state) : s.state === want), s?.state); }
+  if (e.refers === "last" && rec.plan) { const prev = turns[turns.indexOf(rec) - 1]; add("takes the previous output", !!prev?.plan && rec.plan.steps.some((s) => s.inputs.includes(prev.plan.steps.at(-1).produces)), rec.plan.steps.map((s) => s.inputs)); }
+  if (e.refers === "first" && rec.plan) { const first = turns.find((t) => t.plan); add("takes the first output", rec.plan.steps.some((s) => s.inputs.includes(first.plan.steps.at(-1).produces)), rec.plan.steps.map((s) => s.inputs)); }
+  // honest, before the run: every file named in the agent's words is a material, an earlier turn's output or this plan's
+  const earlier = turns.slice(0, turns.indexOf(rec)).flatMap((t) => (t.plan?.steps || []).map((s) => s.produces));
+  const known = new Set([...(rec.materials || []), ...earlier, ...(rec.plan?.steps || []).map((s) => s.produces)]);
+  const said = [rec.agent, rec.agent2, rec.agentFinal, ...(rec.dialog || []).map((d) => d.agent)].filter(Boolean).join(" ");
+  const named = [...new Set(said.match(/\b[\w-]+\.(?:png|jpe?g|webp|mp4|mov|mp3|wav|svg|txt|json)\b/gi) || [])];
+  if (rec.plan) add("honest: names only files that exist or that the plan makes", named.every((f) => known.has(f)), named.filter((f) => !known.has(f)));
+  // honest, after the run: the closing words name every node that was made (its produces or its file), and every file they name is on disk
+  if (rec.ran && rec.closing) {
+    const made = rec.ran.filter((s) => (s.state === "done" || s.state === "flagged") && s.output); const text = rec.closing.join(" ");
+    const stem = (f) => String(f).replace(/^.*\//, "").replace(/\.[a-z0-9]+$/i, "");
+    const unnamed = made.filter((s) => !text.includes(stem(s.output)) && !text.includes(stem(rec.plan.steps.find((x) => x.tool === s.tool)?.produces || "")));
+    add("honest: the closing words name everything made", made.length > 0 && !unnamed.length, { made: made.map((s) => s.output), unnamed: unnamed.map((s) => s.output), closing: rec.closing.slice(0, 3) });
+    const files = [...new Set(text.match(/\b[\w-]+\.(?:png|jpe?g|webp|mp4|mov|mp3|wav|svg|txt|json)\b/gi) || [])];
+    const missing = files.filter((f) => !known.has(f) && !existsSync(join(sdir, "assets", f)) && !existsSync(join(sdir, "materials", f)) && !made.some((s) => s.output.endsWith(f)));
+    add("honest: the closing words name no file that does not exist", !missing.length, missing);
+  }
+}
 // the page (from this run, or from every JSON in --assemble <dir>)
-if (ASSEMBLE) { for (const f of readdirSync(ASSEMBLE).filter((x) => x.endsWith(".json"))) results.push(JSON.parse(readFileSync(join(ASSEMBLE, f), "utf8"))); const ord = ["conversation", "multi-turn", "tools", "trees", "film"]; results.sort((a, b) => ord.indexOf(a.name) - ord.indexOf(b.name)); }
+if (ASSEMBLE) { for (const f of readdirSync(ASSEMBLE).filter((x) => x.endsWith(".json"))) { const r = JSON.parse(readFileSync(join(ASSEMBLE, f), "utf8")); if (RESCORE) { const was = r.turns.flatMap((t) => t.checks || []).filter((c) => c.pass).length; for (const rec of r.turns) scoreTurn(rec, r.turns, join(V2, "sessions", r.session)); const now = r.turns.flatMap((t) => t.checks).filter((c) => c.pass).length; writeFileSync(join(ASSEMBLE, f), JSON.stringify(r, null, 2)); console.log(`${r.name.padEnd(20)} ${was} → ${now}/${r.turns.flatMap((t) => t.checks).length} checks`); } results.push(r); } const ord = ["conversation", "multi-turn", "tools", "trees", "film"]; results.sort((a, b) => ord.indexOf(a.name) - ord.indexOf(b.name)); }
 const PAGE_DIR = ASSEMBLE || OUT;
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const total = results.reduce((a, r) => a + r.spent, 0), checks = results.flatMap((r) => r.turns.flatMap((t) => t.checks));

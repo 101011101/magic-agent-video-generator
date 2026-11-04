@@ -4,7 +4,7 @@
 // No retries, except once for a step that produced nothing at all. A plan with the film chain is recorded, not run.
 // Everything is kept for audit: the dialog, the agent's sheet, the full plan with prompts and models, each step's
 // state, output, credits and error, and the time it took. Grading is separate (grade.mjs).
-// Usage: node V2/bench/v1/run.mjs [--simulate] [--only A01a,B07c] [--groups A,B] [--concurrency 4] [--out dir] [--server url]
+// Usage: node V2/bench/v1/run.mjs [--prefix b2] [--simulate] [--only A01a,B07c] [--groups A,B] [--concurrency 4] [--out dir] [--server url]
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,7 +26,7 @@ const items = readdirSync(join(HERE, "items")).filter((f) => f.endsWith(".json")
 console.log(`${items.length} items · ${SIM ? "simulated" : "REAL, free tier"} · ${N} at a time · ${relative(V2, OUT)}`);
 
 async function runItem(it) {
-  const sid = `b1-${it.id}`, t0 = Date.now(), c0 = spentBy(sid);
+  const sid = `${arg("--prefix", "b1")}-${it.id}`, t0 = Date.now(), c0 = spentBy(sid);   // --prefix b2: a rerun keeps the first run's sessions
   await api("/session/reset", { session: sid, mode: it.mode || "ask" });
   const all = [...new Set(it.turns.flatMap((t) => t.materials || []))];
   for (const m of all) { const r = await api("/import", { session: sid, from: `bench/v1/fixtures/${m}`, name: m }); if (r.error) throw new Error(`fixture ${m}: ${r.error}`); }
@@ -44,8 +44,8 @@ async function runItem(it) {
     }
     if (r.turn?.questions) T.stillAsking = r.turn.questions.map((q) => q.question);
     T.turnIndex = r.turnIndex; T.sheet = r.turn?.sheet || null;
-    const plan = r.turn?.plan; T.plan = plan ? { shape: plan.shape, say: plan.say, refuse: plan.refuse || "", tier_move: plan.tier_move || null, estimate: plan.estimate_credits, guarantees: plan.guarantees || null, cannot: plan.cannot || null,
-      steps: plan.steps.map((s) => ({ tool: s.tool, model: s.model || null, resolution: s.resolution || null, inputs: s.inputs, produces: s.produces, params: s.params, credits: s.credits, why: s.why || null })) } : null;
+    const plan = r.turn?.plan; T.plan = plan ? { preflight: plan.preflight || null, shape: plan.shape, say: plan.say, refuse: plan.refuse || "", tier_move: plan.tier_move || null, estimate: plan.estimate_credits, guarantees: plan.guarantees || null, cannot: plan.cannot || null,
+      steps: plan.steps.map((s) => ({ tool: s.tool, model: s.model || null, resolution: s.resolution || null, inputs: s.inputs, produces: s.produces, params: s.params, credits: s.credits, why: s.why || null, predicted: s.predicted || null, preflight: s.preflight || null })) } : null;
     if (plan && plan.steps.length && !plan.refuse) {
       if (plan.steps.some((s) => FILM.includes(s.tool))) T.notRun = "the plan uses the film chain; film is run one at a time, not in this pass";
       else {
@@ -56,7 +56,8 @@ async function runItem(it) {
         // one retry, only for steps that produced nothing (failed with no output) and not for a spend-cap stop
         const empty = steps.map((s, i) => (s.state === "failed" && !s.output && !/credit cap/.test(s.error || "") ? i : -1)).filter((i) => i >= 0);
         if (empty.length && !SIM) { T.retried = empty.map((i) => ({ tool: steps[i].tool, error: steps[i].error })); await go(null); S = await api(`/session/${sid}`); steps = S.turns[r.turnIndex].plan.steps; }
-        T.ran = steps.map((s) => ({ tool: s.tool, state: s.state, output: s.output || null, credits: s.credits_spent ?? null, cached: !!s.cached, simulated: !!s.simulated, note: s.note || null, error: s.error || null, seconds: s.started_at && s.ran_at ? Math.round((s.ran_at - s.started_at) / 1000) : null }));
+        T.ran = steps.map((s) => ({ tool: s.tool, state: s.state, output: s.output || null, credits: s.credits_spent ?? null, cached: !!s.cached, simulated: !!s.simulated, note: s.note || null, facts: s.facts || null, error: s.error || null, seconds: s.started_at && s.ran_at ? Math.round((s.ran_at - s.started_at) / 1000) : null }));
+        T.goal_check = S.turns[r.turnIndex].plan.goal_check || null;
         T.spent = spentBy(sid) - c1; T.seconds = Math.round((Date.now() - s1) / 1000);
       }
     }
