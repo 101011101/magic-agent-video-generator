@@ -1,0 +1,253 @@
+{
+  "id": "E26b",
+  "item": {
+    "id": "E26b",
+    "case": 26,
+    "case_name": "Trim to the best part",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "either",
+      "asks_about": "What the user considers boring, or whether to prioritize action versus cockpit dialogue.",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Cut Out the Boring Parts",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 8,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "jet-30s.mp4"
+        ],
+        "text": "Cut the boring parts out of this. Just a quick 8-second version."
+      }
+    ],
+    "tests": "Tests sensible editing under a vague interest criterion, producing a short source-faithful highlight without requiring user-supplied timestamps.",
+    "answer_sheet": {
+      "Which parts are boring, and what should be kept?": "your call",
+      "Prioritize jet action or cockpit dialogue?": "your call",
+      "Length": "8 seconds.",
+      "Continuous excerpt or several cuts?": "your call",
+      "Sound": "Keep the original sound with the footage you use.",
+      "Framing, captions, and effects": "Keep the original framing. No captions or extra effects."
+    },
+    "must_haves": [
+      "One playable video lasts 8 seconds, within one frame of tolerance.",
+      "All footage comes from jet-30s.mp4, without generated replacement scenes or speed changes.",
+      "The edit favors visible action or meaningful cockpit interaction over inactive lead-ins, pauses, or repetitive footage.",
+      "Any cuts preserve understandable action and do not leave an included spoken line conspicuously chopped mid-word.",
+      "Original audio accompanies the retained footage in sync, with no added narration, music, or text."
+    ]
+  },
+  "session": "b15-E26b",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Cut the boring parts out of this. Just a quick 8-second version.",
+      "materials": [
+        "jet-30s.mp4"
+      ],
+      "dialog": [],
+      "agent": "I’ll identify the most engaging moments and cut them into a quick 8-second version, keeping the original framing and sound.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "jet-30s.mp4",
+            "field": "asset",
+            "quote": "[attached: jet-30s.mp4]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "[attached: jet-30s.mp4]",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Remove the boring parts and cut it to 8 seconds.",
+            "field": "change",
+            "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "time",
+            "field": "change_kind",
+            "quote": "Cut the boring parts out of this.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+            "source": "inferred",
+            "confidence": 0.98
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+            "source": "inferred",
+            "confidence": 0.95
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+          "source": "stated",
+          "why": "The user requests trimming an existing attached video.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "preflight": {
+          "goal": {
+            "kind": null,
+            "aspect": null,
+            "seconds": null,
+            "alpha": null,
+            "sound": null
+          },
+          "steps": [],
+          "end": [],
+          "ok": true
+        },
+        "shape": "tree",
+        "say": "I’ll identify the most engaging moments and cut them into a quick 8-second version, keeping the original framing and sound.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 0,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "check",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "jet-30s.mp4"
+            ],
+            "produces": "highlight-timings.json",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Which timestamped intervals contain the most engaging visible action to retain, in original order, for a total of exactly 8 seconds while excluding static or uneventful stretches?"
+            },
+            "credits": 0,
+            "why": "The material description does not identify the action timings needed to choose what to keep.",
+            "predicted": {
+              "kind": "verdict"
+            },
+            "preflight": []
+          },
+          {
+            "tool": "assemble",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "jet-30s.mp4",
+              "highlight-timings.json"
+            ],
+            "produces": "jet-8s.mp4",
+            "params": {
+              "extra": "Use the source intervals identified in highlight-timings.json in chronological order; hard cuts; retain original sound synchronized to each interval; preserve framing.",
+              "seconds": 8,
+              "aspect": "16:9",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Join the selected source intervals into exactly 8 seconds, removing uneventful stretches and keeping the original picture and sound unchanged within each retained interval."
+            },
+            "credits": 0,
+            "why": "Use the identified highlights to make the requested short cut without regenerating or reframing the footage.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "16:9",
+              "seconds": 8,
+              "sound": "present"
+            },
+            "preflight": []
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "check",
+          "state": "flagged",
+          "output": "assets/tree-1/highlight-timings.json",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "flag: The explosion is the clearest action to retain, but exact intervals totaling 8 seconds cannot be determined from untimestamped still images.",
+          "facts": null,
+          "error": null,
+          "seconds": 8
+        },
+        {
+          "tool": "assemble",
+          "state": "done",
+          "output": "assets/tree-1/jet-8s.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "1 piece(s), 8 s, 16:9",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 1496984,
+            "w": 1280,
+            "h": 720,
+            "aspect": "16:9",
+            "seconds": 8,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 2
+        }
+      ],
+      "goal_check": [
+        "matches the request's length and size"
+      ],
+      "spent": 0,
+      "seconds": 10
+    }
+  ],
+  "started": "2026-11-02T04:12:01.711Z",
+  "spent": 0,
+  "seconds": 27,
+  "sessionDir": "sessions/b15-E26b"
+}

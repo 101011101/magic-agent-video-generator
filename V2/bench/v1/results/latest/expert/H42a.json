@@ -1,0 +1,133 @@
+{
+ "id": "H42a",
+ "root_cause": "grader",
+ "contributing": [
+  "model-limit"
+ ],
+ "grader_right": false,
+ "agent_vs_you": "The plan does almost everything the user asked. The storefront comes first, all three of the owner's photos are used, the exact opening and closing text are code overlays, there is a soft instrumental bed, and it runs 9 s vertical. The decisive 'fault', speech reading 'عالم الزلازل' in the soundtrack, is not in the file. The three minimax shots have no audio stream (code dropped it), and the reel's audio is the music alone, at the same levels. The music's spectrogram shows steady instrument partials and a regular beat with no vocal contours. The same transcriber also reported speech on the -91 dB silent tracks of D23c and H40c. The one real flaw is the motion. The agent asked minimax for \"a subtle slow push-in\" over 3 s, and the model ran the latte from cup-and-saucer to an extreme foam close-up. I would skip image-to-video here. assemble already gives every still a slow 8% push-in by code: gentle movement for 0 credits that keeps the owner's photos exactly, with no model sound to strip. The catalogue does not mention this, so the agent could not know.",
+ "your_plan": {
+  "say": "I'll make a cosy 9-second vertical reel from your three photos, storefront first, each with a gentle slow push-in, soft upbeat music and your opening and closing text.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-storefront.jpg"
+    ],
+    "produces": "storefront-vertical.png",
+    "params": {
+     "prompt_or_change": "Vertical crop keeping the entrance, the striped awning and the outdoor tables.",
+     "extra": "anchor: center",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Reframe for 9:16 by code."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-latte.jpg"
+    ],
+    "produces": "latte-vertical.png",
+    "params": {
+     "prompt_or_change": "Vertical crop keeping the whole cup and the leaf on the foam.",
+     "extra": "anchor: center",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Reframe for 9:16 by code."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "cafe-pastries.jpg"
+    ],
+    "produces": "pastries-vertical.png",
+    "params": {
+     "prompt_or_change": "Vertical crop keeping the pastry counter.",
+     "extra": "anchor: center",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Reframe for 9:16 by code."
+   },
+   {
+    "tool": "music",
+    "inputs": [],
+    "produces": "cafe-music.mp3",
+    "params": {
+     "prompt_or_change": "Soft, upbeat, cosy café instrumental: gentle acoustic guitar, light piano and brushed drums, a warm morning feel; no vocals, no speech.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The bed. 15 s is the minimum; assemble trims it to 9 s with a fade."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "storefront-vertical.png",
+     "latte-vertical.png",
+     "pastries-vertical.png",
+     "cafe-music.mp3"
+    ],
+    "produces": "cafe-reel-base.mp4",
+    "params": {
+     "prompt_or_change": "Storefront, latte, pastries, 3 s each, gentle push-in on each, music under.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 9,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Code gives each still a slow 8% push-in: gentle, exact and silent apart from the music. The minimax push-in on a 3 s clip overshot to an extreme close-up."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "cafe-reel-base.mp4"
+    ],
+    "produces": "cafe-reel-opening.mp4",
+    "params": {
+     "prompt_or_change": "\"Maple Street Café\"",
+     "extra": "at: top; from: 0; to: 3",
+     "aspect": "9:16",
+     "seconds": 9,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The exact opening text over the storefront."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "cafe-reel-opening.mp4"
+    ],
+    "produces": "maple-street-cafe-reel.mp4",
+    "params": {
+     "prompt_or_change": "\"Your morning starts here\"",
+     "extra": "at: middle; from: 6; to: 9",
+     "aspect": "9:16",
+     "seconds": 9,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The exact closing text over the pastries."
+   }
+  ]
+ },
+ "fix": "Grader: never pass a transcript of a music-only or silent track to the judge as 'speech heard'. First gate it on a speech-presence test (whisper-1 verbose_json no_speech_prob, or a VAD) and on the peak level, and label low-confidence output as a likely transcriber hallucination. Catalogue: add to assemble's line that \"pictures get a slow push-in (gentle movement, 0 credits)\", so 'gentle movement' of photos does not send the planner to image-to-video. The grader fix matters for every item with a music bed or silent audio.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "The three shots (480x858, 3.04 s) have no audio stream. maple-street-cafe-reel.mp4's audio has a mean of -17.3 dB against -17.1 dB for cafe-music.mp3, so the only sound is the music. The music's spectrogram shows flat instrument harmonics and percussive hits every ~0.6 s, with no gliding or vibrato contours. Grader frames: storefront with the striped awning, tables and an exact caption; latte at 3.4 s vs 5.6 s pushes from cup-and-saucer to a foam close-up (real but minor); pastries with the exact closing line."
+}

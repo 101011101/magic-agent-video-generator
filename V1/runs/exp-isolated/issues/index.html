@@ -1,0 +1,200 @@
+<title>Keyframe Pipeline Issues</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single scannable register; open issues first as rows with before/after evidence, then a compact fixed list. */
+:root {
+  --bg: #f6f7f5; --panel: #ffffff; --fg: #1d2420; --mut: #5f6a64; --line: #dde2de;
+  --cause: #9a5b00; --cause-bg: #fdf1dc; --works: #1f6f43; --works-bg: #e2f3e8; --bad: #a3281f; --bad-bg: #fbe5e2;
+  --done: #4f5a55; --done-bg: #e9ecea; --accent: #1f5f6b;
+  --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121614; --panel: #1a1f1c; --fg: #e6ebe8; --mut: #98a39d; --line: #2c3430;
+  --cause: #f0b45c; --cause-bg: #3a2c14; --works: #6fd09a; --works-bg: #173323; --bad: #ff8f85; --bad-bg: #3b1d1a;
+  --done: #b3bdb8; --done-bg: #262c29; --accent: #7cc3cf; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121614; --panel: #1a1f1c; --fg: #e6ebe8; --mut: #98a39d; --line: #2c3430;
+  --cause: #f0b45c; --cause-bg: #3a2c14; --works: #6fd09a; --works-bg: #173323; --bad: #ff8f85; --bad-bg: #3b1d1a;
+  --done: #b3bdb8; --done-bg: #262c29; --accent: #7cc3cf; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--sans); }
+main { max-width: 1040px; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1 { font-size: 26px; margin: 0; text-wrap: balance; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--mut); margin: 0; font-weight: 600; }
+.lede { color: var(--mut); margin: 6px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--mut); }
+.issues { display: grid; gap: 12px; }
+.issue { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+.issue .text { display: grid; gap: 10px; min-width: 0; }
+.head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.id { font: 600 13px var(--mono); color: var(--accent); }
+.chip { font: 600 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+.chip.cause { color: var(--cause); background: var(--cause-bg); }
+.chip.works { color: var(--works); background: var(--works-bg); }
+.chip.bad { color: var(--bad); background: var(--bad-bg); }
+.chip.done { color: var(--done); background: var(--done-bg); }
+.pair { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 10px; margin: 0; }
+.pair dt { font: 600 12px var(--mono); color: var(--mut); text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.pair dd { margin: 0; }
+.ev { font-size: 13px; color: var(--mut); }
+.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.shots figure { margin: 0; display: grid; gap: 4px; }
+.shots img { width: 100%; max-width: 100%; border-radius: 6px; border: 1px solid var(--line); background: var(--done-bg); }
+.shots figcaption { font: 12px var(--mono); color: var(--mut); }
+.shots figcaption b.x { color: var(--bad); } .shots figcaption b.ok { color: var(--works); }
+.fixed { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 12px var(--mono); color: var(--mut); text-transform: uppercase; letter-spacing: .06em; }
+td.id { white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+@media (max-width: 720px) { .issue { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<main>
+  <header>
+    <h1>Keyframe pipeline issues</h1>
+    <p class="lede">Red Riding Hood runs rrh1–rrh3 and the isolated tests (T1–T8). Open issues first.</p>
+  </header>
+
+  <div class="legend">
+    <span><span class="chip cause">cause found</span> fix not built yet</span>
+    <span><span class="chip works">fix works</span> tested</span>
+    <span><span class="chip bad">unreliable</span> check needs redesign</span>
+    <span><span class="chip done">open</span> not tested</span>
+  </div>
+
+  <section class="issues" aria-label="Open issues">
+    <h2>Open</h2>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P17</span><span class="chip cause">cause found</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Character drawn twice.</dd><dt>Fix</dt><dd>Attach a sheet only when a character enters. After that, the frame is their reference.</dd></dl>
+        <p class="ev">T5: without the sheet, 4/4 had exactly one Red.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p17-before.jpg" alt="Slide 12 with two Reds"><figcaption><b class="x">before</b> · sheet attached</figcaption></figure>
+        <figure><img src="p17-after.jpg" alt="Slide 12 with one Red at the table"><figcaption><b class="ok">after</b> · no sheet</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P14</span><span class="chip cause">cause found</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Whole picture re-painted.</dd><dt>Fix</dt><dd>Same fix as P17. No sheets for characters already in the frame.</dd></dl>
+        <p class="ev">T3: all 6 of 44 re-paints had sheets of characters already in the frame. T5: 4/4 kept the framing without them.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p14-before.jpg" alt="Slide 15 re-painted as a different room"><figcaption><b class="x">before</b> · new room</figcaption></figure>
+        <figure><img src="p14-after.jpg" alt="Slide 15 redone in the same room"><figcaption><b class="ok">after</b> · same room</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P6</span><span class="chip cause">cause found</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Good plates rejected.</dd><dt>Fix</dt><dd>Check one essential fact per spot. Keep the details for painting only.</dd></dl>
+        <p class="ev">T1: the two correct cottage plates pass; the one with the misplaced shelf fails.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p6-before.jpg" alt="Cottage plate, try 2"><figcaption><b class="x">rejected</b> · "bed foot needs floor beyond"</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P8</span><span class="chip cause">cause found</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Door swings into the fireplace.</dd><dt>Fix</dt><dd>Ask "can the door open?" on its own, and reject on no.</dd></dl>
+        <p class="ev">T8: our chosen plate fails it; try 1 passes.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p8-before.jpg" alt="Cottage plate try 3, door toward hearth"><figcaption><b class="x">chosen</b> · blocked door</figcaption></figure>
+        <figure><img src="p8-after.jpg" alt="Cottage plate try 1, door clear"><figcaption><b class="ok">try 1</b> · door clear</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P11</span><span class="chip cause">cause found</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Style palette tints the subject.</dd><dt>Fix</dt><dd>Sheets get the medium only (no palette or light). Animals get their natural stance.</dd></dl>
+        <p class="ev">T2: "use own colours" still tinted. Medium only came out clean, but still upright.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p11-before.jpg" alt="Wolf with red and olive patches"><figcaption><b class="x">before</b> · full style</figcaption></figure>
+        <figure><img src="p11-after.jpg" alt="Clean charcoal-grey wolf"><figcaption><b class="ok">after</b> · medium only</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P15</span><span class="chip works">fix works</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Colours drift pink.</dd><dt>Fix</dt><dd>Colour-match each frame to the place's first frame.</dd></dl>
+        <p class="ev">T6: colour shift 14/−1/8 → 0/0/0 (red/green/blue). Free.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p15-before.jpg" alt="Slide 25 with pink cast"><figcaption><b class="x">before</b> · pink cast</figcaption></figure>
+        <figure><img src="p15-after.jpg" alt="Slide 25 colour-matched"><figcaption><b class="ok">after</b> · matched</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P16</span><span class="chip bad">unreliable</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Identity check misses swaps.</dd><dt>Fix</dt><dd>Compare a crop of the character, not the whole frame.</dd></dl>
+        <p class="ev">T4: judged the invented wolf "same" as his sheet.</p>
+      </div>
+      <div class="shots">
+        <figure><img src="p16-before.jpg" alt="Slide 8 with invented realistic wolf"><figcaption><b class="x">frame</b> · invented wolf</figcaption></figure>
+        <figure><img src="p16-sheet.jpg" alt="Wolf asset sheet"><figcaption>his sheet</figcaption></figure>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P20</span><span class="chip done">open</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Crowded scenes miss poses.</dd><dt>Fix</dt><dd>Retest after the P17 fix; split steps if it remains.</dd></dl>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P23</span><span class="chip done">open</span></div>
+        <dl class="pair"><dt>Error</dt><dd>Clips pass through furniture; cuts invent things.</dd><dt>Fix</dt><dd>Waypoint frames; check frames from the middle of each clip. Next video pass.</dd></dl>
+      </div>
+    </article>
+
+    <article class="issue">
+      <div class="text">
+        <div class="head"><span class="id">P24</span><span class="chip done">deferred</span></div>
+        <dl class="pair"><dt>Error</dt><dd>No audio.</dd><dt>Fix</dt><dd>Cue sheet from the blocking; speech first.</dd></dl>
+      </div>
+    </article>
+  </section>
+
+  <section aria-label="Fixed issues" style="display:grid;gap:12px">
+    <h2>Fixed</h2>
+    <div class="fixed">
+      <table>
+        <thead><tr><th>#</th><th>Error</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td class="id">P1</td><td>Characters teleport</td><td>Exit and entry rule</td></tr>
+          <tr><td class="id">P2</td><td>Story skips events</td><td>"Cover every event" rule</td></tr>
+          <tr><td class="id">P3</td><td>Smiling while fleeing</td><td>Expression on every step</td></tr>
+          <tr><td class="id">P4</td><td>Room text ≠ room picture</td><td>Seed: the plate wins</td></tr>
+          <tr><td class="id">P5</td><td>Checker skipped spots</td><td>One required answer per spot</td></tr>
+          <tr><td class="id">P7</td><td>Sparse plates</td><td>Paint from full description</td></tr>
+          <tr><td class="id">P9</td><td>Sheets were scenes</td><td>Checked asset bank</td></tr>
+          <tr><td class="id">P10</td><td>Sheets show later states</td><td>Spec the starting look only</td></tr>
+          <tr><td class="id">P12</td><td>Checker nitpicks</td><td>Major vs minor errors</td></tr>
+          <tr><td class="id">P13</td><td>Several views on one sheet</td><td>Check across all sheets</td></tr>
+          <tr><td class="id">P18</td><td>Retry dropped references</td><td>Retries keep every sheet</td></tr>
+          <tr><td class="id">P19</td><td>Kept a re-painted frame</td><td>Re-paints rank worst</td></tr>
+          <tr><td class="id">P21</td><td>Tiny props failed frames</td><td>Check only handled props</td></tr>
+          <tr><td class="id">P22</td><td>Verifier inconsistent</td><td>Focused questions</td></tr>
+          <tr><td class="id">P25</td><td>LLM timeout</td><td>Background mode</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

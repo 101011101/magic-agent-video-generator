@@ -1,0 +1,34 @@
+{
+  "id": "G35a",
+  "best_tools": "no",
+  "explanation": "The request was understood, but place is a corner-logo tool, not a side-by-side compositor; prose instructions cannot make it resize the base and create a padded 16:9 layout. The text-overlay steps then targeted nonexistent panel padding with the same top placement, producing overlapping labels. This is a tool-fit failure, not an image-model or text-rendering failure.",
+  "better_chain": "deterministic image compositor (capability missing from this catalogue: create a 1600×900 canvas, fit both complete original photos proportionally into separate left/right panels, and reserve label padding) → text-overlay (Before in the left header region, with explicit supported coordinates and size) → text-overlay (After in the right header region, with matching size) → check (verify aspect, ordering, complete photos, and readable nonoverlapping labels)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving",
+    "prompt-or-params"
+  ],
+  "cause": "tool-fit",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "place accepts a base and a small corner overlay; it cannot perform the requested canvas expansion, equal-panel layout, or proportional fitting of both photos.",
+      "verdict": "wrong-tool",
+      "tool": "place"
+    },
+    {
+      "n": 2,
+      "issue": "The lettering tool is appropriate, but the specified top placement does not establish a left-panel label region. The assumed padding was never created, so the label covers the photo.",
+      "verdict": "bad-params",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 3,
+      "issue": "Again uses top placement without an explicit separate right-hand region, causing the second label to overlap the first. Matching styling does not resolve positioning.",
+      "verdict": "bad-params",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "A genuine deterministic still-image layout operation that creates the 16:9 padded canvas and fits both photos into separate panels; no listed tool exposes that capability. A layout check before labeling would also have caught the failed composition."
+}

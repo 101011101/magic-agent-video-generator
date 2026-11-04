@@ -1,0 +1,12 @@
+<section class="card"><h2>What happened</h2>
+<ul>
+<li class="ok">Clip 1 is every beat of its prompt: walks up, studies the mask, lifts it with both hands, the pedestal sinks, dust pours, he stows the mask and looks up alarmed. Same man, same clothes, fixed camera, 8 s.</li>
+<li class="ok">Join 1→2 is clean (SSIM 0.957): clip 2 opens on clip 1's hand-off frame and carries the dust, the torches and the man's pose. Clip 2 does its prompt: the chamber shakes, he turns and runs for the doorway, a block crashes down behind him.</li>
+<li class="ok">Join 2→3 is pixel-clean too (SSIM 0.966): clip 3 opens on the empty dusty chamber with the fallen block.</li>
+<li class="bad">Clip 3 recasts the lead. The hand-off frame from clip 2 has nobody in it: he had already run out of the doorway and the block hides the exit. Clip 3 had to invent the adventurer from its prompt alone, and it drew a different man: white, dark hair, tan shirt with no jacket, a different hat. The jade mask became a glowing green head. The run, dive, roll, hat-dusting and grin all happen, to the wrong person.</li>
+<li class="warn">Clip 3 also changes camera twice inside one call (chamber, then doorway from outside, then a jungle close-up). Seedance treats a prompt with a location change as a multi-shot scene. That is a feature when wanted and a continuity risk when not.</li>
+<li class="warn">Letterbox bars: the start frame came with thin black bars and every clip kept them. Ask the image generator for full-frame or crop before upload.</li>
+</ul>
+<p>Last-frame chaining carries everything that is visible in the hand-off frame and nothing that is not. The chain held identity for exactly as long as the character stayed in shot. Fixes to test next, in order of cost: (1) write each clip so the lead is in frame at its end (never let him exit the frame at a join); (2) pass the character as a named reference on every call, which Magic Hour supports on text-to-video but not on image-to-video, so a continuation would become text-to-video with the hand-off frame and the character sheet both as references; (3) give clip 3 an end frame so the model has a target that already contains the right man.</p>
+<p class="mut">Costs: start frame 200, clips 768 each (seedance-2.0, 480p, 96 credits per second), 2504 in all. Render time 165–252 s per clip. The first attempt's rejected clip was refunded.</p>
+</section>

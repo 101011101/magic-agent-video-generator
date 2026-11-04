@@ -1,0 +1,33 @@
+{
+  "id": "C17b",
+  "best_tools": "yes",
+  "explanation": "The tool choices were appropriate, and the agent-written line made no unsupported offer claims. However, the voice step returned only 4 seconds of audio, and the plan passed it into talking-photo as though it were 8 seconds without correcting or enforcing the final duration. The grader's uncertainty about lip-sync is not evidence that synchronization actually failed.",
+  "better_chain": "write (roughly 20 words of upbeat English sale copy without specific offer claims) → voice (friendly male English delivery; inspect actual duration) → talking-photo (animate the supplied portrait using the actual voice track, no captions) → assemble (enforce one square, exactly 8-second video while preserving speech synchronization) → gate (verify duration, audible speech, identity, lip-sync, and absence of captions)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate tool and safe, agent-written copy. The short line does not itself ensure an 8-second delivery.",
+      "verdict": "ok",
+      "tool": "write"
+    },
+    {
+      "n": 2,
+      "issue": "The voice choice was appropriate, but exact duration was treated as a prompt-controlled guarantee. The returned audio was explicitly only 4 seconds and needed correction or downstream duration handling.",
+      "verdict": "bad-params",
+      "tool": "voice"
+    },
+    {
+      "n": 3,
+      "issue": "Correct animation tool and portrait input, but the supplied audio was 4 seconds, not the claimed 'full 8-second voice track.' Requesting 8 seconds here did not resolve that mismatch.",
+      "verdict": "bad-inputs",
+      "tool": "talking-photo"
+    }
+  ],
+  "missing": "A duration-reconciliation step after the short voice result, followed by deterministic enforcement and verification of the final square video's exact 8-second length."
+}

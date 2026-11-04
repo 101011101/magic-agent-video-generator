@@ -1,0 +1,2460 @@
+{
+  "note": "Magic Hour API tool catalog for the state solver. Source of truth: official OpenAPI spec (https://docs.magichour.ai/api-reference/openapi.json, 'Magic Hour API beta'), docs.magichour.ai models/tool pages, npm magic-hour v0.82.0, PyPI magic-hour v0.86.0, hosted MCP tools/list. category rule: generative = model synthesizes new pixels/audio/text; deterministic = no new content synthesis (analysis, cutout, caption overlay, file ops). The category label is an inference, not a docs field. models holds the selectable engine variant: model enum, else version/mode enum. Every create endpoint also accepts optional 'name'. All jobs are async: create returns {id, credits_charged}; poll GET /v1/{video|image|audio}-projects/{id} until status complete, then use downloads[].url (expires 24h). Inputs are a public URL, a Magic Hour library URL, or a file_path from upload-urls. 'unverified' marks values not confirmed in official docs. failure_modes is an extra field.",
+  "accessed": "2026-10-05",
+  "tools": [
+    {
+      "name": "Image-to-Video",
+      "endpoint": "POST /v1/image-to-video",
+      "sdk_method": "JS: client.v1.imageToVideo.create() / .generate(); Python: client.v1.image_to_video.create() / .generate()",
+      "category": "generative",
+      "purpose": "Animate a still image into a video clip, optionally guided by a prompt and an end frame.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls; start image"
+        },
+        {
+          "name": "assets.end_image_file_path",
+          "type": "image",
+          "required": false,
+          "constraints": "last frame; not supported by minimax-h3, wan-2.2; veo3.1/veo3.1-lite need duration <= 8s; kling-2.6 end frame 1080p only"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "duration 1-60; allowed values per model (see limits)"
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "required": false,
+          "constraints": "see models; default 'default'"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "360p, 480p, 720p, 1080p, 4k; per-model support; default 720p paid / 480p free"
+        },
+        {
+          "name": "audio",
+          "type": "boolean",
+          "required": false,
+          "constraints": "audio: boolean, default false. Not supported: gemini-omni-1.1, kling-2.6, wan-2.2. Extra credits: kling-3.0, seedance-1.5, veo3.1, veo3.1-lite. Free: ltx-2.5, minimax-h3, seedance-2.0, seedance-2.0-mini, seedance-2.5, wan-3.0."
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "motion/scene prompt"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "default",
+        "kling-3.0",
+        "ltx-2.5",
+        "seedance-2.0-mini",
+        "wan-3.0",
+        "seedance-2.5",
+        "gemini-omni-1.1",
+        "minimax-h3",
+        "wan-2.2",
+        "seedance-1.5",
+        "seedance-2.0",
+        "veo3.1-lite",
+        "sora-2",
+        "veo3.1",
+        "kling-2.6",
+        "ltx-2.3"
+      ],
+      "default_model": "default (= kling-3.0 on paid tiers, ltx-2.5 on free tier)",
+      "limits": {
+        "duration_s": {
+          "min": 1,
+          "max": 60,
+          "per_model": {
+            "gemini-omni-1.1": "integer 3-10",
+            "kling-2.6": "5, 10",
+            "kling-3.0": "integer 3-15",
+            "ltx-2.5": "integer 1-60",
+            "minimax-h3": "integer 1-30",
+            "seedance-1.5": "integer 4-12",
+            "seedance-2.0": "integer 4-15",
+            "seedance-2.0-mini": "integer 4-15",
+            "seedance-2.5": "integer 4-30",
+            "veo3.1": "4, 6, 8, 16, 24, 32, 40, 48, 56",
+            "veo3.1-lite": "4, 6, 8, 16, 24, 32, 40, 48, 56",
+            "wan-2.2": "3-10, 15",
+            "wan-3.0": "2-10, 15, 20, 25, 30",
+            "sora-2": "4, 8, 12, 24, 36, 48, 60 (models page only; unverified in OpenAPI)",
+            "ltx-2.3": "1-10, 15, 20, 25, 30 (models page only)"
+          }
+        },
+        "resolutions": [
+          "360p",
+          "480p",
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "resolutions_per_model": {
+          "gemini-omni-1.1": "360p, 720p, 1080p, 4k",
+          "kling-2.6": "720p, 1080p",
+          "kling-3.0": "720p, 1080p, 4k",
+          "ltx-2.5": "480p, 720p, 1080p",
+          "minimax-h3": "480p, 720p, 1080p",
+          "seedance-1.5": "480p, 720p, 1080p",
+          "seedance-2.0": "480p-4k (OpenAPI) vs 480p, 720p (models page)",
+          "seedance-2.0-mini": "480p, 720p",
+          "seedance-2.5": "480p-1080p (OpenAPI) vs 480p, 720p (models page)",
+          "veo3.1": "720p, 1080p",
+          "veo3.1-lite": "720p, 1080p",
+          "wan-2.2": "480p, 720p, 1080p",
+          "wan-3.0": "480p, 720p, 1080p",
+          "sora-2": "720p (models page)"
+        },
+        "aspect_ratios": [],
+        "aspect_ratio_note": "No aspect_ratio field; output shape follows input image (inferred).",
+        "other": "Legacy values still accepted: ltx-2, kling-2.5, kling-1.6, seedance, kling-2.5-audio, veo3.1-audio (-audio = base model + audio:true)."
+      },
+      "cost": "Credits/second of output x end_seconds. 360p/480p/720p/1080p/4k: gemini-omni-1.1 48/-/144/192/384; ltx-2.3, ltx-2.5, minimax-h3, wan-2.2 -/24/48/72/-; kling-2.6 -/-/36/72/-; kling-3.0 -/-/48/72/240 (+24 audio at 720p/1080p, +48 at 4k); veo3.1-lite -/-/48/72 (+24 audio); veo3.1 -/-/96/120 (+24 audio); seedance-1.5 -/30/60/90 (audio 2x); seedance-2.0-mini -/96/192; seedance-2.0 -/144/288; seedance-2.5 -/288/576; sora-2 720p 120. Formula: duration x output fps x resolution multiplier. Create response gives an estimate; final value on get-details. Failed jobs refunded.",
+      "maintains": [
+        {
+          "property": "first frame = input image (subject identity, composition, style at t=0)",
+          "basis": "inferred"
+        },
+        {
+          "property": "last frame = end_image_file_path when given",
+          "basis": "documented"
+        },
+        {
+          "property": "aspect ratio of input image",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "adds motion, camera movement and environmental effects over time",
+          "basis": "documented"
+        },
+        {
+          "property": "adds generated audio when audio=true",
+          "basis": "documented"
+        },
+        {
+          "property": "subject identity can drift in later frames",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "Paid default (kling-3.0) does not support 480p.",
+        "Unsupported duration/resolution combination per model is rejected (inferred).",
+        "Free resolution limited; higher resolutions need paid plan."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/image-to-video"
+    },
+    {
+      "name": "Text-to-Video",
+      "endpoint": "POST /v1/text-to-video",
+      "sdk_method": "JS: client.v1.textToVideo.create() / .generate(); Python: client.v1.text_to_video.create() / .generate()",
+      "category": "generative",
+      "purpose": "Generate a video clip from a text prompt.",
+      "inputs": [
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "1-20000 chars"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "duration 1-60; allowed values per model"
+        },
+        {
+          "name": "aspect_ratio",
+          "type": "enum",
+          "required": false,
+          "constraints": "16:9, 9:16, 1:1; gemini-omni-1.1, veo3.1, veo3.1-lite: 16:9, 9:16 only"
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "required": false,
+          "constraints": "see models; default 'default'"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "360p, 480p, 720p, 1080p, 4k; per-model support; default 720p paid / 480p free"
+        },
+        {
+          "name": "audio",
+          "type": "boolean",
+          "required": false,
+          "constraints": "audio: boolean, default false. Not supported: gemini-omni-1.1, kling-2.6, wan-2.2. Extra credits: kling-3.0, seedance-1.5, veo3.1, veo3.1-lite. Free: ltx-2.5, minimax-h3, seedance-2.0, seedance-2.0-mini, seedance-2.5, wan-3.0."
+        },
+        {
+          "name": "references",
+          "type": "array of {name, file_path}",
+          "required": false,
+          "constraints": "1-10 items; fields have no description in docs (unverified: reference images for reference-to-video models)"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "default",
+        "kling-3.0",
+        "ltx-2.5",
+        "seedance-2.0-mini",
+        "wan-3.0",
+        "seedance-2.5",
+        "gemini-omni-1.1",
+        "minimax-h3",
+        "wan-2.2",
+        "seedance-1.5",
+        "seedance-2.0",
+        "veo3.1-lite",
+        "sora-2",
+        "veo3.1",
+        "kling-2.6",
+        "ltx-2.3"
+      ],
+      "default_model": "default (= kling-3.0 on paid tiers, ltx-2.5 on free tier)",
+      "limits": {
+        "duration_s": {
+          "min": 1,
+          "max": 60,
+          "per_model": {
+            "gemini-omni-1.1": "integer 3-10",
+            "kling-2.6": "5, 10",
+            "kling-3.0": "integer 3-15",
+            "ltx-2.5": "integer 1-60",
+            "minimax-h3": "integer 1-30",
+            "seedance-1.5": "integer 4-12",
+            "seedance-2.0": "integer 4-15",
+            "seedance-2.0-mini": "integer 4-15",
+            "seedance-2.5": "integer 4-30",
+            "veo3.1": "4, 6, 8, 16, 24, 32, 40, 48, 56",
+            "veo3.1-lite": "4, 6, 8, 16, 24, 32, 40, 48, 56",
+            "wan-2.2": "3-10, 15",
+            "wan-3.0": "2-10, 15, 20, 25, 30",
+            "sora-2": "4, 8, 12, 24, 36, 48, 60 (models page only; unverified in OpenAPI)",
+            "ltx-2.3": "1-10, 15, 20, 25, 30 (models page only)"
+          }
+        },
+        "resolutions": [
+          "360p",
+          "480p",
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "resolutions_per_model": {
+          "gemini-omni-1.1": "360p, 720p, 1080p, 4k",
+          "kling-2.6": "720p, 1080p",
+          "kling-3.0": "720p, 1080p, 4k",
+          "ltx-2.5": "480p, 720p, 1080p",
+          "minimax-h3": "480p, 720p, 1080p",
+          "seedance-1.5": "480p, 720p, 1080p",
+          "seedance-2.0": "480p-4k (OpenAPI) vs 480p, 720p (models page)",
+          "seedance-2.0-mini": "480p, 720p",
+          "seedance-2.5": "480p-1080p (OpenAPI) vs 480p, 720p (models page)",
+          "veo3.1": "720p, 1080p",
+          "veo3.1-lite": "720p, 1080p",
+          "wan-2.2": "480p, 720p, 1080p",
+          "wan-3.0": "480p, 720p, 1080p",
+          "sora-2": "720p (models page)"
+        },
+        "aspect_ratios": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ],
+        "other": "Legacy values still accepted: ltx-2, kling-2.5, kling-1.6, seedance, kling-2.5-audio, veo3.1-audio (-audio = base model + audio:true)."
+      },
+      "cost": "Credits/second of output x end_seconds. 360p/480p/720p/1080p/4k: gemini-omni-1.1 48/-/144/192/384; ltx-2.3, ltx-2.5, minimax-h3, wan-2.2 -/24/48/72/-; kling-2.6 -/-/36/72/-; kling-3.0 -/-/48/72/240 (+24 audio at 720p/1080p, +48 at 4k); veo3.1-lite -/-/48/72 (+24 audio); veo3.1 -/-/96/120 (+24 audio); seedance-1.5 -/30/60/90 (audio 2x); seedance-2.0-mini -/96/192; seedance-2.0 -/144/288; seedance-2.5 -/288/576; sora-2 720p 120. Formula: duration x output fps x resolution multiplier. Create response gives an estimate; final value on get-details. Failed jobs refunded.",
+      "maintains": [
+        {
+          "property": "nothing from prior state (creates new content); prompt content only",
+          "basis": "inferred"
+        },
+        {
+          "property": "identity of referenced subjects when references are passed",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "creates all visual content, motion, and optional audio",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Prompt adherence and character consistency across separate calls not guaranteed (inferred).",
+        "references field semantics undocumented."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/text-to-video"
+    },
+    {
+      "name": "AI Talking Photo",
+      "endpoint": "POST /v1/ai-talking-photo",
+      "sdk_method": "JS: client.v1.aiTalkingPhoto.create() / .generate(); Python: client.v1.ai_talking_photo.create() / .generate()",
+      "category": "generative",
+      "purpose": "Animate a portrait image so the face speaks a supplied audio track.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls; clear face, >= 512x512 recommended"
+        },
+        {
+          "name": "assets.audio_file_path",
+          "type": "audio",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 0; start of audio segment"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 0.1; segment max 300s (realistic) / 45s (prompted)"
+        },
+        {
+          "name": "style.generation_mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "realistic (default), prompted; deprecated: pro, standard, stable, expressive"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "only used in prompted mode"
+        },
+        {
+          "name": "max_resolution",
+          "type": "number",
+          "required": false,
+          "constraints": "caps larger output dimension; clamped to plan max"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "realistic",
+        "prompted"
+      ],
+      "default_model": "realistic",
+      "limits": {
+        "duration_s": {
+          "max_realistic": 300,
+          "max_prompted": 45
+        },
+        "resolutions": [
+          "plan-dependent; hard cap 720p (resolution-limits page)"
+        ],
+        "aspect_ratios": [],
+        "aspect_ratio_note": "Follows input image (inferred)."
+      },
+      "cost": "20 credits/second (prompted), 48 credits/second (realistic); duration = end_seconds - start_seconds. Estimate at create, final on completion.",
+      "maintains": [
+        {
+          "property": "face likeness (realistic mode: 'maintains likeness well')",
+          "basis": "documented"
+        },
+        {
+          "property": "prompted mode: slightly lower likeness",
+          "basis": "documented"
+        },
+        {
+          "property": "background and framing of photo",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "mouth/lip motion synced to audio, head pose and expressions",
+          "basis": "documented"
+        },
+        {
+          "property": "scene can change per prompt in prompted mode",
+          "basis": "documented"
+        },
+        {
+          "property": "adds the input audio as soundtrack",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "Needs a clear, front-facing face; profiles reduce quality.",
+        "No text input in schema despite summary text; generate audio first with AI Voice Generator."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/ai-talking-photo"
+    },
+    {
+      "name": "Lip Sync",
+      "endpoint": "POST /v1/lip-sync",
+      "sdk_method": "JS: client.v1.lipSync.create() / .generate(); Python: client.v1.lip_sync.create() / .generate()",
+      "category": "generative",
+      "purpose": "Re-animate the lips of a person in a video to match a new audio track.",
+      "inputs": [
+        {
+          "name": "assets.video_source",
+          "type": "enum",
+          "required": true,
+          "constraints": "file, youtube"
+        },
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": false,
+          "constraints": "required if video_source=file; file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "assets.youtube_url",
+          "type": "file URL",
+          "required": false,
+          "constraints": "required if video_source=youtube"
+        },
+        {
+          "name": "assets.audio_file_path",
+          "type": "audio",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "> start_seconds"
+        },
+        {
+          "name": "max_fps_limit",
+          "type": "number",
+          "required": false,
+          "constraints": ">= 1; output keeps input fps if lower"
+        },
+        {
+          "name": "style.generation_mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "lite (default), standard, pro; standard/pro need Creator+"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "lite",
+        "standard",
+        "pro"
+      ],
+      "default_model": "lite",
+      "limits": {
+        "duration_s": "end_seconds - start_seconds; no max documented",
+        "resolutions": [
+          "follows input (inferred)"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "1 credit/frame (lite, standard), 2 credits/frame (pro). Example: 10s at 30fps lite ~ 300 credits.",
+      "maintains": [
+        {
+          "property": "video content, person identity, body, background, camera motion",
+          "basis": "inferred"
+        },
+        {
+          "property": "frame rate up to max_fps_limit",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "lip/mouth movements to match audio",
+          "basis": "documented"
+        },
+        {
+          "property": "audio track replaced with input audio",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "Needs visible, front-facing face; extreme head motion or occlusion reduce quality.",
+        "Best with single speaker; audio and video should be similar length."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/lip-sync"
+    },
+    {
+      "name": "Face Swap Video",
+      "endpoint": "POST /v1/face-swap",
+      "sdk_method": "JS: client.v1.faceSwap.create() / .generate(); Python: client.v1.face_swap.create() / .generate()",
+      "category": "generative",
+      "purpose": "Replace faces in a video with a face from an image.",
+      "inputs": [
+        {
+          "name": "assets.video_source",
+          "type": "enum",
+          "required": true,
+          "constraints": "file, youtube"
+        },
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": false,
+          "constraints": "required if video_source=file; gif accepted here only"
+        },
+        {
+          "name": "assets.youtube_url",
+          "type": "file URL",
+          "required": false,
+          "constraints": "required if video_source=youtube"
+        },
+        {
+          "name": "assets.face_swap_mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "all-faces (default), individual-faces"
+        },
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": false,
+          "constraints": "source face; required for all-faces"
+        },
+        {
+          "name": "assets.face_mappings",
+          "type": "array of {original_face, new_face}",
+          "required": false,
+          "constraints": "max 5; required for individual-faces; original_face from face detection"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "> start_seconds"
+        },
+        {
+          "name": "style.version",
+          "type": "enum",
+          "required": false,
+          "constraints": "v1, v2, default (default)"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "v1",
+        "v2",
+        "default"
+      ],
+      "default_model": "default",
+      "limits": {
+        "duration_s": "end_seconds - start_seconds; no max documented; test 5-10s first",
+        "resolutions": [
+          "service/plan managed"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "24 credits/second at 24fps (frame-based; final on completion).",
+      "maintains": [
+        {
+          "property": "expressions, head movements, lighting",
+          "basis": "documented"
+        },
+        {
+          "property": "body, pose, background, camera motion, audio",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "face identity of target face(s)",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "error code no_source_face when source face undetected.",
+        "Extreme head motion, occlusion, small faces reduce quality.",
+        "v1: weaker identity preservation; v2: stronger."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/face-swap-video"
+    },
+    {
+      "name": "Video-to-Video",
+      "endpoint": "POST /v1/video-to-video",
+      "sdk_method": "JS: client.v1.videoToVideo.create() / .generate(); Python: client.v1.video_to_video.create() / .generate()",
+      "category": "generative",
+      "purpose": "Restyle a video with a preset art style (style transfer).",
+      "inputs": [
+        {
+          "name": "assets.video_source",
+          "type": "enum",
+          "required": true,
+          "constraints": "file, youtube"
+        },
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": false,
+          "constraints": "required if video_source=file"
+        },
+        {
+          "name": "assets.youtube_url",
+          "type": "file URL",
+          "required": false,
+          "constraints": "required if video_source=youtube"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "> start_seconds"
+        },
+        {
+          "name": "style.art_style",
+          "type": "enum",
+          "required": true,
+          "constraints": "75 presets, e.g. Studio Ghibli, Pixar, Lego, Cyberpunk, Oil Painting, Van Gogh, No Art Style"
+        },
+        {
+          "name": "style.version",
+          "type": "enum",
+          "required": false,
+          "constraints": "v1, v2, default"
+        },
+        {
+          "name": "style.prompt_type",
+          "type": "enum",
+          "required": false,
+          "constraints": "default, custom, append_default"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "required if prompt_type custom/append_default"
+        },
+        {
+          "name": "style.model",
+          "type": "enum",
+          "required": false,
+          "constraints": "Dreamshaper, Absolute Reality, Flat 2D Anime, Soft Anime, Kaywaii, Western Anime, 3D Anime, default"
+        },
+        {
+          "name": "fps_resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "FULL, HALF (default)"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "Dreamshaper",
+        "Absolute Reality",
+        "Flat 2D Anime",
+        "Soft Anime",
+        "Kaywaii",
+        "Western Anime",
+        "3D Anime",
+        "default"
+      ],
+      "default_model": "default",
+      "limits": {
+        "duration_s": "end_seconds - start_seconds; no max documented",
+        "resolutions": [
+          "service/plan managed; hard cap 1472px; dims divisible by 64"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "48 credits/second at 24fps (frame-based). HALF fps halves frames (inferred).",
+      "maintains": [
+        {
+          "property": "original motion and structure",
+          "basis": "documented"
+        },
+        {
+          "property": "timing, composition, camera motion",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "visual style / rendering of every frame",
+          "basis": "documented"
+        },
+        {
+          "property": "frame rate halved with fps_resolution=HALF",
+          "basis": "documented"
+        },
+        {
+          "property": "identity detail of people may change",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "Fast/chaotic motion and unstable lighting reduce quality.",
+        "Not for content changes (e.g. 'add a person')."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/video-to-video"
+    },
+    {
+      "name": "AI Video Editor",
+      "endpoint": "POST /v1/ai-video-editor",
+      "sdk_method": "JS: client.v1.aiVideoEditor.create() / .generate(); Python: client.v1.ai_video_editor.create() / .generate()",
+      "category": "generative",
+      "purpose": "Edit an existing video clip from a natural-language instruction.",
+      "inputs": [
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "edit instruction"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": false,
+          "constraints": "default 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "clip length per model (see limits)"
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "required": false,
+          "constraints": "gemini-omni-1.1, ltx-2.5, ltx-2.3, gemini-omni (deprecated)"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "480p, 720p, 1080p; default 480p free / 720p paid"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "gemini-omni-1.1",
+        "ltx-2.5",
+        "ltx-2.3"
+      ],
+      "default_model": "gemini-omni-1.1 (paid); free tier default conflicts: OpenAPI says ltx-2.5, models/tool pages say ltx-2.3",
+      "limits": {
+        "duration_s": {
+          "gemini-omni-1.1": "3-10",
+          "ltx-2.5": "0.5-20 (OpenAPI)",
+          "ltx-2.3": "0.5-45 (tool page)"
+        },
+        "resolutions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "resolutions_per_model": {
+          "gemini-omni-1.1": "720p, 1080p",
+          "ltx": "480p, 720p, 1080p"
+        },
+        "aspect_ratios": []
+      },
+      "cost": "Frame-based; rate not listed on models page (unverified). Estimate at create, final on completion.",
+      "maintains": [
+        {
+          "property": "unedited content, motion, framing",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "objects, colors, scene details or style named in prompt (remove/replace objects, recolor, restyle)",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Multiple unrelated edits in one prompt reduce consistency.",
+        "Fast-moving details may break; review full clip."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/ai-video-editor"
+    },
+    {
+      "name": "AI Video Translator",
+      "endpoint": "POST /v1/ai-video-translator",
+      "sdk_method": "JS: client.v1.aiVideoTranslator.create() / .generate(); Python: client.v1.ai_video_translator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Translate the speech in a video into another language.",
+      "inputs": [
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls; contains speech"
+        },
+        {
+          "name": "target_language",
+          "type": "enum",
+          "required": true,
+          "constraints": "53 languages, e.g. English, Spanish, Chinese (Simplified), Hindi, Japanese"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": false,
+          "constraints": "default 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "clip 1-30s"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "480p (default), 720p, 1080p; 720p+ paid"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": {
+          "min": 1,
+          "max": 30
+        },
+        "resolutions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "Frame-based; rate not listed (unverified).",
+      "maintains": [
+        {
+          "property": "visuals, speaker identity",
+          "basis": "inferred"
+        },
+        {
+          "property": "speaker voice timbre (unverified)",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "spoken language of audio track",
+          "basis": "documented"
+        },
+        {
+          "property": "lip movements (unverified)",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "No tool guide page; behavior beyond schema unverified."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/ai-video-translator"
+    },
+    {
+      "name": "Animation",
+      "endpoint": "POST /v1/animation",
+      "sdk_method": "JS: client.v1.animation.create() / .generate(); Python: client.v1.animation.create() / .generate()",
+      "category": "generative",
+      "purpose": "Create a stylized, camera-effect animation from a prompt, optional start image and optional audio.",
+      "inputs": [
+        {
+          "name": "fps",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 1"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "output duration, >= 0.1"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 64; max plan-dependent, hard cap 1472px"
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 64; max plan-dependent, hard cap 1472px"
+        },
+        {
+          "name": "style.art_style",
+          "type": "enum",
+          "required": true,
+          "constraints": "47 presets incl. Custom, Pixar, Studio Ghibli Film Still, Cyberpunk, Photograph, Directed by AI"
+        },
+        {
+          "name": "style.art_style_custom",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "required if art_style=Custom"
+        },
+        {
+          "name": "style.camera_effect",
+          "type": "enum",
+          "required": true,
+          "constraints": "52 presets e.g. Simple Zoom In, Pan Left, Tilt Up, Slideshow, '* - Audio Sync', Directed by AI"
+        },
+        {
+          "name": "style.prompt_type",
+          "type": "enum",
+          "required": true,
+          "constraints": "custom, use_lyrics, ai_choose (last two need audio)"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "required if prompt_type=custom"
+        },
+        {
+          "name": "style.transition_speed",
+          "type": "number",
+          "required": true,
+          "constraints": "1-10"
+        },
+        {
+          "name": "assets.audio_source",
+          "type": "enum",
+          "required": true,
+          "constraints": "none, file, youtube"
+        },
+        {
+          "name": "assets.audio_file_path",
+          "type": "audio",
+          "required": false,
+          "constraints": "required if audio_source=file"
+        },
+        {
+          "name": "assets.youtube_url",
+          "type": "file URL",
+          "required": false,
+          "constraints": "required if audio_source=youtube"
+        },
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": false,
+          "constraints": "first frame"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": "end_seconds; no max documented",
+        "resolutions": [
+          "custom width x height, 64px min, 1472px hard cap"
+        ],
+        "aspect_ratios": [
+          "any via width/height"
+        ]
+      },
+      "cost": "24 credits/second at 24fps; estimate from fps x end_seconds.",
+      "maintains": [
+        {
+          "property": "start image as first frame when provided",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "art style, content evolves over time per transition_speed",
+          "basis": "documented"
+        },
+        {
+          "property": "camera motion per camera_effect",
+          "basis": "documented"
+        },
+        {
+          "property": "adds audio track when audio given",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "Stop-motion/morphing style; not photoreal continuous motion (inferred).",
+        "Audio must cover end_seconds."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/animation"
+    },
+    {
+      "name": "Audio-to-Video",
+      "endpoint": "POST /v1/audio-to-video",
+      "sdk_method": "JS: client.v1.audioToVideo.create() / .generate(); Python: client.v1.audio_to_video.create() / .generate()",
+      "category": "generative",
+      "purpose": "Generate a video driven by an audio track, with optional reference image and prompt.",
+      "inputs": [
+        {
+          "name": "assets.audio_file_path",
+          "type": "audio",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": false,
+          "constraints": "reference for initial frame"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "visual style/scene"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": false,
+          "constraints": "default 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "> start_seconds"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "480p, 720p, 1080p; default 720p paid / 480p free"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": "end_seconds - start_seconds; no max documented",
+        "resolutions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "24 credits/second at 480p, 48 at 720p, 72 at 1080p.",
+      "maintains": [
+        {
+          "property": "audio segment duration and timing",
+          "basis": "documented"
+        },
+        {
+          "property": "reference image as initial frame",
+          "basis": "documented"
+        },
+        {
+          "property": "audio track kept in output (unverified)",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "creates visuals matching audio and prompt",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Prompt conflicting with reference image degrades output."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/audio-to-video"
+    },
+    {
+      "name": "Character Replace",
+      "endpoint": "POST /v1/character-replace",
+      "sdk_method": "JS: client.v1.characterReplace.create() / .generate(); Python: client.v1.character_replace.create() / .generate()",
+      "category": "generative",
+      "purpose": "Replace a person in a video with a reference character, or animate the character with the video's motion.",
+      "inputs": [
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "reference character"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": false,
+          "constraints": "default 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "> start_seconds"
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "required": false,
+          "constraints": "wan-animate (default), kling-3.0"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "wan-animate: 480p, 720p; kling-3.0: 720p, 1080p; default lowest on plan"
+        },
+        {
+          "name": "style.mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "replace, animate"
+        },
+        {
+          "name": "style.selection_mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "auto (default), point (wan-animate only)"
+        },
+        {
+          "name": "style.points",
+          "type": "array of {position_x, position_y, time_seconds}",
+          "required": false,
+          "constraints": "required if selection_mode=point"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video file via downloads[].url (container unverified; likely mp4)"
+      },
+      "models": [
+        "wan-animate",
+        "kling-3.0"
+      ],
+      "default_model": "wan-animate",
+      "limits": {
+        "duration_s": {
+          "kling-3.0_replace": "3-10",
+          "kling-3.0_animate": "3-30",
+          "wan-animate": "no max documented"
+        },
+        "resolutions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "48 credits/second at 480p, 96 at 720p (kling-3.0 1080p rate unverified).",
+      "maintains": [
+        {
+          "property": "replace mode: scene, background, motion of source video",
+          "basis": "documented"
+        },
+        {
+          "property": "animate mode: character appearance from image",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "replace mode: subject identity/appearance becomes reference character",
+          "basis": "documented"
+        },
+        {
+          "property": "animate mode: motion transferred from video onto character image",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Occlusion breaks tracking.",
+        "kling-3.0 rejects points (picks main person).",
+        "Multiple people: use point selection."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/character-replace"
+    },
+    {
+      "name": "Auto Subtitle Generator",
+      "endpoint": "POST /v1/auto-subtitle-generator",
+      "sdk_method": "JS: client.v1.autoSubtitleGenerator.create() / .generate(); Python: client.v1.auto_subtitle_generator.create() / .generate()",
+      "category": "deterministic",
+      "purpose": "Transcribe speech in a video and burn styled captions into it.",
+      "inputs": [
+        {
+          "name": "assets.video_file_path",
+          "type": "video",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "start_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": ">= 0"
+        },
+        {
+          "name": "end_seconds",
+          "type": "number",
+          "required": true,
+          "constraints": "> start_seconds"
+        },
+        {
+          "name": "style.template",
+          "type": "enum",
+          "required": false,
+          "constraints": "karaoke, cinematic, minimalist, highlight"
+        },
+        {
+          "name": "style.custom_config",
+          "type": "object",
+          "required": false,
+          "constraints": "font (Google Fonts), font_size, font_style, text_color, highlighted_text_color, stroke_color, stroke_width, vertical_position, horizontal_position; template or custom_config required"
+        }
+      ],
+      "output": {
+        "type": "video",
+        "format": "video with burned-in captions; no SRT/VTT export"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": "end_seconds - start_seconds; no max documented",
+        "resolutions": [
+          "follows input (inferred)"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "~4.8 credits/second at 24fps.",
+      "maintains": [
+        {
+          "property": "all video frames and audio apart from caption overlay",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "adds caption text overlay",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "No language parameter.",
+        "Noise, music, multiple speakers reduce transcription accuracy.",
+        "Font may not support language."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/video-projects/auto-subtitle-generator"
+    },
+    {
+      "name": "AI Image Generator",
+      "endpoint": "POST /v1/ai-image-generator",
+      "sdk_method": "JS: client.v1.aiImageGenerator.create() / .generate(); Python: client.v1.ai_image_generator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Generate images from a text prompt.",
+      "inputs": [
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "min 1 char"
+        },
+        {
+          "name": "image_count",
+          "type": "number",
+          "required": true,
+          "constraints": "1-16; allowed counts per model (1; 1-4; or 1, 4, 9, 16)"
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "required": false,
+          "constraints": "see models; default 'default'"
+        },
+        {
+          "name": "aspect_ratio",
+          "type": "enum",
+          "required": false,
+          "constraints": "1:1 (default), 16:9, 9:16"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "640px, 1k, 2k, 4k (longest edge), auto (deprecated, default)"
+        },
+        {
+          "name": "style.tool",
+          "type": "enum",
+          "required": false,
+          "constraints": "35 presets e.g. general (default), ai-logo-generator, thumbnail-maker, movie-poster-generator, ai-photo-generator"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image_count image files via downloads[] (format unverified)"
+      },
+      "models": [
+        "default",
+        "z-image-turbo",
+        "flux-2-klein",
+        "nano-banana-2-lite",
+        "nano-banana-2",
+        "krea-2",
+        "gpt-image-2.5-flare",
+        "gpt-image-2",
+        "seedream-v5-pro",
+        "seedream-v4",
+        "nano-banana",
+        "nano-banana-pro",
+        "flux-schnell"
+      ],
+      "default_model": "default (server-chosen; changes over time)",
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "640px",
+          "1k",
+          "2k",
+          "4k"
+        ],
+        "resolutions_per_model": {
+          "flux-schnell": "640px, 1k, 2k",
+          "flux-2-klein": "640px, 1k, 2k",
+          "z-image-turbo": "640px, 1k, 2k",
+          "seedream-v4": "640px-4k",
+          "seedream-v4.5": "640px-4k",
+          "seedream-v5-pro": "640px, 1k, 2k",
+          "nano-banana": "640px, 1k",
+          "nano-banana-2-lite": "640px, 1k",
+          "nano-banana-2": "640px-4k",
+          "nano-banana-pro": "1k, 2k, 4k",
+          "gpt-image-2": "640px-4k",
+          "gpt-image-2.5-flare": "640px-4k",
+          "krea-2": "640px, 1k",
+          "qwen-edit": "640px, 1k, 2k"
+        },
+        "aspect_ratios": [
+          "1:1",
+          "16:9",
+          "9:16"
+        ],
+        "other": "Free plan: 640px and free models only (flux-schnell, flux-2-klein, z-image-turbo, krea-2). Deprecated: seedream."
+      },
+      "cost": "Per image, from (lowest resolution): flux-schnell 5, flux-2-klein 5, z-image-turbo 5, krea-2 10, qwen-edit 10, seedream-v4 40, gpt-image-2 50, nano-banana 50, nano-banana-2-lite 50, seedream-v4.5 50, seedream-v5-pro 75, nano-banana-2 100, gpt-image-2.5-flare 100, nano-banana-pro 150. Higher resolution costs more; x image_count. Exact per-resolution rates unverified.",
+      "maintains": [
+        {
+          "property": "nothing from prior state; new content",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "creates full image from prompt",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Vague or conflicting prompts reduce quality.",
+        "Identity consistency across calls not guaranteed (inferred)."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-image-generator"
+    },
+    {
+      "name": "AI Image Editor",
+      "endpoint": "POST /v1/ai-image-editor",
+      "sdk_method": "JS: client.v1.aiImageEditor.create() / .generate(); Python: client.v1.ai_image_editor.create() / .generate()",
+      "category": "generative",
+      "purpose": "Edit or combine one or more input images from a text instruction.",
+      "inputs": [
+        {
+          "name": "assets.image_file_paths",
+          "type": "image[]",
+          "required": false,
+          "constraints": "max 10 (schema); per-model max additional images 1-9; marked optional in schema but needed for edits"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "1-15000 chars"
+        },
+        {
+          "name": "model",
+          "type": "enum",
+          "required": false,
+          "constraints": "see models"
+        },
+        {
+          "name": "image_count",
+          "type": "enum",
+          "required": false,
+          "constraints": "1 (default), 4, 9, 16"
+        },
+        {
+          "name": "aspect_ratio",
+          "type": "enum",
+          "required": false,
+          "constraints": "auto (default), 16:9, 9:16, 4:3, 3:2, 1:1, 4:5, 2:3"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": false,
+          "constraints": "640px, 1k, 2k, 4k, auto (deprecated)"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file(s) via downloads[] (format unverified)"
+      },
+      "models": [
+        "default",
+        "qwen-edit",
+        "flux-2-klein",
+        "nano-banana-2-lite",
+        "nano-banana-2",
+        "krea-2",
+        "gpt-image-2.5-flare",
+        "gpt-image-2",
+        "seedream-v5-pro",
+        "seedream-v4.5",
+        "seedream-v4",
+        "nano-banana",
+        "nano-banana-pro"
+      ],
+      "default_model": "default (server-chosen; changes over time)",
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "640px",
+          "1k",
+          "2k",
+          "4k"
+        ],
+        "resolutions_per_model": {
+          "flux-schnell": "640px, 1k, 2k",
+          "flux-2-klein": "640px, 1k, 2k",
+          "z-image-turbo": "640px, 1k, 2k",
+          "seedream-v4": "640px-4k",
+          "seedream-v4.5": "640px-4k",
+          "seedream-v5-pro": "640px, 1k, 2k",
+          "nano-banana": "640px, 1k",
+          "nano-banana-2-lite": "640px, 1k",
+          "nano-banana-2": "640px-4k",
+          "nano-banana-pro": "1k, 2k, 4k",
+          "gpt-image-2": "640px-4k",
+          "gpt-image-2.5-flare": "640px-4k",
+          "krea-2": "640px, 1k",
+          "qwen-edit": "640px, 1k, 2k"
+        },
+        "aspect_ratios": [
+          "auto",
+          "16:9",
+          "9:16",
+          "4:3",
+          "3:2",
+          "1:1",
+          "4:5",
+          "2:3"
+        ],
+        "other": "Max additional input images: flux-2-klein 5, krea-2 1, qwen-edit 2, others 9. Input 512x512+ recommended."
+      },
+      "cost": "Per image, from (lowest resolution): flux-schnell 5, flux-2-klein 5, z-image-turbo 5, krea-2 10, qwen-edit 10, seedream-v4 40, gpt-image-2 50, nano-banana 50, nano-banana-2-lite 50, seedream-v4.5 50, seedream-v5-pro 75, nano-banana-2 100, gpt-image-2.5-flare 100, nano-banana-pro 150. Higher resolution costs more; x image_count. Exact per-resolution rates unverified.",
+      "maintains": [
+        {
+          "property": "regions and subjects not named in the instruction",
+          "basis": "inferred"
+        },
+        {
+          "property": "subject identity (model-dependent; not guaranteed)",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "content, style or composition named in prompt; can compose multiple references",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Multiple edits in one instruction reduce accuracy.",
+        "Identity drift on people (inferred)."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-image-editor"
+    },
+    {
+      "name": "Face Swap Photo",
+      "endpoint": "POST /v1/face-swap-photo",
+      "sdk_method": "JS: client.v1.faceSwapPhoto.create() / .generate(); Python: client.v1.face_swap_photo.create() / .generate()",
+      "category": "generative",
+      "purpose": "Replace face(s) in a target image with a source face.",
+      "inputs": [
+        {
+          "name": "assets.target_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "image that receives the face"
+        },
+        {
+          "name": "assets.face_swap_mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "all-faces (default), individual-faces"
+        },
+        {
+          "name": "assets.source_file_path",
+          "type": "image",
+          "required": false,
+          "constraints": "required for all-faces"
+        },
+        {
+          "name": "assets.face_mappings",
+          "type": "array of {original_face, new_face}",
+          "required": false,
+          "constraints": "max 5; required for individual-faces"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "plan-dependent longest edge: free 576, creator 1024, pro 1472, business 4096"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "10 credits per image (charged at create, refunded on failure).",
+      "maintains": [
+        {
+          "property": "facial expression, lighting, image quality",
+          "basis": "documented"
+        },
+        {
+          "property": "pose, body, hair, background, composition",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "face identity",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "no_source_face error.",
+        "Small/obscured faces, extreme angles, lighting mismatch."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/face-swap-photo"
+    },
+    {
+      "name": "Head Swap",
+      "endpoint": "POST /v1/head-swap",
+      "sdk_method": "JS: client.v1.headSwap.create() / .generate(); Python: client.v1.head_swap.create() / .generate()",
+      "category": "generative",
+      "purpose": "Place a head from one image onto the body in another image.",
+      "inputs": [
+        {
+          "name": "assets.body_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "keeps body, pose, scene"
+        },
+        {
+          "name": "assets.head_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "head reference"
+        },
+        {
+          "name": "max_resolution",
+          "type": "number",
+          "required": false,
+          "constraints": "caps larger dimension; max 2048, clamped to plan"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "<= 2048px longest edge, plan-capped"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "10 credits per image.",
+      "maintains": [
+        {
+          "property": "target body, pose, scene",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "whole head incl. face, hair, broader head details",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Angle, lighting, proportion mismatch; occluding hair/hands/hats; cropped heads."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/head-swap"
+    },
+    {
+      "name": "Body Swap",
+      "endpoint": "POST /v1/body-swap",
+      "sdk_method": "JS: client.v1.bodySwap.create() / .generate(); Python: client.v1.body_swap.create() / .generate()",
+      "category": "generative",
+      "purpose": "Place a person from one image into a scene image, replacing the scene's person.",
+      "inputs": [
+        {
+          "name": "assets.person_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "person to insert"
+        },
+        {
+          "name": "assets.scene_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "scene/background"
+        },
+        {
+          "name": "resolution",
+          "type": "enum",
+          "required": true,
+          "constraints": "640px, 1k, 2k, 4k"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [
+        "nano-banana-2-lite (640px/1k)",
+        "nano-banana-2 (2k/4k)"
+      ],
+      "default_model": "chosen by resolution",
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "640px",
+          "1k",
+          "2k",
+          "4k"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "From 50 credits at 640px, rising with resolution (exact rates unverified).",
+      "maintains": [
+        {
+          "property": "scene, background, composition",
+          "basis": "documented"
+        },
+        {
+          "property": "person identity and appearance from person image",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "person in the scene",
+          "basis": "documented"
+        },
+        {
+          "property": "pose may adapt to scene (inferred)",
+          "basis": "inferred"
+        }
+      ],
+      "failure_modes": [
+        "Overlap/occlusion in scene, pose/angle/lighting mismatch, low-quality inputs."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/body-swap"
+    },
+    {
+      "name": "AI Clothes Changer",
+      "endpoint": "POST /v1/ai-clothes-changer",
+      "sdk_method": "JS: client.v1.aiClothesChanger.create() / .generate(); Python: client.v1.ai_clothes_changer.create() / .generate()",
+      "category": "generative",
+      "purpose": "Dress a person in a garment from a reference image (virtual try-on).",
+      "inputs": [
+        {
+          "name": "assets.person_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "person"
+        },
+        {
+          "name": "assets.garment_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "garment; flat lay or mannequin best"
+        },
+        {
+          "name": "assets.garment_type",
+          "type": "enum",
+          "required": false,
+          "constraints": "entire_outfit (default), upper_body, lower_body, dresses (deprecated)"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "plan-capped; hard cap 1472px"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "25 credits per image.",
+      "maintains": [
+        {
+          "property": "pose, lighting, background",
+          "basis": "documented"
+        },
+        {
+          "property": "face identity",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "clothing in selected garment region",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Obstructed clothing (crossed arms), poor lighting, busy backgrounds."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-clothes-changer"
+    },
+    {
+      "name": "AI Headshot Generator",
+      "endpoint": "POST /v1/ai-headshot-generator",
+      "sdk_method": "JS: client.v1.aiHeadshotGenerator.create() / .generate(); Python: client.v1.ai_headshot_generator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Create a professional headshot from a photo of one person.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "exactly one detectable face; face area >= 512x512 recommended"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "omit for default professional style"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "plan-capped; hard cap 1344px"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "50 credits per headshot.",
+      "maintains": [
+        {
+          "property": "facial features and identity",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "background, attire, lighting, framing to headshot",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Fails without exactly one detectable face (inferred from requirement).",
+        "Sunglasses, masks, profiles reduce quality."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-headshot-generator"
+    },
+    {
+      "name": "AI Face Editor",
+      "endpoint": "POST /v1/ai-face-editor",
+      "sdk_method": "JS: client.v1.aiFaceEditor.create() / .generate(); Python: client.v1.ai_face_editor.create() / .generate()",
+      "category": "generative",
+      "purpose": "Adjust expression, gaze and head pose of a face with numeric sliders.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "clear frontal face, >= 512x512 recommended"
+        },
+        {
+          "name": "style.enhance_face",
+          "type": "boolean",
+          "required": false,
+          "constraints": "default false"
+        },
+        {
+          "name": "style.<control>",
+          "type": "number",
+          "required": false,
+          "constraints": "-100..100 step 5, default 0: eyebrow_direction, eye_gaze_horizontal, eye_gaze_vertical, eye_open_ratio, lip_open_ratio, head_roll, head_pitch, head_yaw, mouth_grim, mouth_pout, mouth_purse, mouth_smile, mouth_position_horizontal, mouth_position_vertical"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "plan-dependent"
+        ],
+        "aspect_ratios": []
+      },
+      "cost": "1 credit per edit (endpoint text says '1 frame').",
+      "maintains": [
+        {
+          "property": "realistic proportions, lighting, identity",
+          "basis": "documented"
+        },
+        {
+          "property": "background, clothing",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "expression, eye gaze, mouth shape, head pose",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Large slider values look unnatural; best one change at a time."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-face-editor"
+    },
+    {
+      "name": "AI Image Upscaler",
+      "endpoint": "POST /v1/ai-image-upscaler",
+      "sdk_method": "JS: client.v1.aiImageUpscaler.create() / .generate(); Python: client.v1.ai_image_upscaler.create() / .generate()",
+      "category": "generative",
+      "purpose": "Upscale an image 2x or 4x with AI detail recovery.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "max 4096x4096"
+        },
+        {
+          "name": "scale_factor",
+          "type": "number",
+          "required": true,
+          "constraints": "2 or 4; 4 needs Creator+"
+        },
+        {
+          "name": "style.mode",
+          "type": "enum",
+          "required": false,
+          "constraints": "preserve, balanced (default), creative; pro deprecated -> preserve"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": false,
+          "constraints": "creative mode only"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [
+        "preserve",
+        "balanced",
+        "creative"
+      ],
+      "default_model": "balanced",
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "input <= 4096x4096; output = input x scale_factor"
+        ],
+        "aspect_ratios": [
+          "unchanged"
+        ]
+      },
+      "cost": "2x: 25 (preserve) / 50 (balanced, creative); 4x: 100 / 200.",
+      "maintains": [
+        {
+          "property": "content and composition",
+          "basis": "documented"
+        },
+        {
+          "property": "aspect ratio",
+          "basis": "inferred"
+        },
+        {
+          "property": "detail (preserve mode)",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "resolution (2x/4x)",
+          "basis": "documented"
+        },
+        {
+          "property": "detail enhanced (balanced) or reinterpreted (creative)",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Amplifies JPEG artifacts; cannot recover missing detail; text-heavy images weak."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-image-upscaler"
+    },
+    {
+      "name": "Image Background Remover",
+      "endpoint": "POST /v1/image-background-remover",
+      "sdk_method": "JS: client.v1.imageBackgroundRemover.create() / .generate(); Python: client.v1.image_background_remover.create() / .generate()",
+      "category": "deterministic",
+      "purpose": "Cut out the subject; optionally composite it on a new background.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "assets.background_image_file_path",
+          "type": "image",
+          "required": false,
+          "constraints": "new background; resized to match input"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "PNG with alpha (no background given); composited image otherwise"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "follows input (inferred)"
+        ],
+        "aspect_ratios": [
+          "unchanged"
+        ]
+      },
+      "cost": "5 credits per image.",
+      "maintains": [
+        {
+          "property": "subject at full quality",
+          "basis": "documented"
+        },
+        {
+          "property": "dimensions",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "background removed (alpha) or replaced",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Fine hair on busy backgrounds, transparent objects, low subject/background contrast."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/image-background-remover"
+    },
+    {
+      "name": "Photo Colorizer",
+      "endpoint": "POST /v1/photo-colorizer",
+      "sdk_method": "JS: client.v1.photoColorizer.create() / .generate(); Python: client.v1.photo_colorizer.create() / .generate()",
+      "category": "generative",
+      "purpose": "Add realistic color to a black-and-white or grayscale photo.",
+      "inputs": [
+        {
+          "name": "assets.image_file_path",
+          "type": "image",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [
+          "plan-dependent (unverified)"
+        ],
+        "aspect_ratios": [
+          "unchanged (inferred)"
+        ]
+      },
+      "cost": "10 credits per image.",
+      "maintains": [
+        {
+          "property": "content, structure, composition",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "color",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Complex scenes give variable results; damaged scans reduce accuracy."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/photo-colorizer"
+    },
+    {
+      "name": "AI GIF Generator",
+      "endpoint": "POST /v1/ai-gif-generator",
+      "sdk_method": "JS: client.v1.aiGifGenerator.create() / .generate(); Python: client.v1.ai_gif_generator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Generate a short animated GIF from a text prompt.",
+      "inputs": [
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "1-500 chars"
+        },
+        {
+          "name": "output_format",
+          "type": "enum",
+          "required": false,
+          "constraints": "gif (default), mp4, webm"
+        }
+      ],
+      "output": {
+        "type": "animation (image project)",
+        "format": "gif, mp4 or webm"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": "not settable",
+        "resolutions": [],
+        "aspect_ratios": []
+      },
+      "cost": "50 credits per GIF.",
+      "maintains": [
+        {
+          "property": "nothing from prior state; no image input",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "creates new short animation",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "No image input; no custom duration."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-gif-generator"
+    },
+    {
+      "name": "AI Meme Generator",
+      "endpoint": "POST /v1/ai-meme-generator",
+      "sdk_method": "JS: client.v1.aiMemeGenerator.create() / .generate(); Python: client.v1.ai_meme_generator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Write meme text for a topic on a fixed meme template.",
+      "inputs": [
+        {
+          "name": "style.topic",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "1-200 chars"
+        },
+        {
+          "name": "style.template",
+          "type": "enum",
+          "required": true,
+          "constraints": "Random or ~100 named templates (e.g. Drake Hotline Bling, Distracted Boyfriend)"
+        },
+        {
+          "name": "style.searchWeb",
+          "type": "boolean",
+          "required": false,
+          "constraints": "default false; search_web in Python SDK"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [],
+        "aspect_ratios": [
+          "template-defined"
+        ]
+      },
+      "cost": "10 credits per meme.",
+      "maintains": [
+        {
+          "property": "template image",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "panel text generated for topic",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Vague topics produce weak memes."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-meme-generator"
+    },
+    {
+      "name": "AI QR Code Generator",
+      "endpoint": "POST /v1/ai-qr-code-generator",
+      "sdk_method": "JS: client.v1.aiQrCodeGenerator.create() / .generate(); Python: client.v1.ai_qr_code_generator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Generate an artistic, scannable QR code.",
+      "inputs": [
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "constraints": "URL or text encoded"
+        },
+        {
+          "name": "style.art_style",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "preset (Watercolor, Cyberpunk City, Ink Landscape, Interior Painting, Japanese Street, Mech, Minecraft, Picasso Painting, Game Map, Spaceship, Chinese Painting, Winter Village) or free text"
+        }
+      ],
+      "output": {
+        "type": "image",
+        "format": "image file via downloads[].url (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [],
+        "aspect_ratios": [
+          "1:1 (inferred)"
+        ]
+      },
+      "cost": "0 credits.",
+      "maintains": [
+        {
+          "property": "encoded content / scannability (goal, must test)",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "visual style",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Busy or low-contrast styles can break scanning."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/image-projects/ai-qr-code-generator"
+    },
+    {
+      "name": "AI Voice Generator",
+      "endpoint": "POST /v1/ai-voice-generator",
+      "sdk_method": "JS: client.v1.aiVoiceGenerator.create() / .generate(); Python: client.v1.ai_voice_generator.create() / .generate()",
+      "category": "generative",
+      "purpose": "Text-to-speech with a preset celebrity/character voice.",
+      "inputs": [
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "max 1000 chars"
+        },
+        {
+          "name": "style.voice_name",
+          "type": "enum",
+          "required": true,
+          "constraints": "1266 preset voices (e.g. Morgan Freeman, David Attenborough)"
+        }
+      ],
+      "output": {
+        "type": "audio",
+        "format": "audio file via audio project downloads[] (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": "set by text length (max 1000 chars)",
+        "resolutions": [],
+        "aspect_ratios": []
+      },
+      "cost": "0.1 credits per character, rounded up (max 100).",
+      "maintains": [
+        {
+          "property": "script text",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "creates speech audio in chosen voice",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "No language parameter.",
+        "Not exposed in hosted MCP."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/audio-projects/ai-voice-generator"
+    },
+    {
+      "name": "AI Voice Cloner",
+      "endpoint": "POST /v1/ai-voice-cloner",
+      "sdk_method": "JS: client.v1.aiVoiceCloner.create() / .generate(); Python: client.v1.ai_voice_cloner.create() / .generate()",
+      "category": "generative",
+      "purpose": "Clone a voice from a sample and speak given text with it.",
+      "inputs": [
+        {
+          "name": "assets.audio_file_path",
+          "type": "audio",
+          "required": true,
+          "constraints": "single speaker, clean, >= 3s"
+        },
+        {
+          "name": "style.prompt",
+          "type": "text prompt",
+          "required": true,
+          "constraints": "1-1000 chars"
+        }
+      ],
+      "output": {
+        "type": "audio",
+        "format": "audio file via audio project downloads[] (format unverified)"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": "set by text length (max 1000 chars)",
+        "resolutions": [],
+        "aspect_ratios": []
+      },
+      "cost": "0.1 credits per generated character, rounded up.",
+      "maintains": [
+        {
+          "property": "voice timbre, intonation, speaking patterns of sample",
+          "basis": "documented"
+        }
+      ],
+      "mutates": [
+        {
+          "property": "spoken content (new text)",
+          "basis": "documented"
+        }
+      ],
+      "failure_modes": [
+        "Noisy or multi-speaker samples degrade clone.",
+        "No language parameter.",
+        "Not exposed in hosted MCP."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/audio-projects/ai-voice-cloner"
+    },
+    {
+      "name": "Face Detection",
+      "endpoint": "POST /v1/face-detection (+ GET /v1/face-detection/{id})",
+      "sdk_method": "JS: client.v1.faceDetection.create() / .generate(); Python: client.v1.face_detection.create() / .generate()",
+      "category": "deterministic",
+      "purpose": "List faces in an image or video to build face_mappings for multi-face swaps.",
+      "inputs": [
+        {
+          "name": "assets.target_file_path",
+          "type": "image | video",
+          "required": true,
+          "constraints": "file URL or file_path from POST /v1/files/upload-urls"
+        },
+        {
+          "name": "confidence_score",
+          "type": "number",
+          "required": false,
+          "constraints": "0-1, default 0.5"
+        }
+      ],
+      "output": {
+        "type": "face list",
+        "format": "faces[] {path '<frame>-<index>.png', url}; status queued|rendering|complete|error"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [],
+        "aspect_ratios": []
+      },
+      "cost": "Free for now (pricing may change).",
+      "maintains": [
+        {
+          "property": "input media unchanged (analysis only)",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [],
+      "failure_modes": [
+        "Low confidence_score adds false detections; high drops faces."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/files/face-detection"
+    },
+    {
+      "name": "Generate Asset Upload URLs",
+      "endpoint": "POST /v1/files/upload-urls",
+      "sdk_method": "JS: client.v1.files.uploadUrls.create(), client.v1.files.uploadFile(); Python: client.v1.files.upload_urls.create(), client.v1.files.upload_file()",
+      "category": "deterministic",
+      "purpose": "Get pre-signed PUT URLs and file_path values to upload local inputs.",
+      "inputs": [
+        {
+          "name": "items[].type",
+          "type": "enum",
+          "required": true,
+          "constraints": "video, audio, image"
+        },
+        {
+          "name": "items[].extension",
+          "type": "text",
+          "required": true,
+          "constraints": "video: mp4 m4v mov webm; audio: mp3 wav aac flac webm weba m4a opus ogg oga aiff amr; image: png jpg jpeg jfif heic heif webp avif jp2 tiff tif bmp; gif only for face swap video"
+        }
+      ],
+      "output": {
+        "type": "upload targets",
+        "format": "items[] {upload_url, expires_at, file_path}"
+      },
+      "models": [],
+      "default_model": null,
+      "limits": {
+        "duration_s": null,
+        "resolutions": [],
+        "aspect_ratios": [],
+        "other": "Upload size: free 200MB, creator 2GB, pro 5GB, business 10GB. Uploads deleted after 7 days."
+      },
+      "cost": "None documented.",
+      "maintains": [
+        {
+          "property": "file bytes",
+          "basis": "inferred"
+        }
+      ],
+      "mutates": [],
+      "failure_modes": [
+        "Upload URL expiry; unsupported extension."
+      ],
+      "source_url": "https://docs.magichour.ai/api-reference/files/generate-asset-upload-urls"
+    }
+  ]
+}

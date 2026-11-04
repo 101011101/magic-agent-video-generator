@@ -1,0 +1,21 @@
+{
+  "id": "D18c",
+  "best_tools": "yes",
+  "explanation": "Image-to-video was the right tool, and its prompt correctly requested slow clouds, gentle ripples, fixed terrain, and consistent light. However, the plan relied on a silence instruction despite minimax-h3 generating its own audio, and never enforced 16:9; the excessive cloud evolution and lighting changes were model failures despite appropriate instructions.",
+  "better_chain": "image-to-video (animate lake.jpg for 8 seconds with minimal cloud translation, gentle ripples, locked terrain, camera, and lighting) → assemble (discard generated audio, output exactly 8 seconds in 16:9, fitting and padding rather than cropping away the source composition) → gate (verify silence, aspect, duration, slow cloud motion, stable terrain, and unchanged lighting; regenerate if motion or lighting fails)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "model-quality"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correct source, animation tool, duration, and motion instructions. However, its requested silence is not a reliable guarantee with this model, and preserving source framing does not enforce 16:9; downstream normalization was needed.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    }
+  ],
+  "missing": "A finishing step to remove generated audio and enforce an 8-second, 16:9 output while preserving the composition, followed by verification of selective motion and stable lighting."
+}

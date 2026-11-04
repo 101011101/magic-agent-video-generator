@@ -1,0 +1,52 @@
+{
+ "id": "E25c",
+ "root_cause": "harness",
+ "contributing": [
+  "model-limit"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The plan is the one I would make. A code crop to 9:16 with her centred (she is already central, so anchor centre works), then captions on the cropped clip so the subtitles are laid out for the final frame, with the original audio kept. The agent even asked in extra for captions 'below her face'. The miss is in our captions call. execute.js always sends style {template: 'minimalist'}: white text with only a faint shadow. Over her white sweater, 'show you three easy' and 'mornings less stressful' wash out. The API's style.custom_config takes stroke_color/stroke_width, font_style bold and vertical_position, but the harness never passes any of them. It also ignores whatever the planner writes in extra. The catalogue then blames the tool ('styling: big and bold is not honoured'). The agent could not have fixed the contrast with catalogue tools. text-overlay's dark band would need the transcript, which nothing in the catalogue provides. The 'Hi everyone.' versus 'Hi everyone!' punctuation is the transcriber's choice and minor.",
+ "your_plan": {
+  "say": "I'll reframe your clip to vertical with her centred, then add English captions of what she says in short timed lines below her face, keeping all 10 seconds and her voice.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "crop",
+    "inputs": [
+     "talk-one.mp4"
+    ],
+    "produces": "talk-916.mp4",
+    "params": {
+     "prompt_or_change": "Reframe to vertical 9:16 keeping the woman centred; frames and audio unchanged.",
+     "extra": "anchor: center",
+     "aspect": "9:16",
+     "seconds": 10,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A new size of the user's clip goes through crop: nothing regenerated, full length and audio kept. She sits at the centre of the 16:9 frame."
+   },
+   {
+    "tool": "captions",
+    "inputs": [
+     "talk-916.mp4"
+    ],
+    "produces": "talk-916-captioned.mp4",
+    "params": {
+     "prompt_or_change": "Burn in English subtitles of her own speech in short timed chunks.",
+     "extra": "language: English; position: bottom (below her face, inside the frame); style: bold white with a thick black outline",
+     "aspect": "9:16",
+     "seconds": 10,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Subtitles of the clip's own speech in its own language are what captions does well. The outline is what keeps white words readable over her light sweater, once the harness passes it."
+   }
+  ]
+ },
+ "fix": "In execute.js, send captions a style.custom_config, not a bare template: text_color #FFFFFF, stroke_color #000000, stroke_width about 3-4 px at 480p, font_style bold. Map vertical_position from the planner's extra ('position: top|center|bottom'), defaulting to bottom. Alternatively, pick a template with a stroke or box (test cinematic and highlight once). Then update the catalogue's captions lines to state what is actually controllable: position, an outlined high-contrast style, and no language choice.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "talk-centred.mp4 is 720x1280 at 10.13 s, and the captioned output is 576x1024 at 10.0 s with audio. Frames at 1 fps show her centred with her whole face visible. Captions run in timed chunks: 'Hi everyone.' at about 1-2 s, 'Today I want to / show you three easy' at about 2-5 s, 'ways to make your / mornings less stressful.' at about 6-10 s, all words in order. They are thin white sans-serif with a faint shadow, sitting on her white sweater and hair. At 4 s, 'show you three easy' has very low contrast against the sweater. The judge's single contrast failure is fair. execute.js hard-codes style: { template: 'minimalist' }, and the API sheet (section 6.4) documents stroke_color, stroke_width and vertical_position in custom_config."
+}

@@ -1,0 +1,296 @@
+{
+  "id": "J52b",
+  "item": {
+    "id": "J52b",
+    "case": 52,
+    "case_name": "Two goals in one message",
+    "group": "J",
+    "group_name": "How the conversation goes (applies on top of any case above)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Bottle Cleanup and Mountain Scene",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "images",
+      "seconds": null,
+      "outputs": 2,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "product-bottle.jpg"
+        ],
+        "text": "Can you do two square pictures? First, edit this bottle photo so the wooden table and background are gone, replaced with plain white. Keep the bottle unchanged. Also make a new realistic picture of this same bottle standing on a rock beside a mountain lake at sunrise. No text on either."
+      }
+    ],
+    "tests": "Separates an attached-photo edit from a new scene-generation request, completing both while retaining the reference product's identity.",
+    "answer_sheet": {
+      "Which source and product": "Use product-bottle.jpg. Both outputs should feature the same matte black insulated bottle shown there.",
+      "First picture edit": "Remove the entire wooden table and original background, replacing them with plain white. Preserve the bottle's shape, colour, lid and visible details.",
+      "Second picture scene": "A new photorealistic scene with that bottle standing upright on a rock beside a mountain lake at sunrise.",
+      "Size and number": "Two separate square 1:1 pictures. Free-tier image resolution is fine.",
+      "Text and branding": "Do not add any text, captions or logos to either picture.",
+      "Lighting and composition": "Use sunrise lighting for the lake scene. Exact framing and other scenic details are your call."
+    },
+    "must_haves": [
+      "Two separate square images are supplied, not a combined collage.",
+      "The first image retains the source bottle's silhouette, matte black finish and lid details against a plain white background.",
+      "Neither the wooden table nor the original background remains in the first image.",
+      "The second image realistically shows the same bottle upright on a rock beside a mountain lake, with visible sunrise lighting.",
+      "Neither image contains added text or logos."
+    ]
+  },
+  "session": "b1-J52b",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you do two square pictures? First, edit this bottle photo so the wooden table and background are gone, replaced with plain white. Keep the bottle unchanged. Also make a new realistic picture of this same bottle standing on a rock beside a mountain lake at sunrise. No text on either.",
+      "materials": [
+        "product-bottle.jpg"
+      ],
+      "dialog": [],
+      "agent": "I'll cut out the bottle and place it on two square backgrounds: plain white and a realistic mountain lake at sunrise. This keeps the bottle itself unchanged.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "product-bottle.jpg",
+            "field": "asset",
+            "quote": "First, edit this bottle photo",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "[attached: product-bottle.jpg]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "Produce two square pictures with no text: first, replace the wooden table and background in the supplied photo with plain white, keeping the bottle unchanged; second, create a new realistic picture of the same bottle standing on a rock beside a mountain lake at sunrise.",
+            "field": "change",
+            "quote": "Can you do two square pictures? First, edit this bottle photo so the wooden table and background are gone, replaced with plain white. Keep the bottle unchanged. Also make a new realistic picture of this same bottle standing on a rock beside a mountain lake at sunrise. No text on either.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "form",
+            "field": "change_kind",
+            "quote": "the wooden table and background are gone, replaced with plain white",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "Table and background for the first picture; a new surrounding scene for the second picture.",
+            "field": "range",
+            "quote": "the wooden table and background are gone, replaced with plain white",
+            "source": "inferred",
+            "confidence": 0.98
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes — preserve the bottle unchanged",
+            "field": "keep_rest",
+            "quote": "Keep the bottle unchanged.",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "First, edit this bottle photo",
+          "source": "stated",
+          "why": "The primary request edits a supplied bottle photo; the additional requested picture uses the same bottle in a new scene.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "tree",
+        "say": "I'll cut out the bottle and place it on two square backgrounds: plain white and a realistic mountain lake at sunrise. This keeps the bottle itself unchanged.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 15,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "background-remove",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "product-bottle.jpg"
+            ],
+            "produces": "bottle-cutout.png",
+            "params": {
+              "extra": "Preserve the bottle and its existing details; transparent surroundings.",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Remove the wooden table and all background, retaining only the bottle.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Isolate the original bottle so neither finished picture regenerates it."
+          },
+          {
+            "tool": "image",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [],
+            "produces": "white-background.png",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "A uniform pure white square background, with no objects or markings.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Create the square white base for the first picture."
+          },
+          {
+            "tool": "place",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "white-background.png",
+              "bottle-cutout.png"
+            ],
+            "produces": "bottle-white-square.png",
+            "params": {
+              "extra": "Center the complete bottle with comfortable margins; preserve its proportions and original pixels without regeneration.",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Place the bottle cutout centrally on the white background.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Place the original bottle on white without altering its appearance."
+          },
+          {
+            "tool": "image",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [],
+            "produces": "mountain-lake-background.png",
+            "params": {
+              "extra": "Use soft frontal illumination and a level camera angle suitable for compositing a product photograph.",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Photorealistic mountain lake at sunrise, distant mountains and warm early light, a large natural rock in the foreground with an empty flat top at lower center ready to support an upright bottle; no objects or markings on the rock.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Create a realistic setting with a suitable surface for the unchanged bottle."
+          },
+          {
+            "tool": "place",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "mountain-lake-background.png",
+              "bottle-cutout.png"
+            ],
+            "produces": "bottle-mountain-lake-square.png",
+            "params": {
+              "extra": "Position the bottle base flush with the rock surface; preserve proportions and original bottle pixels; add a subtle contact shadow beneath the cutout.",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Place the unchanged bottle upright on the foreground rock at a realistic product scale.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Complete the second picture while retaining the original bottle rather than generating a likeness."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "background-remove",
+          "state": "done",
+          "output": "assets/tree-1/bottle-cutout.png",
+          "credits": 5,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 5
+        },
+        {
+          "tool": "image",
+          "state": "done",
+          "output": "assets/tree-1/white-background.png",
+          "credits": 5,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 4
+        },
+        {
+          "tool": "place",
+          "state": "done",
+          "output": "assets/tree-1/bottle-white-square.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "bottle-cutout.png at top-right, 15% wide",
+          "error": null,
+          "seconds": 0
+        },
+        {
+          "tool": "image",
+          "state": "done",
+          "output": "assets/tree-1/mountain-lake-background.png",
+          "credits": 5,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 7
+        },
+        {
+          "tool": "place",
+          "state": "done",
+          "output": "assets/tree-1/bottle-mountain-lake-square.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "bottle-cutout.png at top-right, 15% wide",
+          "error": null,
+          "seconds": 0
+        }
+      ],
+      "spent": 15,
+      "seconds": 19
+    }
+  ],
+  "started": "2026-11-01T06:10:19.909Z",
+  "spent": 15,
+  "seconds": 19,
+  "sessionDir": "sessions/b1-J52b"
+}

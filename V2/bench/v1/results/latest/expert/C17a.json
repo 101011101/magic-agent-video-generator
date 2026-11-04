@@ -1,0 +1,67 @@
+{
+ "id": "C17a",
+ "root_cause": "harness",
+ "contributing": [
+  "agent-reasoning"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The chain is right (exact script with write, then a synthetic female voice, then talking-photo of her own picture), and the words and identity came out right. The length was handled by hope. The plan had \"Target delivery length: 8 seconds\" in write and \"pace delivery to exactly 8 seconds\" in the voice extra, which voice.js passes to gpt-4o-mini-tts as a style instruction that it ignores. It also set seconds: 8 on voice, talking-photo and crop, and no code reads any of those. So the voice came out at 5.06 s, Magic Hour's talking photo took the audio's length (end_seconds = the sound's length, 5.12 s), and the crop kept 5.13 s. The agent had what it needed to see this coming: the planner prompt says \"A voice track's length sets the clip length that carries it\", and the write line gives 2.5 words a second, so 14 words is about 5.5 s and 8 s needs about 2.5 s of pauses that no listed tool adds. The final crop was also wasted: the portrait and the talking clip are already 640x640. I would build the 8 s into the voice track itself: one sentence per line, an unhurried delivery with a pause after each, and the track padded to exactly 8.0 s.",
+ "your_plan": {
+  "say": "I'll have a friendly synthetic female voice say your exact words, with relaxed pauses so it runs 8 seconds, then make your photo speak them as one square video with no captions.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "write",
+    "inputs": [],
+    "produces": "speech.txt",
+    "params": {
+     "prompt_or_change": "Write exactly these three sentences, one per line, and nothing else: \"Hi everyone!\" / \"Thanks for stopping by.\" / \"I can't wait to show you what's new.\"",
+     "extra": "exact words; one sentence per line",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The exact script, split by sentence so the voice tool reads three lines in one voice with a natural gap between them."
+   },
+   {
+    "tool": "voice",
+    "inputs": [
+     "speech.txt"
+    ],
+    "produces": "speech.mp3",
+    "params": {
+     "prompt_or_change": "Speak the script exactly as written.",
+     "extra": "voice: female; warm, friendly and unhurried, with a relaxed pause after each sentence",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "About 5.5 s of speech; talking-photo takes its length from this track, so the track must be 8.0 s. The pauses and a short tail are padded by code (needs voice.js to honour seconds)."
+   },
+   {
+    "tool": "talking-photo",
+    "inputs": [
+     "portrait-woman.jpg",
+     "speech.mp3"
+    ],
+    "produces": "talking-portrait.mp4",
+    "params": {
+     "prompt_or_change": "Natural lip sync and subtle head motion; keep her face, curly hair, sweater and the park background.",
+     "extra": "no captions",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Her own photo speaks the track. The portrait is already square (640x640), so no crop step is needed."
+   }
+  ]
+ },
+ "fix": "Make voice.js honour params.seconds. After synthesis, if the speech is shorter than the target, spread the gap as pauses between lines (sentences) plus a short lead-in and tail (adelay/apad) until it is exactly the target. If it is longer, apply atempo up to 1.15 and report anything still over. Add to the catalogue's voice line: \"its length sets talking-photo's length; seconds pads it with pauses\". This applies to every timed voice-over and talking head, including E28b's 10 s narration.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "ffprobe: speech.mp3 is 5.06 s; talking-portrait.mp4 is 640x640, 5.12 s, with audio; talking-portrait-square.mp4 is 720x720, 5.13 s. The grader frames show the curly-haired woman with changing mouth shapes. voice.js never reads params.seconds and sends extra as the TTS 'instructions'. execute.js builds talking-photo with end_seconds = the sound's length. The grader's 'about 8 s' window is 6.4 to 9.6 s, so 5.1 s fails correctly."
+}

@@ -1,0 +1,60 @@
+{
+ "id": "A06d",
+ "root_cause": "harness",
+ "contributing": [],
+ "grader_right": true,
+ "agent_vs_you": "The agent's three prompts are good on everything they mention: qwen with lettering, the exact name with the ampersand, one standalone mark each, and three genuinely different ideas (wheel, winding route, MM monogram) with different layouts. None of them says green, black or white, so qwen drew a clean black-on-white logo three times. The planner never saw the palette: the sheet filled direction with the enum value \"stated\" and kept \"Simple green and black on white\" only in that field's quote, and plan.js builds the SHEET lines as `field: value (source)`, so the planner read `direction: stated (stated)`. Its desired_state confirms it (\"...each featuring the exact name and a small, genuinely different symbol\"), and the planner's own rule \"THE USER'S WORDS ARE THE SPEC ... 'green and black on white' is green, black and pure white\" could not fire on words it was never shown. I would lead every prompt with the palette and say which part is which colour (the symbol green, the name black, the ground pure white), because qwen defaults to monochrome for a \"clean logo\".",
+ "your_plan": {
+  "say": "I'll make three separate square logos for Moss & Mile in green and black on pure white, each with the name and a different small symbol: a bicycle wheel, a winding road and a moss sprig.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "moss_mile_wheel.png",
+    "params": {
+     "prompt_or_change": "Flat minimalist vector logo, two colours only, green and black on a pure white background: a small green bicycle-wheel symbol centred above the name \"Moss & Mile\" in bold black geometric sans-serif lettering on one line. No other text, no tagline, no border, no mockup, nothing else in the picture.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "Concept 1 (the ride): symbol above the name. The palette leads the prompt and is assigned to parts, so qwen cannot fall back to black on white."
+   },
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "moss_mile_road.png",
+    "params": {
+     "prompt_or_change": "Flat minimalist vector logo, two colours only, green and black on a pure white background: a small green winding-road symbol, one smooth S-shaped ribbon, placed to the left of the name \"Moss & Mile\" in black sans-serif lettering on one line. No other text, no tagline, no border, no mockup, nothing else in the picture.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "Concept 2 (the mile): a route mark beside the name, a different layout from concept 1."
+   },
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "moss_mile_sprig.png",
+    "params": {
+     "prompt_or_change": "Flat minimalist vector logo, two colours only, green and black on a pure white background: a small green moss-sprig symbol (three rounded leaves on a short curved stem) above the name \"Moss & Mile\" in elegant black serif capitals. No other text, no tagline, no border, no mockup, nothing else in the picture.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "Concept 3 (the moss): a nature mark with serif type, so the three differ in idea, layout and lettering, not only in colour. Each prompt is lettered on qwen and read back."
+   }
+  ]
+ },
+ "fix": "Carry the user's look into the planner. In plan.js print each stated field's quote next to its value (e.g. `direction: stated — \"Simple green and black on white\"`), or in sheet.js fill `style` whenever direction=stated, not only when direction=needed. Extend guard() in plan.js so every colour word in the stated direction quote must appear in every image/image-edit prompt (prepend \"In green and black on pure white:\" when it is missing). The same lost-quote path dropped \"watercolor\" in D22b and \"soft watercolours\" in J50a.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "I opened all three PNGs (640x640). The wheel sits above the name, the two-line name has a thin S-route beside it, and the MM sits above a serif name. All three are pure black on near-white with no green, and 'Moss & Mile' is spelled correctly in each. In session.json the sheet has direction value 'stated' and quote 'Simple green and black on white, each with the name and a small symbol.'. The plan's desired_state has no palette, and none of the three prompts names a colour. The judge is right."
+}

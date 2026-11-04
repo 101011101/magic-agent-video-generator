@@ -1,0 +1,21 @@
+{
+  "id": "D18a",
+  "best_tools": "yes",
+  "explanation": "Animating the supplied photo directly was appropriate, and the prompt correctly specified actual bottle rotation, stable geometry, and a stationary camera and setting. However, minimax-h3 adds audio, so requesting “no audio” without a removal step did not reliably satisfy silence; the invented branding and geometry drift were model-output failures despite the preservation instructions.",
+  "better_chain": "image-to-video (animate the supplied bottle through a slow 90-degree turn, preserving its unbranded matte-black appearance, rigid geometry, and stationary surroundings; square, 6 seconds) → video-edit (remove the entire audio track) → gate (verify silence, approximate duration, actual rotation, unchanged branding and geometry, and stationary camera/table; retry generation if needed)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "model-quality"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correct tool, source image, motion instructions, aspect ratio, and requested duration. The no-audio instruction alone cannot reliably suppress this model's generated soundtrack; a downstream removal step was needed.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    }
+  ],
+  "missing": "An explicit audio-removal step after generation, followed by verification of silence and visual preservation."
+}

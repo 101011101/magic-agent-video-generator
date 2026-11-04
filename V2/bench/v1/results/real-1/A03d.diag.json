@@ -1,0 +1,33 @@
+{
+  "id": "A03d",
+  "best_tools": "yes",
+  "explanation": "The tool choices were appropriate for a flyer requiring exact text, but the background prompt explicitly introduced rust and the overlay lacked concrete font-sizing, full-text fitting, and black-on-cream settings. The missing words were already absent after the overlay, so the final crop did not cause the truncation; a completeness check should have caught it before delivery.",
+  "better_chain": "image (clean black-and-cream background, portrait 4:5, no wording) → text-overlay (all exact supplied text, explicit address line breaks, font sizes fitted to the complete text block, black lettering without a gray band) → check (verify every word and punctuation mark, comfortable legibility, palette, margins, and 4:5 format; correct before delivery if needed)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "The prompt explicitly requests muted rust, contrary to the black-and-cream requirement. Generating square also creates an avoidable later crop.",
+      "verdict": "bad-params",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "The complete, correct text was supplied and text-overlay is suitable here. However, the settings request hierarchy and wrapping without specifying a fitted font size or complete-block height, and do not specify black lettering on cream without a contrasting band. The output already omits the headline's first word and the address's ending despite the preservation instructions.",
+      "verdict": "bad-params",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly converts the square image to 4:5 without regenerating text. The planned central 72% safe area fits within the retained 80% width, and the visible omissions predate this crop; it cannot recover them.",
+      "verdict": "ok",
+      "tool": "crop"
+    }
+  ],
+  "missing": "A final completeness and layout check against the exact headline and entire address, including punctuation, plus palette verification and a correction pass before delivery."
+}

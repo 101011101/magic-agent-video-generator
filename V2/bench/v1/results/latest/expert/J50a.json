@@ -1,0 +1,94 @@
+{
+ "id": "J50a",
+ "root_cause": "harness",
+ "contributing": [],
+ "grader_right": true,
+ "agent_vs_you": "Turn 2 was handled correctly. 'The first one' resolved to the fox, and a code crop with fit: contain and the plain edge colour kept the same art, with the fox and moon whole. The failure was made in turn 1: neither image prompt says watercolour, so flux-2-klein drew a glossy photoreal fox with detailed fur on a near-black ground, and the square inherited that. The planner never saw \"Both soft watercolours.\": the sheet stored it only as the quote of direction=stated, and the planner prompt prints `direction: stated (stated)`. The newer style guard in plan.js would not have caught it either: its regex needs a word boundary right after 'watercolour', so the plurals 'watercolours' and 'illustrations' don't match. For turn 2 I would deliver the 1:1 picture the 4:5 was cut from. It is the same art, already square, with nothing padded or regenerated.",
+ "your_plan": {
+  "say": "Turn 1: I'll paint both pictures as soft watercolours, the fox under the crescent moon and the lighthouse in a storm, and cut each to 4:5 with no text. Turn 2: I'll give you the fox picture square, the same painting with the fox and moon whole.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "sleeping_fox_source.png",
+    "params": {
+     "prompt_or_change": "Soft watercolour illustration with loose washes, soft bleeding edges and paper texture: a fox curled up asleep under a crescent moon in a calm night sky; the fox and the moon well inside the central 80% of the width; no text.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 1. The style leads the prompt, and it is made square so a 4:5 cut keeps everything."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "sleeping_fox_source.png"
+    ],
+    "produces": "sleeping_fox_4x5.png",
+    "params": {
+     "prompt_or_change": "4:5 cut keeping the fox and the moon.",
+     "extra": "anchor: center",
+     "aspect": "4:5",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 1: the tall size asked, by code."
+   },
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "storm_lighthouse_source.png",
+    "params": {
+     "prompt_or_change": "Soft watercolour illustration with loose washes and paper texture: a lighthouse on a rock in a stormy sea, dark rain clouds, crashing waves; the lighthouse inside the central 80% of the width; no text.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 1, picture 2, in the same style."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "storm_lighthouse_source.png"
+    ],
+    "produces": "storm_lighthouse_4x5.png",
+    "params": {
+     "prompt_or_change": "4:5 cut keeping the lighthouse and the storm.",
+     "extra": "anchor: center",
+     "aspect": "4:5",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 1: the tall size asked, by code."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "sleeping_fox_source.png"
+    ],
+    "produces": "sleeping_fox_square.png",
+    "params": {
+     "prompt_or_change": "The first illustration as a square, unchanged.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 2. The square the 4:5 was cut from is the same art with the fox and moon whole: nothing padded, nothing redrawn."
+   }
+  ]
+ },
+ "fix": "Same as A06d and D22b. Give the planner the quotes of stated fields (or fill `style` whenever direction=stated), and fix the STYLE guard in plan.js so plurals match: `water ?colou?rs?`, `illustrat(?:ions?|ed)`, `sketch(?:es)?`, `cartoons?`.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "sleeping_fox_source.png (640x640) and sleeping_fox_square.png both show a photoreal fox with fine fur detail, curled on a glowing crescent moon on a black-navy ground: no watercolour washes or paper. The square is the 4:5 crop padded back with the dark edge colour, fox and moon whole. In the sheet, direction has value 'stated' and quote 'Both soft watercolours.'. The turn-1 prompts carry no style. The judge's 'not watercolour' is right."
+}

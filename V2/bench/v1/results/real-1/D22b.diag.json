@@ -1,0 +1,28 @@
+{
+  "id": "D22b",
+  "best_tools": "yes",
+  "explanation": "The agent correctly animated the existing picture, but the initial image prompt omitted watercolor, producing a photographic starting point that the animation then preserved. The chain also relied on generation settings alone for silence, duration and aspect, despite the video model's tendency to add sound; it needed explicit finishing steps. The sweeping-beam instruction was appropriate, so that particular failure reflects model execution rather than wrong wiring.",
+  "better_chain": "image (explicit watercolor brushwork, red-and-white lighthouse, rocky coast at dusk, no writing, 16:9) → check (verify style and composition; regenerate if needed) → image-to-video (use that picture, locked camera, gentle waves and a clearly visible beam sweeping across the water, 6 seconds) → gate (verify watercolor preservation and both motions; retry if needed) → video-edit (remove all audio) → crop (exact 16:9) → trim (0–6 seconds) → gate (verify playable video, exact duration and aspect, silence and no writing)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params",
+    "model-quality"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correct generation tool, but the prompt omitted the requested watercolor style and no-writing constraint. The supplied result visibly lacks watercolor treatment.",
+      "verdict": "bad-params",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correctly uses the first-turn picture and clearly requests both motions, preserved composition, six seconds and silence. However, this generation step alone cannot reliably enforce silence, exact duration or exact aspect; the chain needed finishing and verification afterward.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    }
+  ],
+  "missing": "Explicit audio removal and exact aspect/duration finishing, followed by verification. The first-turn prompt also lacked watercolor and no-writing instructions; the generated still should have been checked before animation."
+}

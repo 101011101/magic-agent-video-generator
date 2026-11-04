@@ -1,0 +1,227 @@
+{
+  "id": "G33b",
+  "item": {
+    "id": "G33b",
+    "case": 33,
+    "case_name": "YouTube thumbnail",
+    "group": "G",
+    "group_name": "Composed pieces (several tools, one finished thing)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Morning Video Frame Thumbnail",
+    "sub": "b",
+    "spec": {
+      "exact_text": [
+        "MORNINGS MADE EASY"
+      ],
+      "aspect": "16:9",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "talk-one.mp4"
+        ],
+        "text": "Use a clear frame from my video to make a 16:9 YouTube thumbnail. Keep me recognisable and add “MORNINGS MADE EASY” in big letters beside my face. Pick the frame yourself; make it warm and upbeat."
+      }
+    ],
+    "tests": "Tests extracting a usable frame from an attached video and composing it with readable text into a still thumbnail.",
+    "answer_sheet": {
+      "Source and frame selection": "Use talk-one.mp4; pick a clear frame yourself.",
+      "Person": "The woman speaking at the kitchen table in the attached video; keep her recognisable.",
+      "Headline and language": "MORNINGS MADE EASY, in English.",
+      "Platform and size": "One 16:9 YouTube thumbnail; free-tier resolution is fine.",
+      "Visual style": "Warm and upbeat, with big text beside my face; colours and font are your call."
+    },
+    "must_haves": [
+      "The deliverable is one still image in 16:9, not a video.",
+      "The thumbnail visibly uses a frame from talk-one.mp4, retaining the woman's identity and source-frame appearance.",
+      "The woman's face is clear and unobstructed.",
+      "The headline reads exactly “MORNINGS MADE EASY” in large, legible letters beside her face.",
+      "The overall treatment looks warm and upbeat."
+    ]
+  },
+  "session": "b1-G33b",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Use a clear frame from my video to make a 16:9 YouTube thumbnail. Keep me recognisable and add “MORNINGS MADE EASY” in big letters beside my face. Pick the frame yourself; make it warm and upbeat.",
+      "materials": [
+        "talk-one.mp4"
+      ],
+      "dialog": [],
+      "agent": "I’ll extract a frame from your video, keep your face unchanged, and add the big lettering beside it for a widescreen thumbnail.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "A YouTube thumbnail using a clear frame from talk-one.mp4, keeping the user recognisable and placing “MORNINGS MADE EASY” in big letters beside their face.",
+            "field": "subject",
+            "quote": "Use a clear frame from my video to make a 16:9 YouTube thumbnail. Keep me recognisable and add “MORNINGS MADE EASY” in big letters beside my face.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "stated",
+            "field": "direction",
+            "quote": "make it warm and upbeat",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "style",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "16:9",
+            "field": "size",
+            "quote": "16:9",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "talk-one.mp4 — the user's video, supplying a clear frame showing their face; select the frame.",
+            "field": "materials",
+            "quote": "Use a clear frame from my video",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "1",
+            "field": "count",
+            "quote": "a 16:9 YouTube thumbnail",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "image",
+          "quote": "make a 16:9 YouTube thumbnail",
+          "source": "stated",
+          "why": "The requested deliverable is a single thumbnail image made using a frame from the supplied video.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "tree",
+        "say": "I’ll extract a frame from your video, keep your face unchanged, and add the big lettering beside it for a widescreen thumbnail.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 0,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "frame",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "talk-one.mp4"
+            ],
+            "produces": "face-frame.png",
+            "params": {
+              "extra": "at: 3",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Extract the original video frame unchanged.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Extract a real frame rather than regenerate the user's appearance."
+          },
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "face-frame.png"
+            ],
+            "produces": "thumbnail-base.png",
+            "params": {
+              "extra": "anchor: center; preserve the entire face",
+              "seconds": 0,
+              "aspect": "16:9",
+              "prompt_or_change": "Crop to widescreen while keeping the user's face visible.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Set the thumbnail's exact widescreen aspect without regenerating the face."
+          },
+          {
+            "tool": "text-overlay",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "thumbnail-base.png"
+            ],
+            "produces": "youtube-thumbnail.png",
+            "params": {
+              "extra": "at: middle; position beside the face without covering it; large bold high-contrast lettering, wrapped to fit",
+              "seconds": 0,
+              "aspect": "16:9",
+              "prompt_or_change": "MORNINGS MADE EASY",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Add exact, legible lettering beside the face while preserving the underlying frame."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "frame",
+          "state": "done",
+          "output": "assets/tree-1/face-frame.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-1/thumbnail-base.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "text-overlay",
+          "state": "done",
+          "output": "assets/tree-1/youtube-thumbnail.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T05:40:16.074Z",
+  "spent": 0,
+  "seconds": 23,
+  "sessionDir": "sessions/b1-G33b"
+}

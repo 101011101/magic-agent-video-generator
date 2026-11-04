@@ -1,0 +1,104 @@
+{
+  "id": "C15a",
+  "group": "C",
+  "case": 15,
+  "case_name": "Face swap on a video",
+  "title": "Five Second Talking Face Swap",
+  "tests": "Tests a short video face swap with source identity, temporal consistency and original audio preserved, without misrepresenting free-tier capabilities.",
+  "pass": false,
+  "score": 30,
+  "tags": [
+    "wrong-length",
+    "must-have-missed",
+    "major-fault",
+    "not-usable"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "assemble:done"
+      ]
+    },
+    {
+      "name": "a video was made",
+      "pass": true,
+      "got": [
+        ".mp4"
+      ]
+    },
+    {
+      "name": "about 5 s",
+      "pass": false,
+      "got": 10.1
+    },
+    {
+      "name": "sound present and audible",
+      "pass": true,
+      "got": -0.4
+    },
+    {
+      "name": "must-haves met",
+      "pass": false,
+      "got": "1/3"
+    },
+    {
+      "name": "asks nothing",
+      "pass": true,
+      "got": []
+    }
+  ],
+  "judge": {
+    "usable_as_is": false,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "major",
+        "what": "The delivered clip is 10.1 seconds long instead of the required 5 seconds."
+      },
+      {
+        "severity": "major",
+        "what": "The face replacement is not maintained throughout the delivered clip: the early samples resemble the portrait, but the samples at 6.3 and 8.9 seconds show the original woman's face again."
+      }
+    ],
+    "score": 2,
+    "summary": "The early frames show a plausible face replacement in the original kitchen, but the clip runs twice the required length and returns to the original face.",
+    "must_haves": [
+      {
+        "item": "The delivered video is 5 seconds long and follows the first 5 seconds of talk-one.mp4.",
+        "met": "no",
+        "why": "The supplied output duration is 10.1 seconds, not 5 seconds."
+      },
+      {
+        "item": "The woman's face recognizably matches portrait-woman.jpg throughout, rather than reverting to the original face between frames.",
+        "met": "no",
+        "why": "The face in the 1.3- and 3.8-second samples resembles the portrait, but the later samples revert to the original woman's facial features."
+      },
+      {
+        "item": "The original kitchen, clothing, body motion and framing remain unchanged.",
+        "met": "yes",
+        "why": "The sampled frames preserve the kitchen layout, clothing, body placement and framing, with natural changes in hand and head pose."
+      },
+      {
+        "item": "Original speech is audible and synchronized with the video.",
+        "met": "cannot_tell",
+        "why": "The sound report confirms audible speech, but a transcript and isolated frames cannot establish lip synchronization or verify that the audio is unchanged from the source."
+      },
+      {
+        "item": "The face remains aligned during mouth and head movement, without conspicuous flicker or doubled facial features.",
+        "met": "cannot_tell",
+        "why": "The sampled faces appear aligned without obvious doubled features, but isolated frames cannot establish tracking stability or rule out flicker during movement."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 150,
+  "seconds": 105,
+  "outputs": [
+    "sessions/b2-C15a/assets/tree-1/talk-one-face-replaced.mp4"
+  ],
+  "tools": [
+    "trim→face-swap-video→trim→assemble"
+  ]
+}

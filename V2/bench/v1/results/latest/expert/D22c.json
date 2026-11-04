@@ -1,0 +1,51 @@
+{
+ "id": "D22c",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness",
+  "grader"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The failure was set up in turn 1. The user asked to 'Draw a square cartoon of ...', and the agent's image prompt dropped the word 'cartoon' entirely ('A little yellow robot with one big round eye and purple boots, ... square composition'). The catalogue warns that illustration styles drift to photographic unless the style leads the prompt. flux-2-klein duly made a glossy 3D vinyl-toy render. The planner's STYLE guard, which prepends a named style such as 'cartoon', never fired. It reads only the sheet fields, and the sheet's subject quote left out 'cartoon': the style field is only filled when direction=needed. In turn 2 the agent was right to animate the session picture with image-to-video, and minimax kept that exact robot and its 3D look. So the clip fails the user's 'cartoon drawing' intent because the drawing never was one. A second, smaller miss: the turn-1 picture holds the can with its spout pointing away from the pot. In turn 2 the model had water come out of the handle side (the judge's 'double spout'). I would lead every prompt in the piece with the style. I would compose the turn-1 picture with the spout toward the pot, since watering is what a can beside seedlings is for. Then the turn-2 prompt would describe the can tipping forward so the water leaves the spout.",
+ "your_plan": {
+  "say": "Turn 1: I'll draw a square flat cartoon of your little yellow robot with its watering can by the seedlings. Turn 2: I'll animate that same drawing for 5 silent seconds as it tips the can and waters the seedlings.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "robot-cartoon.png",
+    "params": {
+     "prompt_or_change": "A flat 2D cartoon illustration with bold clean black outlines and simple flat colours, children's picture-book style, not 3D, not a photo: a cute little yellow robot with one big round eye and purple boots, holding a red watering can with its spout pointing toward a terracotta pot of small green seedlings standing right beside it, plain white background, whole robot and pot in frame.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 1. The style the user named leads the prompt so klein does not drift to a 3D or photographic render. The spout faces the pot so the later watering can read physically."
+   },
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "robot-cartoon.png"
+    ],
+    "produces": "robot-watering.mp4",
+    "params": {
+     "prompt_or_change": "2D cartoon animation in exactly the same flat drawing style, bold outlines and flat colours, no 3D shading: the same little yellow robot with one big round eye and purple boots slowly tips its red watering can forward and a stream of cartoon water pours from the spout onto the seedlings in the pot, the seedlings bob gently; the robot's design, colours and the background stay the same; static camera.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Turn 2. The user's own session picture is the start frame, which keeps the identity. Gentle motion of a still is what image-to-video does well. The invented sound is dropped by code, so the clip is silent, and the 1:1 aspect is kept."
+   }
+  ]
+ },
+ "fix": "Make the STYLE guard in plan.js read the user's raw messages for the whole session, not only the sheet's stated fields. 'Draw a square cartoon of ...' must make every image, image-edit and image-to-video prompt in the piece start with the style, follow-ups included. Fill the sheet's style field whenever a style word is said, not only when direction=needed. Grader: give the judge the turn-1 picture when a must-have compares against it, and read the audio from the container (this clip has no audio stream).",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "Turn-1 yellow_robot_seedlings.png (640x640, flux-2-klein) is a glossy 3D vinyl-toy render with specular highlights and soft shadows, not a cartoon drawing. The can's spout and purple rose point to the right, away from the pot on the left. yellow_robot_watering.mp4 is 480x480, 5.17 s, video only (silent). Frames at 2 fps show the same toy robot: yellow body, one big eye, purple boots, the 3D look kept. Its head turns. The can tilts, the soil darkens or blues with water, and the stream leaves the handle side, not the spout. The output is faithful to the turn-1 picture, so the style failure was inherited from turn 1."
+}

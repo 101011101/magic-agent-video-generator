@@ -1,0 +1,110 @@
+{
+  "id": "E27a",
+  "group": "E",
+  "case": 27,
+  "case_name": "Add music to a clip",
+  "title": "Warm Music for Morning Tips",
+  "tests": "Tests whether the delivered video adds music matching an explicit mood while preserving the source footage and speech.",
+  "pass": false,
+  "score": 5,
+  "tags": [
+    "asked-unneeded",
+    "wrong-kind",
+    "wrong-length",
+    "must-have-missed",
+    "major-fault",
+    "not-usable"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "generate_music:done"
+      ]
+    },
+    {
+      "name": "a video was made",
+      "pass": false,
+      "got": [
+        ".wav"
+      ]
+    },
+    {
+      "name": "about 10 s",
+      "pass": false,
+      "got": 15
+    },
+    {
+      "name": "sound present and audible",
+      "pass": true,
+      "got": -1
+    },
+    {
+      "name": "must-haves met",
+      "pass": false,
+      "got": "0/3"
+    },
+    {
+      "name": "asks nothing",
+      "pass": false,
+      "got": [
+        {
+          "field": "question",
+          "question": "I can generate a warm, hopeful instrumental—soft piano and gentle pads, with no vocals or strong beat—but the connected tools can’t mix it into your clip while preserving the entire video and your voice unchanged.\n\nIf you’d like a separate music track to layer quietly beneath your voice, how long is the clip?"
+        }
+      ]
+    }
+  ],
+  "judge": {
+    "usable_as_is": false,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "major",
+        "what": "The delivered output is a standalone music file, not the original kitchen-table video with music added."
+      },
+      {
+        "severity": "major",
+        "what": "The output has no clear speech, so the woman's original spoken introduction is not preserved."
+      },
+      {
+        "severity": "major",
+        "what": "The music lasts 15 seconds despite the user specifying a 10-second clip."
+      }
+    ],
+    "score": 1,
+    "summary": "The agent produced a 15-second standalone music track instead of the requested 10-second video with its original voice and added background music.",
+    "must_haves": [
+      {
+        "item": "The output contains the full original 10-second kitchen-table video, with no new shots or altered playback speed.",
+        "met": "no",
+        "why": "The only supplied output is a WAV audio file, not a video."
+      },
+      {
+        "item": "Added music is clearly audible and has a warm, hopeful, gentle character rather than an aggressive or high-energy feel.",
+        "met": "cannot_tell",
+        "why": "The supplied description identifies music or ambience, but does not establish its mood or energy, and the audio cannot be heard here."
+      },
+      {
+        "item": "The woman's original spoken introduction remains audible and understandable throughout.",
+        "met": "no",
+        "why": "The output description explicitly reports no clear speech."
+      },
+      {
+        "item": "The added music ends with the video rather than continuing over extra footage or a blank screen.",
+        "met": "no",
+        "why": "There is no combined video, and the delivered music runs 15 seconds rather than matching the specified 10-second clip."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 15,
+  "seconds": 56,
+  "outputs": [
+    "sessions/mcp-m1-E27a/assets/01-generate_music.wav"
+  ],
+  "tools": [
+    "generate_music"
+  ]
+}

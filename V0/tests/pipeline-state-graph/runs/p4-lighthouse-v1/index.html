@@ -1,0 +1,189 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lighthouse short film · state-graph</title><style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--ok:#4f7a3a;--bad:#a0402d;--warn:#c27a1e;--card:#fbf7ef}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Georgia,serif}main{max-width:1100px;margin:0 auto;padding:40px 16px 80px}h1{font-weight:normal;font-size:30px}
+h2{font-weight:normal;font-size:24px;border-top:1px solid var(--line);padding-top:20px;margin-top:40px}h3{font-weight:normal;color:var(--soft);font-size:16px;margin:22px 0 6px}
+.soft{color:var(--soft)}.small{font-size:13px}.lab{font-variant:small-caps;color:var(--soft);margin:6px 0 0}.red{color:var(--bad)}.green{color:var(--ok)}.orange{color:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}img,video{width:100%;display:block;border:1px solid var(--line)}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}.card{flex:0 0 200px;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--ok);padding:8px;font-size:13px}
+.card.bad{border-top-color:var(--bad)}.card.forced{border-top-color:var(--warn)}.card img{margin-bottom:6px}.thumb{max-width:220px}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;font-weight:normal;vertical-align:top}tr.cont td{background:#eef0dc}
+.wrap{overflow-x:auto}pre{white-space:pre-wrap;font-size:12px;margin:4px 0}details{margin-top:4px}summary{cursor:pointer;color:var(--soft)}
+.ver{border-left:3px solid var(--line);padding-left:10px;margin:10px 0}.tl{position:relative;border:1px solid var(--line);background:var(--card);margin:10px 0}
+.lane{position:relative;height:30px;border-bottom:1px dashed var(--line)}.lane>span.n{position:absolute;left:4px;top:6px;font-size:11px;color:var(--soft);z-index:1}
+.bar{position:absolute;top:4px;height:22px;background:#d9cbb4;border:1px solid var(--soft);font-size:11px;overflow:hidden;white-space:nowrap;padding:2px 4px}.bar.m{background:#e3d4ef}
+.flag{position:absolute;top:2px;font-size:10px;white-space:nowrap;border-left:2px solid var(--bad);padding-left:2px}.flag.sfx{border-left-color:var(--ok)}
+@media(max-width:760px){.two{grid-template-columns:1fr}}</style></head><body><main><h1>Lighthouse short film · pipeline state-graph</h1><p class="soft">A short film, 2 minutes. A lighthouse keeper finds a glowing shell on the beach at dawn. She brings it home. At night it hums and the lamp goes out. She climbs the tower in a storm and uses the shell to relight it. Ships are saved. Morning again, she puts the shell back on the beach. Melancholy, painterly, no dialogue, just score.</p>
+<p class="soft">models: IMAGE {&quot;model&quot;:&quot;nano-banana-pro&quot;,&quot;resolution&quot;:&quot;2k&quot;,&quot;aspect_ratio&quot;:&quot;16:9&quot;} · VIDEO {&quot;model&quot;:&quot;wan-3.0&quot;,&quot;resolution&quot;:&quot;720p&quot;,&quot;audio&quot;:true}<br>
+1360 credits · wall 5:32 · beats 2/9 run · LLM 4 calls (0 cached), 7517 in / 1428 out tokens</p>
+<table><tr><td class="red">beat </td><td>Error: Command failed: ffprobe -v error -show_entries format=duration -of csv=p=0 picture.mp4
+picture.mp4: No such file or directory
+</td></tr></table><video src="final.mp4" controls playsinline></video><h2>Measures</h2><div class="wrap"><table><tr><th>Join</th><th>Link</th><th>Seam SSIM</th><th>Jump (median 0.979)</th><th>Dip ratio</th><th>Tail trim</th><th>Lead trim</th></tr><tr class="cont"><td>b1 → b2</td><td>continuous</td><td>0.809</td><td>12.341</td><td></td><td></td><td></td></tr></table></div>
+<div class="wrap"><table class="small"><tr><th>Clip</th><th>First vs start</th><th>Frames</th><th>Lead still</th><th>Tail still</th><th>Trimmed to</th></tr><tr><td>b1</td><td>0.986</td><td>150</td><td></td><td></td><td></td></tr><tr><td>b2</td><td>0.989</td><td>147</td><td></td><td></td><td></td></tr></table></div>
+<p class="soft small">seam SSIM: similarity of the last frame before the join and the first frame after it (1 = same image).<br>jump: pixel change across the join; at a cut it is large by design, at a continuous join it should stay near the median.<br>
+dip ratio: motion across the join vs motion inside the clips; near 1 = motion continues, far below 1 = motion reset (a pause).<br>tail / lead trim: still frames cut from the end of the clip before / the start of the clip after.<br>
+first vs start: similarity of the clip's first frame and its start frame. lead / tail still: still frames found at the clip start / end. trimmed to: frames kept.</p><h2>Failed checks</h2><table><tr><td>beat 2</td><td>attempt 1</td><td>hard: shell wrong size (should be 7 cm long, fits in a palm.): Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.<br>soft: shell pose should be Resting on its side, aperture upward.: Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.</td><td class="red">accepted (forced)</td></tr></table><h2>Beats</h2><h3>Beat 1 · cut · beach · dawn, calm, overcast</h3><p>keeper walks into view along the waterline and stops beside the small amber glow of shell. <span class="soft">Static camera.</span></p><div class="two">
+<div><img src="b1-start.png" loading="lazy"><p class="soft small">no seed (fresh) — no usable earlier frame: fresh generation; new: lighthouse<br>new: lighthouse</p><details><summary>wanted state</summary><p class="small"><b>beach</b>:  / Level shoreline with exposed rock pools. / Across the foreground and middle distance. / with none / Wet sand; retreating tide; no storm-cast driftwood. / Diffuse pearl-grey dawn light.<br><b>lighthouse</b>:  / Upright tower. / Upper right, 90 m beyond the foreground pools. / with none / Intact, salt-stained. / Diffuse pearl-grey dawn light.</p></details></div>
+<div><video src="b1.mp4" controls playsinline></video><p class="soft small">keeper walks into view along the waterline and stops beside the small amber glow of shell. Static camera. Sound: Sound: Gentle surf, distant seabirds.. No music..</p></div></div>
+<div class="row"><div class="card "><img src="b1-start-a1.png" loading="lazy">attempt 1 · f1<br><span class="green">accepted</span>
+<details><summary>prompt</summary>Painterly cinematic realism in pearl grey, slate blue, weathered white and muted brown, with textured surfaces, softly blended light and restrained amber accents.. One single 16:9 film frame, not a grid, storyboard or collage; no text, borders, timecodes or signatures.
+Frame: Wide, low shoreward angle.. Reflective pools and kelp fill the empty foreground beneath the lighthouse on the headland. Place: beach, dawn, calm, overcast.
+New in this frame, lighthouse: A cylindrical masonry lighthouse with salt-stained white walls, narrow windows, a glazed lantern crown and an attached low cottage. Real size: 22 m tall tower, approximately thirteen times a person's height.. Upright tower.; Upper right, 90 m beyond the foreground pools.; Intact, salt-stained.; lit: Diffuse pearl-grey dawn light..
+The place, beach: A rocky coastal beach with grey sand, shallow reflective rock pools, ribbons of kelp and scattered broken shells beneath a rising headland.
+Keep every real size consistent with the people and the place: lighthouse 22 m tall tower, approximately thirteen times a person's height..<br><span class="soft">inputs: none</span></details></div></div><img src="b1-strip.jpg" loading="lazy">
+<div class="two"><div><img src="b1-last.png" loading="lazy" class="thumb"></div><p class="small">last frame f2<br>lighthouse: <span class="green">ok</span> · keeper: <span class="red">keeper identity differs: Wrong character and wardrobe; boots farther than 20 cm from shell.; keeper wardrobe should be Heavy charcoal coat over a neatly patched slate dress; dark boots.; keeper position should be Lower left, boots 20 cm from shell.: Older masculine-presenting figure in cap, brown jacket and trousers, looking down with empty gloved hands.</span> · shell: <span class="red">shell identity differs: No clear ivory spiral-shell design; appears oversized and too far from boots.; shell wrong size (should be 7 cm long, fits in a palm.): Amber-glowing irregular object on the wet beach near the boots.; shell position should be Lower left, in sand 20 cm from keeper's boots.: Amber-glowing irregular object on the wet beach near the boots.</span></p></div><h3>Beat 2 · continuous · beach · dawn, calm, overcast</h3><p>keeper kneels, lifts shell into her palm, and pauses over its warm spiral. <span class="soft">Static camera.</span></p><div class="two">
+<div><img src="b2-start.png" loading="lazy"><p class="lab">continuous start: the real last frame of beat 1 · missing keeper, shell → repaired</p><p class="soft small"></p><details><summary>wanted state</summary><p class="small"><b>beach</b>:  / Level shoreline with exposed rock pools. / Across the foreground and middle distance. / with none / Wet sand; retreating tide; no storm-cast driftwood. / Diffuse pearl-grey dawn light.<br><b>lighthouse</b>:  / Upright tower. / Upper right, 90 m beyond the foreground pools. / with none / Intact, salt-stained. / Diffuse pearl-grey dawn light.<br><b>keeper</b>: Heavy charcoal coat over a neatly patched slate dress; dark boots. / Standing with lowered eyes and empty hands. / Lower left, boots 20 cm from shell. / with beach / Dry. / Diffuse pearl-grey dawn light.<br><b>shell</b>:  / Resting on its side, aperture upward. / Lower left, in sand 20 cm from keeper's boots. / with beach / Intact, softly glowing amber. / Pearl-grey daylight with internal amber light.</p></details></div>
+<div><video src="b2.mp4" controls playsinline></video><p class="soft small">keeper kneels, lifts shell into her palm, and pauses over its warm spiral. Static camera. The motion is already under way at the first frame; no pause, no restart. Sound: Sound: Gentle surf, distant seabirds.. No music..</p></div></div>
+<div class="row"><div class="card forced"><img src="b2-start.png" loading="lazy">attempt 1 · seed f2 · f3<br><span class="orange">accepted (forced)</span>
+<br><span class="soft">hard: shell wrong size (should be 7 cm long, fits in a palm.): Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.</span><br><span class="soft">soft: shell pose should be Resting on its side, aperture upward.: Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.</span><details><summary>prompt</summary>Painterly cinematic realism in pearl grey, slate blue, weathered white and muted brown, with textured surfaces, softly blended light and restrained amber accents.. One single 16:9 film frame, not a grid, storyboard or collage; no text, borders, timecodes or signatures.
+Image 1 is the current frame: keep its place, camera, framing, light and every object exactly.
+Add keeper (A woman of about sixty with a lined face, weathered hands, grey hair tied back, narrow shoulders and a lean build. Real size: 1.68 m tall woman.): Standing with lowered eyes and empty hands.; Lower left, boots 20 cm from shell.; interacting with beach; Dry.; wearing Heavy charcoal coat over a neatly patched slate dress; dark boots.; lit: Diffuse pearl-grey dawn light..
+Add shell (A spiral marine snail shell with ivory ridges, a pale ochre aperture and a translucent inner whorl. Real size: 7 cm long, fits in a palm.): Resting on its side, aperture upward.; Lower left, in sand 20 cm from keeper's boots.; interacting with beach; Intact, softly glowing amber.; lit: Pearl-grey daylight with internal amber light..<br><span class="soft">inputs: b1-last.png</span></details></div></div><img src="b2-strip.jpg" loading="lazy">
+<div class="two"><div><img src="b2-last.png" loading="lazy" class="thumb"></div><p class="small">last frame f4<br>lighthouse: <span class="green">ok</span> · keeper: <span class="green">ok</span> · shell: <span class="red">shell wrong size (should be 7 cm long, fits in a palm.): Large intact amber-glowing spiral shell held in both hands, aperture toward camera.; shell position should be In keeper's right palm, 35 cm above the sand.: Large intact amber-glowing spiral shell held in both hands, aperture toward camera.; shell pose should be Cradled with its spiral facing upward.: Large intact amber-glowing spiral shell held in both hands, aperture toward camera.</span></p></div>
+<h2>State graph and lineage</h2><h3><b>keeper</b> <span class="soft">character · 1.68 m tall woman.</span></h3><p class="soft small">A woman of about sixty with a lined face, weathered hands, grey hair tied back, narrow shoulders and a lean build.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance (end of beat)<br><span class="soft">Heavy charcoal coat over a neatly patched slate dress; dark boots. · Dry.</span></p>
+<div class="row"><div class="card bad"><img src="b1-last.png" loading="lazy"><b>f2</b> · beat 1 last<br><span class="red">keeper identity differs: Wrong character and wardrobe; boots farther than 20 cm from shell.; keeper wardrobe should be Heavy charcoal coat over a neatly patched slate dress; dark boots.; keeper position should be Lower left, boots 20 cm from shell.: Older masculine-presenting figure in cap, brown jacket and trousers, looking down with empty gloved hands.</span>
+<br>seed ← f1</div><div class="card "><img src="b2-start.png" loading="lazy"><b>f3</b> · beat 2 start<br><span class="green">ok</span>
+<br>seed ← f2</div><div class="card "><img src="b2-last.png" loading="lazy"><b>f4</b> · beat 2 last<br><span class="green">ok</span>
+<br>seed ← f3</div></div></div><h3><b>shell</b> <span class="soft">prop · 7 cm long, fits in a palm.</span></h3><p class="soft small">A spiral marine snail shell with ivory ridges, a pale ochre aperture and a translucent inner whorl.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance (end of beat)<br><span class="soft"> · Intact, softly glowing amber.</span></p>
+<div class="row"><div class="card bad"><img src="b1-last.png" loading="lazy"><b>f2</b> · beat 1 last<br><span class="red">shell identity differs: No clear ivory spiral-shell design; appears oversized and too far from boots.; shell wrong size (should be 7 cm long, fits in a palm.): Amber-glowing irregular object on the wet beach near the boots.; shell position should be Lower left, in sand 20 cm from keeper's boots.: Amber-glowing irregular object on the wet beach near the boots.</span>
+<br>seed ← f1</div><div class="card bad"><img src="b2-start.png" loading="lazy"><b>f3</b> · beat 2 start<br><span class="red">shell wrong size (should be 7 cm long, fits in a palm.): Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.; shell pose should be Resting on its side, aperture upward.: Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.</span>
+<br>seed ← f2</div><div class="card bad"><img src="b2-last.png" loading="lazy"><b>f4</b> · beat 2 last<br><span class="red">shell wrong size (should be 7 cm long, fits in a palm.): Large intact amber-glowing spiral shell held in both hands, aperture toward camera.; shell position should be In keeper's right palm, 35 cm above the sand.: Large intact amber-glowing spiral shell held in both hands, aperture toward camera.; shell pose should be Cradled with its spiral facing upward.: Large intact amber-glowing spiral shell held in both hands, aperture toward camera.</span>
+<br>seed ← f3</div></div></div><div class="ver"><p class="small">v2 ← continues shell@v1 · since beat 9 · condition: Intact, faintly glowing amber. → Intact, wet, faintly glowing amber.<br><span class="soft"> · Intact, wet, faintly glowing amber.</span></p>
+<div class="row"></div></div><h3><b>beach</b> <span class="soft">location · 250 m long shoreline, with rocks up to waist height.</span></h3><p class="soft small">A rocky coastal beach with grey sand, shallow reflective rock pools, ribbons of kelp and scattered broken shells beneath a rising headland.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance<br><span class="soft"> · Wet sand; retreating tide; no storm-cast driftwood.</span></p>
+<div class="row"></div></div><div class="ver"><p class="small">v2 ← continues beach@v1 · since beat 9 · condition: Wet sand; returning tide below the shell-finding place. → Wet sand; thin returning tide surrounding shell.<br><span class="soft"> · Wet sand; thin returning tide surrounding shell.</span></p>
+<div class="row"></div></div><h3><b>lighthouse</b> <span class="soft">location · 22 m tall tower, approximately thirteen times a person's height.</span></h3><p class="soft small">A cylindrical masonry lighthouse with salt-stained white walls, narrow windows, a glazed lantern crown and an attached low cottage.</p><div class="ver"><p class="small">v1 · since beat 1 · first appearance<br><span class="soft"> · Intact, salt-stained.</span></p>
+<div class="row"><div class="card "><img src="b1-start-a1.png" loading="lazy"><b>f1</b> · beat 1 start<br><span class="green">ok</span>
+</div><div class="card "><img src="b1-last.png" loading="lazy"><b>f2</b> · beat 1 last<br><span class="green">ok</span>
+<br>seed ← f1</div><div class="card "><img src="b2-start.png" loading="lazy"><b>f3</b> · beat 2 start<br><span class="green">ok</span>
+<br>seed ← f2</div><div class="card "><img src="b2-last.png" loading="lazy"><b>f4</b> · beat 2 last<br><span class="green">ok</span>
+<br>seed ← f3</div></div></div><h3><b>cottage</b> <span class="soft">location · 4 m by 5 m room, with a 2.4 m ceiling.</span></h3><p class="soft small">A small lighthouse cottage kitchen with faded blue plaster walls, worn wooden floorboards and a window facing the tower and sea.</p><div class="ver"><p class="small">v1 · since beat 3 · first appearance<br><span class="soft"> · Intact; window closed and rain-streaked.</span></p>
+<div class="row"></div></div><h3><b>table</b> <span class="soft">prop · 1.2 m long, 75 cm high, waist-high to the keeper.</span></h3><p class="soft small">A rectangular wooden kitchen table with a worn brown surface and neatly repaired joints.</p><div class="ver"><p class="small">v1 · since beat 3 · first appearance<br><span class="soft"> · Intact, worn.</span></p>
+<div class="row"></div></div><h3><b>cup</b> <span class="soft">prop · 9 cm tall, hand-sized.</span></h3><p class="soft small">A cream ceramic drinking cup with a blue rim, one handle and a chipped lip.</p><div class="ver"><p class="small">v1 · since beat 3 · first appearance<br><span class="soft"> · Chipped, intact.</span></p>
+<div class="row"></div></div><h3><b>meal</b> <span class="soft">prop · 20 cm across, smaller than a person's forearm.</span></h3><p class="soft small">A shallow grey ceramic bowl containing a simple vegetable stew.</p><div class="ver"><p class="small">v1 · since beat 3 · first appearance<br><span class="soft"> · Partly eaten.</span></p>
+<div class="row"></div></div><h3><b>spoon</b> <span class="soft">prop · 18 cm long, hand-sized.</span></h3><p class="soft small">A plain pewter eating spoon with an oval bowl and a narrow handle.</p><div class="ver"><p class="small">v1 · since beat 3 · first appearance<br><span class="soft"> · Used.</span></p>
+<div class="row"></div></div><h3><b>stairs</b> <span class="soft">location · 3.5 m diameter, rising 18 m inside the tower; steps are 80 cm wide.</span></h3><p class="soft small">A spiralling lighthouse stairwell with worn stone steps, whitewashed masonry, narrow slit windows and a fixed iron handrail.</p><div class="ver"><p class="small">v1 · since beat 4 · first appearance<br><span class="soft"> · Wet steps; rain entering slit windows.</span></p>
+<div class="row"></div></div><h3><b>lantern</b> <span class="soft">location · 4 m across, with a 3 m ceiling.</span></h3><p class="soft small">A circular lighthouse lantern room with salt-marked glazing, iron mullions and a dark metal floor surrounding a central beacon.</p><div class="ver"><p class="small">v1 · since beat 5 · first appearance<br><span class="soft"> · Intact; exterior glazing rain-streaked.</span></p>
+<div class="row"></div></div><h3><b>lamp</b> <span class="soft">prop · 1.7 m tall including its pedestal, approximately as tall as the keeper.</span></h3><p class="soft small">A fixed lighthouse beacon with a brass burner, a hinged glass housing and concentric optical lenses mounted on a central iron pedestal.</p><div class="ver"><p class="small">v1 · since beat 3 · first appearance<br><span class="soft"> · Lit; glass housing closed.</span></p>
+<div class="row"></div></div><div class="ver"><p class="small">v2 ← continues lamp@v1 · since beat 3 · condition: Lit; glass housing closed. → Extinguished; glass housing closed.<br><span class="soft"> · Extinguished; glass housing closed.</span></p>
+<div class="row"></div></div><div class="ver"><p class="small">v3 ← continues lamp@v2 · since beat 5 · condition: Extinguished; glass housing closed. → Extinguished; glass housing open.<br><span class="soft"> · Extinguished; glass housing open.</span></p>
+<div class="row"></div></div><div class="ver"><p class="small">v4 ← continues lamp@v3 · since beat 6 · condition: Extinguished; glass housing open. → Lit; glass housing open.<br><span class="soft"> · Lit; glass housing open.</span></p>
+<div class="row"></div></div><h3><b>sea</b> <span class="soft">location · Several kilometres of visible water, dwarfing ships and people.</span></h3><p class="soft small">An open coastal sea crossed by a low jagged reef, with a distant uninterrupted horizon.</p><div class="ver"><p class="small">v1 · since beat 7 · first appearance<br><span class="soft"> · Storm-roughened, rain-veiled.</span></p>
+<div class="row"></div></div><h3><b>ships</b> <span class="soft">prop · Each vessel is approximately 55 m long, many times larger than a person.</span></h3><p class="soft small">A group of three steel coastal cargo vessels with dark hulls, pale wheelhouses, short masts and navigation lamps.</p><div class="ver"><p class="small">v1 · since beat 7 · first appearance<br><span class="soft"> · Intact; navigation lights on.</span></p>
+<div class="row"></div></div><h3><b>reef</b> <span class="soft">prop · 180 m long, with exposed points up to 2 m high.</span></h3><p class="soft small">A fixed ridge of jagged dark coastal rock with uneven points projecting above the surrounding water.</p><div class="ver"><p class="small">v1 · since beat 7 · first appearance<br><span class="soft"> · Wet, wave-washed.</span></p>
+<div class="row"></div></div><h3><b>debris</b> <span class="soft">prop · Branches range from 30 cm to 1.5 m long, hand-sized to nearly person-length.</span></h3><p class="soft small">A scattered collection of bleached driftwood branches tangled with brown seaweed.</p><div class="ver"><p class="small">v1 · since beat 8 · first appearance<br><span class="soft"> · Wet, storm-cast.</span></p>
+<div class="row"></div></div><h3>Frame graph</h3><pre>f1 (beat 1 start) ← no seed · generate · accepted
+f2 (beat 1 last) ← seed f1 · clip-last · accepted
+f3 (beat 2 start) ← seed f2 · repair · forced
+f4 (beat 2 last) ← seed f3 · clip-last · accepted</pre><h2>Cue sheet</h2><div class="tl"><div class="lane"><span class="n">beds</span><div class="bar " style="left:0.00%;width:100.00%" title="beach Gentle surf, distant seabirds; mixed inaudibly.">beach Gentle surf, distant seabirds; mixed inaudibly.</div></div>
+<div class="lane"><span class="n">music</span><div class="bar m" style="left:0.00%;width:100.00%" title="Restrained melancholy strings and piano.">Restrained melancholy strings and piano.</div></div>
+<div class="lane"><span class="n">events</span><span class="flag " style="left:0.00%" title="start Restrained melancholy strings and piano.">start Restrained melancholy strings and piano.</span><span class="flag " style="left:50.51%" title="hold Restrained melancholy strings and piano.">hold Restrained melancholy strings and piano.</span></div>
+<div class="lane"><span class="n">sfx</span></div></div><p class="soft small">0 s — 9.9 s</p><div class="wrap"><table class="small"><tr><th>Bed</th><th>Location</th><th>Time, weather</th><th>Ambience</th><th>s</th><th>Beats</th></tr><tr><td>bed1</td><td>beach</td><td>dawn, calm, overcast</td><td>Gentle surf, distant seabirds; mixed inaudibly.</td><td>0–9.9</td><td>1, 2</td></tr></table>
+<table class="small"><tr><th>Music cue</th><th>s</th><th>Beats</th><th>Events</th></tr><tr><td>Restrained melancholy strings and piano.</td><td>0–9.9</td><td>1, 2</td><td>start @ 0s (beat 1)<br>hold @ 5s (beat 2)</td></tr></table>
+<table class="small"><tr><th>SFX beat</th><th>At</th><th>Entity</th><th>Change</th><th>Sound</th></tr></table>
+<table class="small"><tr><th>Clip</th><th>Clip sound</th></tr><tr><td>beat 1</td><td>Sound: Gentle surf, distant seabirds; mixed inaudibly.. No music.</td></tr><tr><td>beat 2</td><td>Sound: Gentle surf, distant seabirds; mixed inaudibly.. No music.</td></tr><tr><td>beat 3</td><td>Sound: Rain against glass, distant wind; mixed inaudibly.. No music.</td></tr><tr><td>beat 4</td><td>Sound: Wind through slits, rain on stone; mixed inaudibly.. No music.</td></tr><tr><td>beat 5</td><td>Sound: Rain on glazing, wind around tower; mixed inaudibly.. No music.</td></tr><tr><td>beat 6</td><td>Sound: Rain on glazing, wind around tower; mixed inaudibly.. No music.</td></tr><tr><td>beat 7</td><td>Sound: Heavy surf, offshore wind and rain; mixed inaudibly.. No music.</td></tr><tr><td>beat 8</td><td>Sound: Soft returning surf, distant seabirds; mixed inaudibly.. No music.</td></tr><tr><td>beat 9</td><td>Sound: Soft returning surf, distant seabirds; mixed inaudibly.. No music.</td></tr></table></div>
+<ul class="small"><li>Times are absolute seconds in the final cut, from the trimmed clips' exact lengths. Edit them and re-run the mix.</li><li>Ambience and sfx are generated inside each clip by the video model (wan-3.0 audio). They come from clip_sound in the video prompt; their exact timing is not controllable.</li><li>sfx.at_s is the intended position (60% into the clip). No sfx endpoint exists, so no separate sfx file is placed there.</li><li>Each bed is the first clip's own audio, looped under the whole location run at about -14 dB, so the background does not jump at every clip.</li><li>Music is a PLACEHOLDER: a quiet synthetic chord pad (ffmpeg aevalsrc) per cue at about -26 LUFS. No music endpoint exists. Replace it with a real score; the cue text says what each cue should feel like.</li><li>music=false in mixAudio skips the placeholder score.</li></ul>
+<h2>Decisions (6)</h2><div class="wrap"><table class="small"><tr><th>Time</th><th>Beat</th><th>Kind</th><th>Details</th></tr><tr><td>01:02:31</td><td>1</td><td>seed</td><td><details><summary>{&quot;seed&quot;:null,&quot;kept&quot;:[],&quot;merges&quot;:[],&quot;fresh&quot;:[&quot;lighthouse&quot;],&quot;ranked&quot;:[],&quot;why&quot;:&quot;no </summary><pre>{
+ &quot;seed&quot;: null,
+ &quot;kept&quot;: [],
+ &quot;merges&quot;: [],
+ &quot;fresh&quot;: [
+  &quot;lighthouse&quot;
+ ],
+ &quot;ranked&quot;: [],
+ &quot;why&quot;: &quot;no usable earlier frame: fresh generation; new: lighthouse&quot;
+}</pre></details></td></tr><tr><td>01:03:05</td><td>1</td><td>verify</td><td><details><summary>{&quot;frame&quot;:&quot;f1&quot;,&quot;attempt&quot;:1,&quot;hard&quot;:[],&quot;soft&quot;:[]}</summary><pre>{
+ &quot;frame&quot;: &quot;f1&quot;,
+ &quot;attempt&quot;: 1,
+ &quot;hard&quot;: [],
+ &quot;soft&quot;: []
+}</pre></details></td></tr><tr><td>01:03:05</td><td>1</td><td>accept</td><td><details><summary>{&quot;frame&quot;:&quot;f1&quot;,&quot;attempt&quot;:1,&quot;faults&quot;:[]}</summary><pre>{
+ &quot;frame&quot;: &quot;f1&quot;,
+ &quot;attempt&quot;: 1,
+ &quot;faults&quot;: []
+}</pre></details></td></tr><tr><td>01:05:10</td><td>1</td><td>clip-last</td><td><details><summary>{&quot;frame&quot;:&quot;f2&quot;,&quot;ok&quot;:{&quot;lighthouse&quot;:true,&quot;keeper&quot;:false,&quot;shell&quot;:false},&quot;faults&quot;:[&quot;k</summary><pre>{
+ &quot;frame&quot;: &quot;f2&quot;,
+ &quot;ok&quot;: {
+  &quot;lighthouse&quot;: true,
+  &quot;keeper&quot;: false,
+  &quot;shell&quot;: false
+ },
+ &quot;faults&quot;: [
+  &quot;keeper identity differs: Wrong character and wardrobe; boots farther than 20 cm from shell.&quot;,
+  &quot;keeper wardrobe should be Heavy charcoal coat over a neatly patched slate dress; dark boots.&quot;,
+  &quot;shell identity differs: No clear ivory spiral-shell design; appears oversized and too far from boots.&quot;,
+  &quot;shell wrong size (should be 7 cm long, fits in a palm.): Amber-glowing irregular object on the wet beach near the boots.&quot;,
+  &quot;keeper position should be Lower left, boots 20 cm from shell.: Older masculine-presenting figure in cap, brown jacket and trousers, looking down with empty gloved hands.&quot;,
+  &quot;shell position should be Lower left, in sand 20 cm from keeper's boots.: Amber-glowing irregular object on the wet beach near the boots.&quot;
+ ]
+}</pre></details></td></tr><tr><td>01:05:54</td><td>2</td><td>continuous-repair</td><td><details><summary>{&quot;frame&quot;:&quot;f3&quot;,&quot;missing&quot;:[&quot;keeper&quot;,&quot;shell&quot;],&quot;faults&quot;:[&quot;shell wrong size (should b</summary><pre>{
+ &quot;frame&quot;: &quot;f3&quot;,
+ &quot;missing&quot;: [
+  &quot;keeper&quot;,
+  &quot;shell&quot;
+ ],
+ &quot;faults&quot;: [
+  &quot;shell wrong size (should be 7 cm long, fits in a palm.): Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.&quot;,
+  &quot;shell pose should be Resting on its side, aperture upward.: Large amber-glowing spiral shell beside woman's boots; second glowing shell near man.&quot;
+ ],
+ &quot;forced&quot;: true
+}</pre></details></td></tr><tr><td>01:07:49</td><td>2</td><td>clip-last</td><td><details><summary>{&quot;frame&quot;:&quot;f4&quot;,&quot;ok&quot;:{&quot;lighthouse&quot;:true,&quot;keeper&quot;:true,&quot;shell&quot;:false},&quot;faults&quot;:[&quot;sh</summary><pre>{
+ &quot;frame&quot;: &quot;f4&quot;,
+ &quot;ok&quot;: {
+  &quot;lighthouse&quot;: true,
+  &quot;keeper&quot;: true,
+  &quot;shell&quot;: false
+ },
+ &quot;faults&quot;: [
+  &quot;shell wrong size (should be 7 cm long, fits in a palm.): Large intact amber-glowing spiral shell held in both hands, aperture toward camera.&quot;,
+  &quot;shell position should be In keeper's right palm, 35 cm above the sand.: Large intact amber-glowing spiral shell held in both hands, aperture toward camera.&quot;,
+  &quot;shell pose should be Cradled with its spiral facing upward.: Large intact amber-glowing spiral shell held in both hands, aperture toward camera.&quot;
+ ]
+}</pre></details></td></tr></table></div><h2>API calls (4)</h2><div class="wrap"><table class="small"><tr><th>Key</th><th>Endpoint</th><th>Credits</th><th>s</th><th>At</th></tr><tr><td>frame:b1:a1</td><td>/v1/ai-image-generator</td><td>200</td><td>30</td><td>2026-10-11T01:03:02.136Z</td></tr><tr><td>clip:b1</td><td>/v1/image-to-video</td><td>480</td><td>111</td><td>2026-10-11T01:04:59.188Z</td></tr><tr><td>repair:b2</td><td>/v1/ai-image-editor</td><td>200</td><td>33</td><td>2026-10-11T01:05:44.706Z</td></tr><tr><td>clip:b2</td><td>/v1/image-to-video</td><td>480</td><td>105</td><td>2026-10-11T01:07:40.430Z</td></tr>
+<tr><th>total</th><th>/v1/ai-image-generator</th><th>200</th><th></th><th></th></tr><tr><th>total</th><th>/v1/image-to-video</th><th>960</th><th></th><th></th></tr><tr><th>total</th><th>/v1/ai-image-editor</th><th>200</th><th></th><th></th></tr></table></div>
+<details><summary>frame:b1:a1 · /v1/ai-image-generator · 200 credits · 30 s</summary><p class="small">inputs: [] · output: &quot;b1-start-a1.png&quot; · at 2026-10-11T01:03:02.136Z</p><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse-v1 b1 a1&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly cinematic realism in pearl grey, slate blue, weathered white and muted brown, with textured surfaces, softly blended light and restrained amber accents.. One single 16:9 film frame, not a grid, storyboard or collage; no text, borders, timecodes or signatures.\nFrame: Wide, low shoreward angle.. Reflective pools and kelp fill the empty foreground beneath the lighthouse on the headland. Place: beach, dawn, calm, overcast.\nNew in this frame, lighthouse: A cylindrical masonry lighthouse with salt-stained white walls, narrow windows, a glazed lantern crown and an attached low cottage. Real size: 22 m tall tower, approximately thirteen times a person's height.. Upright tower.; Upper right, 90 m beyond the foreground pools.; Intact, salt-stained.; lit: Diffuse pearl-grey dawn light..\nThe place, beach: A rocky coastal beach with grey sand, shallow reflective rock pools, ribbons of kelp and scattered broken shells beneath a rising headland.\nKeep every real size consistent with the people and the place: lighthouse 22 m tall tower, approximately thirteen times a person's height..&quot;
+ }
+}</pre></details><details><summary>clip:b1 · /v1/image-to-video · 480 credits · 113 s</summary><p class="small">inputs: null · output: &quot;b1.mp4&quot; · at 2026-10-11T01:04:59.188Z</p><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse-v1 b1&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;keeper walks into view along the waterline and stops beside the small amber glow of shell. Static camera. Sound: Sound: Gentle surf, distant seabirds.. No music..&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/700cc89d-fb35-488b-ae8f-cea1e33a4d73-image-0.png&quot;
+ }
+}</pre></details><details><summary>repair:b2 · /v1/ai-image-editor · 200 credits · 34 s</summary><p class="small">inputs: [&quot;b1-last.png&quot;] · output: &quot;b2-start.png&quot; · at 2026-10-11T01:05:44.706Z</p><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse-v1 b2 repair&quot;,
+ &quot;image_count&quot;: 1,
+ &quot;model&quot;: &quot;nano-banana-pro&quot;,
+ &quot;resolution&quot;: &quot;2k&quot;,
+ &quot;aspect_ratio&quot;: &quot;16:9&quot;,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;Painterly cinematic realism in pearl grey, slate blue, weathered white and muted brown, with textured surfaces, softly blended light and restrained amber accents.. One single 16:9 film frame, not a grid, storyboard or collage; no text, borders, timecodes or signatures.\nImage 1 is the current frame: keep its place, camera, framing, light and every object exactly.\nAdd keeper (A woman of about sixty with a lined face, weathered hands, grey hair tied back, narrow shoulders and a lean build. Real size: 1.68 m tall woman.): Standing with lowered eyes and empty hands.; Lower left, boots 20 cm from shell.; interacting with beach; Dry.; wearing Heavy charcoal coat over a neatly patched slate dress; dark boots.; lit: Diffuse pearl-grey dawn light..\nAdd shell (A spiral marine snail shell with ivory ridges, a pale ochre aperture and a translucent inner whorl. Real size: 7 cm long, fits in a palm.): Resting on its side, aperture upward.; Lower left, in sand 20 cm from keeper's boots.; interacting with beach; Intact, softly glowing amber.; lit: Pearl-grey daylight with internal amber light..&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_paths&quot;: [
+   &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/f5bf60f4-f4b0-42a7-84ea-fb7408387846-image-0.png&quot;
+  ]
+ }
+}</pre></details><details><summary>clip:b2 · /v1/image-to-video · 480 credits · 106 s</summary><p class="small">inputs: null · output: &quot;b2.mp4&quot; · at 2026-10-11T01:07:40.430Z</p><pre>{
+ &quot;name&quot;: &quot;p4-lighthouse-v1 b2&quot;,
+ &quot;model&quot;: &quot;wan-3.0&quot;,
+ &quot;resolution&quot;: &quot;720p&quot;,
+ &quot;audio&quot;: true,
+ &quot;end_seconds&quot;: 5,
+ &quot;style&quot;: {
+  &quot;prompt&quot;: &quot;keeper kneels, lifts shell into her palm, and pauses over its warm spiral. Static camera. The motion is already under way at the first frame; no pause, no restart. Sound: Sound: Gentle surf, distant seabirds.. No music..&quot;
+ },
+ &quot;assets&quot;: {
+  &quot;image_file_path&quot;: &quot;api-assets/cmsla3fmt01cnio0zhjlc2wsv/a33c1bc7-b4e6-4664-b99f-eb75024c31b2-image-0.png&quot;
+ }
+}</pre></details>
+<h2>Planned, not run (7 beats)</h2><table class="small"><tr><td>3</td><td>cut</td><td>cottage</td><td>lamp goes dark beyond the window as shell's trembling hum enters the score.</td></tr><tr><td>4</td><td>cut</td><td>stairs</td><td>keeper climbs the last worn steps, gripping stairs' iron rail while holding shell against her chest.</td></tr><tr><td>5</td><td>cut</td><td>lantern</td><td>keeper opens lamp's hinged glass housing with her free hand.</td></tr><tr><td>6</td><td>continuous</td><td>lantern</td><td>keeper brings shell close to lamp's burner; gathering amber light kindles the beacon.</td></tr><tr><td>7</td><td>cut</td><td>sea</td><td>ships turn one after another away from reef, following the restored beam toward open sea.</td></tr><tr><td>8</td><td>cut</td><td>beach</td><td>keeper settles shell into the wet sand and leaves her hand lingering beside it.</td></tr><tr><td>9</td><td>continuous</td><td>beach</td><td>keeper rises and walks toward lighthouse as returning water reaches shell and gently passes around its stationary spiral.</td></tr></table></main></body></html>

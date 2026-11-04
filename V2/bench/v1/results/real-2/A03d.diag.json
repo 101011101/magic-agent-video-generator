@@ -1,0 +1,28 @@
+{
+  "id": "A03d",
+  "best_tools": "yes",
+  "explanation": "The image prompt explicitly requested rust-red textures, contradicting the black-and-cream requirement. Although the exact text was supplied to the appropriate lettering model, it changed apostrophes and omitted the postcode space. The crop then clipped the headline because the generated source had not respected the requested safe margins, and no inspection or correction intervened.",
+  "better_chain": "image (qwen lettering enabled; black and cream only, exact supplied strings, wrapped address, generous horizontal crop-safe margins) → check (verify every character, palette, legibility and crop safety) → image-edit (correct any failures with lettering enabled) → crop (centered 4:5) → check (verify final text and margins)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving",
+    "model-quality"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "The lettering-capable image model was appropriate and received the complete text, but the prompt explicitly added rust-red artwork contrary to the requested two-color palette. The output also failed the exact-text and safe-margin instructions.",
+      "verdict": "bad-params",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Cropping is appropriate for obtaining a non-native 4:5 aspect, but this source was not crop-safe: its headline extended beyond the central retained area. Cropping it without inspection removed lettering and left the address against the edge.",
+      "verdict": "bad-inputs",
+      "tool": "crop"
+    }
+  ],
+  "missing": "Inspection and conditional correction before cropping, followed by a final check of exact punctuation, postcode spacing, black-and-cream palette, and comfortable text margins."
+}

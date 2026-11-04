@@ -1,0 +1,451 @@
+{
+  "id": "E25b",
+  "item": {
+    "id": "E25b",
+    "case": 25,
+    "case_name": "Recut 16:9 to 9:16",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Portrait Cut for Two Speakers",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "9:16",
+      "kind": "video",
+      "seconds": 10,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "talk-two.mp4"
+        ],
+        "text": "Turn this into a 9:16 vertical clip. Show the man when he asks his question, then the woman when she answers, with each centred while talking. Keep all 10 seconds and the original audio. No captions."
+      }
+    ],
+    "tests": "Tests speaker-aware portrait reframing of a two-person conversation without losing either speaking turn.",
+    "answer_sheet": {
+      "Source and speakers": "Use talk-two.mp4. The man asks the question and the woman answers.",
+      "Layout and transitions": "Centre the current speaker in a full-frame portrait crop; a clean cut at the speaker change is fine.",
+      "Size and duration": "9:16 vertical, all 10 seconds; free-tier resolution is fine.",
+      "Audio and text": "Preserve the original conversation and sound, with no captions or added text."
+    },
+    "must_haves": [
+      "The output is a 9:16 portrait edit of the attached office conversation.",
+      "The man is centred and his face is fully visible during his question.",
+      "The woman is centred and her face is fully visible during her answer.",
+      "Both speaking turns remain in their original order, with the full 10 seconds and original audio in sync.",
+      "The image is not stretched and contains no added captions."
+    ]
+  },
+  "session": "b15-E25b",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Turn this into a 9:16 vertical clip. Show the man when he asks his question, then the woman when she answers, with each centred while talking. Keep all 10 seconds and the original audio. No captions.",
+      "materials": [
+        "talk-two.mp4"
+      ],
+      "dialog": [],
+      "agent": "I’ll check who speaks when, then crop each speaking section separately and join them back together. I’ll preserve the full clip and original audio, with no captions.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "talk-two.mp4",
+            "field": "asset",
+            "quote": "[attached: talk-two.mp4]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "MATERIALS the user has: talk-two.mp4",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Reframe to 9:16 vertical. Show the man centred while he asks his question, then the woman centred while she answers. Preserve all 10 seconds and the original audio. Do not add captions.",
+            "field": "change",
+            "quote": "Turn this into a 9:16 vertical clip. Show the man when he asks his question, then the woman when she answers, with each centred while talking. Keep all 10 seconds and the original audio. No captions.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "form",
+            "field": "change_kind",
+            "quote": "Turn this into a 9:16 vertical clip.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "Keep all 10 seconds",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Keep all 10 seconds and the original audio. No captions.",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Turn this into a 9:16 vertical clip.",
+          "source": "stated",
+          "why": "The user requests reframing an existing supplied video while preserving its duration and audio.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "preflight": {
+          "goal": {
+            "kind": null,
+            "aspect": null,
+            "seconds": null,
+            "alpha": null,
+            "sound": null
+          },
+          "steps": [],
+          "end": [],
+          "ok": true
+        },
+        "shape": "tree",
+        "say": "I’ll check who speaks when, then crop each speaking section separately and join them back together. I’ll preserve the full clip and original audio, with no captions.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 0,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "check",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "talk-two.mp4"
+            ],
+            "produces": "speaker-timeline.json",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "What is the question-to-answer speaker timeline, identifying the man asking and woman answering by their positions and the exact time to switch framing?"
+            },
+            "credits": 0,
+            "why": "Determine the speaker positions and exact handoff needed for the two reframed sections.",
+            "predicted": {
+              "kind": "verdict"
+            },
+            "preflight": []
+          },
+          {
+            "tool": "trim",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "talk-two.mp4",
+              "speaker-timeline.json"
+            ],
+            "produces": "question.mp4",
+            "params": {
+              "extra": "from: 0; to: speaker handoff time from speaker-timeline.json; sound: keep",
+              "seconds": 0,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Keep the opening through the identified speaker handoff, retaining original audio."
+            },
+            "credits": 0,
+            "why": "Extract the opening section without dropping any footage or audio.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "16:9",
+              "seconds": 10.1,
+              "sound": "present",
+              "lettering": false
+            },
+            "preflight": []
+          },
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "question.mp4",
+              "speaker-timeline.json"
+            ],
+            "produces": "question-vertical.mp4",
+            "params": {
+              "extra": "anchor: asking man's position from speaker-timeline.json; sound: keep",
+              "seconds": 0,
+              "aspect": "9:16",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Reframe vertically with the identified asking man centred; retain original audio."
+            },
+            "credits": 0,
+            "why": "Centre the correct man rather than assuming a centre crop will include him.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "9:16",
+              "seconds": 10.1,
+              "sound": "present",
+              "lettering": false
+            },
+            "preflight": []
+          },
+          {
+            "tool": "trim",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "talk-two.mp4",
+              "speaker-timeline.json"
+            ],
+            "produces": "answer.mp4",
+            "params": {
+              "extra": "from: speaker handoff time from speaker-timeline.json; to: end of source (10.1 seconds); sound: keep",
+              "seconds": 0,
+              "aspect": "",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Keep the answering section from the handoff to the source's end, retaining original audio."
+            },
+            "credits": 0,
+            "why": "Extract the remainder with no gap at the handoff and no loss of the final frames.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "16:9",
+              "seconds": 10.1,
+              "sound": "present",
+              "lettering": false
+            },
+            "preflight": []
+          },
+          {
+            "tool": "crop",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "answer.mp4",
+              "speaker-timeline.json"
+            ],
+            "produces": "answer-vertical.mp4",
+            "params": {
+              "extra": "anchor: answering woman's position from speaker-timeline.json; sound: keep",
+              "seconds": 0,
+              "aspect": "9:16",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Reframe vertically with the identified answering woman centred; retain original audio."
+            },
+            "credits": 0,
+            "why": "Centre the answering woman in the vertical frame.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "9:16",
+              "seconds": 10.1,
+              "sound": "present",
+              "lettering": false
+            },
+            "preflight": []
+          },
+          {
+            "tool": "assemble",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "question-vertical.mp4",
+              "answer-vertical.mp4"
+            ],
+            "produces": "talk-two-vertical.mp4",
+            "params": {
+              "extra": "sound: keep; hard cut; retain each section's full duration; no captions",
+              "seconds": 10.1,
+              "aspect": "9:16",
+              "resolution": "",
+              "fidelity": false,
+              "lettering": false,
+              "prompt_or_change": "Join question then answer without gaps, overlaps or transitions; preserve all source frames in time and the original continuous audio. Add no captions."
+            },
+            "credits": 0,
+            "why": "Restore the complete original sequence with a framing change at the speaker handoff.",
+            "predicted": {
+              "kind": "clip",
+              "aspect": "9:16",
+              "seconds": 10.1,
+              "sound": "present"
+            },
+            "preflight": []
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "check",
+          "state": "flagged",
+          "output": "assets/tree-1/speaker-timeline.json",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "flag: Still images without timestamps or dialogue cannot establish who asks or answers, the speaker timeline, or an exact framing-switch time.",
+          "facts": null,
+          "error": null,
+          "seconds": 8
+        },
+        {
+          "tool": "trim",
+          "state": "done",
+          "output": "assets/tree-1/question.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "0-10.1 s of 10.1 s",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 1239475,
+            "w": 858,
+            "h": 480,
+            "aspect": "16:9",
+            "seconds": 10.1,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 2
+        },
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-1/question-vertical.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "by code: crop",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 1623260,
+            "w": 720,
+            "h": 1280,
+            "aspect": "9:16",
+            "seconds": 10.1,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 4
+        },
+        {
+          "tool": "trim",
+          "state": "done",
+          "output": "assets/tree-1/answer.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "0-10.1 s of 10.1 s",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 1239475,
+            "w": 858,
+            "h": 480,
+            "aspect": "16:9",
+            "seconds": 10.1,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 1
+        },
+        {
+          "tool": "crop",
+          "state": "done",
+          "output": "assets/tree-1/answer-vertical.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "by code: crop",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 1623260,
+            "w": 720,
+            "h": 1280,
+            "aspect": "9:16",
+            "seconds": 10.1,
+            "sound": "present"
+          },
+          "error": null,
+          "seconds": 3
+        },
+        {
+          "tool": "assemble",
+          "state": "flagged",
+          "output": "assets/tree-1/talk-two-vertical.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "2 piece(s), 10.1 s, 9:16 · check: sound silent, asked to keep it",
+          "facts": {
+            "exists": true,
+            "kind": "clip",
+            "bytes": 1732491,
+            "w": 720,
+            "h": 1280,
+            "aspect": "9:16",
+            "seconds": 10.1,
+            "sound": "silent"
+          },
+          "error": null,
+          "seconds": 3
+        }
+      ],
+      "goal_check": [
+        "matches the request's length and size"
+      ],
+      "spent": 0,
+      "seconds": 25
+    }
+  ],
+  "started": "2026-11-02T04:11:16.626Z",
+  "spent": 0,
+  "seconds": 45,
+  "sessionDir": "sessions/b15-E25b"
+}

@@ -1,0 +1,180 @@
+{
+ "id": "H40c",
+ "root_cause": "harness",
+ "contributing": [
+  "agent-reasoning"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "Most of the plan is mine too: a generated plain white sneaker, two flux edits for detail and profile views, three 5 s image-to-video shots, one silent assemble at 15 s, then code captions in the safe area. The failure is the last node. The agent put all three captions into one text-overlay, with \"caption 1 from: 0; to: 5; caption 2 from: 5; to: 10; caption 3 from: 10; to: 15\" in extra. The executor joined every quoted string in the prompt with newlines into ONE card, and text-overlay.js reads only the first \"from:\"/\"to:\" pair. So all three captions appear stacked for 0–5 s and nothing appears after that. The agent stretched a format the tool does not parse (in H42a it correctly used one node per caption), but the tool merged them silently instead of honouring the windows or refusing. I would chain three text-overlay nodes, one caption and one window each, all at middle.",
+ "your_plan": {
+  "say": "I'll make three moving shots of a plain white leather sneaker, join them into a silent 15-second vertical ad, and add your three captions one after another, inside the safe area.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "sneaker_hero.png",
+    "params": {
+     "prompt_or_change": "Studio product photography of a plain white leather low-top sneaker with white laces, a white sole and no logo, three-quarter view on a clean pale grey background, soft premium lighting, no text.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The product, generated as the user asked (no photo)."
+   },
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "sneaker_hero.png"
+    ],
+    "produces": "shot_1.mp4",
+    "params": {
+     "prompt_or_change": "Slow smooth push-in toward the sneaker; it keeps its white leather, white laces, white sole and plain unbranded sides.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Moving shot 1. Sound is dropped by code."
+   },
+   {
+    "tool": "image-edit",
+    "inputs": [
+     "sneaker_hero.png"
+    ],
+    "produces": "sneaker_detail.png",
+    "params": {
+     "prompt_or_change": "Close detail view of the same sneaker's white leather, laces and stitching; same design, white sole, pale grey background and soft lighting; no logo or text.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A second view of the same shoe."
+   },
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "sneaker_detail.png"
+    ],
+    "produces": "shot_2.mp4",
+    "params": {
+     "prompt_or_change": "Slow lateral camera slide across the white leather and laces; the sneaker's structure and materials stay the same.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Moving shot 2."
+   },
+   {
+    "tool": "image-edit",
+    "inputs": [
+     "sneaker_hero.png"
+    ],
+    "produces": "sneaker_profile.png",
+    "params": {
+     "prompt_or_change": "The same sneaker in a clean full side profile, centred on the pale grey background; same white leather, laces, sole, design and soft lighting; no logo or text.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A third view of the same shoe."
+   },
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "sneaker_profile.png"
+    ],
+    "produces": "shot_3.mp4",
+    "params": {
+     "prompt_or_change": "Gentle camera arc around the side-profile sneaker, keeping the whole shoe in frame and its design unchanged.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Moving shot 3."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "shot_1.mp4",
+     "shot_2.mp4",
+     "shot_3.mp4"
+    ],
+    "produces": "silent_ad.mp4",
+    "params": {
+     "prompt_or_change": "The three shots in order, 5 s each, silent.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Joins the shots. No sound input, so the ad stays silent."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "silent_ad.mp4"
+    ],
+    "produces": "ad_c1.mp4",
+    "params": {
+     "prompt_or_change": "\"Meet your everyday pair\"",
+     "extra": "at: middle; from: 0; to: 5",
+     "aspect": "9:16",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Caption 1 over shot 1. One caption per node, because the tool draws one card for one window."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "ad_c1.mp4"
+    ],
+    "produces": "ad_c2.mp4",
+    "params": {
+     "prompt_or_change": "\"Clean look. Easy style.\"",
+     "extra": "at: middle; from: 5; to: 10",
+     "aspect": "9:16",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Caption 2 over shot 2."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "ad_c2.mp4"
+    ],
+    "produces": "sneaker_ad_final.mp4",
+    "params": {
+     "prompt_or_change": "\"Shop now\"",
+     "extra": "at: middle; from: 10; to: 15",
+     "aspect": "9:16",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Caption 3 over shot 3. 'middle' keeps every band between 20% and 80% of the height."
+   }
+  ]
+ },
+ "fix": "Change text-overlay so that when the prompt holds N quoted captions and extra holds N from/to windows (or \"caption k from:\"), it renders one card per caption for its own window. Today the executor joins all quotes into one card and the tool uses only the first window. Otherwise it should refuse, so the planner chains nodes. Add the planner rule \"one text-overlay node per timed caption\" and expose a size or max-width so safe-area margins can be met. This covers every timed caption or subtitle sequence.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "Grader frame at 1.9 s: all three captions are stacked in one grey band ('Meet your everyday pair / Clean look. Easy style. / Shop now'). Frames at 5.6, 9.4 and 13.1 s: no caption. In exec.json the text-overlay prompt is 'Meet your everyday pair\\nClean look. Easy style.\\nShop now', and text-overlay.js reads only the first 'from'/'to' (0–5 s). The sneaker views are consistent: white, no logo. The judge is right."
+}

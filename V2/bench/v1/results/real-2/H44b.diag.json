@@ -1,0 +1,51 @@
+{
+  "id": "H44b",
+  "best_tools": "yes",
+  "explanation": "The image tools correctly produced the countdown and readable event card, but assembly relied on prose instructions for unequal card durations and flashing effects rather than explicitly timed pieces and supported visual changes. The eight-second assembly therefore did not reliably preserve the intended five-second reveal or synchronize accents with numeral changes. Speech in the explicitly instrumental music is a generation failure, compounded by the lack of an audio validation step.",
+  "better_chain": "image (9:16 countdown 3, lettering enabled) → image-edit (countdown 2 and 1, each with visibly different neon lighting) → image-edit (matching event card with all three text lines, lettering enabled) → music (instrumental electronic buildup with one-second accents and reveal hit at 3 seconds) → gate (verify no vocals and check accent timing; regenerate if needed) → assemble (make each countdown card a separate one-second clip and the event card a five-second clip) → assemble (join those timed clips with the verified music, 8 seconds, 9:16) → gate (verify countdown timing, lighting changes, synchronized accents, five-second readable reveal and no speech)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "model-quality"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate lettering-capable image model, vertical format and clear numeral prompt.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correct source and editing tool for a consistent countdown numeral. Keeping the lighting unchanged leaves the flashing requirement to a later step.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly derives the final countdown numeral from the common source without losing the visual style.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 4,
+      "issue": "Correct tool and source for a designed end card; the prompt includes every required line and safe margins.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 5,
+      "issue": "The music tool and instrumental buildup prompt are appropriate. However, generated music cannot guarantee the requested accent timestamps or absence of vocals, so its output needed validation before use.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 6,
+      "issue": "Assembly is appropriate for joining the assets, but total duration and order do not establish unequal per-card holds. The plan also asks this joining tool to create neon brightness pulses and assumes generated musical accents are synchronized without checking them.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    }
+  ],
+  "missing": "Explicitly duration-controlled countdown and end-card clips; an implemented neon-lighting change rather than an assembly-only effects request; validation of the generated audio and final timing."
+}

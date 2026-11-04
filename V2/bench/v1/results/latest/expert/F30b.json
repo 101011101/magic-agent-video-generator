@@ -1,0 +1,34 @@
+{
+ "id": "F30b",
+ "root_cause": "spec",
+ "contributing": [
+  "grader"
+ ],
+ "grader_right": false,
+ "agent_vs_you": "There is nothing to fault. \"Some music, something upbeat for a reel\" came with no length, so the agent picked 15 s (the music model's minimum and a standard reel length), asked for no vocals, and delivered one standalone file. The bench spec says seconds: 10, but the user's own answer sheet says \"Length: your call\", so the deterministic 'about 10 s' check failed a length the user left open. Every must-have the judge could assess was met or unassessable from a transcript. I would make the same call.",
+ "your_plan": {
+  "say": "I'll make a 15-second upbeat instrumental track you can use under a reel.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "music",
+    "inputs": [],
+    "produces": "upbeat_reel_music.mp3",
+    "params": {
+     "prompt_or_change": "Upbeat, energetic instrumental pop for a social reel: punchy drums from the very first beat, a bright synth and guitar hook, a steady fast groove and a clean ending; no vocals.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 15,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The user left the length open. 15 s is the model's minimum and a standard reel length, so nothing is cut mid-phrase."
+   }
+  ]
+ },
+ "fix": "Fix the spec: set seconds to null (or a range such as 10–30) when the answer sheet says the length is the agent's call, and have the grader skip the length check then. Any open-length item has the same problem.",
+ "fix_generalises": true,
+ "would_pass": "yes",
+ "evidence": "upbeat_reel_music.mp3 is 15.0 s. Half-second RMS is -13 to -16 dB from 0.0 s, so there is no silent lead-in. It stays steady to 13.5 s, then fades naturally to -56 dB with no abrupt cut. The spectrogram shows dense, regular percussion (about four hits a second) and steady instrumental harmonics, with no vocal pitch contours. The only failed check is 'about 10 s = 15'."
+}

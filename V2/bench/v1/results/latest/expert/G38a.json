@@ -1,0 +1,98 @@
+{
+ "id": "G38a",
+ "root_cause": "grader",
+ "contributing": [
+  "harness"
+ ],
+ "grader_right": false,
+ "agent_vs_you": "The agent's plan delivers the three photos the user asked for. mug_white.png is a clean whole-mug packshot on pure white. The breakfast-table shot is a qwen edit with fidelity on, keeping the same sage colour, shape and handle. The close-up is a crop of the white shot's rim, so it is the same mug by construction. The bench's deliverables() counts only steps whose output nothing else consumes, plus crop, text-overlay, place and assemble pieces in packs. The white listing image is the input of the other two, so it was never shown to the judge, who then failed 'three images', 'same mug' and 'whole mug on white' for a picture that exists and is correct. Where I differ from the agent: a zoom-2 crop of a 640 px image is only 320x320 and soft, so I would upscale it (25 cr). Until deliverables are explicit, I would also give the listing shot its own end node.",
+ "your_plan": {
+  "say": "I'll make one sage-green mug on pure white, then put that same mug on a cosy breakfast table and take a close-up of its rim and glaze, as three separate square photos.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "mug_white.png",
+    "params": {
+     "prompt_or_change": "Product photograph of a plain sage-green glossy ceramic mug, the whole mug with its handle on the right, on a pure white seamless background, soft even studio light; no text, logos or marks.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The main listing shot. It is also the reference for the other two, so the mug is identical."
+   },
+   {
+    "tool": "image-edit",
+    "inputs": [
+     "mug_white.png"
+    ],
+    "produces": "mug_breakfast.png",
+    "params": {
+     "prompt_or_change": "Place this same plain sage-green ceramic mug on a cosy breakfast table with a linen napkin and warm morning window light; keep the mug's exact sage-green colour, shape, handle, rim and glaze unchanged; no text or logos.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": true
+    },
+    "why": "A new setting around the same mug. With fidelity on, this runs on qwen, which holds the exact colour."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "mug_white.png"
+    ],
+    "produces": "mug_rim_crop.png",
+    "params": {
+     "prompt_or_change": "Close-up of the rim and the glazed upper body.",
+     "extra": "zoom: 2; anchor: top",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The detail view, taken from the real pixels of the same mug."
+   },
+   {
+    "tool": "upscale-image",
+    "inputs": [
+     "mug_rim_crop.png"
+    ],
+    "produces": "mug_rim_closeup.png",
+    "params": {
+     "prompt_or_change": "",
+     "extra": "",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The crop is 320x320. A ×2 upscale makes a crisp 640 px detail."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "mug_white.png"
+    ],
+    "produces": "mug_white_listing.png",
+    "params": {
+     "prompt_or_change": "The listing shot as its own file, unchanged.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A no-op that makes the white listing shot an end node. Today's bench, and any view that shows only end nodes, drops an image that feeds other steps."
+   }
+  ]
+ },
+ "fix": "Make deliverables explicit. Give plan steps a `deliver: true` flag (plan2.js already lists deliverables; carry them into the plan) and have grade.mjs deliverables() and the UI use it. Failing that, in a pack, count any picture or clip output whenever the sinks are fewer than spec.outputs. This affects every pack whose first piece seeds the rest (a hero shot reused for variants, a poster reused for a reel).",
+ "fix_generalises": true,
+ "would_pass": "yes",
+ "evidence": "mug_white.png (640x640) shows the whole sage-green mug, handle on the right, on pure white, with no text: a correct listing shot. mug_breakfast.png shows the same mug on linen on a wooden table in window light. mug_rim_closeup.png (320x320) shows the rim and glaze and is soft. 'Final outputs' lists only the last two. deliverables() in grade.mjs filters out consumed outputs and only re-adds text-overlay, crop, place and assemble outputs in packs."
+}

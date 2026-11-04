@@ -1,0 +1,126 @@
+<title>Red Riding Hood rrh4 Blocking</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: the story, then one card per slide: screenplay block beside its frame, then the asset table with reference sources. */
+:root {
+  --bg: #f4f4f1; --panel: #ffffff; --page: #fffef9; --fg: #1d211f; --mut: #616964; --line: #dcdfdb; --accent: #1f5f6b;
+  --base: #4f5a55; --base-bg: #e9ecea; --frame: #1f5f6b; --frame-bg: #dcecef; --bank: #8a4b00; --bank-bg: #fbecd6; --gen: #a3281f; --gen-bg: #fbe4e1;
+  --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; --script: "Courier Prime", "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111413; --panel: #191d1b; --page: #1d211f; --fg: #e6eae8; --mut: #9aa39e; --line: #2c3330; --accent: #7cc3cf;
+  --base: #b3bdb8; --base-bg: #262c29; --frame: #7cc3cf; --frame-bg: #17303a; --bank: #f0b45c; --bank-bg: #3a2c14; --gen: #ff8f85; --gen-bg: #3b1d1a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111413; --panel: #191d1b; --page: #1d211f; --fg: #e6eae8; --mut: #9aa39e; --line: #2c3330; --accent: #7cc3cf;
+  --base: #b3bdb8; --base-bg: #262c29; --frame: #7cc3cf; --frame-bg: #17303a; --bank: #f0b45c; --bank-bg: #3a2c14; --gen: #ff8f85; --gen-bg: #3b1d1a; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 14px/1.55 var(--sans); }
+main { max-width: 1100px; margin: 0 auto; padding-block: 24px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1 { font-size: 24px; margin: 0; text-wrap: balance; }
+h2 { font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--mut); margin: 0; }
+.sub { color: var(--mut); margin: 4px 0 0; max-width: 72ch; }
+.chip { font: 600 11px var(--mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.c-base { color: var(--base); background: var(--base-bg); } .c-frame { color: var(--frame); background: var(--frame-bg); }
+.c-bank { color: var(--bank); background: var(--bank-bg); } .c-gen { color: var(--gen); background: var(--gen-bg); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--mut); }
+.story { background: var(--page); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; }
+.story p { max-width: 68ch; margin: 0 0 10px; }
+details summary { cursor: pointer; font-weight: 600; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font: 12px var(--mono); color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; background: var(--panel); }
+.toc a.only { opacity: .7; } .toc a.in { border-color: var(--accent); color: var(--accent); }
+.toc a:focus-visible { outline: 2px solid var(--accent); }
+.slide { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 14px; scroll-margin-top: 12px; }
+.top { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.script { background: var(--page); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; font: 14px/1.6 var(--script); min-width: 0; }
+.script .num { font: 600 11px var(--mono); color: var(--mut); letter-spacing: .06em; }
+.script .slug { font-weight: 700; margin: 2px 0 8px; }
+.script .line { margin: 0 0 6px; }
+.script .vo { margin: 10px 0 0 12%; color: var(--mut); }
+.script .vo b { display: block; font-weight: 700; color: var(--fg); margin-left: 18%; }
+.shot figure { margin: 0; display: grid; gap: 4px; }
+.shot img { width: 100%; max-width: 100%; border-radius: 6px; border: 1px solid var(--line); display: block; }
+.shot figcaption, .mini { font: 12px var(--mono); color: var(--mut); }
+.noshot { aspect-ratio: 16/9; border: 1px dashed var(--line); border-radius: 6px; display: grid; place-items: center; color: var(--mut); font: 12px var(--mono); }
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--mut); }
+td.as { white-space: nowrap; font-weight: 600; }
+tr.enter td.as::before { content: "→ "; color: var(--accent); }
+.note { font-size: 13px; }
+.only { color: var(--base); }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.pgrid figure, .sgrid figure { margin: 0; display: grid; gap: 4px; } .pgrid img { width: 100%; border-radius: 6px; border: 1px solid var(--line); }
+.sgrid { display: flex; flex-wrap: wrap; gap: 8px; } .sgrid img { width: 110px; height: 90px; object-fit: contain; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.chip img { width: 26px; height: 26px; object-fit: contain; vertical-align: middle; margin-left: 4px; border-radius: 3px; background: var(--panel); }
+@media (max-width: 760px) { .top { grid-template-columns: minmax(0, 1fr); } .script .vo { margin-left: 0; } .script .vo b { margin-left: 0; } }
+</style>
+
+<main>
+  <header>
+    <h1>Little Red Riding Hood: story → blocking → references</h1>
+    <p class="sub">Run rrh4, solved before any slide is drawn: story → ids → states → sheets and plates. Each slide is one block, written like a screenplay scene with only what changes. Below each block: every asset in the frame, what the block does to it, and where its reference will come from. No slides are built yet; the pictures are the plates and sheets the slides will start from.</p>
+  </header>
+
+  <div class="legend">
+    <span><span class="chip c-base">frame N · already in it</span> in the previous frame (or the plate) of this place: no reference, it is transformed in place</span>
+    <span><span class="chip c-frame">frame N · last seen</span> enters from the latest frame that showed it</span>
+    <span><span class="chip c-bank">asset bank</span> first appearance ever</span>
+    <span><span class="chip c-gen">generated</span> never seen and not in the bank</span>
+  </div>
+
+  <section style="display:grid;gap:10px">
+    <h2>Plates (each place's first frame, with what was always there)</h2>
+    <div id="plates" class="pgrid"></div>
+    <h2>Asset sheets (used only for first appearances)</h2>
+    <div id="sheets" class="sgrid"></div>
+  </section>
+
+  <section style="display:grid;gap:10px">
+    <h2>Story</h2>
+    <div class="story" id="story"></div>
+  </section>
+
+  <section style="display:grid;gap:10px">
+    <h2>Slides</h2>
+    <p class="mini" id="summary"></p>
+    <nav class="toc" id="toc" aria-label="Jump to slide"></nav>
+  </section>
+
+  <div id="slides" style="display:grid;gap:14px"></div>
+</main>
+
+<script>
+(async () => {
+  const D = await (await fetch("data.json")).json();
+  const $ = (id) => document.getElementById(id), esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  $("plates").innerHTML = D.plates.map((p) => `<figure><img src="${esc(p.img)}" alt="${esc(p.name)} plate"><figcaption>${esc(p.name)} · always here: ${p.contents.length ? esc(p.contents.join(", ")) : "nothing"}</figcaption></figure>`).join("");
+  $("sheets").innerHTML = D.sheets.map((a) => `<figure><img src="${esc(a.img)}" alt="${esc(a.name)} sheet"><figcaption>${esc(a.name)}</figcaption></figure>`).join("");
+  $("story").innerHTML = D.story.split(/\n\s*\n/).map((p) => `<p>${esc(p)}</p>`).join("");
+  const all = D.slides.flatMap((s) => s.assets), n = (k) => all.filter((a) => a.src.kind === k).length;
+  $("summary").textContent = `${D.slides.length} slides · ${D.slides.filter((s) => s.onlyBase).length} need only the previous frame · asset references: ${n("base")} already in the frame, ${n("frame")} from an earlier frame, ${n("bank")} from the asset bank, ${n("gen")} generated.`;
+  $("toc").innerHTML = D.slides.map((s) => `<a href="#s${s.n}" class="${s.onlyBase ? "only" : "in"}" title="${s.onlyBase ? "only the previous frame" : "something enters"}">${s.n}</a>`).join("");
+  const chip = (src) => `<span class="chip c-${src.kind}">${esc(src.label)}${src.img ? `<img src="${esc(src.img)}" alt="">` : ""}</span>`;
+  $("slides").innerHTML = D.slides.map((s) => `
+    <article class="slide" id="s${s.n}">
+      <div class="top">
+        <div class="script">
+          <div class="num">SLIDE ${s.n} · ${esc(s.kind)}</div>
+          <div class="slug">${esc(s.heading)}</div>
+          ${s.lines.map((l) => `<p class="line">${esc(l)}</p>`).join("")}
+          <div class="vo"><b>NARRATOR (V.O.)</b>${esc(s.caption)}</div>
+        </div>
+        <div class="shot">${s.base.kind === "plate" ? `<figure><img src="${esc(s.base.img)}" alt="plate of ${esc(s.place)}" loading="lazy"><figcaption>starts from the plate of ${esc(s.place)}</figcaption></figure>` : `<div class="noshot">starts from frame ${s.base.slide} (not drawn yet)</div>`}
+          <p class="mini">Environment: ${s.base.kind === "plate" ? `plate of ${esc(s.place)} (first frame here)` : `frame ${s.base.slide}, the latest frame of ${esc(s.place)}`}</p></div>
+      </div>
+      ${s.onlyBase ? `<p class="note only">Everything here is already in frame ${s.base.slide ?? "—"}: that frame is the only reference, transformed by the block.</p>` : ""}
+      <div class="tw"><table>
+        <tr><th>Asset</th><th>Transformation in this block</th><th>Reference source</th></tr>
+        ${s.assets.map((a) => `<tr class="${a.entering ? "enter" : ""}"><td class="as">${esc(a.name)}</td><td>${esc(a.transform)}</td><td>${chip(a.src)}</td></tr>`).join("")}
+        ${s.leaving.map((a) => `<tr><td class="as" style="color:var(--mut)">${esc(a.name)}</td><td>leaves the frame (removed)</td><td><span class="mini">—</span></td></tr>`).join("")}
+      </table></div>
+      ${s.fixtures.length ? `<p class="mini">Places in the set used by this block (from the environment): ${s.fixtures.map((f) => esc(f.name) + (f.changed ? ` → ${esc(f.changed)}` : "")).join(" · ")}</p>` : ""}
+    </article>`).join("");
+})();
+</script>

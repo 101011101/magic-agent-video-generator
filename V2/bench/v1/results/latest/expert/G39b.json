@@ -1,0 +1,50 @@
+{
+ "id": "G39b",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The finished meme is good: the judge passed all five must-haves, and I agree. The only failure is the question 'What style or mood?' before starting. 'Make a meme about Mondays' is a low-stakes, conventional format. Its style is the meme convention itself (a reaction photo plus bold outlined caption), and an expert would just pick a joke and an image. The question did not come from the planner's judgment but from the sheet's policy. The sheet prompt makes direction 'needed' unless tone, style or message is given or the user says 'your call'. sheet.js then asks the image branch's style field whenever direction=needed and style is unknown. Nothing in that policy recognises formats whose look is implied (meme, sticker, thumbnail, emoji) or a casual one-line request. So the agent asked the question that, as the answer sheet shows, nearly every user answers with 'your call'. After the answer, the plan (write the caption, then one lettered qwen image with the caption fed in as exact words) is exactly what I would run.",
+ "your_plan": {
+  "say": "I'll write a short Monday joke and make it into a square meme with a sleepy cat and bold classic meme lettering.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "write",
+    "inputs": [],
+    "produces": "monday-caption.txt",
+    "params": {
+     "prompt_or_change": "Write one short, funny meme caption about Mondays from the point of view of a very sleepy cat that refuses to start the week. It must contain the word Monday. Output only the caption.",
+     "extra": "length: at most 12 words; language: English",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The user left the joke to me. write gives exact words that the lettered image then spells."
+   },
+   {
+    "tool": "image",
+    "inputs": [
+     "monday-caption.txt"
+    ],
+    "produces": "monday-meme.png",
+    "params": {
+     "prompt_or_change": "A classic internet reaction meme: a photo of a grumpy, exhausted tabby cat lying flat on a carpet with half-closed eyes, and the caption in bold white Impact-style capitals with a thick black outline across the top of the picture, fully inside the frame, not covering the cat's face.",
+     "extra": "",
+     "aspect": "1:1",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "Meme lettering is designed lettering: one image node with lettering true, on qwen, read back and fixed once if misspelt. The .txt input becomes the exact words in the prompt."
+   }
+  ]
+ },
+ "fix": "In sheet.js, stop asking style or mood by default. Treat it like kind, audience and size: infer it. Ask only when the user's own brand or a high-stakes design is involved and nothing implies a look. At minimum, add to the sheet prompt: 'direction is free (not needed) when the format implies its own look (meme, sticker, emoji, reaction image, thumbnail) or the request is a casual one-liner; style is then inferred with confidence 1.' Harness side note: the lettering fix returned a 16:9 picture that finish() then padded to 1:1 with olive bands. The fix pass should be asked for the step's own aspect.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "Final monday_meme.png is 640x640: a tabby cat lying flat with half-closed eyes, captioned in bold white letters with black outline, 'Monday started. My cat has requested five more business naps.', all inside the frame. The judge scored all 5 must-haves yes. The only failed check is 'asks nothing' = [style: 'What style or mood?'], and the user answered 'your call'. The note shows the first qwen pass had stray garbled lettering, which the harness's one fix removed. The picture is a 16:9 image padded top and bottom to 1:1."
+}

@@ -1,0 +1,115 @@
+{
+  "id": "IS10",
+  "item": {
+    "id": "IS10",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Two pictures, one reference slot: car on the bridge",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Two pictures, one reference slot: car on the bridge",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "video",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "rt3-bugatti.jpg",
+          "rt3-goldengate.jpg"
+        ],
+        "text": "a video of this car driving across this bridge"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "where": "YouTube",
+      "length": "10 seconds",
+      "sound": "silent"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "create_video_from_image"
+  },
+  "session": "mcp-mi-IS10",
+  "sessionDir": "sessions/mcp-mi-IS10",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "a video of this car driving across this bridge",
+      "materials": [
+        "rt3-bugatti.jpg",
+        "rt3-goldengate.jpg"
+      ],
+      "dialog": [],
+      "agent": "I couldn’t generate the video because your Magic Hour account has **0 credits remaining**. The 5-second clip needs about **120 credits**.\n\nOnce you add credits, I can try again using both photos as references.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-generator\"}",
+          "output": "{\"workflow\": \"video-generator\", \"title\": \"Generate a new video from a text prompt\", \"input\": \"A description of a new scene; use image-to-video when a specific reference image matters.\", \"product_url\": \"https://magichour.ai/products/ai-video-generator\", \"api_docs_url\": \"https://docs.magichour.ai/api-reference/video-projects/text-to-video\", \"creation_tool\": \"create_video_from_text\", \"steps\": [\"Use text-to-video for a new scene without a required likeness; use an image reference and image-to-video when identity must stay consistent.\", \"Specify the subject, one action, camera move, framing and mood. Request only audio and duration supported by the selected model.\", \"Call create_video_from_text, then wait_for_video_project with the returned id and review the actual result.\"], \"example_request\": \"Create a short cinematic scene of a tiny astronaut discovering a glowing forest inside a glass bottle, with a slow orbiting camera.\", \"follow_up\": \"Edit or subtitle the accepted result instead of paying to regenerate unchanged footage.\", \"review\": \"Check prompt adherence, continuity, audio and output settings for the selected model.\", \"models_and_costs_url\": \"https://docs.magichour.ai/api-reference/models\", \"evaluation_url\": \"https://docs.magichour.ai/integration/evaluating-media-apis\", \"starter_recipes_url\": \"https://docs.magichour.ai/get-started/starter-recipes\", \"guidance\": [\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\", \"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\", \"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\", \"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\", \"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\", \"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\", \"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_video_from_text",
+          "args": {
+            "name": "Bugatti driving across Golden Gate Bridge",
+            "end_seconds": 5,
+            "aspect_ratio": "16:9",
+            "resolution": "480p",
+            "model": "minimax-h3",
+            "audio": false,
+            "style": {
+              "prompt": "Photorealistic cinematic automotive footage. Use @car as the exact vehicle reference: preserve this pale ice-blue Bugatti supercar's distinctive body shape, black horseshoe grille, slim headlights, dark glass and silver wheels. Use @bridge as the location reference: Golden Gate Bridge with its orange-red suspension towers, cables, roadway, blue water and clear blue daytime sky. Show the referenced Bugatti driving smoothly forward in its lane across the Golden Gate Bridge, with naturally rotating wheels and realistic reflections. Low front three-quarter tracking shot from a camera moving alongside and ahead of the car at matching speed, keeping the whole car clearly visible as the bridge cables and red towers move past behind it. Continuous single shot, realistic scale and road contact, sunny daylight. No exhibition platform, no crowd around the car, no cuts, no text."
+            },
+            "references": [
+              {
+                "name": "car",
+                "file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/1ead46d5-be38-44b5-83ac-78ac98f8af47-image-0.jpg"
+              },
+              {
+                "name": "bridge",
+                "file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/39eedc07-f7c9-42db-8a1e-0721a085926a-image-0.jpg"
+              }
+            ]
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 120 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "create_video_from_text: insufficient credits: this call needs about 120 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t generate the video because your Magic Hour account has **0 credits remaining**. The 5-second clip needs about **120 credits**.\n\nOnce you add credits, I can try again using both photos as references.",
+        "refuse": "",
+        "tier_move": "I couldn’t generate the video because your Magic Hour account has **0 credits remaining**. The 5-second clip needs about **120 credits**.\n\nOnce you add credits, I can try again using both photos as references.",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 22
+    }
+  ],
+  "started": "2026-11-03T05:26:49.150Z",
+  "spent": 0,
+  "seconds": 23
+}

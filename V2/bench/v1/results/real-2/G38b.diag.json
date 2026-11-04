@@ -1,0 +1,33 @@
+{
+  "id": "G38b",
+  "best_tools": "yes",
+  "explanation": "The tools and source-image wiring were appropriate, but the close-up relied on prose and a top anchor without specifying a smaller crop region; requesting a square aspect from an already-square photo left the full image unchanged. The white shot's altered lid interior and glossier finish are secondary model-fidelity failures despite explicit preservation instructions.",
+  "better_chain": "image-edit (original photo → square white-background shot, preserving the bottle and matte finish) → image-edit (original photo → square gym-bench shot) → crop (original photo → explicitly bounded square detail region around the lid and upper matte body, approximately x=330, y=50, width=380, height=380 in the 1024×1024 source)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [
+    "model-quality"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate source, tool, square aspect and preservation prompt. The finish and lid drift occurred despite the instructions, rather than because of a planning error.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 2,
+      "issue": "Correctly edits the original independently into a square gym-bench scene, with explicit identity preservation and no text or branding.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "The crop tool is appropriate, but aspect 1:1 and anchor: top do not define a tight detail crop on an already-square image. Explicit crop bounds or a supported crop-scale setting were needed instead of relying on prose.",
+      "verdict": "bad-params",
+      "tool": "crop"
+    }
+  ],
+  "missing": ""
+}

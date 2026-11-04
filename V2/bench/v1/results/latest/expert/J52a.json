@@ -1,0 +1,83 @@
+{
+ "id": "J52a",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "model-limit",
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The structure is right and the same as mine: one shared illustrated background; the poster as a qwen lettered edit of it, with all five strings exact; and the reel as image-to-video of the clean background plus a code overlay of the five lines, so the details never warp. The fault is the motion prompt. It told minimax to \"preserve the composition and clear central text area; no new lettering\". Video models act on the nouns and drop the negations: 'text area' and 'lettering' put a large garbled headline and two lines of pseudo-text into the middle of every frame, right behind the overlay. The flux background had none, only small scribbles on the stall signs. A motion prompt should describe only the scene and what moves. The harness reads lettered stills back for stray text but never checks a generated clip's frames, so nothing caught it.",
+ "your_plan": {
+  "say": "I'll make a warm illustrated night-market poster with all five details, and a matching 8-second silent reel where the lights and stalls move gently behind the same details.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "night_market_background.png",
+    "params": {
+     "prompt_or_change": "Warm illustrated night market at dusk, vertical: rows of food stalls with red awnings and glowing food counters, strings of warm bulb lights criss-crossing overhead, people strolling, an amber and deep violet palette, open evening sky in the upper middle.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The shared scene for both pieces."
+   },
+   {
+    "tool": "image-edit",
+    "inputs": [
+     "night_market_background.png"
+    ],
+    "produces": "night_market_poster.png",
+    "params": {
+     "prompt_or_change": "Keep the warm illustrated food stalls, string lights, palette and composition; add large, highly legible cream lettering in the open centre, a bold inviting headline and clean supporting lines: \"Night Market\", \"Saturday 12 July\", \"6–10 pm\", \"Riverside Yard\", \"Free entry\", in that order, generously spaced, within the middle 80%.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "The poster with exact designed lettering, read back by code."
+   },
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "night_market_background.png"
+    ],
+    "produces": "night_market_motion.mp4",
+    "params": {
+     "prompt_or_change": "Locked-off static camera. The overhead string lights twinkle softly and sway a little, thin steam drifts up from the food stalls, and people stroll slowly between the stalls; the same illustrated style and warm colours throughout.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Only the scene and the motion. No word about text or space for text, which the model would draw. Sound is dropped by code."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "night_market_motion.mp4"
+    ],
+    "produces": "night_market_reel.mp4",
+    "params": {
+     "prompt_or_change": "Show these five lines together, centred: \"Night Market\" \"Saturday 12 July\" \"6–10 pm\" \"Riverside Yard\" \"Free entry\"",
+     "extra": "at: middle; from: 0; to: 8",
+     "aspect": "9:16",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Exact, still and readable for all 8 s over the moving background."
+   }
+  ]
+ },
+ "fix": "Add a planner rule: image-to-video and text-to-video prompts describe only the scene and the motion, and never mention text, lettering, captions, signs or 'space for text'. Harness: run the same stray-text read-back used for lettered stills (buildable.js strayText) on a middle frame of any generated clip that will carry an overlay, and regenerate once with a scrubbed prompt if it finds lettering. This covers every animated background behind overlaid text.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "night_market_background.png shows the market and string lights with no headline, only small scribbled stall signs. The poster has all five strings exact in cream on the same scene. Grader frame at 3 s of the reel: a large white garbled headline ('ᔕWE FIO M') and two lines of pseudo-text in the centre, showing through the semi-transparent band that carries the five exact lines. The judge is right."
+}

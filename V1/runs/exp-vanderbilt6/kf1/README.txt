@@ -1,0 +1,3 @@
+kf1: edit-framed: REFERENCES, TASK, CHANGES, CONTEXT, CAMERA, PEOPLE, RULES; image 1 is the place or the previous still
+made 2026-10-30T02:28:54.020Z by: node V1/experiments/fact-film3.mjs --from vanderbilt2 --label vanderbilt6 --kf kf1 --total 30 --max 15 --model wan-3.0 --build --shot 1
+kf1.js is the still template, prompts.js the plan, clip template and helpers, script.js the shooting-script stage, all as they were when this variant was generated. frames.txt and clips.txt hold every assembled prompt; stills/, clips/ and page/ the build. The script itself (../shooting-script.txt) and the cast lines (../run.json) are shared by every variant.

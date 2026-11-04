@@ -1,0 +1,34 @@
+{
+  "id": "C16c",
+  "best_tools": "yes",
+  "explanation": "The first generation prompt omitted the requested storybook style, producing a photorealistic-looking reference and undermining style consistency from the start. Both follow-ups correctly used that original as their reference and requested exact preservation, but the model dropped the cottage robot’s mailbag and altered design details. The grader also incorrectly treated the station picture as missing; it is supplied here.",
+  "better_chain": "image (generate the square station scene with an explicit storybook illustration style and all robot features, no text) → image-edit (use the original to create the cottage delivery scene, explicitly retaining the yellow mailbag and exact design) + image-edit (use the same original to create the mushroom shelter scene with visible rain and identical design) → check (verify all three pictures against the character, style, scene and format requirements) → image-edit (repair any failed requirements)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [
+    "model-quality",
+    "grader"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correct tool, character description and square aspect, but the prompt omitted the explicitly requested storybook illustration style. The resulting station picture looks photographic rather than like the follow-up illustrations.",
+      "verdict": "bad-params",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correctly edits the original reference into a separate square cottage scene and explicitly requests preservation of design, proportions, colors and details. The missing mailbag and changed proportions are failures despite that preservation instruction.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly uses the original reference rather than the potentially drifted cottage output, requests exact preservation, and specifies the mushroom, falling rain, square aspect and no text.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    }
+  ],
+  "missing": "The initial image prompt lacked an explicit storybook illustration style."
+}

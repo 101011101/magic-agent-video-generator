@@ -1,0 +1,41 @@
+{
+  "id": "G35b",
+  "best_tools": "no",
+  "explanation": "The main failure was using place, a corner-logo/sticker tool, as a side-by-side compositor; its prompt could not make it create equal panels or a new 16:9 canvas. The label steps then targeted nonexistent panels without distinct effective positions, producing overlapping text. The renovation edit used an appropriate tool but lost the sinks despite the layout-preservation instruction, and no verification caught that error.",
+  "better_chain": "image-edit (renovate the source while explicitly retaining both sink areas, faucets, fixture positions, geometry and viewpoint) → check (verify renovation materials and source fidelity; revise if needed) → image-edit (compose a 16:9 comparison from the untouched original on the left and approved renovation on the right, with equal panels and proportional padding) → crop (enforce exact 16:9 without cutting photo content) → text-overlay (add Before and After at separate explicit left/right positions) → check (verify labels, aspect, equal panels and unchanged original; reject or revise if altered)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving",
+    "prompt-or-params",
+    "model-quality"
+  ],
+  "cause": "tool-fit",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate source image, editing tool and renovation instructions. The missing sinks are an execution shortfall against the requested layout preservation; explicitly protecting both sink areas would strengthen the prompt.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 2,
+      "issue": "Place preserves a base and adds a small corner asset; it does not create an equal-panel comparison canvas. The requested layout and aspect exceed this tool's function.",
+      "verdict": "wrong-tool",
+      "tool": "place"
+    },
+    {
+      "n": 3,
+      "issue": "Text-overlay is suitable for this plain label, but 'top' plus a nominal left-panel region did not establish a distinct left-side position. The input also lacks the intended comparison panels.",
+      "verdict": "bad-params",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 4,
+      "issue": "Again uses top placement without an effective separate right-side position, so the second label overwrites the first rather than labeling a renovation panel.",
+      "verdict": "bad-params",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "A genuine equal-panel composition operation, exact aspect enforcement, and verification of fixture preservation and final label placement. The catalogue offers no dedicated code-based still-image side-by-side compositor; image-edit composition would require checking that it did not alter the original."
+}

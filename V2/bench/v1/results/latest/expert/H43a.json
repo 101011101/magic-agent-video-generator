@@ -1,0 +1,97 @@
+{
+ "id": "H43a",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent sent an 8-second, one-person, one-shot talking-head ad to the six-stage film chain. Its reason was 'because the presenter speaks on camera'. It was obeying a misleading planner rule: film is never for an ad or a clip of 20 s or less, 'unless the user names ... characters on screen speaking their lines (then film wins, whatever the kind)'. The same prompt's catalogue has the direct path: 'A face that speaks → talking-photo', with voice for the exact words. An expert sees one fictional presenter, one fixed selfie framing, 14 exact words and 8 s. That is a still of the presenter, a synthetic voice reading the script verbatim, a talking-photo to make her speak, and exact captions laid on by code. The film chain also hands exact captions and timing to a pipeline the planner does not control. The bench records film plans without running them, so nothing was made and the item scored 0. Even when run, the film chain is built for stories over 20 s.",
+ "your_plan": {
+  "say": "I'll create a made-up presenter at home, have a friendly synthetic voice say your exact line, animate her speaking it to camera, and add matching captions, all vertical.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "presenter.png",
+    "params": {
+     "prompt_or_change": "Photorealistic vertical phone-selfie video still: a fictional, friendly woman in her mid-30s (an invented person, not resembling anyone real) holding her phone at arm's length in her bright, lived-in living room at home, looking straight into the camera with a relaxed warm smile, lips gently closed, casual athleisure top, natural window daylight. Her face and shoulders fill the upper two-thirds of the frame, with a calm plain area below for captions. No text, no logos.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Nothing to start from but a specific face, so make the image first. The front-facing, closed-mouth framing is what talking-photo animates best. klein, 5 cr."
+   },
+   {
+    "tool": "voice",
+    "inputs": [],
+    "produces": "testimonial.mp3",
+    "params": {
+     "prompt_or_change": "FitTrack makes planning my workouts so easy... I finally have a routine that sticks.",
+     "extra": "voice: female; tone: friendly, casual, warm, unhurried, with a short natural pause between the two sentences",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The exact supplied words in a neutral synthetic voice. The unhurried delivery with a pause brings 14 words close to the 8 s the user wants, and its length sets the clip."
+   },
+   {
+    "tool": "talking-photo",
+    "inputs": [
+     "presenter.png",
+     "testimonial.mp3"
+    ],
+    "produces": "testimonial-talking.mp4",
+    "params": {
+     "prompt_or_change": "She speaks the voice track to camera with natural lip sync and small casual head movements, like a selfie video.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A face that speaks becomes a talking-photo: the presenter visibly speaks the exact audio at 480p, about 30 cr/s."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "testimonial-talking.mp4"
+    ],
+    "produces": "testimonial-cap1.mp4",
+    "params": {
+     "prompt_or_change": "\"FitTrack makes planning my workouts so easy.\"",
+     "extra": "at: bottom; from: 0; to: 3.6",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Captions must reproduce the script exactly, and the subtitler can mishear 'FitTrack'. text-overlay guarantees the exact words, timed to the first sentence."
+   },
+   {
+    "tool": "text-overlay",
+    "inputs": [
+     "testimonial-cap1.mp4"
+    ],
+    "produces": "fittrack-testimonial.mp4",
+    "params": {
+     "prompt_or_change": "\"I finally have a routine that sticks.\"",
+     "extra": "at: bottom; from: 3.6; to: 99",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The second sentence, as a second short caption chunk that follows the speech to the end."
+   }
+  ]
+ },
+ "fix": "Rewrite the planner rule in plan.js. Today it reads '... or characters on screen speaking their lines (then film wins, whatever the kind)'. Make it: 'one presenter or one talking head speaking to camera in a single setting, 30 s or less (testimonial, UGC ad, announcement, greeting) is a tree: image (or the user's photo), then voice (the exact words), then talking-photo, then captions or text-overlay. Film is only for several characters or several scenes.' Add a price-aware guard: a film plan whose total is under 20 s with one character is re-planned as a tree. Catalogue: talking-photo WELL 'a presenter or testimonial to camera'. Harness side note: the bench pass records film plans unrun, so a wrong film choice costs the whole item.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "The session has only prompts and session.json: no assets were made. bench/v1/run.mjs line 50 sets notRun = 'the plan uses the film chain; film is run one at a time, not in this pass'. The plan's own 'say' gives the reason: 'I'll use the film workflow because the presenter speaks on camera'. That echoes plan.js's exception for 'characters on screen speaking their lines'. C17b in this same batch shows talking-photo on the free tier giving a convincing speaking head from one still and a voice track."
+}

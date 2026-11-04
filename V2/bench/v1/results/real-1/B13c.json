@@ -1,0 +1,196 @@
+{
+  "id": "B13c",
+  "item": {
+    "id": "B13c",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which of the two attached pictures should be upscaled?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resolve the Upscale Target",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg",
+          "lake-small.jpg"
+        ],
+        "text": "upscale it please"
+      }
+    ],
+    "tests": "Asks which attachment the user means, then upscales only the selected picture without guessing or processing both.",
+    "answer_sheet": {
+      "Which picture": "The lake one, lake-small.jpg.",
+      "Output size": "your call",
+      "Enhancement style": "your call",
+      "Framing": "Keep the whole lake picture and its original proportions.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The final deliverable is an upscaled version of lake-small.jpg, following clarification.",
+      "The lake, mountains, trees, clouds, and their arrangement remain faithful to the selected source.",
+      "The delivered image has larger pixel dimensions than lake-small.jpg, not merely a renamed copy.",
+      "The full original framing and aspect ratio are preserved.",
+      "Only one edited image is delivered; the dog photo is not included or blended into it."
+    ]
+  },
+  "session": "b1-B13c",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "upscale it please",
+      "materials": [
+        "blurry-dog.jpg",
+        "lake-small.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Before I go on I need one thing:\n· Which picture or clip should I change? Send it, or name one from earlier.",
+          "asked": [
+            "asset"
+          ],
+          "user": "The lake one, lake-small.jpg."
+        }
+      ],
+      "agent": "I'll upscale lake-small.jpg with the image upscaler, keeping its content and framing unchanged.",
+      "firstQuestions": [
+        {
+          "field": "asset",
+          "question": "Which picture or clip should I change? Send it, or name one from earlier."
+        }
+      ],
+      "turnIndex": 1,
+      "sheet": {
+        "fields": [
+          {
+            "value": "lake-small.jpg",
+            "field": "asset",
+            "quote": "The lake one, lake-small.jpg.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "MATERIALS the user has: blurry-dog.jpg, lake-small.jpg",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "upscale",
+            "field": "change",
+            "quote": "upscale it please",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "form",
+            "field": "change_kind",
+            "quote": "upscale it please",
+            "source": "inferred",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "whole",
+            "field": "range",
+            "quote": "upscale it please",
+            "source": "inferred",
+            "confidence": 0.99
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "upscale it please",
+            "source": "inferred",
+            "confidence": 0.99
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "upscale it please",
+          "source": "stated",
+          "why": "The user requests upscaling an existing supplied image and identifies the lake image.",
+          "confidence": 1
+        },
+        "refers_to": "lake-small.jpg",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll upscale lake-small.jpg with the image upscaler, keeping its content and framing unchanged.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 25,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "upscale-image",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "lake-small.jpg"
+            ],
+            "produces": "lake-upscaled.jpg",
+            "params": {
+              "extra": "scale: 2",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Upscale the entire image 2×, preserving content and framing.",
+              "resolution": ""
+            },
+            "credits": 25,
+            "why": "Increase the supplied image's resolution without changing its content."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "upscale-image",
+          "state": "done",
+          "output": "assets/lake-upscaled.png",
+          "credits": 25,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": null,
+          "seconds": 5
+        }
+      ],
+      "spent": 25,
+      "seconds": 6
+    }
+  ],
+  "started": "2026-11-01T05:51:21.992Z",
+  "spent": 25,
+  "seconds": 6,
+  "sessionDir": "sessions/b1-B13c"
+}

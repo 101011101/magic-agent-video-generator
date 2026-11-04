@@ -1,0 +1,39 @@
+{
+  "id": "J52a",
+  "best_tools": "yes",
+  "explanation": "The plan correctly branches from the unlettered background: Qwen adds designed poster lettering, while the background alone is animated before stationary event text is overlaid. The unwanted lettering reflects generation failing the explicit no-signage/no-new-lettering instructions, not a plan that animates the lettered poster. The grader also wrongly treats silence as missing merely because still frames cannot establish audio, despite explicit audio-discard instructions.",
+  "better_chain": "image (make a text-free illustrated 9:16 background) → check (inspect for unwanted lettering; image-edit to remove any found) → branch: image-edit with lettering:true (make the finished poster) AND image-to-video (animate the clean background for eight seconds, discarding audio) → text-overlay (add all five exact event strings throughout 0–8 seconds) → inspect both finished assets, including reel motion, readability and silence",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [
+    "grader"
+  ],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate background-generation tool and prompt, including an explicit prohibition on words and signage. The visible nonsense stall lettering violates that instruction.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Qwen image-edit appropriately adds designed lettering to the shared background, with all five exact strings, vertical sizing and safe margins specified.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly animates the unlettered background rather than the finished poster. Duration, subtle motion, no new lettering and audio removal are explicitly specified.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 4,
+      "issue": "Text-overlay is appropriate for stationary exact text over footage. All five strings, continuous eight-second timing, safe placement and no audio are specified.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": ""
+}

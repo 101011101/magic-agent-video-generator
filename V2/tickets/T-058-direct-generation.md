@@ -1,0 +1,190 @@
+# T-058 · Direct generation: the video model composes; keyframes only when the state demands them
+
+Status: proposed 2026-11-01, from the MCP baseline's film pairs (T-048). Owner: the pipeline (composer); the bench measures it.
+
+## The user's rule, verbatim (2026-11-01)
+
+> so it looks like the mcp just does straight text to video which is good, I think we should do that more instead of the
+> long pipeline, we will only do text to video directly for one case, if there are no input restraints then that means the
+> video generator can make the whole thing on its own. No input restraint could mean that the user only gave text, that
+> means that we dont need to generate key frames per say, if there are references we can just provide the references then
+> directly generate the video, if there are constraints, which can be looked at from the state manager, it is likely from a
+> super long video with multiple clips to consider from etc, in that case instead of generating key frames we will provide
+> key references and let the video generator figure it out, we just gotta provide the environment plus whatever other, we
+> dont need to assemble it that much per say for each key frame, which just need to provide references from the previous
+> clips which are tracked by the state manager, etc and provide references if the previous frames doesnt have the
+> necessary context
+
+## What the data says
+
+- Four film briefs on the free tier: the MCP's one `create_video_from_text` call (ltx-2.5 three times, minimax-h3 once,
+  480p, `audio: true`, one prose prompt of 900 to 2,300 characters with timed beats and the exact words) won all four
+  against the chain story → assets → screenplay → keyframes (flux-2-klein) → pinned clips (minimax-h3) → stitch.
+- The chain's clip is only as good as its stills; every flaw in a still is in the clip, every cut can break continuity.
+  The narration generated inside the video model was right (I46a, I47a); the chain's 3-second clips each generate gibberish
+  speech under the narration.
+- The podcast (I90a) was ONE 30-second generation: the prompt asked for "a single continuous two-shot, no cuts" with the
+  four lines timed (0–8 s Maya, 8–17 s Leo, …). Nothing was fed forward between clips; there was one clip. The first
+  attempt failed on the API's limit of 2,000 characters for `style.prompt`; the second, at 1,640, ran. The model held both
+  hosts for 30 seconds but spoke only Maya's first line: the model's native audio is the weak part of a long single shot.
+- On the micro items the agent's own text-to-video calls hold up (D19a, D19b, D19c, J55a won); the chain loses where it
+  paints first.
+
+## The three cases
+
+1. **No input constraints (the user gave text only).** One text-to-video call from the brief. The planner writes prose:
+   the scene, timed beats, the exact on-screen words, the lines to be spoken, the constraints (no cuts, consistent
+   people, no other text). Within the model's grid (ltx-2.5 1–60 s, minimax-h3 1–30 s at 480p on the free tier) and the
+   2,000-character prompt limit. Audio on. No story stage beyond the research the brief needs; no assets, no keyframes.
+2. **References given (pictures, a logo, a face, a voice sample).** The same call with the references attached: the
+   registry's `refs` / `maxRefs` per model (minimax-h3 nine images, videos or audio; wan-3.0 ten; ltx-2.5 undocumented,
+   to be probed). No keyframes.
+3. **Constraints from the state (a long piece in several clips; the same people, room and props across them; what
+   the last clip ended on).** Per clip, references instead of painted keyframes: the environment root (the plate), the
+   sheets of the people and props the shot needs, the previous clip's last frame (the pipeline already extracts
+   `clips/<clip>-last.png`; the state manager tracks it), and extra references when the last frame lacks the context
+   (a new place → its plate; a new character → their sheet). The prompt is the shot's prose (synopsis, moment, beats,
+   lines), not the FRAMES block that describes two given pictures.
+
+## What already exists, and what is new
+
+- `--clips t2v`: text-to-video per shot with references = the start and end stills, the sheets of the people in frame,
+  the bank voices (`--voice-refs`), up to ten. `--clips seq`: one generation across several shots, references = the
+  pinned stills first, then portraits and voices, capped by the model's `maxRefs`; identity checked on the frames.
+  Both still paint keyframes first and reference them.
+- New: a `direct` clip mode (cases 1 and 2: one generation from the brief; case 3: references from the bank and the
+  previous clip, no paint stage). The story and screenplay stages stay as the source of the prose in case 3; in cases
+  1 and 2 the planner's prompt is the screenplay.
+- Exact on-screen text: the video models letter short strings well and garble long ones (dates and venues in H44a,
+  H44b, H44c); long strings keep the code overlay after the generation.
+
+## Open
+
+- Which free video model carries the mode: ltx-2.5 (the MCP's pick, won three of four) or minimax-h3 (the registry's
+  free default, nine references documented). Probe ltx-2.5's reference support first.
+- A continuity check on the generated clip's frames (the identity gate from `seq`) and what happens when it fails:
+  retry with more references, or fall back to the pinned chain for that clip.
+- The prompt budget: 2,000 characters per call; a 30-second piece needs the beats compressed.
+
+## Bench
+
+The four film briefs (`bench/mcp/film/items`, the I-group items) on `--clips direct`, graded and compared pairwise against
+`results/compare-film-1/` (the MCP) and against the chain; then the ads and composed pieces (H, G) that make a clip.
+About 250 to 750 credits a film on the free tier. Acceptance: on the free tier the direct films beat or tie the MCP's
+single call on the pairwise judge, the chain runs only when case 3's constraints are present, and nothing regresses on
+D and H.
+
+## Built (2026-11-01, commits 20105ce, 374cb21, 162badc, 77a33b3)
+
+- `backend/composer/direct/direct.js`, hooked into `pipeline.mjs`: a whole film from a brief (`--until film`) now goes
+  story → direct generation by default; the chain runs only when a constraint forces it: `--chain` or a chain clip mode
+  (`--clips pinned|start|t2v|seq`), a stage short of the film, an existing run edited (`--retry`, `--accept`, `--recheck`,
+  `--restore`, `--only`, `--script-from`), a reused bank. Flags: `--clips direct`, `--refs a.png,b.jpg`, `--aspect`,
+  `--max-seg 30`, `--dry` (prints the requirements and every prompt, pays nothing).
+- The planner (`direct-plan-v2`): the BRIEF is the contract. It lists the requirements in the brief's own words first
+  (medium, exact on-screen strings, exact spoken lines, the events in order, the length, every "no"), then writes one
+  prose prompt per segment of 1,100 to 1,700 characters with timed beats, the quoted words, and the closing constraints;
+  the research's facts serve what is shown; the story stage's rewrite is flavour. The first planner (v1) planned from
+  the story's rewrite and lost the brief: a live-action documentary for "simple animation", no end card for the ad that
+  ends on one. v1 scored 34/23/42/39 on the four films, v2 34/37/58/58 (the chain 29/37/42/58, the MCP 34/100/42/58).
+- Segments: as few generations as the model's grid allows (ltx-2.5 up to 60 s, minimax-h3 up to 30 s), each later one
+  continuing from the previous one's last frame. **The API binds a reference by its `@name` in the prompt** (422 "The
+  prompt must include @previous" otherwise; the chain's `@start`/`@end`/`@id` is the same rule). On minimax-h3 the
+  hand-off is near exact: segment 2's first frame reproduces segment 1's last frame, labels included
+  (`runs/direct-I92a-mm`). The drift that remains is inside a 30-second generation, the model's own continuity.
+- Records: `build.direct` (the plan with its requirements), `build.made[n]` per generation (prompt, refs, the previous
+  frame as `start`), `build.film`; `bench/mcp/film/record.mjs --out <arm>` writes the bench record (`film/direct-v1`,
+  `film/direct`, `film/direct-mm`); the comparison page's pathway shows the generations and their frames.
+- What the model still gets wrong at 480p, read off the grader: speech nobody asked for (Japanese in the silent coffee
+  ad, "You call 391 soon?" in the podcast), garbled captions where the brief said no text, dense diagrams lettered
+  wrongly over 60 seconds (the MCP's and ours both 24 on the citric acid cycle on ltx-2.5). Next levers, in order:
+  mute the generated track when the brief asks for no speech (room tone or the music bed instead); narration by the
+  voice tool mixed by code for explainers and documentaries, the model asked for ambience only (dialogue stays with the
+  model, it needs the lips); the exact on-screen strings by the code overlay at the planned times instead of by the
+  model; minimax-h3 for lettered diagrams (its labels were legible), ltx-2.5 for live action.
+
+## First numbers (2026-11-01, the free tier, 480p)
+
+| film | chain | direct v1 | direct v2 | MCP | judge, direct v2 vs MCP | judge, direct v2 vs chain |
+|---|---|---|---|---|---|---|
+| I46a F-35 8 s | 29 | 34 | 34 | 34 | direct (clear) | direct (clear) |
+| I47a seed 8 s | 37 | 23 | 37 | 100 pass | MCP (clear) | chain (slight) |
+| I90a podcast 30 s | 42 | 42 | 58 | 42 | MCP (slight) | direct (slight) |
+| I91a coffee ad 10 s | 58 | 39 | 58 | 58 | MCP (slight) | direct (clear) |
+| I92a citric acid cycle 60 s | — | 24 (ltx, one generation) · 34 (minimax, 2 × 30 s, last frame fed forward) | 24 (ltx) | 24 (ltx, one generation) | direct (slight) | — |
+
+Credits a film, direct: 192 / 192 / 720 / 240 / 1,440 (the same as the MCP's: one generation at 24 a second); the chain
+287 / 242 / 775 / 415. Pages: `results/compare-film-direct/` (direct vs MCP), `results/compare-film-chain-direct/`
+(direct vs chain, `--names "Direct,Chain"`), and the combined page `results/compare-all-1/` (the direct films first, then
+the chain's, then the micro tasks).
+
+Read: direct v2 is level with the chain or above it on every film at a third less credit, and level with the MCP on
+three of five by the grader; the judge still prefers the MCP's pictures on three (headphones and staging in the podcast,
+the mood of the coffee ad, a text-free seed clip). The one-minute diagram defeats one ltx-2.5 generation on both
+sides (24 and 24, labels garbled); minimax-h3 in two segments lettered its first half legibly and handed the frame over
+intact, then drifted inside the second generation (34). The model's unasked speech and garbled captions are the faults
+that keep the four films from passing; the levers are in "Built" above.
+
+## The route and the anchors (2026-11-01, commits 071d242, 8c58b76)
+
+- **The route.** After the story, `routeDirect` counts the production (places, scenes, recurring people, shots the brief
+  itself demands, a storyboard) and the rule decides: the chain when the piece needs more than two generations on the
+  model, or a recurring cast across several places, or storyboarded shots; direct generation otherwise. Dry runs: the
+  podcast → direct (one place, one generation); the night ride → direct (one journey, two generations); a three-scene
+  lighthouse short with one keeper → chain ("1 recurring person across 3 places; the brief storyboards its shots").
+  `--chain` and `--clips` override; the decision is kept in `run.json` as `route`.
+- **The anchors.** Specific requirements inside a direct piece are painted first: the planner names the stills a video
+  model gets wrong on its own (a diagram, exact lettering, a product, a layout), they are painted on qwen-image-2.1
+  when words must be spelled, attached as `@name` references, and a later segment that names an anchor gets it again.
+  On the citric acid cycle the planner named one, `@cycle` (the whole lettered diagram); the video model took its
+  layout and most of its large labels, garbled the small tags, and the narration looped: 34 against 24 for one ltx
+  generation and 24 for the MCP; still not usable.
+- **The two-clip continuity test (I93a, a 60 s single take).** Ours: two 30 s minimax-h3 generations, the second bound
+  to the first's last frame; the hand-off is the same rider, jacket, bag, helmet and street, and she reaches the lit café
+  door at the end. The MCP made one 60 s ltx-2.5 generation and never faced a second clip. Grader: ours 37, the MCP 39;
+  both fail on the same fault, speech nobody asked for (Indonesian in ours, German in the MCP's), plus dusk light in the
+  MCP's.
+- **The fault that now decides most pieces** is the model's unasked speech: four of our six pieces and two of the MCP's
+  carry a foreign sentence the grader transcribes. The lever is sound ownership: when no segment has narration or
+  dialogue, generate with `audio: false` and lay an ambience track by code (the music generator asked for a texture,
+  or silence where the brief says no music); when narration is asked, keep the model's audio, which spoke the right
+  words on three of four pieces. Not run yet (a paid rerun).
+
+## The join between generations, measured (2026-11-02, commit d7ad222)
+
+Three continuation modes (`--continue ref|frame|clip`). On the night ride (minimax-h3, 2 × 30 s), the similarity (SSIM)
+between segment 1's last frame and segment 2 at 0 / 0.5 / 1 / 2 s: **ref** (the last frame as `@previous` in a
+text-to-video call) 0.53 / 0.35 / 0.21 / 0.18; **frame** (the last frame as the start frame of an image-to-video
+call) 0.93 / 0.34 / 0.30 / 0.18; a tracking shot moves 0.33 on its own in half a second. So the frame is the right
+one in both modes (not the first frame of clip 1: 0.22), the start-frame call makes the first frame exact, and neither
+carries motion: by half a second both have re-staged the shot, which the eye reads as a freeze-then-restart (frame) or
+a jump (ref). **clip** (the last five seconds as a video reference `@motion` beside `@previous`, the join cut at the
+best-matching pair of frames within three seconds either side) is built and unrun: the ledger reached the 100,000 cap.
+The audio restarts at every join in every mode (babble in another language when no speech was asked), see "The route
+and the anchors". `results/night-ride/` shows the frames and the numbers.
+
+The chain on the citric acid cycle (`runs/chain-I92a`): 18 stills, 10 clips, a music bed, 2,660 credits, 36 passes of
+the driver (a sheet gate flagged every molecule root, a style gate flagged most stills); recorded in `film/agent`.
+
+Over-complication, counted on the fresh comparison (`compare-mcp-2`): where both passed (53 items) the agent used more
+steps than the MCP made create calls on 13, cheaper on 7 of them; where the MCP passed in one call (36) the agent also
+took one step on 25, two on 8 (the VELORA bottle: a klein picture, a klein edit to print the name, a check; the MCP one
+qwen generation with the name in the prompt, both 100), three or more on 2 (talking photos: write, voice, animate).
+The rule that would fold the 8 into one call is the planner's: one generation on the lettering model when the piece is
+one picture with a few words (plan.js, the other session's).
+
+## Approach 2 ran (2026-11-02, cap raised to 101,000 for one call, 720 credits)
+
+`--continue clip`: segment 1's last five seconds attached as a video reference `@motion` beside its last frame
+`@previous`; the API accepted both. Result on the night ride: the model took the look (same rider, jacket, bag, street,
+the café door at the end) and none of the staging: the first frame of segment 2 is 0.19 similar to segment 1's last
+frame, below ref (0.53) and frame (0.93), and the best-matching pair of frames across a three-second window either
+side is 0.17, so the cut lands by default (27.7 s of the first, 0 s of the second). Its audio: "Dove siamo rimasti?"
+then Japanese babble. So of the three modes only the start frame carries anything exact, and it carries one frame.
+The page `results/pipeline-night-ride/` renders the run as the pipeline it executed; `pipeline-page.mjs` does that
+for any direct run (`results/pipeline-chemistry-anchors/` is the anchors branch).
+
+Next candidate for the join, unrun: start segment 2 from the frame three seconds BEFORE segment 1's end (image-to-
+video, exact first frame) so both generations contain the same three seconds of action, then cut at the best-matching
+pair inside that overlap; the exactness of the start frame plus an overlap gives the cut search something to find.
+For the sound, the model's audio is never continuous and is babble when unasked: sound by code (see above).
