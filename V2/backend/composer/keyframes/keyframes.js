@@ -9,6 +9,7 @@ import { crop as cropImage, bars, size as imageSize } from "../../lib/media.js";
 import { captionCard } from "../../lib/captions.js";
 import { execFileSync } from "node:child_process";
 // A black 16:9 frame with the caption centred: the caption card (transparent) laid over black.
+import { buildPlan, fixText, misread, strayText, letterModel } from "./buildable.js";
 export function titleCard(text, out) { const tmp = out.replace(/\.png$/, "-text.png"); captionCard(text, tmp, { w: 1920, h: 1080, size: 56, at: "middle" }); execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "color=c=black:s=1920x1080", "-i", tmp, "-filter_complex", "[0][1]overlay=0:0", "-frames:v", "1", "-update", "1", out]); return out; }
 import { keyframePrompt, deltaEditPrompt, sameInstant } from "./template.js";
 import { inFrame } from "../screenplay/screenplay.js";
@@ -32,7 +33,8 @@ export function repairPrompt(repair, medium) {
   return `REPAIR (from image 1)\nImage 1 is this exact frame; keep its camera, place, light, every person and vehicle, their positions and poses, and the finish exactly. Change only this:\n${lines.join("\n")}\n- Nothing else changes: no new thing appears anywhere, nothing moves.\n\nRULES\n${medium.treatment ? `${medium.treatment} ` : ""}${medium.frame} One frame filling the picture edge to edge, no black bars; no captions, titles or overlaid text.`;
 }
 
-export async function paintKeyframes({ state, jobs, medium, K, run, say = console.log, only = null, still: STILL = "nano-banana-pro", res: RES = "2k", cropDirect = CROP_DIRECT }) {
+export async function paintKeyframes({ state, jobs, medium, K, run, say = console.log, only = null, still: STILL = "nano-banana-pro", res: RES = "2k", cropDirect = CROP_DIRECT, tier = "paid" }) {
+  const LETTER = letterModel(STILL, tier);   // the model that letters on this tier: the paint model when it letters well (buildable.js)
   K.painted ??= {}; K.attempts ??= {};
   // A reference never carries black bars: a painted still with thin bars is cropped to its picture before it is sent as
   // image 1 (the painter widened the thin bars of one frame into a full letterbox on the frame edited from it).
@@ -76,8 +78,17 @@ export async function paintKeyframes({ state, jobs, medium, K, run, say = consol
       else if (cropped) { mode = "crop"; const p = keyframePrompt({ still: s, state, medium, mode }); images = [cropped.file, ...p.images.slice(1).map(resolve)]; prompt = p.prompt; }
       else { const p = keyframePrompt({ still: s, state, medium, mode }); images = p.images.map(resolve); prompt = p.prompt; }
       file = `stills/${s.id}${suffix}.png`;
+      // Buildable in one shot? Words on a model that letters poorly: the scene blank, then a lettering edit (buildable.js).
+      const bp = await buildPlan({ prompt, still: STILL, tier }), framePrompt = prompt; if (bp.split) prompt = bp.scene;   // the scene without its lettering
+      if (bp.note) say(`  ${s.id}${suffix}: ${bp.note}`);
       const job = await jobs.image(`still-${s.id}${suffix}`, file, prompt, images, { model: STILL, resolution: RES, aspect_ratio: "16:9" });
-      if (job.estimated) { say(`  ${s.id}${suffix}: would be painted (${mode}${cropped ? " from the crop" : ""}, ${job.credits} credits); dry run, nothing sent`); continue; }
+      if (job.estimated) { say(`  ${s.id}${suffix}: would be painted (${mode}${cropped ? " from the crop" : ""}, ${job.credits} credits${bp.split ? `, the scene without its words, then lettered on ${LETTER}` : ""}); dry run, nothing sent`); continue; }
+      const build = { words: bp.words, steps: bp.steps.map((x) => `${x.op}${x.model ? `:${x.model}` : ""}`), ...(bp.split ? { scene: bp.scene, frame_prompt: framePrompt } : {}) };
+      if (bp.split) { await fixText({ jobs, run, key: `still-${s.id}${suffix}-letter`, file, words: bp.words, wrong: bp.words, stray: [], model: LETTER, res: RES }); build.lettered = bp.words.map((w) => w.text); say(`  ${s.id}${suffix}: scene painted without its words, lettered on ${LETTER}: ${bp.words.map((w) => `"${w.text}"`).join(", ")}`); }
+      if (LETTER) {   // read the frame; one fix on the lettering model when a word is wrong or stray lettering is there
+        const st = await strayText({ run, file, words: bp.words }), wrong = misread(bp.words, st.seen); build.seen = st.seen.map((x) => x.text);
+        if (wrong.length || st.stray.length) { await fixText({ jobs, run, key: `still-${s.id}${suffix}`, file, words: bp.words, wrong, stray: st.stray, model: LETTER, res: RES }); build.fixed = [...wrong.map((w) => `wrote "${w.text}"`), ...st.stray.map((x) => `removed ${x.where} ("${x.text}")`)]; say(`  ${s.id}${suffix}: lettering fixed on ${LETTER}: ${build.fixed.join("; ")}`); }
+      }
       const expected = state.expectedFor(s);
       const c = await state.peopleCheck(file, people, state.peopleBaseline(s, K.painted)), room = mode === "crop" ? { ok: true, note: "crop of the master" } : await state.roomCheck(file, s.place, expected, env ? K.painted[env.id].file : null, state.cameraOf(s)), lb = bars(run.path(file)), style = await state.styleCheck(file), load = mode === "crop" ? { ok: true, note: "crop of the master" } : await state.loadCheck(file, state.loads(s), state.loadBaseline(s, K.painted)), geo = mode === "crop" ? { ok: true, note: "crop of the master" } : await state.geometryCheck(file, s.frame.props, state.geoBaseline(s, K.painted), state.headingBaseline(s, K.painted)), bad = !c.ok || !room.ok || lb.boxed || !style.ok || !load.ok || !geo.ok;
       if (!geo.ok) c.note = `${c.note} · GEOMETRY: ${geo.note}`;
@@ -85,7 +96,7 @@ export async function paintKeyframes({ state, jobs, medium, K, run, say = consol
       if (!load.ok) c.note = `${c.note} · LOAD: ${load.extra.length ? `${load.extra.join(", ")} carr${load.extra.length === 1 ? "ies" : "y"} more than the screenplay puts on it: ` : ""}${load.note}`;
       if (lb.frac >= 0.005) c.note = `${c.note} · black bars: ${lb.top} px top, ${lb.bottom} px bottom, ${lb.left} px left, ${lb.right} px right${lb.boxed ? "" : " (cropped at the stitch)"}`;
       say(`  ${s.id}${suffix} (${mode}${cropped ? ` from a ${Math.round(cropped.box.w * 100)}% crop of ${cropped.of}` : ""}): ${c.people} people (want ${people.length}) · order ${(c.order || []).join(" < ") || "-"} · people ${c.ok ? "ok" : "FLAGGED"} · room ${room.ok ? "ok" : `FLAGGED${room.added?.length ? ` (added: ${room.added.join(", ")})` : ""}`}${lb.boxed ? " · black bars FLAGGED" : ""}${load.ok ? "" : " · load FLAGGED"}${geo.ok ? "" : " · geometry FLAGGED"} · ${c.note} ${room.note || ""}`);
-      progress = true; K.painted[s.id] = { file, key: s.key, cropped, mode, repaired: mode === "repair" || undefined, check: { ...c, room, bars: lb, style, load, geo }, bad, images: cropped ? [`crop:${cropped.of}`, ...keyframePrompt({ still: s, state, medium, mode }).images.slice(1)] : keyframePrompt({ still: s, state, medium, mode }).images, prompt, attempt: k + 1 }; run.save();
+      progress = true; K.painted[s.id] = { file, key: s.key, build, cropped, mode, repaired: mode === "repair" || undefined, check: { ...c, room, bars: lb, style, load, geo }, bad, images: cropped ? [`crop:${cropped.of}`, ...keyframePrompt({ still: s, state, medium, mode }).images.slice(1)] : keyframePrompt({ still: s, state, medium, mode }).images, prompt, attempt: k + 1 }; run.save();
       state.record(s, { file, gate: bad ? "flagged" : "ok", how: mode });
     }
   }

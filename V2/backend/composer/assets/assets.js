@@ -145,7 +145,9 @@ pick: the number of the best one: a single clear depiction of this exact thing i
       const propNames = e.kind === "place" ? (L.elements || []).filter((x) => x.kind === "prop" && x.id !== e.id).map((x) => x.name) : [];
       const prompt = e.kind === "character"
         ? `${L.medium.treatment} ${L.medium.person}, full length. The person: ${e.look}\nStanding, front view, neutral pose, arms relaxed, whole figure visible head to feet.\nPlain light-grey seamless studio backdrop, soft even light, nothing else in the picture; no text.`
-        : e.kind === "place" ? `${L.medium.treatment} ${match1}${L.medium.place} ${e.name}, empty of people${propNames.length ? ` and of the story's vehicles and objects (none of: ${propNames.join(", ")})` : ""}, one single image. ${e.look}${e.setting ? ` The place as the story first shows it, its surroundings only (the sky, sea or ground, weather, light and the viewpoint; nothing that moves through it): ${e.setting}` : ""} Period-accurate in every detail. No text or labels.`
+        // the medium can name a genre with people in it ("video podcast photograph"); small models follow the opening words, so emptiness
+        // leads, and the excluded props are not named: a "none of: Maya's microphone" list painted both microphones, three times of three
+        : e.kind === "place" ? `${L.medium.treatment} ${match1}An empty set with nobody in it. ${L.medium.place} ${e.name}, empty of people${propNames.length ? " and of the story's vehicles and objects" : ""}, one single image. ${e.look}${e.setting ? ` The place as the story first shows it, its surroundings only (the sky, sea or ground, weather, light and the viewpoint; nothing that moves through it): ${e.setting}` : ""} Period-accurate in every detail. No text or labels.`
         : `${L.medium.treatment} ${match1}${L.medium.object} ${e.name}, the whole thing seen from the side, filling the frame, in its natural setting with nothing else of note and no people, one single image. ${e.look} Period-accurate in every detail. No text or labels.`;
       const job = await jobs.image(`root-${e.id}`, file, prompt, ref);
       if (job.estimated) { say(`  ${e.id}: would be generated (${e.kind}, ${job.credits} credits); dry run`); continue; }
@@ -155,7 +157,16 @@ pick: the number of the best one: a single clear depiction of this exact thing i
       const lb = bars(run.path(file)), barsNote = lb.frac > 0 ? `black bars ${lb.top}+${lb.bottom} px top/bottom, ${lb.left}+${lb.right} px sides` : "";
       if (lb.frac > 0 && lb.frac <= 0.3) { const raw = file.replace(/\.png$/, "-raw.png"); renameSync(run.path(file), run.path(raw)); const [W, H] = imageSize(run.path(raw)); cropImage(run.path(raw), { x: lb.left / W, y: lb.top / H, w: (W - lb.left - lb.right) / W, h: (H - lb.top - lb.bottom) / H }, run.path(file)); say(`  ${e.id}: ${barsNote}, cropped off (raw kept as ${raw})`); }
       else if (lb.frac > 0.3) say(`  ${e.id}: FLAGGED ${barsNote}; look at it before it is used`);
-      const fit = await sheetMatchesLook(run, file, e, propNames);
+      let fit = await sheetMatchesLook(run, file, e, propNames);
+      // A place sheet that came with people or the story's props in it gets one cleaning edit, then the check again: the
+      // "empty" podcast studio came with two hosts at two microphones on flux-2-klein four times of four and on qwen once
+      // of once, whatever the prompt said, and the frames painted from it took the strangers' clothes for the cast's.
+      const strays = [...(fit.excluded_present || []), ...(fit.prominent_extras || fit.extras || [])];
+      if (e.kind === "place" && !fit.ok && strays.length) {
+        const dirty = file.replace(/\.png$/, "-uncleaned.png"); copyFileSync(run.path(file), run.path(dirty));
+        const clean = await jobs.image(`root-${e.id}-clean`, file, `Remove every person from this picture, and remove ${strays.join(", ")}. Where they were, show what is behind them: empty chairs, the bare table top, the wall. Keep everything else exactly as it is: the room, the furniture, the light, the colours, the framing.`, [dirty]);
+        if (!clean.estimated) { fit = await sheetMatchesLook(run, file, e, propNames); say(`  ${e.id}: cleaned by an edit (people and props removed)${fit.ok ? "" : ", still flagged"}`); }
+      }
       L.bank[e.id] = { source: record ? "generated-from-record" : "generated", file, prompt, fit: { ok: fit.ok, why: fit.why }, ...(record ? { record } : {}), ...(ref.length ? { style_ref: ref.at(-1) } : {}), ...(barsNote ? { bars: barsNote } : {}), ...(fit.ok ? {} : { flagged: `${[...fit.excluded_present.map((x) => `excluded by its description: ${x}`), ...fit.prominent_extras.map((x) => `not in its description: ${x}`)].join("; ")} (${fit.why})` }) };
       say(`  ${e.id}: generated (${e.kind})${fit.ok ? "" : ` · FLAGGED ${L.bank[e.id].flagged}`}`);
       if (e.kind === "place") L.style_ref ??= file;

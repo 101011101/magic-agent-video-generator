@@ -140,18 +140,18 @@ export async function makeSequences({ state, jobs, K, run, say = console.log, vi
     // T-046: a sequence is pinned on its frames as a clip is, and is remade when any of them changed (a repaint, a restore);
     // before this rule a rendered sequence was kept whatever happened to its stills. A record from before it has no frame
     // list: the refs it recorded (f1=…, f2=…) stand in; a card sequence lists its card.
-    const frames = group.flatMap((g) => g.c.end !== g.c.start ? [K.painted[g.c.start]?.file, K.painted[g.c.end]?.file] : [K.painted[g.c.start]?.file]);
+    const pinned = group.flatMap((g) => g.c.end !== g.c.start ? [K.painted[g.c.start]?.file, K.painted[g.c.end]?.file] : [K.painted[g.c.start]?.file]);   // not "frames": that name is media.js's frame sampler, called below
     const prior = K.sequences[key];
     if (prior?.clip) {
       const was = prior.frames || (prior.refs || []).filter((r) => /^f\d+=/.test(r)).map((r) => r.slice(r.indexOf("=") + 1));
-      if (!was.length || (was.length === frames.length && was.every((x, i) => x === frames[i]))) return;
-      const changed = frames.map((x, i) => (x !== was[i] ? x || `${was[i]} (gone)` : null)).filter(Boolean);
+      if (!was.length || (was.length === pinned.length && was.every((x, i) => x === pinned[i]))) return;
+      const changed = pinned.map((x, i) => (x !== was[i] ? x || `${was[i]} (gone)` : null)).filter(Boolean);
       (K.attempts[`seq-${key}`] ??= []).push(prior); delete K.sequences[key]; for (const g of group) if (K.made[g.c.n]?.sequence === key) delete K.made[g.c.n];
       say(`  sequence ${key}: its frames changed since it was rendered (${changed.join(", ")}); it is rendered again`);
     }
     if (K.painted[first.start]?.card) {   // a card sequence: by code, as a clip
       const file = `clips/seq-${key}.mp4`; execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-loop", "1", "-i", run.path(K.painted[first.start].file), "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", String(total), "-vf", "scale=1280:720,format=yuv420p", "-r", "24", "-c:v", "libx264", "-c:a", "aac", "-shortest", run.path(file)]);
-      K.sequences[key] = { clip: file, shots: group.map((g) => g.shot.n), seconds: total, rendered: total, card: true, frames, identity: { ok: true, note: "title card" } }; for (const g of group) K.made[g.c.n] = { sequence: key, card: true, clip: file, identity: { ok: true, note: "title card" } }; run.save(); say(`  sequence ${key}: title card, ${total} s, by code`); return;
+      K.sequences[key] = { clip: file, shots: group.map((g) => g.shot.n), seconds: total, rendered: total, card: true, frames: pinned, identity: { ok: true, note: "title card" } }; for (const g of group) K.made[g.c.n] = { sequence: key, card: true, clip: file, identity: { ok: true, note: "title card" } }; run.save(); say(`  sequence ${key}: title card, ${total} s, by code`); return;
     }
     const blocker = group.map((g) => chainBad(g.c.start) || chainBad(g.c.end)).find(Boolean), missing = group.some((g) => !K.painted[g.c.start]?.file || !K.painted[g.c.end]?.file);
     if (blocker || missing) { say(`  sequence ${key}: waiting on ${blocker || "its stills"}`); return; }
@@ -175,7 +175,7 @@ export async function makeSequences({ state, jobs, K, run, say = console.log, vi
       const pseudo = { first: group[0].shot.first, last: group.at(-1).shot.last, lines: group.flatMap((g) => g.shot.lines) };
       const identity = await state.clipCheck(ff, pseudo, rendered), heard = pseudo.lines.length ? await transcribe(run, file) : "";
       say(`  sequence ${key}${suffix} (${rendered} s rendered for ${total} s): first≈start ${ends.first_vs_start} last≈end ${ends.last_vs_end} · identity ${identity.ok ? "ok" : `FLAGGED${identity.badFrames?.length ? ` frames ${identity.badFrames.join(",")}` : ""}`} · ${identity.note}${heard ? ` · heard: ${heard}` : ""}`);
-      made = { clip: file, mode: "seq", model, shots: group.map((g) => g.shot.n), frames, seconds: total, rendered, speed: fast ? speedUp : 1, qa: ends, identity, heard, prompt, refs: refs.map((r) => `${r.name}=${r.file}`), attempt: k + 1 };
+      made = { clip: file, mode: "seq", model, shots: group.map((g) => g.shot.n), frames: pinned, seconds: total, rendered, speed: fast ? speedUp : 1, qa: ends, identity, heard, prompt, refs: refs.map((r) => `${r.name}=${r.file}`), attempt: k + 1 };
     } catch (e) { const msg = String(e).slice(0, 300); say(`  sequence ${key}: FAILED ${msg}`); made = { error: msg, mode: "seq", model, shots: group.map((g) => g.shot.n), seconds: total, prompt }; }
     K.sequences[key] = made; for (const g of group) K.made[g.c.n] = { sequence: key, clip: made.clip, identity: made.identity, error: made.error, mode: "seq" }; run.save();
   });

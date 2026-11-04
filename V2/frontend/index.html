@@ -130,7 +130,8 @@ aside h1{font-size:13px;font-weight:600;margin:0 0 10px 6px;letter-spacing:-.01e
 document.head.appendChild(Object.assign(document.createElement("style"), { textContent: DAG_CSS }));
 const $ = (s, r = document) => r.querySelector(s), chat = $("#chat"), canvas = $("#canvas"), toolPanel = $("#tool");
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-const SID = "default"; let S = null, MODELS = null, RUNS = [], CATALOGUE = null; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
+// ?session=<id> in the address opens any saved session (a bench item, a film run); without it, "default".
+const SID = new URLSearchParams(location.search).get("session") || "default"; let S = null, MODELS = null, RUNS = [], CATALOGUE = null; const MODES = ["ask", "auto", "plan"], HINT = { ask: "asks when unsure", auto: "decides for you, marks what it assumed", plan: "plans only, runs nothing" }; const pending = [];
 const api = async (p, b) => (await fetch(p, b ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) } : undefined)).json();
 const el = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstElementChild; };
 const add = (n, where = chat) => { if (where === canvas) { const g = document.createElement("div"); g.className = "vgroup"; g.style.visibility = "hidden"; g.style.left = "0px"; g.style.top = "0px"; g.appendChild(n); space().appendChild(g); const pos = placeFree(g); g.style.left = pos.x + "px"; g.style.top = pos.y + "px"; g.style.visibility = ""; centerOn(g); return n; } where.appendChild(n); n.scrollIntoView({ block: "end", behavior: "smooth" }); return n; };

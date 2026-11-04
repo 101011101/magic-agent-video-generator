@@ -49,7 +49,7 @@ const lock = join(dir, ".lock"); if (existsSync(lock)) { const pid = Number(read
 writeFileSync(lock, String(process.pid)); process.on("exit", () => { try { if (existsSync(lock) && readFileSync(lock, "utf8") === String(process.pid)) unlinkSync(lock); } catch {} });
 const logFile = join(dir, "run.json"), run = { name: label, path: (f) => join(dir, f), log: existsSync(logFile) ? JSON.parse(readFileSync(logFile, "utf8")) : {} };
 run.save = DRY ? () => {} : () => writeFileSync(logFile, JSON.stringify(run.log, null, 2));   // a dry run leaves the record as it was (T-046): its retry bookkeeping is computed and printed, never written
-const L = run.log, jobs = new Jobs(run, { estimate: DRY }), say = (m) => console.log(m), t0 = Date.now();
+const L = run.log, jobs = new Jobs(run, { estimate: DRY, image: { model: STILL, resolution: PROF.res, aspect_ratio: "16:9" } }), say = (m) => console.log(m), t0 = Date.now();
 L.started_at ??= new Date().toISOString();
 const finish = (code = 0) => { L.summary = { ...(L.summary || {}), credits: jobs.spent(), llm: usage, wall_s: Math.round((Date.now() - t0) / 1000), until: UNTIL }; run.save(); if (!DRY) writeResults({ label, L, state, K: L.build || {} }); say(`\n${DRY ? "dry run: the record and the pages are untouched" : `results: V2/results/${label}/index.html`} · credits this run ${jobs.spent()}${DRY ? ` · dry run: ${jobs.estimated.reduce((n, e) => n + e.cost, 0)} credits would have been spent on ${jobs.estimated.map((e) => e.key).join(", ") || "nothing"}` : ""} · ${usage.calls} model calls (${usage.cached} cached)`); process.exit(code); };
 let state = null;
