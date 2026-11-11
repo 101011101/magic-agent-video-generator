@@ -1,0 +1,47 @@
+{
+ "id": "670516f713",
+ "key": "must:J49b:Headline about 1.5x original size and fully inside canvas",
+ "symptom": "Headline about 1.5x original size and fully inside canvas",
+ "item": "J49b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'about 1.5x and fully inside canvas' item not met?",
+    "because": "In both chats the edited headline is almost the same size as the original. Old: the width went from about 416px to about 453px (about 1.09x). New: the text is about 84% of the canvas width in both images.",
+    "evidence": "s2.old.dumper.J49b/grade.json must[1]: 'Width grew from about 416px to about 453px, roughly 1.09x'. s2.new.stupid.J49b/grade.json must[1]: 'Text width is about 84% of canvas in both images; it is essentially unchanged in size.'"
+   },
+   {
+    "why": "Why was the headline not enlarged when the assistant did run an edit?",
+    "because": "Both assistants did the correct thing for this test. They reused the first image and called edit_image with model qwen-edit and a clear prompt. The prompt asked for the text at 1.5x size, the same font and centre point, and nothing else changed. The edit model followed the 'keep everything the same' part and mostly ignored the numeric scale.",
+    "evidence": "s2.old.dumper.J49b/calls.jsonl line 10: edit_image, model qwen-edit, prompt 'Make the headline text \"SLOW SUNDAY\" about 1.5 times larger (50% bigger)... Change nothing else'. s2.new.stupid.J49b/calls.jsonl line 15: the same request, 'Make the \"SLOW SUNDAY\" text about 1.5 times larger (50% bigger)... Keep everything else in the image exactly the same'. Both tool results are 'complete', 10 credits, and give no warning."
+   },
+   {
+    "why": "Why did the prompt-driven edit model not apply a 1.5x scale?",
+    "because": "qwen-edit is an instruction-following diffusion editor. It does not measure or apply a geometric transform. A strong 'keep everything else exactly the same' instruction pushes it to re-render the input almost unchanged. Two different source images and two different prompts gave the same result, so this is a property of the model, not of one prompt wording.",
+    "evidence": "The grader says the cup, background, font and centre are 'essentially identical' in both chats (old must[2], must[3]; new must[2], must[3]). Only small re-rendering differences appear (old: 'background texture slightly different'; new: 352x640 vs 360x640). This means the model reproduced the input and did not change the layout."
+   },
+   {
+    "why": "Why did the assistant not use an exact way to resize the text?",
+    "because": "The free plan offers only prompt-driven generation and editing models for images (flux-2-klein, qwen-image-2.1, qwen-edit, krea-2, flux-schnell, z-image-turbo). Neither build gives a deterministic text overlay or resize tool for still images. Exact drawing by code is only described for video cards in plan_video_production. The assistants correctly warned that 'AI editing follows directions only roughly'.",
+    "evidence": "s2.old.dumper.J49b/calls.jsonl line 2: the list of free-plan image models in the rejection reason. tools-new.json: plan_video_production 'background'/'picture' fields say a card is 'drawn by code... with no generation call' (video only). The assistant replies in both calls.jsonl files say the size may not be exactly 1.5x."
+   },
+   {
+    "why": "Is the new-build chat also limited by the brief or the first output?",
+    "because": "Partly. In the new stupid chat, plan_request wrongly returned aspect 9:16 'from the user's words', so the poster came out 360px wide. The headline already filled about 84% of the width, so 1.5x (about 126%) could not fit inside the canvas. This separate defect made the item impossible to meet there. Even so, the observed failure is the same as in old: the size did not change.",
+    "evidence": "s2.new.stupid.J49b/calls.jsonl line 2: plan_request output 'aspect','value':'9:16','source':'user','from':'the user's words' after the user only said 'make a coffee cup poster'. grade.json checks: 'aspect 1:1' fails, got 352x640/360x640."
+   }
+  ],
+  "axiom": "The free-plan image editor (qwen-edit) is a prompt-driven diffusion editor. It cannot apply a precise geometric scale to existing text: when asked for '1.5x bigger, everything else unchanged', it re-renders the image almost the same. No deterministic text-resize or overlay tool exists for still images.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic image text-overlay step for posters. Draw the headline by code (font, colour, size, centre stored) on a text-free generated illustration, so 'make the text 1.5x bigger' re-renders the overlay at size x1.5 with no new generation. Until then, the edit_image description should say that qwen-edit does not follow numeric resize requests. In the new build, also fix plan_request so it does not invent aspect 9:16 'from the user's words'."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.2747898
+}

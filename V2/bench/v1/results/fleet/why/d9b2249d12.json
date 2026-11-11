@@ -1,0 +1,47 @@
+{
+ "id": "d9b2249d12",
+ "key": "must:D18a:Camera and wooden table remain stationary",
+ "symptom": "Camera and wooden table remain stationary",
+ "item": "D18a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Camera and wooden table remain stationary' not met?",
+    "because": "Both output videos show background or camera motion. In the new chat it is a large camera orbit with an invented background: the plant goes, a TV and a stove appear. In the old chat it is a small drift: the plant and chair edge move a few pixels and the bottle slides about 10 px left.",
+    "evidence": "s3.new.stupid.D18a/grade.json: must 'Camera and wooden table remain stationary' met=no, 'The background changes a lot... The camera is clearly moving or orbiting', major fault 'camera orbits or pans'. s3.old.dumper.D18a/grade.json: met=no, 'The table and window stay put. The plant and chair edge shift a few pixels', marked minor, score 4, usable_as_is=true."
+   },
+   {
+    "why": "Why did the camera move? Did the assistant ask for motion or leave the camera unspecified?",
+    "because": "No. In both chats the assistant asked for a static camera in plain words. The prompt was the only control it sent. So the motion did not come from the assistant's arguments.",
+    "evidence": "calls.jsonl, old: style.prompt 'The camera stays completely still, static locked-off shot. Background unchanged'. New: 'The camera stays still... The room, window light and background stay the same.' In the new chat the stupid user never said 'keep the camera still', but the assistant added it anyway."
+   },
+   {
+    "why": "Why did the model not follow the static-camera prompt?",
+    "because": "Both runs used ltx-2.5 at 480p, a free-plan image-to-video model. The request was a product rotation in place. The model often renders this as a camera orbit around a still object, and then it must invent the parts of the room that the orbit reveals. That gives the drift and the new background objects.",
+    "evidence": "calls.jsonl, both: model 'ltx-2.5', resolution '480p', 640x640 result. New grade.json: 'The apparent motion comes from the background shifting, so the camera seems to orbit', and the bottle 'barely rotates'. D18a.json 'tests': 'actual product rotation ... rather than a camera orbit', so the test targets exactly this known failure."
+   },
+   {
+    "why": "Why was ltx-2.5 used and not a stronger model?",
+    "because": "The free plan allows only ltx-2.5 and minimax-h3 for video. The old build rejected model 'default', and the assistant then chose ltx-2.5. The new build's plan_request flow also ended in ltx-2.5. Nothing in the tool results showed that minimax-h3 keeps the camera still any better, so the evidence cannot say if another model choice would have passed.",
+    "evidence": "s3.old.dumper.D18a/calls.jsonl line 2: reason 'the free plan's video models are ltx-2.5 and minimax-h3 (set model explicitly)'. tools-new.json lists only ltx-2.5 and minimax-h3 as video models. Missing: no D18a run with minimax-h3 to compare."
+   },
+   {
+    "why": "Why was the result not caught and fixed before delivery?",
+    "because": "Neither assistant watched the output. Both delivered it with a general warning that the camera or the turn might be off. A free-plan 6 s generation is a one-shot result, so the flaw comes from the model and the assistant does not check it.",
+    "evidence": "Old reply: 'I haven't watched the result myself... the camera might move slightly.' New reply: 'I haven't watched the result.' It also says 'while the camera stays still', which the grader flagged as a minor fault."
+   }
+  ],
+  "axiom": "The free-plan image-to-video model (ltx-2.5, 480p) does not reliably lock the camera. Even with an explicit 'camera stays still, static locked-off shot' prompt, it often renders 'turn the object in place' as a camera orbit or drift and invents background content. The assistant's only control was the text prompt. The old-build failure is borderline: a few pixels of drift that the grader itself called minor, with usable_as_is=true. This suggests the grader reads 'stationary' strictly, but the cause is still the model's motion.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Partial mitigation only. For product-turn-in-place requests on the free plan, the server can tell the assistant to send a short, motion-only prompt such as 'static tripod shot, no camera movement, only the bottle rotates'. It can also add an explicit camera-lock or negative-motion parameter, if ltx-2.5 or minimax-h3 has one. The assistant should then check a few output frames, for example with fetch_video_download, and retry once with the other free model if the background shifts. The model limit itself has no fix inside this system."
+ },
+ "error": null,
+ "seconds": 54,
+ "usd": 0.36411380000000004
+}

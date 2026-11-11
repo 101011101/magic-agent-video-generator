@@ -1,0 +1,47 @@
+{
+ "id": "7c69ed830a",
+ "key": "must:H44a:'14 November 2026' and 'Willow Park, Bristol' on screen together for 3+ s",
+ "symptom": "'14 November 2026' and 'Willow Park, Bristol' on screen together for 3+ s",
+ "item": "H44a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why were '14 November 2026' and 'Willow Park, Bristol' not on screen in either chat?",
+    "because": "Neither video has any text. Neither assistant asked the user for the date or the venue. The new assistant also told the model to show no text.",
+    "evidence": "new grade.json: 'No date or location text visible in any frame', exact_text all 'missing'. new calls.jsonl line 8 prompt ends 'No speech, no voiceover, no on-screen text, no letters.' old calls.jsonl line 3 prompt has no event words."
+   },
+   {
+    "why": "Why did the assistants not put the date and venue in?",
+    "because": "The stupid persona's first message drops the on-screen requirement. The user writes only 'make a promo video for our lantern night'. The date and venue exist only in the persona's bank, and this persona answers only when asked in plain words.",
+    "evidence": "chat.json messages[0] = 'make a promo video for our lantern night'. The bank holds 'Event date: 14 November 2026' and 'Venue: Willow Park, Bristol'. H44a.json expect.asks='required', asks_about='The event date and venue to display.'"
+   },
+   {
+    "why": "Why did the old build not ask?",
+    "because": "The old server has no step that checks for missing information before a create call. The assistant went straight to create_video_from_text (5 s, 16:9). Only after delivery did it offer to add the name, date and place, and then the chat ended.",
+    "evidence": "old calls.jsonl: the calls are only create_video_from_text (the first was rejected for model 'default', the second was approved) and then wait_for_video_project. The say kind is 'delivered' and the text is 'You didn't give me any event details... send me: The event name, date and place'. The run ends after turn 0."
+   },
+   {
+    "why": "Why did the new build not ask, when it does have plan_request?",
+    "because": "plan_request saw exact_words as 'missing' but did not ask a question about it. The first pass asked only about seconds, aspect and sound. The second pass returned ready:true with exact_words still missing and questions:[].",
+    "evidence": "new calls.jsonl line 2 output: questions about seconds, aspect and sound only. Line 7 output: 'ready':true, exact_words value null source 'missing', 'questions':[]."
+   },
+   {
+    "why": "Why did ready:true with exact_words missing lead to a video with no text?",
+    "because": "The plan_request description says 'do not guess ... on-screen words' and 'If ready is true, create with the returned values'. The assistant followed it: it left the text out and asked for 'no on-screen text'. The tool does not treat on-screen words as required for a promo or event request, so a missing value is handled as 'no text'.",
+    "evidence": "tools-new.json plan_request description: 'If ready is true, create with the returned values. A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' new state/say: 'No text on screen, because you didn't give me any words.'"
+   }
+  ],
+  "axiom": "The user's brief leaves out the on-screen event details, so the assistant must ask for them. Neither build makes the assistant ask. The old build has no check before a create call. In the new build, plan_request returns ready:true while exact_words is still missing, so missing words become 'no text'.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, treat exact_words as required when the subject is a promo, ad, event, poster or invite. Do not return ready:true while exact_words is missing. Always put a question about it inside the 3-question limit, before sound, for example: 'What words should appear on screen (event name, date, place)?' In the old build, add the same check before create, for example by moving plan_request into the hosted server."
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.1723366
+}

@@ -1,0 +1,47 @@
+{
+ "id": "c8da7bae0c",
+ "key": "must:D23a:Title is cream lettering on dark green card, inside frame",
+ "symptom": "Title is cream lettering on dark green card, inside frame",
+ "item": "D23a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'cream lettering on dark green card' item not met?",
+    "because": "The delivered clips have no title card at all. Every frame shows only the lake scene, so the grader had no lettering or card to judge.",
+    "evidence": "old grade.json: 'No title card present.', 'Lake scene is visible from 0.5 s and 2 s'. new grade.json: 'No title card is visible.', 'Frames at 0.6 s and 2.4 s both show the lake'. exact_text seen='missing' in both."
+   },
+   {
+    "why": "Why do the clips have no title card?",
+    "because": "The assistant never asked the model for one. Both create_video_from_text prompts describe only a mountain lake. The new prompt even ends with 'No text.'",
+    "evidence": "old calls.jsonl line 3: style.prompt 'A serene mountain lake at sunrise ... slow cinematic camera glide'. new calls.jsonl line 8: prompt '...morning light. Slow, smooth cinematic camera glide over the water. No text.'"
+   },
+   {
+    "why": "Why did the assistant leave out the title?",
+    "because": "The user never mentioned a title. The simulated stupid user's only opening message was 'make a video of a mountain lake'. It dropped the title card, the exact wording, the colours, the 2-second timing and the sunrise mist from the D23a brief.",
+    "evidence": "old chat.json messages[0].text = 'make a video of a mountain lake'. D23a.json turns[0].text has the full title-card request. The persona bank keeps that full request, but the persona only answers questions it is asked."
+   },
+   {
+    "why": "Why did the information not come back during the conversation?",
+    "because": "The old run asked nothing and went straight to delivery. In the new run, plan_request marked exact_words as missing but returned only 3 questions (length, platform, sound), so no one asked about on-screen words. Then the assistant sent exact_words=[] as 'derived', and plan_request accepted it as ready.",
+    "evidence": "old calls.jsonl: no user turn, delivered after 1 create. new calls.jsonl line 2: exact_words source 'missing', but the questions list has only seconds/aspect/sound. Line 7: exact_words [] 'derived' gives ready:true. The tools-new.json plan_request description says 'up to 3 questions' and 'do not guess ... on-screen words'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The test harness made the stupid persona's opener with the key must-have content removed. D23a expects asks='never', so the full request should be in the first message. But the grader still scores against the full must_haves. No assistant can reasonably guess a dark green title card with exact wording from 'a mountain lake'. This is a harness artifact. The new build's 3-question cap and its acceptance of a 'derived' [] for exact_words are secondary weaknesses that could have recovered the title.",
+    "evidence": "D23a.json expect.asks='never' and must_haves[1] require the card. chat.json persona: 'Never invent a fact ... answer it from your knowledge bank' only when asked. The opener came from the harness and holds none of the title details."
+   }
+  ],
+  "axiom": "The test harness gave the stupid persona the opening message 'make a video of a mountain lake'. This message drops the whole title-card requirement, but the grader still checks the full D23a must_haves. The test also expects the assistant never to ask questions, so the title information could not be recovered.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the persona's opening message keep every must-have element that cannot be guessed, here the title card with its exact words, colours and timing. Do this for items with expect.asks='never', or grade only what the user actually said. Secondary fix in the new build: in plan_request, exact_words should always count as a question slot when it is missing. Do not accept a 'derived' [] unless the user said they want no text."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.1979572
+}

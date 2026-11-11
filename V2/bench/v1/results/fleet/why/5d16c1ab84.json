@@ -1,0 +1,47 @@
+{
+ "id": "5d16c1ab84",
+ "key": "must:D19a:The frisbee remains identifiable through the catch rather than disappearing or passing through the dog.",
+ "symptom": "The frisbee remains identifiable through the catch rather than disappearing or passing through the dog.",
+ "item": "D19a",
+ "n": 6,
+ "builds": {
+  "old": 3,
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'frisbee remains identifiable through the catch' item not met?",
+    "because": "The generated clips show no real catch. In some clips the frisbee floats over the dog's head or face, then jumps to another place or vanishes. In other clips the dog holds the frisbee from the first frame, so there is no catch to follow.",
+    "evidence": "s3.old.happy.D19a/grade.json: 'No catch happens. The frisbee is absent from the last frame'. s3.old.dumper.D19a/grade.json: 'Frisbee hovers above the dog's head/nose in frames 1-2, then appears far left in frame 3 and is gone in frame 4'. s3.new.happy and s3.new.dumper grade.json: 'The dog already holds the frisbee at 0.5 s'. s3.new.dumper also says its shape shifts between frames."
+   },
+   {
+    "why": "Why did the clips have no coherent catch when the prompts asked for one?",
+    "because": "The prompts were correct and specific. Every chat asked for the dog to leap and catch a red frisbee in its mouth, with a static camera. So the prompt wording did not cause the failure. The video model did not render the action correctly.",
+    "evidence": "calls.jsonl, create_video_from_text style.prompt. Old happy: 'golden retriever leaping and catching a red frisbee in mid-air ... static locked-off camera'. New dumper: 'leaps, catching a flying red frisbee in its mouth mid-air, then lands on the grass holding it'. New happy: 'leaps into the air and catches a red frisbee in its mouth'."
+   },
+   {
+    "why": "Why did the same model fail on both builds?",
+    "because": "All four chats used the same generator: ltx-2.5 at 480p, 5 s, 120 credits. The free plan allows only ltx-2.5 and minimax-h3. The old build rejected model 'default' with that message, and the assistant then picked ltx-2.5. The new build's plan_request also led straight to ltx-2.5.",
+    "evidence": "s3.old.happy and s3.old.dumper calls.jsonl, first call rejected: 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. The retry used model 'ltx-2.5', resolution '480p'. s3.new.happy and s3.new.dumper calls.jsonl also show model 'ltx-2.5', resolution '480p'."
+   },
+   {
+    "why": "Why was the bad clip delivered and not regenerated?",
+    "because": "The assistant cannot watch the video, and no build gives it a step to check the frames before delivery. So it delivered the first result and asked the user to check the catch. The users did not complain, so the chats ended after one generation.",
+    "evidence": "s3.old.happy calls.jsonl, final message: 'I couldn't watch the clip myself, so please check that the catch looks right'. s3.new.dumper: 'I haven't watched it myself ... AI video sometimes gets fast motion wrong'. Each chat has only one create_video_from_text call that the server approved."
+   },
+   {
+    "why": "Why does ltx-2.5 lose the frisbee during the catch?",
+    "because": "This is an axiom. At 480p the free-plan text-to-video model cannot keep a small fast object coherent when it touches another moving body. It does not keep the object in place (object permanence) or keep the contact physically right. Sometimes it avoids the action by starting with the frisbee already in the dog's mouth. The evidence does not show whether minimax-h3 would do better, because no chat tried it.",
+    "evidence": "The failure looks the same across 4 chats, 2 builds and 2 personas, all with correct prompts and ltx-2.5. The defects are generator artifacts: the frisbee floats, teleports and changes shape. The camera also moves in 2 chats although the prompt asked for a static camera."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) cannot render a physically coherent catch of a small fast object. The frisbee floats, teleports, vanishes, or is in the mouth from the start, even with a correct and explicit prompt.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "None: inherent to ltx-2.5. Partial mitigation: in the new build's create_video_from_text guidance, tell the assistant to try minimax-h3 for fast object-contact actions. Also add a frame-sample check (e.g. get_last_frame or mid-clip frames) so the assistant can see a missing catch and regenerate once. The evidence does not show that minimax-h3 is better."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.42279220000000006
+}

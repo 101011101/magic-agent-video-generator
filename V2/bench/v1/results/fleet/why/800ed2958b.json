@@ -1,0 +1,47 @@
+{
+ "id": "800ed2958b",
+ "key": "must:D19a:A red frisbee visibly travels toward the dog before being caught in its mouth.",
+ "symptom": "A red frisbee visibly travels toward the dog before being caught in its mouth.",
+ "item": "D19a",
+ "n": 7,
+ "builds": {
+  "old": 3,
+  "new": 4
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'A red frisbee visibly travels toward the dog before being caught in its mouth' not met?",
+    "because": "The clips have no real catch. The frisbee floats above the dog, jumps between places, flies away or disappears. In one clip the dog holds the frisbee from the first frame, so there is no flight before a catch.",
+    "evidence": "s3.old.happy grade.json: 'frisbee floats above the dog in frames 1-2 and flies off to the upper right… never gets it in its mouth'. s3.old.dumper grade.json: 'hovers above the dog's head… far left in frame 3 and is gone in frame 4'. s3.new.happy grade.json: 'The dog already holds the frisbee at 0.5 s. No flight or catch is visible'."
+   },
+   {
+    "why": "Did the assistant send a weak or wrong prompt, so the model did not try to show the catch?",
+    "because": "No. All four chats sent a clear prompt for one action: a dog that leaps and catches a red frisbee in mid-air, in its mouth, with a static camera. The new-build prompts are even more explicit ('catches a flying red frisbee in its mouth mid-air, then lands on the grass holding it'). The prompt is not the cause.",
+    "evidence": "calls.jsonl create_video_from_text style.prompt in s3.old.happy, s3.old.dumper, s3.new.happy and s3.new.dumper. All four state the catch in plain words."
+   },
+   {
+    "why": "Why did a clear prompt still give a catch that is not coherent?",
+    "because": "Every chat made its clip with ltx-2.5 at 480p, 5 s, in one generation. A fast interaction between two objects (a disc in flight, then a mouth that closes on it) asks for physical tracking of a small object, and this model does not render it reliably. It makes the frisbee float, teleport, vanish, or already be held.",
+    "evidence": "calls.jsonl in all four chats: model 'ltx-2.5', resolution '480p', end_seconds 5, one call, status complete. The same failure appears in both builds and for both happy and dumper users (7 of the chats)."
+   },
+   {
+    "why": "Why did the assistant use ltx-2.5 and not a stronger video model?",
+    "because": "The account is on the free plan. The server rejects the 'default' model and allows only ltx-2.5 and minimax-h3. The assistant picked the first free model each time. No evidence shows that minimax-h3 does the catch better, so this choice is not a proven cause.",
+    "evidence": "s3.old.happy and s3.old.dumper calls.jsonl line 2: approve=false, reason 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. The new-build chats went to ltx-2.5 directly."
+   },
+   {
+    "why": "Why was the bad clip delivered without a retry?",
+    "because": "The assistant cannot watch the output, so it delivered after one generation and asked the user to check the catch. The brief expects no questions, and a single 120-credit generation was the whole attempt. This is why the defect reached the grader, but the defect itself comes from the generator.",
+    "evidence": "'say' entries in calls.jsonl: 'I couldn't watch the clip myself, so please check that the catch looks right' (old.happy) and 'AI video sometimes gets fast motion wrong' (new.dumper)."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) cannot reliably make a physically coherent catch of a small fast object in one 5 s generation, even with a clear and explicit prompt. The frisbee floats, teleports, vanishes, or is in the mouth from the start.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "none: inherent. The only possible mitigation is to try minimax-h3 for fast object-interaction prompts and compare it with ltx-2.5 on D19a. No current evidence shows that minimax-h3 makes a better catch."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.3124662
+}

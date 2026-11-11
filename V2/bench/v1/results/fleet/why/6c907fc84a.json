@@ -1,0 +1,47 @@
+{
+ "id": "6c907fc84a",
+ "key": "must:A03d:Address preserves en dash, period, apostrophe, commas",
+ "symptom": "Address preserves en dash, period, apostrophe, commas",
+ "item": "A03d",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'en dash, period, apostrophe, commas' item not met in either chat?",
+    "because": "In the new chat, the address on the flyer is garbled, so the grader cannot read any of its punctuation. In the old chat, the flyer has no address at all.",
+    "evidence": "s1.new.stupid.A03d/grade.json: 'Cannot be read; the address is garbled', with the address read as 'Unit 14B, [garbled] / Old Foundry ... [garbled] / Kingston upon Thames, KT1 20A6'. s1.old.stupid.A03d/grade.json: 'No address.'"
+   },
+   {
+    "why": "Why does the old flyer have no address?",
+    "because": "The stupid persona's first message gives no text: 'make a flyer for a printmakers open studio'. The old assistant did not ask which words to show. It called generate_image at once with words it made up ('OPEN STUDIO', 'Printmakers', 'Live demos • Prints for sale • All welcome'). It asked for the studio name, date, time and address only after it had delivered the flyer.",
+    "evidence": "s1.old.stupid.A03d/chat.json: messages[0] is 'make a flyer for a printmakers open studio'. calls.jsonl line 2: the generate_image prompt contains only invented text. Line 5: the delivered reply says 'Send me your studio name, date, time and address'."
+   },
+   {
+    "why": "In the new build, the assistant did get the exact address and sent it in the prompt. Why is it garbled anyway?",
+    "because": "The assistant sent the full address with correct punctuation (an en dash in 127–129, 'St. John’s' with a curly apostrophe). But it asked for the address 'At the bottom in smaller text' on a 640px, 9:16 canvas. The output is 352×640, so the address lines are only a few pixels tall. At that size, qwen-image draws text-like scribbles instead of letters.",
+    "evidence": "s1.new.stupid.A03d/calls.jsonl line 11: resolution '640px', aspect_ratio '9:16', prompt '...At the bottom in smaller text: Unit 14B, Second Floor, ... 127–129 St. John’s Road...'. grade.json checks: '352x640'. assets/01-wait_for_image_project.png: the headline, date and time are crisp; the three tiny address lines are illegible ('Old Gunpowder...', 'KT1 20A6')."
+   },
+   {
+    "why": "Why was the canvas so small and narrow?",
+    "because": "640px is the largest resolution the free plan allows. Also, plan_request returned aspect '9:16' with source 'user' ('the user's words'), but the user never gave a shape. A 9:16 canvas is narrower than the 4:5 in the brief, so the long address lines have even less width.",
+    "evidence": "Old calls.jsonl line 5 and new calls.jsonl line 14: '640px... the largest your free plan allows'. New calls.jsonl line 2: plan_request output gives aspect value '9:16', source 'user', from 'the user's words', but the user had only said 'make a flyer...'."
+   },
+   {
+    "why": "Why did no tool stop or reroute a long exact line that must be small?",
+    "because": "Neither build warns that a line of about 100 characters in small type at 640px will not render. Neither build offers a way to put exact text on the image as deterministic text instead of model-drawn text. plan_request only gathers exact_words; it does not check whether they will be legible. The assistant suggested 'make the artwork with no text and add your words in an editor' only after it had delivered.",
+    "evidence": "tools-new.json plan_request description: 'exact_words is a list of strings... exactly as the user wrote it', with nothing about length or legibility. New calls.jsonl line 14: the assistant warns 'AI image models often get long text wrong, especially a long address' only after generation."
+   }
+  ],
+  "axiom": "A diffusion image model (qwen-image-2.1) cannot reliably draw a long string of about 100 characters with exact punctuation in small type on a free-plan canvas of at most 640px. Below a few pixels of glyph height, it draws letter-like scribbles. This is a limit of the generation model and the free plan. (In the old chat, the address never reached the model, because the assistant did not ask which words to show.)",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "When exact_words contains a line longer than about 40 characters (or more than about 60 characters in total), plan_request/generate_image should return a warning. They should then make the artwork without that text and add the exact lines server-side as real text (a deterministic text overlay), in a size that is legible at 640px. Also stop plan_request from filling in aspect '9:16' as 'user' when the user gave no shape. The old build also needs to ask which exact words to show before it generates a flyer."
+ },
+ "error": null,
+ "seconds": 47,
+ "usd": 0.26107860000000005
+}

@@ -1,0 +1,47 @@
+{
+ "id": "7c9e43a297",
+ "key": "check:length:H",
+ "symptom": "about 15 s",
+ "item": "H40a",
+ "n": 33,
+ "builds": {
+  "new": 23,
+  "old": 10
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the 'about 15 s' check read 5.2 s?",
+    "because": "The grader measured one generated clip, not a full 15 s ad. In the new build it had only the separate clips: 5 s and 6 s scenes plus a music file.",
+    "evidence": "s4.new.happy.H40a/grade.json: 'about 15 s' fail, got 5.2 s. Files are 2 mp4 (480x858) and 1 wav. calls.jsonl line 2: plan_video_production plans 4 clips (2 s card, 5 s scene, 6 s scene, 2 s card), seconds:15, join [1,2,3,4]."
+   },
+   {
+    "why": "Why did the grader have only the clips and not the joined film?",
+    "because": "In the new build, join_production_clips does make the full-length film. But the harness cannot download it: the download fails with a 404, so the film never reaches the graded files.",
+    "evidence": "s4.new.happy.H44b/calls.jsonl line 9: join returns seconds 8.1 and checked 'One file, 8 s, 9:16 → yes', but files = 'download failed: download 404 http://127.0.0.1:8000/films/…mp4'. grade.json then measures 3 s, the countdown clip alone. s4.new.dumper.H42a line 13: join gives 9.2 s and the same 404. grade.json: 'about 9 s' got 3 s."
+   },
+   {
+    "why": "Why does the download fail?",
+    "because": "The new local build serves joined films from its own local file server (127.0.0.1:8000/films/…). The harness fetches outputs from that URL, and that server does not serve the file to the harness (404). Generated clips, in contrast, come from videos.magichour.ai and download without problems.",
+    "evidence": "In H44b and H42a, every wait_for_video_project file under videos.magichour.ai is saved (assets/01-…mp4). Only the 127.0.0.1:8000 join URLs fail. The assistant gave the user that local link as the deliverable (H42a line 17)."
+   },
+   {
+    "why": "Why do old-build chats also fail (10 of 33)?",
+    "because": "The old hosted build has no tool to join clips. On the free plan, one video_from_image or video_from_text call is limited to 5 s, so the assistant delivers one 5 s clip.",
+    "evidence": "s4.old.stupid.H41a/calls.jsonl: one create_video_from_image call with end_seconds 5 (ltx-2.5, 480p). Reply: 'The free plan limits this type of video to 5 seconds.' grade.json: 'about 10 s' got 5 s. s4.old.stupid.H44c grade.json: 'about 10 s' got 5 s."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "New build (23/33): the harness cannot fetch the server's local film URL. This is a defect of the test harness, not of the assistant or the model; the join tool reports the right length. Old build (10/33): the 5 s free-plan limit per clip, with no way to join clips, is a fixed limit of the hosted product.",
+    "evidence": "In H44b and H42a, the join results confirm the right lengths (8.1 s, 9.2 s), while the harness logs '404'. In H41a, the assistant states the free-plan 5 s limit."
+   }
+  ],
+  "axiom": "New build (23/33 failures): the harness cannot download the joined film from the server's local URL (http://127.0.0.1:8000/films/…, 404). The grader then measures the longest single clip (5.2 s) and not the 15 s film that join_production_clips reports. This is a harness artifact. Old build (10/33): the free plan limits each clip to 5 s, and the build has no join tool. This is an inherent limit of that build.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the harness collect join outputs. Option 1: serve the films directory of the local build on an address the harness can reach. Option 2: have join_production_clips copy the file into the chat's assets folder. Then grade the joined mp4, not the separate clips. Make the harness flag a failed deliverable download as a harness error, not a duration failure. For the old build: none, inherent (5 s free-plan limit per clip, no join tool)."
+ },
+ "error": null,
+ "seconds": 56,
+ "usd": 0.6045195999999999
+}

@@ -1,0 +1,52 @@
+{
+ "id": "8411080223",
+ "key": "must:H44c:Both versions show rooftop musicians at sunset with consistent styling",
+ "symptom": "Both versions show rooftop musicians at sunset with consistent styling",
+ "item": "H44c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Both versions show rooftop musicians at sunset with consistent styling' not met?",
+    "because": "Each chat delivered only one video, so there was no second version to compare. The one clip did show a rooftop band at dusk.",
+    "evidence": "old grade.json: 'Only one version; it does show the trio at sunset.' new grade.json: 'Only the vertical version exists; it does show a rooftop trio at dusk.' The check '2 outputs' got 1 in both chats."
+   },
+   {
+    "why": "Why was only one video made?",
+    "because": "The assistant called create_video_from_text only once in each chat. Old made one 5 s 16:9 clip. New made one 10 s 9:16 clip and then offered a landscape version in its reply but did not make it.",
+    "evidence": "old calls.jsonl: one successful create_video_from_text call (aspect_ratio 16:9, end_seconds 5). new calls.jsonl: one create call (aspect_ratio 9:16, end_seconds 10). The new final reply says: 'Is your screen landscape (16:9)? If so, I can make a matching landscape version for another 240 credits.'"
+   },
+   {
+    "why": "Why did the assistant not know that two formats were needed?",
+    "because": "The stupid persona's opening message hid the two-format requirement: 'can you make a promo video for rooftop jazz'. The requirement could only come out if the assistant asked the right question.",
+    "evidence": "chat.json messages[0] = 'can you make a promo video for rooftop jazz'. The bank holds 'Two separate 10-second videos: one 9:16 for Stories and one 16:9 for a venue screen', and the persona answers only what it is asked."
+   },
+   {
+    "why": "Old: why was the requirement never brought out?",
+    "because": "The old assistant asked no questions. It guessed 16:9 and 5 s and generated at once, so the user never got a chance to mention Stories and the venue screen.",
+    "evidence": "old calls.jsonl: the first call is create_video_from_text with guessed values. No user turn comes before the delivered message."
+   },
+   {
+    "why": "New: the user said 'instagram stories and also a screen at the venue'. Why did this still give only one video?",
+    "because": "The new plan_request sheet has only one 'aspect' row, so it can describe only one output. The assistant put 'aspect: 9:16 derived from instagram stories' in that row. plan_request returned ready:true with that one aspect and no question about the second screen. The assistant then followed 'If ready is true, create with the returned values' and made one video.",
+    "evidence": "new calls.jsonl line 7: plan_request args have aspect=9:16 (from 'instagram stories'). The output has ready:true and questions:[]. tools-new.json plan_request description lists single rows (seconds, aspect, ...) and has no way to give several outputs or several aspects."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The planning tool cannot represent a request for several deliverables. When the user names two destinations, the tool keeps one and marks the plan complete. Nothing in the tool flow makes the assistant produce the second format. The old build has no planning step at all, so a vague opener goes straight to a single guessed output.",
+    "evidence": "tools-new.json plan_request schema (single aspect value). Old build: no plan_request call in old calls.jsonl."
+   }
+  ],
+  "axiom": "Neither build can handle a request for more than one output. The new plan_request sheet has a single 'aspect' slot. It turned 'instagram stories and also a screen at the venue' into one 9:16 output and returned ready:true. The old build has no planning step, so the assistant guessed one 16:9 output from the stupid persona's vague opener. Either way only one version was made, so 'both versions' could not be met.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Change plan_request to accept a list of outputs (for example an 'outputs' row with one aspect for each destination). When the messages name more than one destination (such as Stories plus a venue screen), it should return one row for each output. If that is not clear, it should return the question 'One video or one for each place?'. Add to the description: 'If the user names several places, create one video for each place with the same prompt.'"
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.1976454
+}

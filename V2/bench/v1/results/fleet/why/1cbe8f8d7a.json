@@ -1,0 +1,46 @@
+{
+ "id": "1cbe8f8d7a",
+ "key": "must:J51a:The delivered video is vertical 9:16, not widescreen.",
+ "symptom": "The delivered video is vertical 9:16, not widescreen.",
+ "item": "J51a",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'vertical 9:16' checklist item not met?",
+    "because": "No video was delivered at all, so the grader had nothing to check for aspect ratio.",
+    "evidence": "Grader's reason: 'No video was delivered; both generation attempts were refused for 0 credits.' s2r.old.happy.J51a/calls.jsonl ends with type 'end', kind 'cannot', and no result."
+   },
+   {
+    "why": "Why was no video delivered?",
+    "because": "Every create_video_from_text call was refused before it ran (approve:false), including the vertical retry after the user switched to TikTok.",
+    "evidence": "happy calls.jsonl line 10: args aspect_ratio '9:16', model ltx-2.5, 480p, end_seconds 6 -> reason 'insufficient credits: this call needs about 144 credits and 0 remain on the account'. stupid calls.jsonl line 8: aspect_ratio '9:16' -> 'needs about 120 credits and 0 remain'."
+   },
+   {
+    "why": "Was the refusal caused by wrong arguments from the assistant?",
+    "because": "No. After the user's change of mind, the assistant chose the cheapest valid free-plan setup (ltx-2.5, 480p) and correctly set 9:16. The only error was in the stupid chat: a first call with model 'default', which the server rejected and the assistant then fixed. The final refusal came only from the credit balance.",
+    "evidence": "happy line 10 and stupid line 8 both send aspect_ratio '9:16'. stupid line 2 'model \"default\" is not available on the free plan' was fixed at line 3. All later refusals say 'insufficient credits'."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The free-plan test account used for the old-build fleet runs was already empty when these chats started. The refusal was the same in all 3 old chats and in every call, before the chat made anything. So the balance was a state of the test account, not a result of this chat's actions.",
+    "evidence": "happy line 5, the very first call: '0 remain on the account'. stupid line 3, the first valid call: '0 remain'. The symptom shows only in old builds (builds {old:3}). The new-build runs of J51a did not fail this item, so they had credits."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The harness ran the old-build chats on an account with no credits, so no build and no assistant behaviour could produce a video. This is a defect of the test environment, not of the MCP tools or the brief.",
+    "evidence": "In both chats the assistant's replies correctly report the blocker ('There's no free setting cheap enough to run on 0 credits'). The item spec expects beyond_free 'no', so the brief is meant to be possible on a free plan that has credits."
+   }
+  ],
+  "axiom": "The old-build fleet ran on a Magic Hour free-plan account whose credit balance was already 0. Every generation was refused with 'insufficient credits', even though the assistant sent correct 9:16 arguments. This is a test-harness/account-state artifact.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Before each chat, the harness should top up or reset the free-plan test account to its starting credit allowance, or give each build its own funded account. A pre-flight credit check should abort the chat and mark it 'invalid: no credits' rather than grade it. Then rerun the old-build J51a chats."
+ },
+ "error": null,
+ "seconds": 22,
+ "usd": 0.08028480000000002
+}

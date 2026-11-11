@@ -1,0 +1,431 @@
+{
+  "id": "A3",
+  "item": {
+    "id": "A3",
+    "case": "A3",
+    "case_name": "Continue this clip, 6 s + 6 s (the canary)",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Continue the portrait clip",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "1:1",
+      "seconds": 12,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "bench-portrait-clip.mp4"
+        ],
+        "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests reading a clip's last frame, identity across the join, the asked action, joining two clips, and not regenerating what already exists.",
+    "answer_sheet": {
+      "Inputs": "The attached 6-second clip and the portrait it was made from.",
+      "New part": "6 more seconds: she turns and walks out of frame; same face, hair and clothes.",
+      "Output": "One 12-second file: the original 6 seconds first, unchanged, then the new 6 seconds; same shape as the clip.",
+      "Sound": "Silent.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable video file runs for 12 seconds, plus or minus 1 second.",
+      "The first 6 seconds are the original clip, unchanged.",
+      "There is no jump at the join.",
+      "Her face, hair and clothes stay the same in the new 6 seconds.",
+      "She turns and walks out of frame.",
+      "The video is silent.",
+      "The cost is about one 6-second generation."
+    ]
+  },
+  "session": "comp-c3-replicate-A3",
+  "sessionDir": "sessions/comp-c3-replicate-A3",
+  "baseline": "replicate",
+  "server": "Replicate, paid",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.",
+      "materials": [
+        "portrait-woman.jpg",
+        "bench-portrait-clip.mp4"
+      ],
+      "dialog": [],
+      "agent": "[Download the 12-second silent video](https://replicate.delivery/xezq/dQKcLj5z2dJDIFFXeBN5AjPk48qb6Nfoy8BGhQDBtzftD68uA/tmpgyur60vs.mp4)\n\nThe original sequence comes first, followed by the continuation.\n\nNote: the combined file was re-encoded, so the original segment is not a bit-for-bit copy.",
+      "calls": [
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"lightricks\",\"model_name\":\"ltx-2.5-fast\",\"jq_filter\":\".latest_version.openapi_schema.components.schemas.Input\"}",
+          "output": "{\"type\": \"object\", \"title\": \"Input\", \"required\": [\"prompt\"], \"properties\": {\"fps\": {\"allOf\": [{\"$ref\": \"#/components/schemas/fps\"}], \"default\": 25, \"x-order\": 6, \"description\": \"Frame rate in frames per second\"}, \"image\": {\"type\": \"string\", \"title\": \"Image\", \"format\": \"uri\", \"default\": null, \"x-order\": 1, \"nullable\": true, \"description\": \"First frame image for image-to-video generation\"}, \"prompt\": {\"type\": \"string\", \"title\": \"Prompt\", \"x-order\": 0, \"description\": \"Text prompt describing the video to generate\"}, \"duration\": {\"allOf\": [{\"$ref\": \"#/components/schemas/duration\"}], \"default\": 6, \"x-order\": 4, \"description\": \"Duration of the video in seconds. Durations longer than 10 seconds are only available at 720p or 1080p resolution with 24 or 25 FPS. 48/50 FPS caps at 10 seconds.\"}, \"resolution\": {\"allOf\": [{\"$ref\": \"#/components/schemas/resolution\"}], \"default\": \"1080p\", \"x-order\": 3, \"description\": \"Resolution quality of the generated video. Higher resolutions cap the maximum duration.\"}, \"aspect_ratio\": {\"allOf\": [{\"$ref\": \"#/components/schemas/aspect_ratio\"}], \"default\": \"16:9\", \"x-order\": 5, \"description\": \"Aspect ratio of the generated video\"}, \"generate_audio\": {\"type\": \"boolean\", \"title\": \"Generate Audio\", \"default\": true, \"x-order\": 7, \"description\": \"Generate audio for the video. Used for text_to_video and image_to_video tasks.\"}, \"last_frame_image\": {\"type\": \"string\", \"title\": \"Last Frame Image\", \"format\": \"uri\", \"default\": null, \"x-order\": 2, \"nullable\": true, \"description\": \"Last frame image for image-to-video generation. When provided, the video interpolates between the first frame and this last frame.\"}}}",
+          "error": null
+        },
+        {
+          "name": "search",
+          "arguments": "{\"query\":\"video extract last frame ffmpeg\",\"limit\":3,\"jq_filter\":\".models[] | {owner:.model.owner,name:.model.name,description:.model.description}\"}",
+          "output": "[{\"owner\": \"littletry\", \"name\": \"video-frame-custom\", \"description\": \"Extract the first, last, middle, specific, or evenly spaced frames from a video.\"}, {\"owner\": \"nicolascoutureau\", \"name\": \"video-utils\", \"description\": null}, {\"owner\": \"lucataco\", \"name\": \"frame-extractor\", \"description\": \"Extract the first or last frame from any video file as a high-quality image\"}]",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"littletry\",\"model_name\":\"video-frame-custom\",\"jq_filter\":\"{version:.latest_version.id,schemas:.latest_version.openapi_schema.components.schemas}\"}",
+          "output": "{\"version\": \"ca7c5e27d473374e61d51d17bbde1941b654b01ab92c1bd36c6708efcd938bc0\", \"schemas\": {\"mode\": {\"enum\": [\"first\", \"last\", \"middle\", \"frame_number\", \"frame_numbers\", \"uniform\"], \"type\": \"string\", \"title\": \"mode\", \"description\": \"An enumeration.\"}, \"Input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"video\"], \"properties\": {\"mode\": {\"allOf\": [{\"$ref\": \"#/components/schemas/mode\"}], \"default\": \"last\", \"x-order\": 1}, \"video\": {\"type\": \"string\", \"title\": \"Video\", \"format\": \"uri\", \"x-order\": 0}, \"num_frames\": {\"type\": \"integer\", \"title\": \"Num Frames\", \"default\": 5, \"minimum\": 1, \"x-order\": 4}, \"end_percent\": {\"type\": \"number\", \"title\": \"End Percent\", \"default\": 100, \"maximum\": 100, \"minimum\": 0, \"x-order\": 6}, \"frame_number\": {\"type\": \"integer\", \"title\": \"Frame Number\", \"default\": 1, \"minimum\": 1, \"x-order\": 2}, \"image_format\": {\"allOf\": [{\"$ref\": \"#/components/schemas/image_format\"}], \"default\": \"jpg\", \"x-order\": 7, \"description\": \"Image format for every extracted frame.\"}, \"jpeg_quality\": {\"type\": \"integer\", \"title\": \"Jpeg Quality\", \"default\": 95, \"maximum\": 100, \"minimum\": 1, \"x-order\": 8}, \"frame_numbers\": {\"type\": \"string\", \"title\": \"Frame Numbers\", \"default\": \"\", \"x-order\": 3}, \"start_percent\": {\"type\": \"number\", \"title\": \"Start Percent\", \"default\": 0, \"maximum\": 100, \"minimum\": 0, \"x-order\": 5}}}, \"Output\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"format\": \"uri\"}, \"title\": \"Output\"}, \"Status\": {\"enum\": [\"starting\", \"processing\", \"succeeded\", \"canceled\", \"failed\"], \"type\": \"string\", \"title\": \"Status\", \"description\": \"An enumeration.\"}, \"image_format\": {\"enum\": [\"jpg\", \"png\"], \"type\": \"string\", \"title\": \"image_format\", \"description\": \"An enumeration.\"}, \"ValidationError\": {\"type\": \"object\", \"title\": \"ValidationError\", \"required\": [\"loc\", \"msg\", \"type\"], \"properties\": {\"loc\": {\"type\": \"array\", \"items\": {\"anyOf\": [{\"type\": \"string\"}, {\"type\": \"integer\"}]}, \"title\": \"Location\"}, \"msg\": {\"type\": \"string\", \"title\": \"Message\"}, \"type\": {\"type\": \"string\", \"title\": \"Error Type\"}}}, \"PredictionRequest\": {\"type\": \"object\", \"title\": \"PredictionRequest\", \"properties\": {\"id\": {\"type\": \"string\", \"title\": \"Id\"}, \"input\": {\"$ref\": \"#/components/schemas/Input\"}}}, \"PredictionResponse\": {\"type\": \"object\", \"title\": \"PredictionResponse\", \"properties\": {\"id\": {\"type\": \"string\", \"title\": \"Id\"}, \"logs\": {\"type\": \"string\", \"title\": \"Logs\"}, \"error\": {\"type\": \"string\", \"title\": \"Error\"}, \"input\": {\"$ref\": \"#/components/schemas/Input\"}, \"output\": {\"$ref\": \"#/components/schemas/Output\"}, \"status\": {\"type\": \"string\", \"title\": \"Status\"}, \"metrics\": {\"type\": \"object\", \"title\": \"Metrics\"}, \"version\": {\"type\": \"string\", \"title\": \"Version\"}, \"created_at\": {\"type\": \"string\", \"title\": \"Created At\", \"format\": \"date-time\"}, \"started_at\": {\"type\": \"string\", \"title\": \"Started At\", \"format\": \"date-time\"}, \"completed_at\": {\"type\": \"string\", \"title\": \"Completed At\", \"format\": \"date-time\"}}}, \"HTTPValidationError\": {\"type\": \"object\", \"title\": \"HTTPValidationError\", \"properties\": {\"detail\": {\"type\": \"array\", \"items\": {\"$ref\": \"#/components/schemas/ValidationError\"}, \"title\": \"Detail\"}}}}}",
+          "error": null
+        },
+        {
+          "name": "create_predictions",
+          "arguments": "{\"version\":\"littletry/video-frame-custom:ca7c5e27d473374e61d51d17bbde1941b654b01ab92c1bd36c6708efcd938bc0\",\"input\":{\"video\":\"https://app-uploads.krea.ai/6821da79-c082-4d7e-878f-7ebbd23c1bba/1793859046950-8957a04d-3567-4ac6-ab95-aab93364942f-bench-portrait-clip.mp4\",\"mode\":\"last\",\"image_format\":\"png\"},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"03f0qfs3c5rmt0d1n9ar9pzs7m\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "search",
+          "arguments": "{\"query\":\"ffmpeg concatenate video\",\"limit\":3,\"jq_filter\":\".models[] | {owner:.model.owner,name:.model.name,description:.model.description}\"}",
+          "output": "[{\"owner\": \"idan054\", \"name\": \"better-video-merge\", \"description\": \"Fix Diffrent Sizes for each clip. Fork of lucataco/cog-video-merge.git\"}, {\"owner\": \"lucataco\", \"name\": \"video-merge\", \"description\": \"Simple tool to merge together separate video snippets\"}, {\"owner\": \"hexiaochun\", \"name\": \"video_merge\", \"description\": \"\\u89c6\\u9891\\u5408\\u5e76\"}]",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"nicolascoutureau\",\"model_name\":\"video-utils\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"0fb38cfaa6fcc8c6960794d6eb8591e4494f07e92f22dcd573f57b219decd03b\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"task\", \"input_file\"], \"properties\": {\"fps\": {\"type\": \"integer\", \"title\": \"Fps\", \"default\": 0, \"x-order\": 2, \"description\": \"frames per second, if relevant. Use 0 to keep original fps (or use default). Converting to GIF defaults to 12fps\"}, \"task\": {\"allOf\": [{\"$ref\": \"#/components/schemas/task\"}], \"x-order\": 0, \"description\": \"Task to perform\"}, \"input_file\": {\"type\": \"string\", \"title\": \"Input File\", \"format\": \"uri\", \"x-order\": 1, \"description\": \"File \\u2013 zip, image or video to process\"}}}}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"03f0qfs3c5rmt0d1n9ar9pzs7m\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"succeeded\", \"output\": [\"https://replicate.delivery/xezq/idXkGisV46JsOd8AtUVbUFANhBC6PZEsGLNXmlvdHeref58uA/frame_00000145.png\"], \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"lightricks\",\"model_name\":\"ltx-2.5-fast\",\"jq_filter\":\".latest_version.openapi_schema.components.schemas | {fps,duration,resolution,aspect_ratio}\"}",
+          "output": "{\"fps\": {\"enum\": [24, 25, 48, 50], \"type\": \"integer\", \"title\": \"fps\", \"description\": \"An enumeration.\"}, \"duration\": {\"enum\": [2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20], \"type\": \"integer\", \"title\": \"duration\", \"description\": \"An enumeration.\"}, \"resolution\": {\"enum\": [\"720p\", \"1080p\", \"2k\", \"4k\"], \"type\": \"string\", \"title\": \"resolution\", \"description\": \"An enumeration.\"}, \"aspect_ratio\": {\"enum\": [\"16:9\", \"9:16\"], \"type\": \"string\", \"title\": \"aspect_ratio\", \"description\": \"An enumeration.\"}}",
+          "error": null
+        },
+        {
+          "name": "create_models_predictions",
+          "arguments": "{\"model_owner\":\"lightricks\",\"model_name\":\"ltx-2.5-fast\",\"input\":{\"image\":\"https://replicate.delivery/xezq/idXkGisV46JsOd8AtUVbUFANhBC6PZEsGLNXmlvdHeref58uA/frame_00000145.png\",\"prompt\":\"A seamless continuation of this exact shot, beginning exactly from the provided frame. The same woman with the exact same face, dark curly shoulder-length hair and gray ribbed knit sweater, identical clothes and appearance throughout. She naturally turns her body toward screen right, then walks steadily to the right until she completely exits the frame by the end of six seconds. If seated she first smoothly rises. Natural realistic human movement, consistent anatomy and identity. Her hair and clothing move naturally as she walks. Keep the camera locked completely still, the same framing, same park background, same light and colors; no cut, no zoom, no transition. End on the empty unchanged background after she has walked out. Silent video, no speech, no music, no sound.\",\"duration\":6,\"resolution\":\"720p\",\"fps\":24,\"generate_audio\":false},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"3zgw1vmjdxrmt0d1n9ats7a388\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"lucataco\",\"model_name\":\"video-merge\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"14273448a57117b5d424410e2e79700ecde6cc7d60bf522a769b9c7cf989eba7\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"video_files\"], \"properties\": {\"fps\": {\"type\": \"integer\", \"title\": \"Fps\", \"default\": 0, \"x-order\": 4, \"description\": \"Output video frame rate. If not specified, uses first video's fps\"}, \"width\": {\"type\": \"integer\", \"title\": \"Width\", \"default\": 0, \"x-order\": 2, \"description\": \"Output video width. If not specified, uses first video's width\"}, \"height\": {\"type\": \"integer\", \"title\": \"Height\", \"default\": 0, \"x-order\": 3, \"description\": \"Output video height. If not specified, uses first video's height\"}, \"keep_audio\": {\"type\": \"boolean\", \"title\": \"Keep Audio\", \"default\": true, \"x-order\": 1, \"description\": \"Whether to keep audio in the output video\"}, \"video_files\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"format\": \"uri\"}, \"title\": \"Video Files\", \"x-order\": 0, \"description\": \"List of video files to concatenate\"}}}}",
+          "error": null
+        },
+        {
+          "name": "search",
+          "arguments": "{\"query\":\"ffmpeg command\",\"limit\":2,\"jq_filter\":\".models[] | {owner:.model.owner,name:.model.name,description:.model.description}\"}",
+          "output": "[{\"owner\": \"foixasoftware\", \"name\": \"ffmpeg\", \"description\": \"merge videos\"}, {\"owner\": \"awerks\", \"name\": \"ffmpeg\", \"description\": null}]",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"awerks\",\"model_name\":\"ffmpeg\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"855828ff35b675308ff010c0b6b0a5a7fb4c160fb83b42b49bdd18989614ff0e\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"video_file\"], \"properties\": {\"debug\": {\"type\": \"boolean\", \"title\": \"Debug\", \"default\": false, \"x-order\": 1, \"description\": \"Print out memory usage information.\"}, \"video_file\": {\"type\": \"string\", \"title\": \"Video File\", \"format\": \"uri\", \"x-order\": 0, \"description\": \"Video file\"}}}}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"foixasoftware\",\"model_name\":\"ffmpeg\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"94f358189c0f452ae3e2be1bef374a497fc2c749a48ab61fe4e8b6319d1e561c\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"videos\"], \"properties\": {\"videos\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"format\": \"uri\"}, \"title\": \"Videos\", \"x-order\": 0, \"description\": \"Birle\\u015ftirilecek video dosyalar\\u0131\"}}}}",
+          "error": null
+        },
+        {
+          "name": "search",
+          "arguments": "{\"query\":\"video processing ffmpeg custom command\",\"limit\":3,\"jq_filter\":\".models[] | {owner:.model.owner,name:.model.name,description:.model.description}\"}",
+          "output": "[{\"owner\": \"awerks\", \"name\": \"ffmpeg\", \"description\": null}, {\"owner\": \"foixasoftware\", \"name\": \"ffmpeg\", \"description\": \"merge videos\"}, {\"owner\": \"fofr\", \"name\": \"toolkit\", \"description\": \"Video toolkit \\u2013 convert, make GIFs, extract audio\"}]",
+          "error": null
+        },
+        {
+          "name": "get_models_readme",
+          "arguments": "{\"model_owner\":\"lucataco\",\"model_name\":\"video-merge\",\"jq_filter\":\".\"}",
+          "output": "\"## About\\r\\n\\r\\nThis is a simple tool to combine two different video snippets into one\"",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"fofr\",\"model_name\":\"toolkit\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"19711d11c243800f08364ba9ae9078f54874f21363ba445dabdbf082b5d69565\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"task\", \"input_file\"], \"properties\": {\"fps\": {\"type\": \"integer\", \"title\": \"Fps\", \"default\": 0, \"x-order\": 2, \"description\": \"frames per second, if relevant. Use 0 to keep original fps (or use default). Converting to GIF defaults to 12fps\"}, \"task\": {\"allOf\": [{\"$ref\": \"#/components/schemas/task\"}], \"x-order\": 0, \"description\": \"Task to perform\"}, \"input_file\": {\"type\": \"string\", \"title\": \"Input File\", \"format\": \"uri\", \"x-order\": 1, \"description\": \"File \\u2013 zip, image or video to process\"}}}}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null, \"logs\": \"Using resolution: 1280x720 (16:9 @ 720p), 24 FPS\\nGenerating video from image...\\nSubmitted LTX job 108e9c982da348f9b96b1f256c5eb18c\\n\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"hexiaochun\",\"model_name\":\"video_merge\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"7b2a580622648bed0569fcec9d2efa5ac768e5c20bd1785e2700650f3dd50a30\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"videos\"], \"properties\": {\"videos\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"format\": \"uri\"}, \"title\": \"Videos\", \"x-order\": 0, \"description\": \"List of input videos\"}}}}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"3zgw1vmjdxrmt0d1n9ats7a388\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/np784YhPbipnDFVgwCiPFJwRIvdeDkJ3cMWLMekWGy98AdeuA/tmpegl8yzma.mp4\", \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "create_predictions",
+          "arguments": "{\"version\":\"lucataco/video-merge:14273448a57117b5d424410e2e79700ecde6cc7d60bf522a769b9c7cf989eba7\",\"input\":{\"video_files\":[\"https://app-uploads.krea.ai/6821da79-c082-4d7e-878f-7ebbd23c1bba/1793859046950-8957a04d-3567-4ac6-ab95-aab93364942f-bench-portrait-clip.mp4\",\"https://replicate.delivery/xezq/np784YhPbipnDFVgwCiPFJwRIvdeDkJ3cMWLMekWGy98AdeuA/tmpegl8yzma.mp4\"],\"keep_audio\":false},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"mfdrgka87xrmr0d1n9b9fv30b0\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"starting\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null, \"logs\": \"Moviepy - Building video /tmp/output/output.mp4.\\nMoviepy - Writing video /tmp/output/output.mp4\\nt:   0%|          | 0/290 [00:00<?, ?it/s, now=None]\\nt:  18%|\\u2588\\u258a        | 52/290 [00:00<00:00, 516.09it/s, now=None]\\n\"}",
+          "error": null
+        },
+        {
+          "name": "search",
+          "arguments": "{\"query\":\"trim video start end time\",\"limit\":1,\"jq_filter\":\".models[] | {owner:.model.owner,name:.model.name,description:.model.description}\"}",
+          "output": "{\"owner\": \"lucataco\", \"name\": \"trim-video\", \"description\": \"Simple tool to quickly trim a video or audio file\"}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"lucataco\",\"model_name\":\"trim-video\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"a58ed80215326cba0a80c77a11dd0d0968c567388228891b3c5c67de2a8d10cb\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"video\"], \"properties\": {\"video\": {\"type\": \"string\", \"title\": \"Video\", \"format\": \"uri\", \"x-order\": 0, \"description\": \"Input video file to trim\"}, \"quality\": {\"allOf\": [{\"$ref\": \"#/components/schemas/quality\"}], \"default\": \"medium\", \"x-order\": 5, \"description\": \"Video quality preset\"}, \"duration\": {\"type\": \"string\", \"title\": \"Duration\", \"x-order\": 3, \"nullable\": true, \"description\": \"Duration to trim from start time (format: HH:MM:SS or MM:SS or seconds). Ignored if end_time is specified.\"}, \"end_time\": {\"type\": \"string\", \"title\": \"End Time\", \"x-order\": 2, \"nullable\": true, \"description\": \"End time for trimming (format: HH:MM:SS or MM:SS or seconds). If not specified, uses duration instead.\"}, \"start_time\": {\"type\": \"string\", \"title\": \"Start Time\", \"default\": \"00:00:00\", \"x-order\": 1, \"description\": \"Start time for trimming (format: HH:MM:SS or MM:SS or seconds)\"}, \"remove_audio\": {\"type\": \"boolean\", \"title\": \"Remove Audio\", \"default\": false, \"x-order\": 6, \"description\": \"Remove audio track from output video\"}, \"output_format\": {\"allOf\": [{\"$ref\": \"#/components/schemas/output_format\"}], \"default\": \"mp4\", \"x-order\": 4, \"description\": \"Output video format\"}}}}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"mfdrgka87xrmr0d1n9b9fv30b0\",\"jq_filter\":\"{status,output,error}\"}",
+          "output": "{\"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/OpMRjnkVIcY1HNXnT1RKWupVMwZREaferCgT2cpOOoViBdeuA/output.mp4\", \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"lucataco\",\"model_name\":\"trim-video\",\"jq_filter\":\".latest_version.openapi_schema.components.schemas.quality\"}",
+          "output": "{\"enum\": [\"ultrafast\", \"superfast\", \"veryfast\", \"faster\", \"fast\", \"medium\", \"slow\", \"slower\", \"veryslow\"], \"type\": \"string\", \"title\": \"quality\", \"description\": \"An enumeration.\"}",
+          "error": null
+        },
+        {
+          "name": "create_predictions",
+          "arguments": "{\"version\":\"lucataco/trim-video:a58ed80215326cba0a80c77a11dd0d0968c567388228891b3c5c67de2a8d10cb\",\"input\":{\"video\":\"https://replicate.delivery/xezq/OpMRjnkVIcY1HNXnT1RKWupVMwZREaferCgT2cpOOoViBdeuA/output.mp4\",\"start_time\":\"0\",\"end_time\":\"12\",\"remove_audio\":true,\"quality\":\"slow\"},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"stbnmnf091rmy0d1n9bbbwdqtc\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"stbnmnf091rmy0d1n9bbbwdqtc\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"stbnmnf091rmy0d1n9bbbwdqtc\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"processing\", \"output\": null, \"error\": null, \"logs\": \"\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"stbnmnf091rmy0d1n9bbbwdqtc\",\"jq_filter\":\"{status,output,error,logs}\"}",
+          "output": "{\"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/dQKcLj5z2dJDIFFXeBN5AjPk48qb6Nfoy8BGhQDBtzftD68uA/tmpgyur60vs.mp4\", \"error\": null, \"logs\": \"\"}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_predictions",
+          "args": {
+            "version": "littletry/video-frame-custom:ca7c5e27d473374e61d51d17bbde1941b654b01ab92c1bd36c6708efcd938bc0",
+            "input": {
+              "video": "https://app-uploads.krea.ai/6821da79-c082-4d7e-878f-7ebbd23c1bba/1793859046950-8957a04d-3567-4ac6-ab95-aab93364942f-bench-portrait-clip.mp4",
+              "mode": "last",
+              "image_format": "png"
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "lightricks",
+            "model_name": "ltx-2.5-fast",
+            "input": {
+              "image": "https://replicate.delivery/xezq/idXkGisV46JsOd8AtUVbUFANhBC6PZEsGLNXmlvdHeref58uA/frame_00000145.png",
+              "prompt": "A seamless continuation of this exact shot, beginning exactly from the provided frame. The same woman with the exact same face, dark curly shoulder-length hair and gray ribbed knit sweater, identical clothes and appearance throughout. She naturally turns her body toward screen right, then walks steadily to the right until she completely exits the frame by the end of six seconds. If seated she first smoothly rises. Natural realistic human movement, consistent anatomy and identity. Her hair and clothing move naturally as she walks. Keep the camera locked completely still, the same framing, same park background, same light and colors; no cut, no zoom, no transition. End on the empty unchanged background after she has walked out. Silent video, no speech, no music, no sound.",
+              "duration": 6,
+              "resolution": "720p",
+              "fps": 24,
+              "generate_audio": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_predictions",
+          "args": {
+            "version": "lucataco/video-merge:14273448a57117b5d424410e2e79700ecde6cc7d60bf522a769b9c7cf989eba7",
+            "input": {
+              "video_files": [
+                "https://app-uploads.krea.ai/6821da79-c082-4d7e-878f-7ebbd23c1bba/1793859046950-8957a04d-3567-4ac6-ab95-aab93364942f-bench-portrait-clip.mp4",
+                "https://replicate.delivery/xezq/np784YhPbipnDFVgwCiPFJwRIvdeDkJ3cMWLMekWGy98AdeuA/tmpegl8yzma.mp4"
+              ],
+              "keep_audio": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_predictions",
+          "args": {
+            "version": "lucataco/trim-video:a58ed80215326cba0a80c77a11dd0d0968c567388228891b3c5c67de2a8d10cb",
+            "input": {
+              "video": "https://replicate.delivery/xezq/OpMRjnkVIcY1HNXnT1RKWupVMwZREaferCgT2cpOOoViBdeuA/output.mp4",
+              "start_time": "0",
+              "end_time": "12",
+              "remove_audio": true,
+              "quality": "slow"
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        }
+      ],
+      "firstQuestions": [],
+      "files": [
+        {
+          "file": "assets/01-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/dQKcLj5z2dJDIFFXeBN5AjPk48qb6Nfoy8BGhQDBtzftD68uA/tmpgyur60vs.mp4",
+          "type": "video/mp4",
+          "bytes": 4815582
+        },
+        {
+          "file": "assets/02-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/np784YhPbipnDFVgwCiPFJwRIvdeDkJ3cMWLMekWGy98AdeuA/tmpegl8yzma.mp4",
+          "type": "video/mp4",
+          "bytes": 2658988
+        },
+        {
+          "file": "assets/03-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/OpMRjnkVIcY1HNXnT1RKWupVMwZREaferCgT2cpOOoViBdeuA/output.mp4",
+          "type": "video/mp4",
+          "bytes": 11453237
+        }
+      ],
+      "kind": "delivered",
+      "denied": [],
+      "spent": 0,
+      "seconds": 155
+    }
+  ],
+  "started": "2026-11-05T06:10:43.865Z",
+  "seconds": 159,
+  "spent": 0,
+  "gate": {
+    "creates": 4,
+    "spent": 6,
+    "max": 6
+  },
+  "given": [
+    {
+      "name": "portrait-woman.jpg",
+      "file": "given/portrait-woman.jpg",
+      "bytes": 88779,
+      "same_as_fixture": true
+    },
+    {
+      "name": "bench-portrait-clip.mp4",
+      "file": "given/bench-portrait-clip.mp4",
+      "bytes": 1023284,
+      "same_as_fixture": false
+    }
+  ]
+}

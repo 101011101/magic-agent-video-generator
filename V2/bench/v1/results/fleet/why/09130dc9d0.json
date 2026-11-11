@@ -1,0 +1,52 @@
+{
+ "id": "09130dc9d0",
+ "key": "check:aspect:B",
+ "symptom": "aspect 1:1",
+ "item": "B12d",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'aspect 1:1' check not met?",
+    "because": "The one image delivered in each failing chat is 640x256, a wide 2.5:1 rectangle. It is not a square.",
+    "evidence": "grade.json for s1.old.happy and s1.new.happy: check 'aspect 1:1' pass=false, got [\"640x256\"]. The judge's notes say: 'The image is about 640×256, a wide rectangle, not 1:1.'"
+   },
+   {
+    "why": "Why was the image wide when the assistant wanted a square? Did it ask for the wrong shape?",
+    "because": "No. In every chat the assistant sent aspect_ratio '1:1' to edit_image, with model flux-2-klein, resolution 640px and image_count 1. The prompt also asked for a square with padding above and below. The assistant's arguments were correct.",
+    "evidence": "calls.jsonl: s1.old.happy, s1.old.dumper, s1.new.happy and s1.new.stupid all have edit_image args {\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"aspect_ratio\":\"1:1\",...}. In s1.new.stupid, plan_request returned aspect '1:1' with source user and ready=true."
+   },
+   {
+    "why": "Why did a request with aspect_ratio 1:1 return a 640x256 file?",
+    "because": "The flux-2-klein edit endpoint ignored aspect_ratio. It kept roughly the shape of the input picture: the source is 1024x384 (2.67:1), and the output is 640x256 (2.5:1), with the long edge scaled to 640 and the size rounded. The job status was 'complete' with no error or warning, so the server accepted the parameter and silently did not apply it.",
+    "evidence": "The assistant's own text in s1.old.happy says 'Your photo is 1024×384'. wait_for_image_project output: status complete, error null, nothing about aspect. Output file is 640x256. The same thing happened on both builds and with all three user types."
+   },
+   {
+    "why": "Why did the assistant not see that the shape was wrong and fix it before it delivered?",
+    "because": "fetch_image_download gave the assistant no image content: output was \"\" in every chat. The assistant could not look at the result. It reported '640×640' or 'square' from what it had requested, without checking. The wait result has no width or height fields, so there was no second way to check.",
+    "evidence": "calls.jsonl: every fetch_image_download has \"output\":\"\". The replies say 'I couldn't preview the output from here' and still claim '640×640'. grade.json s1.new.happy fault: 'The assistant said the image was square, which is false.'"
+   },
+   {
+    "why": "Why did the tool description not warn the assistant that edit_image may not honour aspect_ratio?",
+    "because": "Both builds pass through the upstream schema, which says only 'The aspect ratio of the output image(s). If not specified, defaults to auto.' It gives no per-model note that flux-2-klein keeps the input shape. Without that warning, the assistant had no reason to choose another way, such as generate_image or plain padding.",
+    "evidence": "tools-new.json edit_image.inputSchema.properties.aspect_ratio.description; no aspect limit per model is listed in the model description. The new build added plan_request, but that tool only checks that an aspect value exists, not that the model honours it."
+   },
+   {
+    "why": "Why does flux-2-klein editing keep the input shape?",
+    "because": "This is how the free-plan edit model behaves on the Magic Hour backend: it keeps the source canvas ratio and ignores aspect_ratio. The MCP server cannot change this. This is the axiom.",
+    "evidence": "All 5 failures give the same 640x256 output from the same 1024x384 source and the same flux-2-klein 640px arguments, across both builds."
+   }
+  ],
+  "axiom": "The free-plan edit model flux-2-klein, on Magic Hour's AI_IMAGE_EDITOR, ignores aspect_ratio. It keeps the input image's shape (1024x384 in, 640x256 out). The server accepts the request with no error. The assistant sent 1:1 correctly. Neither build's tool description warns about this, and the assistant cannot see the output to check it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the new build, have edit_image or wait_for_image_project read the delivered image's real width and height. If the shape differs from the requested aspect_ratio, return a clear mismatch warning. Also add a line to the edit_image aspect_ratio description: 'flux-2-klein keeps the input image's shape. To change the shape, pad the source to the target ratio first, then edit it, or give a padded upload.' Better still, add a step that pads the source to 1:1 without AI before the edit, so a request to make a picture square needs no AI redraw."
+ },
+ "error": null,
+ "seconds": 57,
+ "usd": 0.6215184
+}

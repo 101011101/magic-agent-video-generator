@@ -1,0 +1,47 @@
+{
+ "id": "c1afd3e8f0",
+ "key": "must:D18c:Clouds drift slowly",
+ "symptom": "Clouds drift slowly",
+ "item": "D18c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Clouds drift slowly' not met in both D18c happy chats?",
+    "because": "In both output videos the clouds dissolve and re-form with new shapes, positions and colours from frame to frame. They do not move across the sky as stable shapes.",
+    "evidence": "s3.old.happy.D18c/grade.json, 'Clouds drift slowly' = no: 'Clouds dissolve and re-form into different shapes and positions across frames … fast morphing'. s3.new.happy.D18c/grade.json, same item = no: 'Clouds appear, dissolve and re-form with new shapes'. Both list it as a major fault."
+   },
+   {
+    "why": "Why did the clouds morph? Did the assistant ask for the wrong motion?",
+    "because": "No. In both builds the assistant asked for exactly what the user wanted: a locked-off camera, 'Clouds drift slowly across the evening sky', gentle ripples, still mountains and trees, unchanged light. It also sent the user's photo as the first frame.",
+    "evidence": "old calls.jsonl line 2 and new calls.jsonl line 3: create_video_from_image with style.prompt 'Static locked-off camera… Clouds drift slowly across the evening sky…', assets.image_file_path = the lake photo, audio false, end_seconds 8."
+   },
+   {
+    "why": "Why did a correct prompt still give morphing clouds?",
+    "because": "Both runs used the same generator and settings: ltx-2.5 at 480p (826x496, 24 fps) for 8 s. The model did not keep the clouds' shape over time. It also added an orange alpenglow and warmer reflections that nobody asked for. These are the same kind of time-consistency errors, which points to the model, not the request.",
+    "evidence": "wait_for_video_project results in both calls.jsonl: width 826, height 496, fps 24, end_seconds 8, credits 192. Both grade.json files also report lighting drift ('left mountain … turn orange-lit') even though the prompt said 'Warm evening light unchanged'."
+   },
+   {
+    "why": "Why was ltx-2.5 at 480p used, and not a stronger model?",
+    "because": "In the old build, the assistant itself called it 'the free-plan setting'. In the new build it called 480p 'the highest resolution on the free plan'. The new tool list offers only ltx-2.5 and minimax-h3. Both builds picked the cheap free-tier option, and the plan_request check in the new build returned ready=true with no warning about motion quality.",
+    "evidence": "old state.json reply: 'The model was LTX 2.5 at 480p … the free-plan setting'. new calls.jsonl line 6: '480p (the highest resolution on the free plan)'. tools-new.json model enum: ['ltx-2.5','minimax-h3']. new calls.jsonl line 2: plan_request ready=true, questions []."
+   },
+   {
+    "why": "Why can the MCP layer not stop this?",
+    "because": "Holding a cloud's shape steady over time is decided inside the video model. The MCP server only passes on the prompt, the image and the settings. Neither build has a parameter for motion strength or time consistency. With the same model, the old and new builds failed in the same way, so the tool-layer differences between them did not matter here.",
+    "evidence": "Old and new used almost the same arguments (same model, resolution, image and prompt meaning) and got the same failure and the same score 3 in grade.json. The test brief D18c.json asks for slow drift with no other trick available."
+   }
+  ],
+  "axiom": "The free-plan video model (ltx-2.5 at 480p, 8 s) does not keep cloud shapes consistent over time. Even with a clear, correct prompt, it turns 'slow drift' into clouds that morph and re-form. This is a limit of the generation model on the free plan.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "none: inherent. The only partial fix: the tool description for create_video_from_image (or plan_request) could say that ltx-2.5 often morphs sky and clouds. The assistant could then tell the user, or try minimax-h3 or a shorter clip when the plan allows it."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.203764
+}

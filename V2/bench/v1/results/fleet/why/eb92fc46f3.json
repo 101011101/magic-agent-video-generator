@@ -1,0 +1,46 @@
+{
+ "id": "eb92fc46f3",
+ "key": "must:A06b:Name reads exactly 'KwickFixx'",
+ "symptom": "Name reads exactly 'KwickFixx'",
+ "item": "A06b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the stupid chat's logo fail 'Name reads exactly KwickFixx' with 'No text at all in the image'?",
+    "because": "The image has no text because the assistant's prompt told the model to leave text out.",
+    "evidence": "s1.new.stupid.A06b/calls.jsonl line 8: generate_image style.prompt ends with 'No text, no letters, no words.' grade.json exact_text: seen 'missing', read_as 'no text present'."
+   },
+   {
+    "why": "Why did the assistant ask for an image with no text?",
+    "because": "It never learned the shop name. The stupid user's only message was 'i need a logo for my repair shop', and the user gives facts only when a plain question asks for them. The assistant asked one question (where the logo will be shown), not the name.",
+    "evidence": "s1.new.stupid.A06b/chat.json: messages has only 'i need a logo for my repair shop'. The persona answers plain questions from its bank, and the bank holds 'Exact name and capitalization: KwickFixx'. calls.jsonl line 5: the assistant's question asks only about placement. Final reply: 'I didn't put any text on it because you didn't tell me your shop's name.'"
+   },
+   {
+    "why": "Why did the assistant ask about placement and not the name?",
+    "because": "The new build's plan_request tool picked the questions, and it returned only the aspect question even though the assistant sent exact_words as missing. The tool description tells the assistant to ask the returned questions word for word.",
+    "evidence": "calls.jsonl line 2: args contain exact_words source 'missing'. Output: questions = [{param:'aspect', ...}] only. tools-new.json plan_request: 'If ready is false, ask the user the returned questions word for word'."
+   },
+   {
+    "why": "Why did the assistant generate without the name after the second plan_request call?",
+    "because": "On the second call plan_request returned ready:true while exact_words and look were still missing. The description says 'If ready is true, create with the returned values', so the assistant created the image. It treated the missing exact_words as 'no text' and said so in its reply.",
+    "evidence": "calls.jsonl line 7: output {ready:true, exact_words: null/missing, questions: []}. tools-new.json: 'If ready is true, create with the returned values... do not guess ... on-screen words'."
+   },
+   {
+    "why": "Why does plan_request call a logo request ready when the on-screen words are unknown?",
+    "because": "The readiness rules for generate_image treat only aspect as blocking. exact_words is not required, even when the subject is a logo, and a logo needs the business name. This is a defect in the new build's plan_request logic. The old build has no plan_request tool to gate this.",
+    "evidence": "Both plan_request outputs: aspect is the only question raised. exact_words stays 'missing' but does not block ready. Second chat for contrast: s1.new.dumper.A06b gave the name up front, the prompt spelled 'KwickFixx' correctly, and flux-2-klein still drew 'KwickFix' (grade.json read_as 'KwickFix'). That failure is a separate generation-model limit, not this gate."
+   }
+  ],
+  "axiom": "The new build's plan_request returns ready:true for a generate_image logo request while exact_words (the business name) is still missing. It raises only the aspect question, so the name is never asked for, and the assistant follows the tool and renders a logo with no text. (The dumper chat failed for a different reason: flux-2-klein dropped one 'x' from a correctly spelled prompt, which is a limit of the generation model.)",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In plan_request, make exact_words a blocking parameter for generate_image when the subject is a logo, sign, label or poster (or any subject that names a brand or business). If exact_words is missing, return ready:false with a plain question such as 'What is the exact name to show on it, spelled the way you want it?'. Put this question before or with the aspect question."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.1622804
+}

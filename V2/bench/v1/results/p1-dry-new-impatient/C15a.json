@@ -1,0 +1,255 @@
+{
+  "id": "C15a",
+  "item": {
+    "id": "C15a",
+    "case": 15,
+    "case_name": "Face swap on a video",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "maybe",
+      "refuse": false
+    },
+    "title": "Five Second Talking Face Swap",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 5,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "talk-one.mp4",
+          "portrait-woman.jpg"
+        ],
+        "text": "Put the face from this portrait onto the woman in the first 5 seconds of the video. Keep the original sound, framing and everything else."
+      }
+    ],
+    "tests": "Tests a short video face swap with source identity, temporal consistency and original audio preserved, without misrepresenting free-tier capabilities.",
+    "answer_sheet": {
+      "Source face and target": "Use portrait-woman.jpg as the replacement face for the woman in talk-one.mp4.",
+      "Length and segment": "The first 5 seconds only.",
+      "Framing and resolution": "Keep the original framing and aspect ratio; 480p is fine. I want her to look like the portrait, so the hair and clothes can come with her.",
+      "Audio and added text": "Keep the original audio in sync. No captions, music or added text."
+    },
+    "must_haves": [
+      "The delivered video is 5 seconds long and follows the first 5 seconds of talk-one.mp4.",
+      "The woman's face recognizably matches portrait-woman.jpg throughout, rather than reverting to the original face between frames.",
+      "The original kitchen, body motion and framing remain; her hair and clothing may follow the portrait so she is recognisable.",
+      "Original speech is audible and synchronized with the video.",
+      "The face remains aligned during mouth and head movement, without conspicuous flicker or doubled facial features."
+    ],
+    "changed": [
+      "2026-11-01: recognisable over untouched (user decision): the hair, and on video the clothes, may come with the new person; everything else stays"
+    ]
+  },
+  "session": "mcp-p1-dry-n-impatient-C15a",
+  "sessionDir": "sessions/mcp-p1-dry-n-impatient-C15a",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Put the face from this pic onto the woman in the first 5 seconds of this clip, keeping the original sound and everything else unchanged. Quick pls.",
+      "materials": [
+        "talk-one.mp4",
+        "portrait-woman.jpg"
+      ],
+      "dialog": [],
+      "agent": "Magic Hour blocked the face swap because your account has insufficient credits. No video was created.\n\nAdd credits, then I can retry the first 5 seconds, targeting only the woman and retaining the original audio.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-face-swap\"}",
+          "output": "{\"workflow\":\"video-face-swap\",\"title\":\"Replace a face in an existing video\",\"input\":\"An existing video and an approved replacement face image.\",\"product_url\":\"https://magichour.ai/products/face-swap\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/video-projects/face-swap-video\",\"creation_tool\":\"swap_face_in_video\",\"steps\":[\"Use the approved source face and target clip; upload local files with get_upload_urls and send their raw bytes to upload_url.\",\"For one selected person in a multi-person clip, use detect_faces and get_face_detection_results, then assets.face_swap_mode=individual-faces with assets.face_mappings; do not swap every face.\",\"Call swap_face_in_video for the requested start_seconds and end_seconds, then wait_for_video_project with the returned id.\"],\"example_request\":\"Put my face into this short movie-style scene. Keep the other people unchanged and show me the finished clip.\",\"follow_up\":\"Reuse the accepted clip for subtitles or another edit; do not regenerate the scene merely to change its captions.\",\"review\":\"Check identity, occlusions and temporal stability. Obtain permission for the likenesses used.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Put the face from this pic onto the woman in the first 5 seconds of this clip, keeping the original sound and everything else unchanged. Quick pls.\\n[Attached: talk-one.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4]\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/59bd85c6-da7f-4c11-b545-eef95afe9e20-image-0.jpg]\"}],\"tool\":\"swap_face_in_photo\",\"attachments\":[{\"name\":\"talk-one.mp4\",\"kind\":\"video\"},{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"params\":[{\"name\":\"subject\",\"value\":\"woman in talk-one.mp4; replacement face from portrait-woman.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Replace only the woman's face in video using supplied portrait\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"original sound and everything else unchanged\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"the woman\",\"source\":\"user\"},{\"name\":\"range\",\"value\":\"0–5 seconds\",\"source\":\"user\"}]}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":true,\"params\":[{\"name\":\"which_face\",\"value\":\"the woman\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "detect_faces",
+          "arguments": "{\"assets\":{\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4\"}}",
+          "output": "{\"id\":\"5be24623-2cc6-4d06-9648-ca5fb67c5042\",\"credits_charged\":0}",
+          "error": null
+        },
+        {
+          "name": "get_face_detection_results",
+          "arguments": "{\"id\":\"5be24623-2cc6-4d06-9648-ca5fb67c5042\"}",
+          "output": "{\"id\":\"5be24623-2cc6-4d06-9648-ca5fb67c5042\",\"credits_charged\":0,\"status\":\"complete\",\"faces\":[{\"path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/5be24623-2cc6-4d06-9648-ca5fb67c5042/0-0.png\",\"url\":\"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/5be24623-2cc6-4d06-9648-ca5fb67c5042/0-0.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261109%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261109T050031Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=a6561c7e7e7943e4d195781aaab627e3e813feff8da5d31842d584bee32bd3d20ee1ca56b6084477f462ecd154fa99cb97e34cd3bbf20ba32df8e809cccf9451963af64b72dfb3fe56ee16ed60e2e52cfddab7ad98d561d649c334dc7f6f8a89af7cc3c00cfaa57fd92a70c0a824fc8c629e52389f51f33fcca3088bf317cf858514dbbb13c5e0b0e716dfeaf40ab445d26a105ecae7aba596abd8e44f98bf6ba7c25bed69371c30b1fbb417829b09b0a2aafc206317c675770bbfcbc33be2a5cefff3a151ad29ef6a8d4224b57b80f22370d99b62b0263971b21eb802ef4f4f96c5a582aa79a4e24da033d4cdb374e0f45d08573cf33056e4a37c717cc9b481\"}],\"error\":null}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "detect_faces",
+          "args": {
+            "assets": {
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4"
+            }
+          },
+          "approve": true,
+          "reason": "",
+          "est": 0
+        },
+        {
+          "name": "swap_face_in_video",
+          "args": {
+            "start_seconds": 0,
+            "end_seconds": 5,
+            "assets": {
+              "video_source": "file",
+              "video_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4",
+              "face_swap_mode": "individual-faces",
+              "face_mappings": [
+                {
+                  "original_face": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/5be24623-2cc6-4d06-9648-ca5fb67c5042/0-0.png",
+                  "new_face": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/59bd85c6-da7f-4c11-b545-eef95afe9e20-image-0.jpg"
+                }
+              ]
+            },
+            "name": "Woman face swap — first 5 seconds"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-face-swap\"}",
+          "result": "{\"workflow\":\"video-face-swap\",\"title\":\"Replace a face in an existing video\",\"input\":\"An existing video and an approved replacement face image.\",\"product_url\":\"https://magichour.ai/products/face-swap\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/video-projects/face-swap-video\",\"creation_tool\":\"swap_face_in_video\",\"steps\":[\"Use the approved source face and target clip; upload local files with get_upload_urls and send their raw bytes to upload_url.\",\"For one selected person in a multi-person clip, use detect_faces and get_face_detection_results, then assets.face_swap_mode=individual-faces with assets.face_mappings; do not swap every face.\",\"Call swap_face_in_video for the requested start_seconds and end_seconds, then wait_for_video_project with the returned id.\"],\"example_request\":\"Put my face into this short movie-style scene. Keep the other people unchanged and show me the finished clip.\",\"follow_up\":\"Reuse the accepted clip for subtitles or another edit; do not regenerate the scene merely to change its captions.\",\"review\":\"Check identity, occlusions and temporal stability. Obtain permission for the likenesses used.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Put the face from this pic onto the woman in the first 5 seconds of this clip, keeping the original sound and everything else unchanged. Quick pls.\\n[Attached: talk-one.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4]\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/59bd85c6-da7f-4c11-b545-eef95afe9e20-image-0.jpg]\"}],\"tool\":\"swap_face_in_photo\",\"attachments\":[{\"name\":\"talk-one.mp4\",\"kind\":\"video\"},{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"params\":[{\"name\":\"subject\",\"value\":\"woman in talk-one.mp4; replacement face from portrait-woman.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Replace only the woman's face in video using supplied portrait\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"original sound and everything else unchanged\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"the woman\",\"source\":\"user\"},{\"name\":\"range\",\"value\":\"0–5 seconds\",\"source\":\"user\"}]}",
+          "result": "{\"tool\":\"swap_face_in_photo\",\"ready\":true,\"params\":[{\"name\":\"which_face\",\"value\":\"the woman\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "detect_faces",
+          "arguments": "{\"assets\":{\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4\"}}",
+          "result": "{\"id\":\"5be24623-2cc6-4d06-9648-ca5fb67c5042\",\"credits_charged\":0}"
+        },
+        {
+          "type": "call",
+          "name": "get_face_detection_results",
+          "arguments": "{\"id\":\"5be24623-2cc6-4d06-9648-ca5fb67c5042\"}",
+          "result": "{\"id\":\"5be24623-2cc6-4d06-9648-ca5fb67c5042\",\"credits_charged\":0,\"status\":\"complete\",\"faces\":[{\"path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/5be24623-2cc6-4d06-9648-ca5fb67c5042/0-0.png\",\"url\":\"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/5be24623-2cc6-4d06-9648-ca5fb67c5042/0-0.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261109%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261109T050031Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=a6561c7e7e7943e4d195781aaab627e3e813feff8da5d31842d584bee32bd3d20ee1ca56b6084477f462ecd154fa99cb97e34cd3bbf20ba32df8e809cccf9451963af64b72dfb3fe56ee16ed60e2e52cfddab7ad98d561d649c334dc7f6f8a89af7cc3c00cfaa57fd92a70c0a824fc8c629e52389f51f33fcca3088bf317cf858514dbbb13c5e0b0e716dfeaf40ab445d26a105ecae7aba596abd8e44f98bf6ba7c25bed69371c30b1fbb417829b09b0a2aafc206317c675770bbfcbc33be2a5cefff3a151ad29ef6a8d4224b57b80f22370d99b62b0263971b21eb802ef4f4f96c5a582aa79a4e24da033d4cdb374e0f45d08573cf33056e4a37c717cc9b481\"}],\"error\":null}"
+        },
+        {
+          "type": "call",
+          "name": "swap_face_in_video",
+          "arguments": "{\"start_seconds\":0,\"end_seconds\":5,\"assets\":{\"video_source\":\"file\",\"video_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a2d68c6-7484-4783-8981-28a1abf2f70a-video-0.mp4\",\"face_swap_mode\":\"individual-faces\",\"face_mappings\":[{\"original_face\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/5be24623-2cc6-4d06-9648-ca5fb67c5042/0-0.png\",\"new_face\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/59bd85c6-da7f-4c11-b545-eef95afe9e20-image-0.jpg\"}]},\"name\":\"Woman face swap — first 5 seconds\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "Magic Hour blocked the face swap because your account has insufficient credits. No video was created.\n\nAdd credits, then I can retry the first 5 seconds, targeting only the woman and retaining the original audio."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "swap_face_in_video: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "Magic Hour blocked the face swap because your account has insufficient credits. No video was created.\n\nAdd credits, then I can retry the first 5 seconds, targeting only the woman and retaining the original audio.",
+        "refuse": "",
+        "tier_move": "Magic Hour blocked the face swap because your account has insufficient credits. No video was created.\n\nAdd credits, then I can retry the first 5 seconds, targeting only the woman and retaining the original audio.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "detect_faces",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "talk-one.mp4"
+            ],
+            "produces": "01-detect_faces.png",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "detect_faces",
+          "state": "done",
+          "output": "assets/01-detect_faces.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 41
+    }
+  ],
+  "started": "2026-11-09T05:00:04.391Z",
+  "persona": "impatient",
+  "opening": {
+    "id": "C15a",
+    "persona": "impatient",
+    "text": "Put the face from this pic onto the woman in the first 5 seconds of this clip, keeping the original sound and everything else unchanged. Quick pls.",
+    "withheld": [
+      "Keep the original framing."
+    ],
+    "extras": [
+      "Quick pls."
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 42
+}

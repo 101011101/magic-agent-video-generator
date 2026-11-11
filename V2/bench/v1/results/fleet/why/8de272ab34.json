@@ -1,0 +1,47 @@
+{
+ "id": "8de272ab34",
+ "key": "must:E29c:Handle fixed at bottom right with clear margins",
+ "symptom": "Handle fixed at bottom right with clear margins",
+ "item": "E29c",
+ "n": 3,
+ "builds": {
+  "old": 1,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Handle fixed at bottom right with clear margins' not met?",
+    "because": "No '@flightschool' text appears anywhere in the output frames. The bottom-right corner is empty, so position and margins cannot pass.",
+    "evidence": "grade.json in all 3 chats: 'Nothing appears at the bottom right' / 'Nothing at bottom right in any frame'. exact_text '@flightschool' seen='missing'. The only text the grader read is the dialogue subtitles 'Rook, you with me?' and 'Right here, Vega.' at bottom centre."
+   },
+   {
+    "why": "Why is there no watermark in the output?",
+    "because": "The assistant had only one way to add the text: edit_video (model ltx-2.5, 480p). This tool makes every frame again from a text prompt. It does not put a layer on the source video. The model regenerated the footage and did not draw the requested text.",
+    "evidence": "calls.jsonl, all 3 chats: a single edit_video call with style.prompt 'Only add a small, subtle watermark text \"@flightschool\" in the bottom right corner…', then wait_for_video_project status 'complete', 832x512. grade.json: 'Footage was regenerated: the first frames show a different cockpit and pilot'."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for an exact overlay?",
+    "because": "Neither build has a tool that places a fixed text layer on a video. The assistant said so and suggested ffmpeg/CapCut. The user then said to try anyway (dumper: a nudge; stupid: 'ya go ahead'), so the assistant ran the closest tool as a best effort and warned about the risk.",
+    "evidence": "calls.jsonl: old.dumper and new.dumper say 'none of my Magic Hour tools can put a fixed text watermark…' (classified 'cannot'). The nudge reads 'please just go ahead and try it anyway'. new.stupid: 'Magic Hour has no tool that stamps a fixed watermark' and it gives an ffmpeg drawtext command. In new.stupid, join_videos returned a 404 and was not a path to an overlay."
+   },
+   {
+    "why": "Why did the generative model not render the text, even with a clear prompt?",
+    "because": "Video-to-video diffusion models like LTX-2.5 do not reliably follow a prompt to add small, exact, translucent text at a fixed spot. They tend to reproduce the content of the source and drop small typographic details. This is a limit of the generation model. No argument the assistant could send would control it.",
+    "evidence": "Prompts in all 3 chats asked for exact text, position, inset, opacity and shadow in plain words. Old used ~65% opacity and an inset, new used 'set in from the edges'. The result was the same in both builds: no text, and the scene was regenerated. The assistant's own caveats ('can't promise exact letters, a set size … steady position') match this."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The Magic Hour toolset has no deterministic overlay function on either build, and the generative model cannot do the overlay. The brief needs a capability the system does not have. The behaviour is the same on old and new, so it is not a regression in either build.",
+    "evidence": "Same failure and same grader reason on old.dumper, new.dumper and new.stupid. E29c.json expect.beyond_free='no', but must_haves ask for exact, fixed-position, translucent text with the footage left unchanged."
+   }
+  ],
+  "axiom": "The Magic Hour toolset (both builds) has no deterministic text or logo overlay tool. Its only route is edit_video, where the LTX-2.5 video-to-video model regenerates the clip and does not reliably draw small, exact, fixed-position text. The watermark therefore never appears.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "With the current model there is no fix: the model limit is inherent. The only concrete fix is to add a new capability to the MCP server: a deterministic overlay tool (for example ffmpeg drawtext/overlay on the source asset) with parameters for text, corner, inset, opacity and shadow, and audio passed through with -c:a copy. Without that tool, the edit_video description should say that it cannot add exact watermarks or text overlays, so the assistant declines and does not spend credits on it."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.2213302
+}

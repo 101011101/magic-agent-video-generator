@@ -1,0 +1,52 @@
+{
+ "id": "91072ce438",
+ "key": "must:A04d:Yellow cup left of laptop",
+ "symptom": "Yellow cup left of laptop",
+ "item": "A04d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Yellow cup left of laptop' not met?",
+    "because": "Neither output has a yellow cup next to a laptop. The old image has a white/cream mug, and the new image is a plain wooden desk scene.",
+    "evidence": "s1.old.stupid.A04d/grade.json: 'Cup is white/cream, not yellow'; summary says 'white mug, lamp and plant'. s1.new.stupid.A04d/calls.jsonl: the prompt was only 'A wooden desk in a bright room, natural daylight. No text…', with no cup in it."
+   },
+   {
+    "why": "Why did the generator not draw a yellow cup?",
+    "because": "No prompt asked for one. Old sent 'a laptop, a desk lamp, a mug and a small plant… photorealistic', with mug colour and objects made up by the assistant. New sent no objects at all.",
+    "evidence": "old calls.jsonl generate_image style.prompt; new calls.jsonl generate_image style.prompt"
+   },
+   {
+    "why": "Why did the assistant leave the yellow cup out of the prompt?",
+    "because": "The user never said it. The stupid persona's opening message was only 'make a pic of a desk'. The cup, its colour and the layout exist only in the persona's hidden knowledge bank, and the persona reveals them only when asked a plain-words question.",
+    "evidence": "s1.new.stupid.A04d/chat.json: messages[0] = 'make a pic of a desk'; the bank holds 'yellow cup on the viewer's left'; persona.reply: 'answer it from your knowledge bank' only when asked."
+   },
+   {
+    "why": "Why did no one ask what should be on the desk?",
+    "because": "Old: the assistant made the image right away with no questions and filled in the scene itself. New: the assistant followed plan_request, which returned only aspect and exact_words questions. It accepted subject='a desk' as given by the user and kept 'look' as missing without asking about it. The user answered 'no words. wide one' and plan_request returned ready=true.",
+    "evidence": "old calls.jsonl: first call is generate_image, with no question turn. new calls.jsonl line 2: questions only for aspect and exact_words; line 7: ready:true with look:null."
+   },
+   {
+    "why": "Why does plan_request not ask about scene contents?",
+    "because": "By design it checks only shape, length, sound and on-screen words. It treats any subject the user gave as complete, however vague it is, so a bare noun like 'a desk' never triggers a question about which objects, colours or layout.",
+    "evidence": "tools-new.json plan_request description: 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' Nothing in it covers underspecified subject content."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The required attributes (yellow cup, layout) were never in the conversation. A vague opener only works if the tools or the assistant prompt a question about content, and neither build does. In old, skipping questions is the assistant's own choice; in new, the planning tool's question set has a gap.",
+    "evidence": "Both chats end delivered after one image; neither has a question about content; A04d.json must_haves still need the yellow cup."
+   }
+  ],
+  "axiom": "The stupid persona's opening message ('make a pic of a desk') leaves out every scene detail. The yellow cup is only reachable through a question about content, and neither build asks one: old asks nothing, and new's plan_request asks only about aspect and on-screen words and accepts a bare subject as complete.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Make plan_request flag a subject that is only a bare noun with no objects, colours or layout (e.g. 'a desk') as underspecified. It should then return a plain-words question such as 'What should be in the picture, and any colours or where things go?' before it sets ready=true. Also ask the 'look' question when look is missing."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.1554178
+}

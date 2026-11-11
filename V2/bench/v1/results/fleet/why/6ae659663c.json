@@ -1,0 +1,47 @@
+{
+ "id": "6ae659663c",
+ "key": "must:J51b:The revised video preserves the original 8-second duration, action order and timing.",
+ "symptom": "The revised video preserves the original 8-second duration, action order and timing.",
+ "item": "J51b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 8-second duration and timing item not met?",
+    "because": "No video file was ever produced in any turn, so there was no clip whose duration or timing the grader could check.",
+    "evidence": "s2r.old.stupid.J51b/grade.json: the check 'something was made' failed with 'no file'. The reason for this item is 'No video was made. The attempted clip was 5 seconds, not 8.' All six must-haves are marked 'no'."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "Every create_video_from_text call was refused before it ran, because the account had 0 credits. This happened in turn 1 (the original clip) and again in turn 2 (the retry).",
+    "evidence": "old.stupid calls.jsonl: 'insufficient credits: this call needs about 120 credits and 0 remain'. old.dumper calls.jsonl: '...about 192 credits and 0 remain'. new.stupid calls.jsonl lines 8 and 16: the same refusal, '192 credits and 0 remain'."
+   },
+   {
+    "why": "Why did a well-formed, free-plan-valid call still fail?",
+    "because": "The arguments were valid for the free plan (ltx-2.5, 480p, after the 'default' model was rejected). The only blocker was the account balance. The assistant did not cause this, and neither build could get past it.",
+    "evidence": "old.dumper calls.jsonl line 3: model ltx-2.5, 480p, 8 s, 16:9, audio false, refused only for credits. The new build went through plan_request first (ready:true), then got the same refusal."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of every chat, in both builds?",
+    "because": "The benchmark fleet ran all chats on a test account whose credits were already used up. The harness did not refill or check the balance before each chat. The original turn-1 clip, which turn 2 needs to resize, therefore could never exist.",
+    "evidence": "All three chats in both builds were run minutes apart (timestamps 1794364431384 to 1794364623146) and show '0 remain' on the very first video call. The test item J51b.json has expect.beyond_free 'no', so the test author assumed an 8 s 480p clip fits the free plan."
+   },
+   {
+    "why": "Why can the grader not credit anything else?",
+    "because": "J51b is a two-turn test. Turn 2 only makes sense if turn 1 delivered a clip. Without that clip, the duration and timing item cannot be met however the assistant behaves. The assistant correctly said there was nothing to resize.",
+    "evidence": "J51b.json turns[1]: 'Just resize the video you made, don't remake it... Keep the timing exactly the same.' In old.stupid and new.stupid, the turn-2 replies say: 'There's no video to resize... The first one was never made.'"
+   }
+  ],
+  "axiom": "The harness ran the J51b chats on a Magic Hour test account with 0 credits. Every generation was refused, so no turn-1 clip existed to resize. This is a harness/account-state defect, not a model, tool or assistant failure.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, reset or top up the test account to the free-plan allowance, or give each chat a fresh account. Abort the run, or mark chats invalid, when the balance before the first call is below the cost of the item's spec (about 192 credits for 8 s at 480p). Do not grade those chats."
+ },
+ "error": null,
+ "seconds": 24,
+ "usd": 0.1317278
+}

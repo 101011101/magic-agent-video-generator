@@ -1,0 +1,46 @@
+{
+ "id": "8a0088ace4",
+ "key": "must:J52a:Reel has no audible sound",
+ "symptom": "Reel has no audible sound",
+ "item": "J52a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Reel has no audible sound' not met in both chats?",
+    "because": "No reel was made, so the grader had no video to check for silence. It scored 'no' because a missing asset cannot be silent.",
+    "evidence": "s2r.old.happy.J52a/grade.json: check 'something was made' pass=false, got 'no file'; must item 'Reel has no audible sound' met=no, why 'No reel exists to be silent; only a plan for silence was stated.'"
+   },
+   {
+    "why": "Why was no reel made?",
+    "because": "The assistant stopped after its first call, generate_image for the poster, was refused. It never called a video tool. It ended the turn with a 'cannot' message and a plan to make a silent ltx-2.5 reel later.",
+    "evidence": "Both calls.jsonl files: exactly one call (generate_image, qwen-image-2.1, 9:16, 640px), then say kind='cannot' and end. The reply text says 'The reel would ... use the free ltx-2.5 model at 480p with sound off. Nothing was charged and nothing was made.'"
+   },
+   {
+    "why": "Why was the poster call refused?",
+    "because": "The account had 0 credits. The call needed about 10 credits, so it was rejected before any generation ran.",
+    "evidence": "calls.jsonl line 2 in both chats: approve=false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account', est=null."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of the chat?",
+    "because": "Both chats used the old build (hosted server https://mcp.magichour.ai/) on a free-plan test account. That account was already empty when the chat began, and this was the first call in the chat. The assistant's arguments were valid and free-plan compatible (free model, 640px, 9:16), so neither the assistant nor the tool description caused the empty balance. It is the state of the run environment.",
+    "evidence": "chat.json: side 'old', url 'https://mcp.magichour.ai/'. calls.jsonl: the refusal comes on the first and only call. Both failing chats are old-side ({old:2}); no new-side chat failed this item."
+   },
+   {
+    "why": "Why did the empty balance turn into a content failure instead of an invalid run?",
+    "because": "The harness does not check or refill the old-side account balance before each chat. It also does not mark chats as invalid when the account is empty from the start. So the grader scored every must-have, including silence, as unmet.",
+    "evidence": "grade.json: all five must-haves met=no with 'No assets exist'. The summary blames 0 credits and says the agent 'explained this honestly and gave a plan'."
+   }
+  ],
+  "axiom": "The old build's free-plan test account had 0 credits when these chats started. The harness did not refill the account or check its balance before the run. Every generation was refused, so no reel existed for the silence check. The assistant and the tool descriptions did not cause this.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Before each chat, the harness should check the account's credit balance and refill it (or switch to a funded free-plan account). If a chat starts with 0 credits, the harness should mark it 'invalid: no credits' and rerun it. It should not grade the must-haves as unmet."
+ },
+ "error": null,
+ "seconds": 25,
+ "usd": 0.08999460000000001
+}

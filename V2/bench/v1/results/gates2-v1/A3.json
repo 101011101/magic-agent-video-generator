@@ -1,0 +1,263 @@
+{
+  "id": "A3",
+  "item": {
+    "id": "A3",
+    "case": "A3",
+    "case_name": "Continue this clip, 6 s + 6 s (the canary)",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Continue the portrait clip",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "1:1",
+      "seconds": 12,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "bench-portrait-clip.mp4"
+        ],
+        "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests reading a clip's last frame, identity across the join, the asked action, joining two clips, and not regenerating what already exists.",
+    "answer_sheet": {
+      "Inputs": "The attached 6-second clip and the portrait it was made from.",
+      "New part": "6 more seconds: she turns and walks out of frame; same face, hair and clothes.",
+      "Output": "One 12-second file: the original 6 seconds first, unchanged, then the new 6 seconds; same shape as the clip.",
+      "Sound": "Silent.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable video file runs for 12 seconds, plus or minus 1 second.",
+      "The first 6 seconds are the original clip, unchanged.",
+      "There is no jump at the join.",
+      "Her face, hair and clothes stay the same in the new 6 seconds.",
+      "She turns and walks out of frame.",
+      "The video is silent.",
+      "The cost is about one 6-second generation."
+    ]
+  },
+  "session": "mcp-g2v1-A3",
+  "sessionDir": "sessions/mcp-g2v1-A3",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.",
+      "materials": [
+        "portrait-woman.jpg",
+        "bench-portrait-clip.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?",
+          "asked": [
+            "question"
+          ],
+          "user": "Your call.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "[Download the combined silent video](http://127.0.0.1:8765/films/8f22e6fbb3c74fc4a08499cacfc9b650.mp4)\n\nOriginal clip first, followed by the new continuation. The exported file reports **12.1 seconds**.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\\n\\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/19a522a2-4e1d-497d-bafe-431d14747622-image-0.jpg]\\n[Attached: bench-portrait-clip.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/ed3d2cb4-c20a-4896-b1d1-5d9b88e636c6-video-0.mp4 — URL: http://127.0.0.1:8799/bench-portrait-clip.mp4]\"}],\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"bench-portrait-clip.mp4\",\"kind\":\"video\",\"seconds\":6}],\"tool\":\"create_video_from_image\",\"params\":[{\"name\":\"subject\",\"value\":\"The woman in the attached portrait and clip\",\"source\":\"user\"},{\"name\":\"motion\",\"value\":\"Continue from the final frame: she turns and walks out of frame.\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Keep her face, hair and clothes the same; original 6-second clip unchanged and first in joined 12-second output.\",\"source\":\"user\"},{\"name\":\"seconds\",\"value\":6,\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"Match the source clip\",\"source\":\"derived\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\"}]}",
+          "output": "{\"tool\":\"create_video_from_image\",\"ready\":false,\"params\":[{\"name\":\"motion\",\"value\":\"Continue from the final frame: she turns and walks out of frame.\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"seconds\",\"value\":6,\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Keep her face, hair and clothes the same; original 6-second clip unchanged and first in joined 12-second output.\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[{\"param\":\"aspect\",\"question\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\"}]}",
+          "error": null
+        },
+        {
+          "name": "get_last_frame",
+          "arguments": "{\"video\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/ed3d2cb4-c20a-4896-b1d1-5d9b88e636c6-video-0.mp4\"}",
+          "output": null,
+          "error": "Magic Hour refused /v1/video-projects/api-assets/cmsla3fmt01cnio0zhjlc2wsv/ed3d2cb4-c20a-4896-b1d1-5d9b88e636c6-video-0.mp4 (HTTP 404): {\"code\":\"not_found\",\"message\":\"Not Found\"}"
+        },
+        {
+          "name": "get_last_frame",
+          "arguments": "{\"video\":\"http://127.0.0.1:8799/bench-portrait-clip.mp4\"}",
+          "output": "{\"file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/b43523ff-6888-456e-9888-1a7f6aca9312-image-0.jpg\"}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\\n\\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/19a522a2-4e1d-497d-bafe-431d14747622-image-0.jpg]\\n[Attached: bench-portrait-clip.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/ed3d2cb4-c20a-4896-b1d1-5d9b88e636c6-video-0.mp4 — URL: http://127.0.0.1:8799/bench-portrait-clip.mp4]\"},{\"role\":\"assistant\",\"text\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\"},{\"role\":\"user\",\"text\":\"Your call.\"}],\"tool\":\"create_video_from_image\",\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\",\"aspect\":\"1:1\"},{\"name\":\"bench-portrait-clip.mp4\",\"kind\":\"video\",\"seconds\":6}],\"params\":[{\"name\":\"subject\",\"value\":\"The same woman from the source clip's extracted final frame\",\"source\":\"derived\"},{\"name\":\"motion\",\"value\":\"She turns and walks out of frame\",\"source\":\"user\"},{\"name\":\"seconds\",\"value\":6,\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"default\",\"from\":\"User delegated format choice: Your call.\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Same face, hair and clothes; continue from the original clip's final frame; original 6 seconds first and unchanged in final joined video.\",\"source\":\"user\"}]}",
+          "output": "{\"tool\":\"create_video_from_image\",\"ready\":true,\"params\":[{\"name\":\"motion\",\"value\":\"She turns and walks out of frame\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"seconds\",\"value\":6,\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"default\",\"from\":\"User delegated format choice: Your call.\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Same face, hair and clothes; continue from the original clip's final frame; original 6 seconds first and unchanged in final joined video.\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "create_video_from_image",
+          "arguments": "{\"assets\":{\"image_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/b43523ff-6888-456e-9888-1a7f6aca9312-image-0.jpg\"},\"end_seconds\":6,\"resolution\":\"480p\",\"model\":\"ltx-2.5\",\"audio\":false,\"name\":\"Portrait clip continuation — turns and exits\",\"style\":{\"prompt\":\"Seamless continuation of the supplied final frame of an existing clip. The same woman naturally turns to her right and walks fully out of the frame, leaving the park scene visible. Keep her face, facial features, dark curly hair, and gray knitted sweater exactly consistent. Preserve the original environment, lighting, framing and camera position. Natural continuous human movement, fixed camera, no cuts, no text. Silent.\"}}",
+          "output": "{\"id\":\"cmw65w56a011flx01th1ba1ec\",\"estimated_frame_cost\":144,\"credits_charged\":144}",
+          "error": null
+        },
+        {
+          "name": "wait_for_video_project",
+          "arguments": "{\"id\":\"cmw65w56a011flx01th1ba1ec\"}",
+          "output": "{\"id\":\"cmw65w56a011flx01th1ba1ec\",\"name\":\"Portrait clip continuation — turns and exits\",\"status\":\"complete\",\"type\":\"IMAGE_TO_VIDEO\",\"created_at\":\"2026-11-07T08:48:59.699Z\",\"width\":640,\"height\":640,\"enabled\":true,\"start_seconds\":0,\"end_seconds\":6,\"total_frame_cost\":144,\"credits_charged\":144,\"fps\":24,\"error\":null,\"downloads\":[{\"url\":\"https://videos.magichour.ai/cmw65w56a011flx01th1ba1ec/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261107%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261107T084922Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=d2b9282665ea775fdc03b5ec6c5d27692e5ed83c0c10e1fc0ccf4fefc50cb4a0b4e8b2739dcce7391484bd188af5de3ef6f69ecd418447cdd1dfdc27f192045418ba257fc14469390ae122b8500530c8c77e513778d3eb34dea2e5fb4f16bf15ff1892a40eee49c1a7dc868ca8672bbab212b58db83e7348bf20cfb4f97d5b86d22ab2e90797b34d15d346c9a50d35bed60e6b24a14d18159648d864196a0699239da44b77242126f806cd7a4c16f49eabea0fee2307f941b159968ad58615aecda3bd86287c81fbb89d057ac14b98e3edbb6928ade39b8e0d152bae0766bc6d233cdc1c47a28c2e9f485d0639fbcc66cc520349d9230102225d64ead3252e5b\"}],\"download\":{\"url\":\"https://videos.magichour.ai/cmw65w56a011flx01th1ba1ec/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261107%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261107T084922Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=d2b9282665ea775fdc03b5ec6c5d27692e5ed83c0c10e1fc0ccf4fefc50cb4a0b4e8b2739dcce7391484bd188af5de3ef6f69ecd418447cdd1dfdc27f192045418ba257fc14469390ae122b8500530c8c77e513778d3eb34dea2e5fb4f16bf15ff1892a40eee49c1a7dc868ca8672bbab212b58db83e7348bf20cfb4f97d5b86d22ab2e90797b34d15d346c9a50d35bed60e6b24a14d18159648d864196a0699239da44b77242126f806cd7a4c16f49eabea0fee2307f941b159968ad58615aecda3bd86287c81fbb89d057ac14b98e3edbb6928ade39b8e0d152bae0766bc6d233cdc1c47a28c2e9f485d0639fbcc66cc520349d9230102225d64ead3252e5b\",\"expires_at\":\"2026-11-08T08:49:22.000Z\"},\"exact_download_urls\":[\"https://videos.magichour.ai/cmw65w56a011flx01th1ba1ec/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261107%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261107T084922Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=d2b9282665ea775fdc03b5ec6c5d27692e5ed83c0c10e1fc0ccf4fefc50cb4a0b4e8b2739dcce7391484bd188af5de3ef6f69ecd418447cdd1dfdc27f192045418ba257fc14469390ae122b8500530c8c77e513778d3eb34dea2e5fb4f16bf15ff1892a40eee49c1a7dc868ca8672bbab212b58db83e7348bf20cfb4f97d5b86d22ab2e90797b34d15d346c9a50d35bed60e6b24a14d18159648d864196a0699239da44b77242126f806cd7a4c16f49eabea0fee2307f941b159968ad58615aecda3bd86287c81fbb89d057ac14b98e3edbb6928ade39b8e0d152bae0766bc6d233cdc1c47a28c2e9f485d0639fbcc66cc520349d9230102225d64ead3252e5b\"],\"download_expiration_metadata\":[{\"download_index\":\"0\",\"expires_at\":\"2026-11-08T08:49:22.000Z\",\"note\":\"Metadata only. Do not append this value to the download URL.\"}],\"project_type\":\"video\"}",
+          "error": null
+        },
+        {
+          "name": "join_videos",
+          "arguments": "{\"videos\":[\"http://127.0.0.1:8799/bench-portrait-clip.mp4\",\"cmw65w56a011flx01th1ba1ec\"],\"silent\":true}",
+          "output": "{\"download_url\":\"http://127.0.0.1:8765/films/8f22e6fbb3c74fc4a08499cacfc9b650.mp4\",\"seconds\":12.1,\"width\":640,\"height\":640,\"loudness_db\":-91}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_video_from_image",
+          "args": {
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/b43523ff-6888-456e-9888-1a7f6aca9312-image-0.jpg"
+            },
+            "end_seconds": 6,
+            "resolution": "480p",
+            "model": "ltx-2.5",
+            "audio": false,
+            "name": "Portrait clip continuation — turns and exits",
+            "style": {
+              "prompt": "Seamless continuation of the supplied final frame of an existing clip. The same woman naturally turns to her right and walks fully out of the frame, leaving the park scene visible. Keep her face, facial features, dark curly hair, and gray knitted sweater exactly consistent. Preserve the original environment, lighting, framing and camera position. Natural continuous human movement, fixed camera, no cuts, no text. Silent."
+            }
+          },
+          "approve": true,
+          "reason": "",
+          "est": 144
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?"
+        }
+      ],
+      "kind": "delivered",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "[Download the combined silent video](http://127.0.0.1:8765/films/8f22e6fbb3c74fc4a08499cacfc9b650.mp4)\n\nOriginal clip first, followed by the new continuation. The exported file reports **12.1 seconds**.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "create_video_from_image",
+            "model": "ltx-2.5",
+            "resolution": "480p",
+            "inputs": [],
+            "produces": "01-create_video_from_image.mp4",
+            "params": {
+              "model": "ltx-2.5",
+              "resolution": "480p",
+              "seconds": 6,
+              "aspect": null,
+              "prompt": "Seamless continuation of the supplied final frame of an existing clip. The same woman naturally turns to her right and walks fully out of the frame, leaving the park scene visible. Keep her face, facial features, dark curly hair, and gray knitted sweater exactly consistent. Preserve the original environment, lighting, framing and camera position. Natural continuous human movement, fixed camera, no"
+            },
+            "credits": 144
+          },
+          {
+            "tool": "join_videos",
+            "inputs": [],
+            "produces": "02-join_videos.mp4",
+            "params": {},
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "create_video_from_image",
+          "state": "done",
+          "output": "assets/01-create_video_from_image.mp4",
+          "credits": 144,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "join_videos",
+          "state": "done",
+          "output": "assets/02-join_videos.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 144,
+      "seconds": 88
+    }
+  ],
+  "started": "2026-11-07T08:48:09.721Z",
+  "spent": 144,
+  "seconds": 89
+}

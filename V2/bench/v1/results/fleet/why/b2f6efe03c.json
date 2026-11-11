@@ -1,0 +1,52 @@
+{
+ "id": "b2f6efe03c",
+ "key": "must:G39a:Bottom caption exactly 'BUT IT'S ONLY TUESDAY'",
+ "symptom": "Bottom caption exactly 'BUT IT'S ONLY TUESDAY'",
+ "item": "G39a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the bottom caption fail to read 'BUT IT'S ONLY TUESDAY'?",
+    "because": "The two chats fail for two different reasons. In old.stupid the image carries a different joke that the assistant made up. In new.dumper the right text was sent, but the generator misspelled it.",
+    "evidence": "The symptom quote 'Reads FROM THREE ROOMS AWAY' is from old.stupid. s4.new.dumper.G39a/grade.json: the bottom caption 'Reads BUT ITS ONY TUESDAY: the apostrophe and the L are missing'."
+   },
+   {
+    "why": "Why does the old.stupid image say 'FROM THREE ROOMS AWAY'?",
+    "because": "The assistant wrote its own captions into the edit_image prompt.",
+    "evidence": "s4.old.stupid.G39a/calls.jsonl, edit_image args: style.prompt contains 'Top text: \"WHEN YOU HEAR THE TREAT BAG\". Bottom text: \"FROM THREE ROOMS AWAY\"'. The reply admits it chose the joke: 'Want a different caption? Tell me the text'."
+   },
+   {
+    "why": "Why did the assistant make up captions?",
+    "because": "The stupid user's only message held no caption text. The assistant generated at once and never asked. The captions exist only in the persona's knowledge bank, so the user would have given them if asked.",
+    "evidence": "s4.old.stupid.G39a/state.json: the one user turn is 'make a meme with this pic'. The transcript holds no assistant question. In chat.json, the bank 'Caption wording and placement' holds the exact Top and Bottom text."
+   },
+   {
+    "why": "Why did nothing in the old build make the assistant ask?",
+    "because": "The old hosted server has no step that plans the request or checks for missing inputs. The assistant went straight to edit_image. The new build's plan_request returns ready:false and a question when the edit is not given.",
+    "evidence": "old calls.jsonl: the first call is edit_image, with no planning step. new calls.jsonl: plan_request on the vague text returned 'ready:false ... questions:[{param:edit, question:\"What should change in the picture?\"}]'. A second plan_request carried exact_words with both captions."
+   },
+   {
+    "why": "Why did the new.dumper chat fail even though it sent the correct text?",
+    "because": "flux-2-klein drew 'ONY' and dropped the apostrophe. Text rendering in a diffusion edit model is not reliable. The assistant could not view the output to catch this.",
+    "evidence": "new calls.jsonl, edit_image: model flux-2-klein, prompt '...Bottom text ...: BUT IT'S ONLY TUESDAY. Spell the text exactly as written.' grade.json exact_text read_as 'BUT ITS ONY TUESDAY'. The reply says 'I couldn't open the finished image to check it myself'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "For old: the user's message held no captions, the assistant chose to make them up instead of asking, and the old tools have no gate for missing input. For new: AI image models misspell rendered text, and free-plan generation offers no way to place exact text deterministically.",
+    "evidence": "G39a.json spec.exact_text needs both strings verbatim. The old tool list has no planning or missing-input tool before edit_image. In the new build, the model misspelled text that was given verbatim."
+   }
+  ],
+  "axiom": "Old build: the stupid user gave no caption text, and the old server has no gate that turns missing exact_words into a question. So the assistant made up a caption and did not ask. New build: the flux-2-klein edit model misspells rendered text ('ONY') even when it gets the exact string. This is an inherent generator limit.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Old: add a missing-input gate like the new plan_request. In edit_image/meme guidance, say that captions are user content: if the user gives no exact words, ask for them and never make them up. New: for exact captions, draw the text in a deterministic step (a text-overlay step that renders the string onto the image) instead of asking the diffusion model to paint the letters. Failing that, have the assistant check the output (OCR) and run the job again on a mismatch."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.184563
+}

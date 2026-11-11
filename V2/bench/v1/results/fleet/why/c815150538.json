@@ -1,0 +1,47 @@
+{
+ "id": "c815150538",
+ "key": "check:sound:E",
+ "symptom": "sound present and audible",
+ "item": "E29a",
+ "n": 10,
+ "builds": {
+  "old": 5,
+  "new": 5
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did 'sound present and audible' fail with 'no audio track'?",
+    "because": "No video was delivered at all. The only output file was a PNG image, and a PNG has no audio track.",
+    "evidence": "s3/s3.new.dumper.E29a/grade.json: 'a video was made' failed with got [\".png\"], and 'sound present and audible' failed with got 'no audio track'. The judge wrote 'No video was output; only a fox cutout image.'"
+   },
+   {
+    "why": "Why was the only output a PNG?",
+    "because": "The assistant ran just one paid tool, remove_image_background on mascot-fox.png, and polled the result. It never called any video tool on talk-one.mp4.",
+    "evidence": "s3.old.dumper.E29a/calls.jsonl, s3.old.happy.E29a/calls.jsonl and s3.new.dumper.E29a/calls.jsonl: each shows remove_image_background, then wait_for_image_project, then end. The output is a BACKGROUND_REMOVER project, project_type 'image', 5 credits. The 'say' entries are classified as 'delivered' (half done)."
+   },
+   {
+    "why": "Why did the assistant stop and not put the fox on the video?",
+    "because": "The assistant found that no tool could lay an image over a video and leave the frames and audio unchanged. The only option left was the AI video editor, which redraws every frame from a prompt (and on free, cannot use the fox picture as a reference). That would break 'keep the video and sound unchanged', so the assistant refused that path and told the user to use CapCut, iMovie or ffmpeg.",
+    "evidence": "old.happy E29a reply: 'Magic Hour has no tool that places an image on top of a video as an overlay... the speaker, the background and the sound could all change'. new.dumper E29a: 'None of my Magic Hour tools can lay a picture over a video and leave everything else as it is.' old.dumper says the same."
+   },
+   {
+    "why": "Was the assistant right that no overlay tool exists?",
+    "because": "Yes. The tool lists the assistant saw have background removal, subtitles, trim, the AI editor and generators, but no tool that composites an image onto a video. In the new build, plan_request even confirmed remove_image_background as the tool and returned ready:true. Both builds act the same way (old 5 and new 5 failures), across all persona types.",
+    "evidence": "tools-new.json: the plan_request tool enum lists generate_image, edit_image, create_video_from_text/image, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face_*, create_talking_photo and trim_video, with no overlay or watermark tool. new.dumper E29a plan_request returned {tool: remove_image_background, ready: true}."
+   },
+   {
+    "why": "Why does that count as a failure and not as a correct limit?",
+    "because": "The test E29a assumes the whole job can be done on free (expect.refuse=false, beyond_free='no', audio 'required', a 10 s video output). But the server has no capability to composite a still logo onto a user's video and pass the source audio through. So every chat can deliver at most the cutout PNG.",
+    "evidence": "items/E29a.json: spec {kind: video, seconds: 10, audio: required}, expect {refuse: false, beyond_free: 'no'}, must_have 'The original speech remains audible and synchronized throughout the 10-second clip.'"
+   }
+  ],
+  "axiom": "Neither build of the Magic Hour MCP server has a tool that composites an image (logo or watermark) onto an existing video while keeping its frames and audio. The only video-editing path is a generative re-render, which the brief forbids. So no video, and so no audio track, can be made for this test.",
+  "category": "other",
+  "builds": "both",
+  "fix": "Add a deterministic server-side overlay tool, for example overlay_image_on_video(video, image, position=top-right, scale, margin, start/end). It composites the PNG onto every frame (ffmpeg overlay) and copies the source audio stream unchanged (-c:a copy). Add it to plan_request's tool list and describe it in the tool descriptions. If you do not add it, mark E29a as expect.refuse/beyond-capability so the grader does not require a video with audio."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2580876
+}

@@ -1,0 +1,46 @@
+{
+ "id": "d9c46cb288",
+ "key": "must:E29b:The entire original cockpit clip plays before the end card, without being replaced or shortened.",
+ "symptom": "The entire original cockpit clip plays before the end card, without being replaced or shortened.",
+ "item": "E29b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the entire original cockpit clip not play before the end card?",
+    "because": "Neither chat produced a joined video. The only file delivered in each chat is the 2 s card by itself.",
+    "evidence": "s3.new.happy.E29b/calls.jsonl: join_production_clips returns seconds:2, clips:1. state.json mediaSeen holds only that 2 s film. s3.new.stupid.E29b/calls.jsonl shows the same result (2.0 s, 854x480). The grader says: 'No joined output was produced.'"
+   },
+   {
+    "why": "Why was the 2 s card never joined to the 7 s clip?",
+    "because": "The production plan contains only the card. The assistant then tried to join afterwards with join_videos, and the server refused the user's clip with HTTP 404.",
+    "evidence": "plan_video_production args: beats = [one card beat, clip 1]. The output has join:[1] and an advice warning: 'The request asks for 7 s; the beats add up to 2 s.' join_videos args: videos = ['api-assets/cmsla3fmt.../...-video-0.mp4', card URL]. Error: 'Magic Hour refused /v1/video-projects/api-assets/... (HTTP 404) not_found'."
+   },
+   {
+    "why": "Why did join_videos refuse the user's clip?",
+    "because": "The new join_videos accepts only finished video project ids or http URLs. It treats any other string as a project id and looks it up at /v1/video-projects/<string>. The user's attachment exists only as an uploaded asset file_path (api-assets/...), which is not a project, so the lookup returns 404. get_last_frame does the same thing in the stupid chat.",
+    "evidence": "tools-new.json join_videos: '`videos`: finished video project ids or video URLs.' get_last_frame: 'a finished video project id or a video URL.' The error URL shows the file_path appended to /v1/video-projects/. Other tools, such as edit_video and detect_faces, take 'a direct URL... or file_path field from the upload urls API', so file_path is the normal way to refer to user media."
+   },
+   {
+    "why": "Why could the assistant not add the user's clip inside plan_video_production instead?",
+    "because": "The production planner has no beat type for the user's own footage. Beats can only be kind 'scene' (generated) or 'card' (drawn). A reference can only be a picture or a last frame. No field says 'use this uploaded video unchanged'. So the source clip can enter neither the plan nor the join.",
+    "evidence": "tools-new.json plan_video_production: beat kind enum ['scene','card']. reference.kind enum ['none','picture','last_frame','file' (a picture)]. join_production_clips joins only the 'clips of a plan'."
+   },
+   {
+    "why": "Why did the assistant not work around the block?",
+    "because": "No tool in the new list turns an uploaded file_path into a project id or a URL that join_videos accepts. Regenerating the clip would break 'keep the whole clip'. The assistant explicitly refused to do that and asked the user for a direct .mp4 link. Axiom: the new build's join path (join_videos, get_last_frame, production join) cannot resolve an uploaded-asset file_path. That is a tool behavior defect, not a model or plan limit.",
+    "evidence": "happy state.json: 'It won't take a file you uploaded... I won't run your clip through a video generator to get around this, because that would remake the footage.' stupid chat: same explanation. Both chats spent 0 credits, so the free plan was not the limit."
+   }
+  ],
+  "axiom": "In the new build, join_videos (and get_last_frame and the production join) accept only video project ids or URLs, and send any other string to /v1/video-projects/<id>. Uploaded user media is passed as an api-assets file_path, so the user's clip returns 404 and can never be joined. plan_video_production also has no beat kind for the user's own unchanged footage.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In join_videos and get_last_frame, accept an uploaded asset file_path (an api-assets/... string): resolve it to a signed download URL instead of looking it up as a video project. State this in both descriptions ('finished video project ids, video URLs, or file_path of an uploaded video'). Also add a 'source' beat kind (or a `video` field on a beat) to plan_video_production so the user's clip is kept unchanged and joined with the card in join_production_clips."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.345037
+}

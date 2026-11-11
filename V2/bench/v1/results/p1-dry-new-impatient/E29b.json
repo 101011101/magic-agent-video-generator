@@ -1,0 +1,168 @@
+{
+  "id": "E29b",
+  "item": {
+    "id": "E29b",
+    "case": 29,
+    "case_name": "Add a logo or text overlay",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Append a Clean End Card",
+    "sub": "b",
+    "spec": {
+      "exact_text": [
+        "Ready for takeoff?",
+        "@flightschool"
+      ],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 9,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "radio-lines.mp4"
+        ],
+        "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent."
+      }
+    ],
+    "tests": "Tests appending an accurately timed end card with exact text while preserving the complete source clip and its audio.",
+    "answer_sheet": {
+      "End-card wording": "Ready for takeoff? on the first line and @flightschool underneath, without quotation marks.",
+      "End-card appearance": "Solid black background, white text, both lines centered. Font choice is your call.",
+      "Timing and transition": "Preserve the complete 7-second source, then show the end card for 2 seconds, making a 9-second video. A direct cut is fine.",
+      "Framing and audio": "Match the source aspect ratio. Preserve its original sound for the first 7 seconds; the end card is silent."
+    },
+    "must_haves": [
+      "The entire original cockpit clip plays before the end card, without being replaced or shortened.",
+      "A solid black end card occupies only the final 2 seconds of the 9-second output.",
+      "The end card reads exactly 'Ready for takeoff?' with '@flightschool' on the line below.",
+      "Both lines are white, centered, fully visible, and comfortably readable.",
+      "Original cockpit audio is preserved during the source footage, followed by silence during the end card."
+    ]
+  },
+  "session": "mcp-p1-dry-n-impatient-E29b",
+  "sessionDir": "sessions/mcp-p1-dry-n-impatient-E29b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Keep this whole 7-second clip with its original sound, then add a silent 2-second end card saying “Ready for takeoff?” with “@flightschool” underneath. Quick pls.",
+      "materials": [
+        "radio-lines.mp4"
+      ],
+      "dialog": [],
+      "agent": "Magic Hour blocked the end-card creation for insufficient credits, so I couldn’t finish the edit. Your original clip is unchanged.\n\nThe requested edit is 9 seconds total: the full 7-second clip with its original sound, followed by a silent 2-second card:\n\n**Ready for takeoff?**  \n@flightschool",
+      "calls": [
+        {
+          "name": "plan_video_production",
+          "arguments": "{\"request\":\"Keep this whole 7-second clip with its original sound, then add a silent 2-second end card saying “Ready for takeoff?” with “@flightschool” underneath. Quick pls.\",\"story\":{\"title\":\"Takeoff end card\",\"aspect\":\"16:9\",\"setting\":\"Clean, minimal end-card design.\",\"beats\":[{\"clip\":1,\"kind\":\"card\",\"background\":\"#000000\",\"text\":\"Centered white text on black, with Ready for takeoff? above @flightschool.\",\"seconds\":2,\"exact_words\":[\"Ready for takeoff?\",\"@flightschool\"]}],\"audio\":false}}",
+          "output": "{\"ok\":true,\"strategy\":\"manual\",\"max_seconds\":15,\"needs_production\":false,\"seconds\":2,\"credits\":0,\"clips\":[{\"n\":1,\"kind\":\"card\",\"beats\":[1],\"seconds\":2,\"link\":\"new\",\"reference\":{\"kind\":\"drawn\"},\"ends_on\":[],\"depends_on\":[],\"made_by\":\"code\",\"steps\":[{\"tool\":\"draw_card\",\"model\":\"code\",\"credits\":0,\"seconds\":2,\"background\":\"#000000\",\"words\":[\"Ready for takeoff?\",\"@flightschool\"]}]}],\"join\":[1],\"rounds\":[[1]],\"checklist\":[{\"id\":\"file\",\"want\":\"One file, 2 s, 16:9\",\"how\":\"measured\"},{\"id\":\"order\",\"want\":\"1 beats in story order, each once, no repeats\",\"how\":\"by eye\"},{\"id\":\"card-1\",\"want\":\"Card held 2 s with exactly \\\"Ready for takeoff?\\\", \\\"@flightschool\\\"\",\"how\":\"measured length, words by eye\"},{\"id\":\"silent\",\"want\":\"No sound\",\"how\":\"measured\"}],\"problems\":[],\"advice\":[{\"clip\":null,\"note\":\"not-carried\",\"warning\":\"The request asks for 7 s; the beats add up to 2 s.\",\"evidence\":\"\"}],\"production\":\"eJxlkMFOwzAMhl_FMteCGAckegFpb4C4TWhyE7c1zZyqcemmae9OUiakiZyc3_m_384ZTSww1vhBA8e2BVYPjiaPFVIa2VnubZ7rl3KfvUSsWwqJK0xsJtrl9jYwaQUHUTlQKIT7QgDPSTp9yM40N18ZlbDefVbYMK3lOTNcVJ_rpwqNjyVry2o8sYelF2MoKkSFJpAbKljEenhn8ido4wT2O_QrUBO_Gd7aIF1vyfUxhpI7iPrMvO5zOwUfydl-iVPJ3-F_aHbcADGbRPfJsfKfr6yTJ-umOK9Rd4_rKWl0uj5wQUasN1ka48BaxEuRaTSJmq4_evkB0smE0g==\",\"how\":\"Make the rounds in order. For each clip in a round call create_production_clip(production, clip, made); the clips of one round do not wait for each other. Then wait_for_video_project for each id. `made` maps each finished clip number to its video project id. After the last round call join_production_clips(production, made) and give the user its download_url. Before you deliver, go through `checklist`: the join returns `checked` for the lines code can measure; confirm the others from the clips. Tell the user plainly which lines are not met; do not present them as done.\"}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_production_clip",
+          "args": {
+            "clip": 1,
+            "production": "eJxlkMFOwzAMhl_FMteCGAckegFpb4C4TWhyE7c1zZyqcemmae9OUiakiZyc3_m_384ZTSww1vhBA8e2BVYPjiaPFVIa2VnubZ7rl3KfvUSsWwqJK0xsJtrl9jYwaQUHUTlQKIT7QgDPSTp9yM40N18ZlbDefVbYMK3lOTNcVJ_rpwqNjyVry2o8sYelF2MoKkSFJpAbKljEenhn8ido4wT2O_QrUBO_Gd7aIF1vyfUxhpI7iPrMvO5zOwUfydl-iVPJ3-F_aHbcADGbRPfJsfKfr6yTJ-umOK9Rd4_rKWl0uj5wQUasN1ka48BaxEuRaTSJmq4_evkB0smE0g=="
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_video_production",
+          "arguments": "{\"request\":\"Keep this whole 7-second clip with its original sound, then add a silent 2-second end card saying “Ready for takeoff?” with “@flightschool” underneath. Quick pls.\",\"story\":{\"title\":\"Takeoff end card\",\"aspect\":\"16:9\",\"setting\":\"Clean, minimal end-card design.\",\"beats\":[{\"clip\":1,\"kind\":\"card\",\"background\":\"#000000\",\"text\":\"Centered white text on black, with Ready for takeoff? above @flightschool.\",\"seconds\":2,\"exact_words\":[\"Ready for takeoff?\",\"@flightschool\"]}],\"audio\":false}}",
+          "result": "{\"ok\":true,\"strategy\":\"manual\",\"max_seconds\":15,\"needs_production\":false,\"seconds\":2,\"credits\":0,\"clips\":[{\"n\":1,\"kind\":\"card\",\"beats\":[1],\"seconds\":2,\"link\":\"new\",\"reference\":{\"kind\":\"drawn\"},\"ends_on\":[],\"depends_on\":[],\"made_by\":\"code\",\"steps\":[{\"tool\":\"draw_card\",\"model\":\"code\",\"credits\":0,\"seconds\":2,\"background\":\"#000000\",\"words\":[\"Ready for takeoff?\",\"@flightschool\"]}]}],\"join\":[1],\"rounds\":[[1]],\"checklist\":[{\"id\":\"file\",\"want\":\"One file, 2 s, 16:9\",\"how\":\"measured\"},{\"id\":\"order\",\"want\":\"1 beats in story order, each once, no repeats\",\"how\":\"by eye\"},{\"id\":\"card-1\",\"want\":\"Card held 2 s with exactly \\\"Ready for takeoff?\\\", \\\"@flightschool\\\"\",\"how\":\"measured length, words by eye\"},{\"id\":\"silent\",\"want\":\"No sound\",\"how\":\"measured\"}],\"problems\":[],\"advice\":[{\"clip\":null,\"note\":\"not-carried\",\"warning\":\"The request asks for 7 s; the beats add up to 2 s.\",\"evidence\":\"\"}],\"production\":\"eJxlkMFOwzAMhl_FMteCGAckegFpb4C4TWhyE7c1zZyqcemmae9OUiakiZyc3_m_384ZTSww1vhBA8e2BVYPjiaPFVIa2VnubZ7rl3KfvUSsWwqJK0xsJtrl9jYwaQUHUTlQKIT7QgDPSTp9yM40N18ZlbDefVbYMK3lOTNcVJ_rpwqNjyVry2o8sYelF2MoKkSFJpAbKljEenhn8ido4wT2O_QrUBO_Gd7aIF1vyfUxhpI7iPrMvO5zOwUfydl-iVPJ3-F_aHbcADGbRPfJsfKfr6yTJ-umOK9Rd4_rKWl0uj5wQUasN1ka48BaxEuRaTSJmq4_evkB0smE0g==\",\"how\":\"Make the rounds in order. For each clip in a round call create_production_clip(production, clip, made); the clips of one round do not wait for each other. Then wait_for_video_project for each id. `made` maps each finished clip number to its video project id. After the last round call join_production_clips(production, made) and give the user its download_url. Before you deliver, go through `checklist`: the join returns `checked` for the lines code can measure; confirm the others from the clips. Tell the user plainly which lines are not met; do not present them as done.\"}"
+        },
+        {
+          "type": "call",
+          "name": "create_production_clip",
+          "arguments": "{\"clip\":1,\"production\":\"eJxlkMFOwzAMhl_FMteCGAckegFpb4C4TWhyE7c1zZyqcemmae9OUiakiZyc3_m_384ZTSww1vhBA8e2BVYPjiaPFVIa2VnubZ7rl3KfvUSsWwqJK0xsJtrl9jYwaQUHUTlQKIT7QgDPSTp9yM40N18ZlbDefVbYMK3lOTNcVJ_rpwqNjyVry2o8sYelF2MoKkSFJpAbKljEenhn8ido4wT2O_QrUBO_Gd7aIF1vyfUxhpI7iPrMvO5zOwUfydl-iVPJ3-F_aHbcADGbRPfJsfKfr6yTJ-umOK9Rd4_rKWl0uj5wQUasN1ka48BaxEuRaTSJmq4_evkB0smE0g==\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "Magic Hour blocked the end-card creation for insufficient credits, so I couldn’t finish the edit. Your original clip is unchanged.\n\nThe requested edit is 9 seconds total: the full 7-second clip with its original sound, followed by a silent 2-second card:\n\n**Ready for takeoff?**  \n@flightschool"
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "create_production_clip: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "Magic Hour blocked the end-card creation for insufficient credits, so I couldn’t finish the edit. Your original clip is unchanged.\n\nThe requested edit is 9 seconds total: the full 7-second clip with its original sound, followed by a silent 2-second card:\n\n**Ready for takeoff?**  \n@flightschool",
+        "refuse": "",
+        "tier_move": "Magic Hour blocked the end-card creation for insufficient credits, so I couldn’t finish the edit. Your original clip is unchanged.\n\nThe requested edit is 9 seconds total: the full 7-second clip with its original sound, followed by a silent 2-second card:\n\n**Ready for takeoff?**  \n@flightschool",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_video_production",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:file",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_video_production",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 27
+    }
+  ],
+  "started": "2026-11-09T05:13:28.461Z",
+  "persona": "impatient",
+  "opening": {
+    "id": "E29b",
+    "persona": "impatient",
+    "text": "Keep this whole 7-second clip with its original sound, then add a silent 2-second end card saying “Ready for takeoff?” with “@flightschool” underneath. Quick pls.",
+    "withheld": [
+      "The end card has a solid black background.",
+      "The end-card text is white.",
+      "Both lines of text are centered."
+    ],
+    "extras": [
+      "Quick pls."
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 27
+}

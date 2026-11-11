@@ -1,0 +1,46 @@
+{
+ "id": "2ec991ff63",
+ "key": "must:I45b:Ending shows both smiling, and no audible soundtrack",
+ "symptom": "Ending shows both smiling, and no audible soundtrack",
+ "item": "I45b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Ending shows both smiling, and no audible soundtrack' marked not met?",
+    "because": "Both chats show both people smiling at the end. The grader failed the item only on sound: a file it was given had an audio track with real signal.",
+    "evidence": "s5.new.happy.I45b/grade.json: 'Both smile in the last frame. Clip 03 has a peak of -30.5 dB'; the check 'silent as asked' fails with 'audio track, peak -30.5 dB'. s5.new.stupid.I45b/grade.json: 'the clip has sound with a peak of -1.6 dB'."
+   },
+   {
+    "why": "Why did a generated clip contain sound when the assistant asked for silence?",
+    "because": "Every audible file came from minimax-h3, and every one of those calls sent audio:false. The model returned an audio track anyway.",
+    "evidence": "happy calls.jsonl: the plan steps for clips 1 and 2 are minimax-h3 with audio:false. Asset 03 (clip 2, minimax-h3) peaks at -30.5 dB. Asset 02 (clip 1) peaks at -46.8 dB. stupid calls.jsonl line 10: create_video_from_image with model minimax-h3 and audio:false. Its output (asset 02) peaks at -1.6 dB."
+   },
+   {
+    "why": "Why did the sound reach the deliverable in the stupid chat?",
+    "because": "The assistant did not follow the production plan. It made one 15 s clip with a direct create_video_from_image call and delivered the raw Magic Hour URL. It never ran join_production_clips or join_videos(silent:true), the only tools that remove sound. No tool result reported the audio track, so the assistant told the user 'no sound' without proof.",
+    "evidence": "stupid calls.jsonl lines 7-13: plan_video_production returned a plan, then create_video_from_image was called directly with no join step. The final message says '15 seconds, no sound' and gives the videos.magichour.ai URL. tools-new.json: join_videos says '`silent`: remove all sound'. The wait_for_video_project result shows no audio or loudness field."
+   },
+   {
+    "why": "Why was the happy chat graded on a raw clip although its joined film was silent?",
+    "because": "join_production_clips measured the joined film as silent. But the harness could not download the film from the local server (404), so the grader saw only the raw per-clip assets, and clip 2 has minimax-h3 audio.",
+    "evidence": "happy calls.jsonl line 12: join output checked 'No sound' -> got 'silent', result 'yes'. The files field says 'download failed: download 404 http://127.0.0.1:8000/films/5048f9b0....mp4'. grade.json: 'The final file could not be checked'."
+   },
+   {
+    "why": "Why does the new build let unwanted model audio into files the user or grader sees?",
+    "because": "The new build makes a film silent only at join time. The per-clip create tools pass audio:false through to the model and trust it. They do not remove or measure the audio track, so any raw clip (delivered directly, or kept when the join is lost) carries the model's sound.",
+    "evidence": "tools-new.json: join_videos 'silent: remove all sound … returns its loudness'. The create path and wait_for_video_project report no audio. The plan checklist line 'No sound' is 'how: measured' only at the join."
+   }
+  ],
+  "axiom": "The minimax-h3 model on Magic Hour ignores audio:false and returns an MP4 with audible sound (peaks of -1.6 dB and -30.5 dB were measured). In the new build, the per-clip create path sends the flag to the model, does not check the result and does not remove the audio. A second, harness defect (the joined film returned a 404) put the raw clips in front of the grader in the happy chat.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In the new build, when a clip is made with audio:false (create_video_from_image, create_video_from_text, create_production_clip), remove the audio track from the returned MP4 on the server, for example with ffmpeg -an, and return a 'silent' loudness field. Also fix the harness so the grader can download the local 127.0.0.1:8000/films output."
+ },
+ "error": null,
+ "seconds": 58,
+ "usd": 0.6702392
+}

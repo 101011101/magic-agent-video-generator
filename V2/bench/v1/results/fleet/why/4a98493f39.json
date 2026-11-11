@@ -1,0 +1,47 @@
+{
+ "id": "4a98493f39",
+ "key": "must:F30a:The audio lasts 10 seconds, within 0.1 second.",
+ "symptom": "The audio lasts 10 seconds, within 0.1 second.",
+ "item": "F30a",
+ "n": 6,
+ "builds": {
+  "old": 3,
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the delivered audio not last 10 s within 0.1 s?",
+    "because": "Every chat delivered a single untrimmed generate_music output that is 15 s long, or 30 s in old.stupid. Nothing in the chat cut it to 10 s.",
+    "evidence": "s2.new.dumper.F30a/grade.json: check 'about 10 s' failed with got '15 s', and the grader wrote 'The file is 15 s. The user agreed to trim it themselves'. s2.old.stupid.F30a/calls.jsonl: duration 30, and the reply says 'a 30-second instrumental lo-fi track'."
+   },
+   {
+    "why": "Why did the assistant request 15 s when the user asked for 10 s?",
+    "because": "The generate_music schema rejects anything shorter than 15 s, so 15 is the closest value it can send.",
+    "evidence": "tools-new.json, generate_music: \"duration\": {\"minimum\": 15, \"maximum\": 300, \"description\": \"Requested track duration in seconds, from 15 to 300\"}. new.happy and old.dumper calls.jsonl both send duration 15. The old.stupid reply repeats 'from 15 seconds to 5 minutes', so the old build has the same limit."
+   },
+   {
+    "why": "Why did the assistant not cut the 15 s track to 10 s after generation?",
+    "because": "Neither build has a tool that trims an audio file. The only edit tools work on video (join_videos, edit_video and others), and generate_music has no trim option. So the assistant told the user to trim the file themselves.",
+    "evidence": "tools-new.json: no audio trim tool is defined (trim_video appears only in plan_request's enum, and join_videos takes 'videos'). new.happy calls.jsonl reply: 'The music generator can't make anything shorter than 15 seconds. I can't cut audio here, so trim it to 10 seconds in any audio or video editor.' old.dumper reply: 'You cut it down to 10 seconds in any audio or video editor.'"
+   },
+   {
+    "why": "Why did the new build's planning step not catch or route around the length conflict?",
+    "because": "plan_request returned ready:true with seconds=10 for generate_music. It did not warn about the 15 s minimum or offer a way to post-process. Even a warning could not have produced a 10 s file, because no trim step exists.",
+    "evidence": "s2.new.happy.F30a/calls.jsonl, plan_request output: {\"tool\":\"generate_music\",\"ready\":true,\"params\":[...{\"name\":\"seconds\",\"value\":10}],\"questions\":[]}. The next call is generate_music with duration 15."
+   },
+   {
+    "why": "Why did old.stupid get 30 s instead of 15 s?",
+    "because": "This is a secondary cause that applies only to this persona. The stupid user said only 'make me some background music' and never gave a length. The old build has no plan_request to flag the missing value, so the assistant picked 30 s itself. A 10 s result was impossible anyway because of the 15 s floor.",
+    "evidence": "s2.old.stupid.F30a/state.json: the user's only message is 'make me some background music'. calls.jsonl: generate_music duration 30, with no question asked first."
+   }
+  ],
+  "axiom": "The Magic Hour music generator cannot make a track shorter than 15 s (duration minimum 15). Neither MCP build has a tool that trims audio, so a 10 s music file cannot be delivered.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a server-side audio trim step to the new build, using the same ffmpeg path that join_videos uses. Two options: (a) add a trim_audio(audio, start_seconds, end_seconds) tool, or (b) let generate_music accept any duration below 15 s by generating 15 s and returning a copy cut to the requested length with a short fade-out. In both cases, plan_request should report that generate_music under 15 s needs this trim step and route to it."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.7214986
+}

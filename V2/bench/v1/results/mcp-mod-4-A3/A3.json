@@ -1,0 +1,213 @@
+{
+  "id": "A3",
+  "item": {
+    "id": "A3",
+    "case": "A3",
+    "case_name": "Continue this clip, 6 s + 6 s (the canary)",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Continue the portrait clip",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "1:1",
+      "seconds": 12,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "bench-portrait-clip.mp4"
+        ],
+        "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests reading a clip's last frame, identity across the join, the asked action, joining two clips, and not regenerating what already exists.",
+    "answer_sheet": {
+      "Inputs": "The attached 6-second clip and the portrait it was made from.",
+      "New part": "6 more seconds: she turns and walks out of frame; same face, hair and clothes.",
+      "Output": "One 12-second file: the original 6 seconds first, unchanged, then the new 6 seconds; same shape as the clip.",
+      "Sound": "Silent.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable video file runs for 12 seconds, plus or minus 1 second.",
+      "The first 6 seconds are the original clip, unchanged.",
+      "There is no jump at the join.",
+      "Her face, hair and clothes stay the same in the new 6 seconds.",
+      "She turns and walks out of frame.",
+      "The video is silent.",
+      "The cost is about one 6-second generation."
+    ]
+  },
+  "session": "mcp-mcp-mod4-A3",
+  "sessionDir": "sessions/mcp-mcp-mod4-A3",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.",
+      "materials": [
+        "portrait-woman.jpg",
+        "bench-portrait-clip.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "I can generate a silent 6-second continuation, but the connected tools can’t extract your clip’s final frame or append new footage to an uploaded clip while preserving the original unchanged. So I can’t deliver that exact 12-second file here.\n\nIf you upload the clip’s final frame as an image, I can use it to generate the continuation—she turns and walks out of frame, keeping her appearance as consistent as possible. You’d then need to join the two clips in a video editor.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+          "calls_before": 2
+        }
+      ],
+      "agent": "[Download the silent 12-second video](https://videos.magichour.ai/cmw3d3r4y00a5hq01lio3b0b0/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261105%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261105T094923Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=e3e119c599a4ad81caf9fd640481afe26da6d2f66e56c608a1cef3b10d9f337a78ea2326d63fea58caee612b01790c0b71ada6c2f153fe8d7f25df3895fbe4084803a6a18eecf3502dcacf91314e9aa4ce0b5dd691b50329b857ed08ad226c78be0c352734bb9f75860c0eb5b76f9588bf1ca3464ce738c04bc6408f5cc4971cdbf298f4d87a09048e993f6ef2f8058ef798f5e61eacef5b37b9a00db7d07bdca9226765271ac6042245b763714d89c2426e1083fe9b04fda99dcc139578762bff31cc5ab4816e7dbf693be2165d118f81a3f829f72a26bb8e7eb7e1bf6658c754bfccff52d5d0be632b36d29840ab50740af05e24ad74c75d35c7f96a0f8fef)\n\nOne finished MP4, generated using both attachments as references and instructed to continue with her turning and walking out of frame.\n\n**Limitation:** the first six seconds are regenerated, not your original footage preserved unchanged. Output is 480p portrait format.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-generator\"}",
+          "output": "{\"workflow\":\"video-generator\",\"title\":\"Generate a new video from a text prompt\",\"input\":\"A description of a new scene; use image-to-video when a specific reference image matters.\",\"product_url\":\"https://magichour.ai/products/ai-video-generator\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/video-projects/text-to-video\",\"creation_tool\":\"create_video_from_text\",\"steps\":[\"Use text-to-video for a new scene without a required likeness; use an image reference and image-to-video when identity must stay consistent.\",\"Specify the subject, one action, camera move, framing and mood. Request only audio and duration supported by the selected model.\",\"Call create_video_from_text, then wait_for_video_project with the returned id and review the actual result.\"],\"example_request\":\"Create a short cinematic scene of a tiny astronaut discovering a glowing forest inside a glass bottle, with a slow orbiting camera.\",\"follow_up\":\"Edit or subtitle the accepted result instead of paying to regenerate unchanged footage.\",\"review\":\"Check prompt adherence, continuity, audio and output settings for the selected model.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"media-apis\"}",
+          "output": "{\"workflow\":\"media-apis\",\"title\":\"Integrate image and video generation into an application\",\"input\":\"The application's required media inputs, outputs, quality criteria and budget.\",\"product_url\":\"https://magichour.ai/api\",\"api_docs_url\":\"https://docs.magichour.ai/get-started/quick-start\",\"creation_tool\":null,\"steps\":[\"Choose the workflow that matches the required result, then inspect its current API schema and account eligibility. For Kling 3.0, Creator annual is $144 paid upfront for 144,000 credits, enough for 600 five-second 720p videos with audio off ($0.24 each at full credit use, before tax). Audio, higher resolutions and video-reference inputs cost more credits; compare current annual plans at https://docs.magichour.ai/billing/subscription-pricing before choosing.\",\"Authenticate, upload local inputs, create once, retain the project id and poll the matching project endpoint until terminal.\",\"Download the accepted output using the exact signed URL; retain the project id for recovery and reuse.\"],\"example_request\":\"Help me add portrait-to-video generation to my app, including upload, completion polling, download and recovery without duplicate paid jobs.\",\"follow_up\":\"Measure real completion, usable output, retries and credits before expanding the workflow.\",\"review\":\"Select a task-specific endpoint. Compare cost per accepted output on matched inputs; do not infer production quality from mock responses.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\\n\\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/40b05490-a7af-4fd3-b22e-924a6fcc24f4-image-0.jpg]\\n[Attached: bench-portrait-clip.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/43891b5e-69e0-42e3-a9db-bcc292c87920-video-0.mp4]\"},{\"role\":\"assistant\",\"text\":\"I can generate a silent 6-second continuation, but the connected tools can’t extract your clip’s final frame or append new footage to an uploaded clip while preserving the original unchanged. So I can’t deliver that exact 12-second file here.\\n\\nIf you upload the clip’s final frame as an image, I can use it to generate the continuation—she turns and walks out of frame, keeping her appearance as consistent as possible. You’d then need to join the two clips in a video editor.\"},{\"role\":\"user\",\"text\":\"Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.\"}],\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\",\"aspect\":\"1:1\"},{\"name\":\"bench-portrait-clip.mp4\",\"kind\":\"video\",\"seconds\":6,\"role\":\"other\"}],\"tool\":\"create_video_from_text\",\"params\":[{\"name\":\"subject\",\"value\":\"The woman in the supplied portrait and original clip\",\"source\":\"user\"},{\"name\":\"motion\",\"value\":\"Continue the original clip: she turns and walks out of frame\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Keep her face, hair and clothes the same; original 6 seconds first unchanged if possible\",\"source\":\"user\"},{\"name\":\"seconds\",\"value\":12,\"source\":\"user\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"derived\",\"from\":\"supplied square portrait\"},{\"name\":\"look\",\"value\":\"Match supplied portrait and video\",\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"create_video_from_text\",\"ready\":true,\"params\":[{\"name\":\"subject\",\"value\":\"The woman in the supplied portrait and original clip\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"seconds\",\"value\":12,\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\",\"from\":\"the user's words\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"look\",\"value\":\"Match supplied portrait and video\",\"source\":\"derived\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "create_video_from_text",
+          "arguments": "{\"style\":{\"prompt\":\"Create a single continuous 12-second silent video using @original as the source for the scene, camera, framing, lighting, subject appearance and opening motion, and @portrait as the identity and clothing reference for the same woman. Seconds 0–6: reproduce the supplied original six-second clip as closely as possible, matching its opening composition and sequence of motion. Seconds 6–12: continue naturally from that ending pose without a cut; the woman turns away and walks out through the right edge of frame, leaving the camera looking at the same park background. Preserve the same woman's facial identity, shoulder-length dark curly hair, gray knitted sweater and clothing throughout. Keep the camera stationary and the environment consistent. Natural realistic human motion. No scene changes, no additional people, no titles or on-screen text. Silent, no dialogue, music or sound effects.\"},\"references\":[{\"file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/43891b5e-69e0-42e3-a9db-bcc292c87920-video-0.mp4\",\"name\":\"original\"},{\"file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/40b05490-a7af-4fd3-b22e-924a6fcc24f4-image-0.jpg\",\"name\":\"portrait\"}],\"end_seconds\":12,\"resolution\":\"480p\",\"aspect_ratio\":\"9:16\",\"model\":\"minimax-h3\",\"audio\":false,\"name\":\"Park portrait — 12-second continuation approximation\"}",
+          "output": "{\"id\":\"cmw3d3r4y00a5hq01lio3b0b0\",\"estimated_frame_cost\":288,\"credits_charged\":288}",
+          "error": null
+        },
+        {
+          "name": "wait_for_video_project",
+          "arguments": "{\"id\":\"cmw3d3r4y00a5hq01lio3b0b0\",\"timeout_seconds\":300}",
+          "output": "{\"id\":\"cmw3d3r4y00a5hq01lio3b0b0\",\"name\":\"Park portrait — 12-second continuation approximation\",\"status\":\"complete\",\"type\":\"TEXT_TO_VIDEO\",\"created_at\":\"2026-11-05T09:47:33.539Z\",\"width\":480,\"height\":858,\"enabled\":true,\"start_seconds\":0,\"end_seconds\":12,\"total_frame_cost\":288,\"credits_charged\":288,\"fps\":24,\"error\":null,\"downloads\":[{\"url\":\"https://videos.magichour.ai/cmw3d3r4y00a5hq01lio3b0b0/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261105%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261105T094923Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=e3e119c599a4ad81caf9fd640481afe26da6d2f66e56c608a1cef3b10d9f337a78ea2326d63fea58caee612b01790c0b71ada6c2f153fe8d7f25df3895fbe4084803a6a18eecf3502dcacf91314e9aa4ce0b5dd691b50329b857ed08ad226c78be0c352734bb9f75860c0eb5b76f9588bf1ca3464ce738c04bc6408f5cc4971cdbf298f4d87a09048e993f6ef2f8058ef798f5e61eacef5b37b9a00db7d07bdca9226765271ac6042245b763714d89c2426e1083fe9b04fda99dcc139578762bff31cc5ab4816e7dbf693be2165d118f81a3f829f72a26bb8e7eb7e1bf6658c754bfccff52d5d0be632b36d29840ab50740af05e24ad74c75d35c7f96a0f8fef\"}],\"download\":{\"url\":\"https://videos.magichour.ai/cmw3d3r4y00a5hq01lio3b0b0/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261105%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261105T094923Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=e3e119c599a4ad81caf9fd640481afe26da6d2f66e56c608a1cef3b10d9f337a78ea2326d63fea58caee612b01790c0b71ada6c2f153fe8d7f25df3895fbe4084803a6a18eecf3502dcacf91314e9aa4ce0b5dd691b50329b857ed08ad226c78be0c352734bb9f75860c0eb5b76f9588bf1ca3464ce738c04bc6408f5cc4971cdbf298f4d87a09048e993f6ef2f8058ef798f5e61eacef5b37b9a00db7d07bdca9226765271ac6042245b763714d89c2426e1083fe9b04fda99dcc139578762bff31cc5ab4816e7dbf693be2165d118f81a3f829f72a26bb8e7eb7e1bf6658c754bfccff52d5d0be632b36d29840ab50740af05e24ad74c75d35c7f96a0f8fef\",\"expires_at\":\"2026-11-06T09:49:23.000Z\"},\"exact_download_urls\":[\"https://videos.magichour.ai/cmw3d3r4y00a5hq01lio3b0b0/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261105%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261105T094923Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=e3e119c599a4ad81caf9fd640481afe26da6d2f66e56c608a1cef3b10d9f337a78ea2326d63fea58caee612b01790c0b71ada6c2f153fe8d7f25df3895fbe4084803a6a18eecf3502dcacf91314e9aa4ce0b5dd691b50329b857ed08ad226c78be0c352734bb9f75860c0eb5b76f9588bf1ca3464ce738c04bc6408f5cc4971cdbf298f4d87a09048e993f6ef2f8058ef798f5e61eacef5b37b9a00db7d07bdca9226765271ac6042245b763714d89c2426e1083fe9b04fda99dcc139578762bff31cc5ab4816e7dbf693be2165d118f81a3f829f72a26bb8e7eb7e1bf6658c754bfccff52d5d0be632b36d29840ab50740af05e24ad74c75d35c7f96a0f8fef\"],\"download_expiration_metadata\":[{\"download_index\":\"0\",\"expires_at\":\"2026-11-06T09:49:23.000Z\",\"note\":\"Metadata only. Do not append this value to the download URL.\"}],\"project_type\":\"video\"}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_video_from_text",
+          "args": {
+            "style": {
+              "prompt": "Create a single continuous 12-second silent video using @original as the source for the scene, camera, framing, lighting, subject appearance and opening motion, and @portrait as the identity and clothing reference for the same woman. Seconds 0–6: reproduce the supplied original six-second clip as closely as possible, matching its opening composition and sequence of motion. Seconds 6–12: continue naturally from that ending pose without a cut; the woman turns away and walks out through the right edge of frame, leaving the camera looking at the same park background. Preserve the same woman's facial identity, shoulder-length dark curly hair, gray knitted sweater and clothing throughout. Keep the camera stationary and the environment consistent. Natural realistic human motion. No scene changes, no additional people, no titles or on-screen text. Silent, no dialogue, music or sound effects."
+            },
+            "references": [
+              {
+                "file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/43891b5e-69e0-42e3-a9db-bcc292c87920-video-0.mp4",
+                "name": "original"
+              },
+              {
+                "file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/40b05490-a7af-4fd3-b22e-924a6fcc24f4-image-0.jpg",
+                "name": "portrait"
+              }
+            ],
+            "end_seconds": 12,
+            "resolution": "480p",
+            "aspect_ratio": "9:16",
+            "model": "minimax-h3",
+            "audio": false,
+            "name": "Park portrait — 12-second continuation approximation"
+          },
+          "approve": true,
+          "reason": "",
+          "est": 288
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "delivered",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "[Download the silent 12-second video](https://videos.magichour.ai/cmw3d3r4y00a5hq01lio3b0b0/output.mp4?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261105%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261105T094923Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=e3e119c599a4ad81caf9fd640481afe26da6d2f66e56c608a1ce",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "create_video_from_text",
+            "model": "minimax-h3",
+            "resolution": "480p",
+            "inputs": [
+              "bench-portrait-clip.mp4",
+              "portrait-woman.jpg"
+            ],
+            "produces": "01-create_video_from_text.mp4",
+            "params": {
+              "model": "minimax-h3",
+              "resolution": "480p",
+              "seconds": 12,
+              "aspect": "9:16",
+              "prompt": "Create a single continuous 12-second silent video using @original as the source for the scene, camera, framing, lighting, subject appearance and opening motion, and @portrait as the identity and clothing reference for the same woman. Seconds 0–6: reproduce the supplied original six-second clip as closely as possible, matching its opening composition and sequence of motion. Seconds 6–12: continue n"
+            },
+            "credits": 288
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "create_video_from_text",
+          "state": "done",
+          "output": "assets/01-create_video_from_text.mp4",
+          "credits": 288,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 288,
+      "seconds": 176
+    }
+  ],
+  "started": "2026-11-05T09:46:41.728Z",
+  "spent": 288,
+  "seconds": 177
+}

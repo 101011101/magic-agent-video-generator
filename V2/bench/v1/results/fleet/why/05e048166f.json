@@ -1,0 +1,46 @@
+{
+ "id": "05e048166f",
+ "key": "must:H40c:Captions read exactly in order",
+ "symptom": "Captions read exactly in order",
+ "item": "H40c",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Captions read exactly in order' not met?",
+    "because": "Two old-build chats failed it in two ways. In one chat the video had no captions at all. In the other chat the captions were in the video but the first one was misspelled.",
+    "evidence": "s4.old.dumper.H40c/grade.json: 'No captions in the video at all', and all exact_text entries are 'missing'. s4.old.happy.H40c/grade.json: the first caption is read as 'Meet your evydday pair', and the caption at 6 s is still the first one."
+   },
+   {
+    "why": "Why did the happy chat get garbled caption text?",
+    "because": "The assistant had only one way to put the captions in: it wrote the three captions into the prompt of create_video_from_text (ltx-2.5, 480p). The video model then drew the text as pixels.",
+    "evidence": "s4.old.happy.H40c/calls.jsonl: the style.prompt contains 'caption reads exactly \"Meet your everyday pair\"' and the other captions with their shot times. There is no other text step. The assistant's reply says 'The model drew the text into the picture itself'."
+   },
+   {
+    "why": "Why did the dumper chat deliver a video with no captions?",
+    "because": "The assistant saw that no tool could put fixed text on a video. It also knew that text drawn by the model is not reliable. So it told the model 'no text, no words on screen' and left the captions for the user to add.",
+    "evidence": "s4.old.dumper.H40c/calls.jsonl: the create_video_from_image prompt says 'no text, no words on screen'. state.json reply: 'None of my tools can place your own text on a video at fixed positions. The subtitle tool only writes captions from speech it hears, and this video is silent.'"
+   },
+   {
+    "why": "Why did both assistants have to choose between model-drawn text and no text?",
+    "because": "The old tool list has no tool that puts exact text on a video at a set position and time. The only caption tool makes subtitles from speech, and this ad is silent. In the new build, plan_request has an exact_words row, so the new build has a path for exact on-screen words. That is why the failure shows only in old-build chats.",
+    "evidence": "dumper state.json says this about the old tools. tools-new.json: the plan_request description says 'exact_words is a list of strings, one for each line of text to show, exactly as the user wrote it'. tools-old.json starts with get_workflow_guide and upload_chatgpt_image and has no plan_request. The symptom counts are builds {old:3}. I did not read the whole old tool list. I did not read the stupid chat or the frames (grade/01.jpg was not found)."
+   },
+   {
+    "why": "Why does model-drawn text come out wrong?",
+    "because": "Text-to-video and image-to-video models at free-plan quality (ltx-2.5, 480p) do not spell long caption strings reliably. They also do not keep text changes on exact time cuts. This is a limit of the generation model.",
+    "evidence": "happy grade.json faults: 'First caption is misspelled ('evydday') and the letters are warped' and 'the shot cut and caption change do not fall at 5s'. Both assistants gave this same warning in their replies."
+   }
+  ],
+  "axiom": "The old build has no tool that puts exact text on a video, and the video model cannot spell or time captions reliably. So in the old build the assistant can either leave the captions out or accept garbled model-drawn text.",
+  "category": "mcp_tool_behavior",
+  "builds": "old",
+  "fix": "Give the hosted (old) server a step that adds text after generation. It takes the exact_words list with start/end times and a safe-area box, and it renders the text with a font (ffmpeg drawtext or similar) on the finished video. Tell the assistant in the tool descriptions to use this step and never to ask the video model to draw the captions."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.24584059999999996
+}

@@ -1,0 +1,251 @@
+{
+  "id": "B13c",
+  "item": {
+    "id": "B13c",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which of the two attached pictures should be upscaled?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resolve the Upscale Target",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg",
+          "lake-small.jpg"
+        ],
+        "text": "upscale it please"
+      }
+    ],
+    "tests": "Asks which attachment the user means, then upscales only the selected picture without guessing or processing both.",
+    "answer_sheet": {
+      "Which picture": "The lake one, lake-small.jpg.",
+      "Output size": "your call",
+      "Enhancement style": "your call",
+      "Framing": "Keep the whole lake picture and its original proportions.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The final deliverable is an upscaled version of lake-small.jpg, following clarification.",
+      "The lake, mountains, trees, clouds, and their arrangement remain faithful to the selected source.",
+      "The delivered image has larger pixel dimensions than lake-small.jpg, not merely a renamed copy.",
+      "The full original framing and aspect ratio are preserved.",
+      "Only one edited image is delivered; the dog photo is not included or blended into it."
+    ]
+  },
+  "session": "mcp-p2-dry-n-stupid-B13c",
+  "sessionDir": "sessions/mcp-p2-dry-n-stupid-B13c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "can you make this pic or this pic clearer",
+      "materials": [
+        "blurry-dog.jpg",
+        "lake-small.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Yes—which would you like me to make clearer: **the dog, the lake, or both**?\n\nThe lake should sharpen more naturally. The dog is heavily blurred, so enhancing it may reconstruct details rather than recover the exact original features.",
+          "asked": [
+            "question"
+          ],
+          "why": "It asks the user to choose whether to clarify the dog, the lake, or both, and waits for that choice.",
+          "user": "the lake one, lake-small.jpg",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t enhance the lake photo because your Magic Hour account has insufficient credits. No enhanced image was created.\n\nYou can add credits and ask me to retry, or I can suggest free ways to sharpen it.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make this pic or this pic clearer\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/d719e3f3-d8e8-48b1-aa80-3016623e7034-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/e5ca0123-4078-4d19-8688-dc9450a96d97-image-0.jpg]\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"Either blurry-dog.jpg or lake-small.jpg; which image is not specified\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Make the picture clearer\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Preserve the original subject and composition\",\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make this pic or this pic clearer\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/d719e3f3-d8e8-48b1-aa80-3016623e7034-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/e5ca0123-4078-4d19-8688-dc9450a96d97-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Yes—which would you like me to make clearer: **the dog, the lake, or both**?\\n\\nThe lake should sharpen more naturally. The dog is heavily blurred, so enhancing it may reconstruct details rather than recover the exact original features.\"},{\"role\":\"user\",\"text\":\"the lake one, lake-small.jpg\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"lake-small.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Make the lake picture clearer\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Preserve the original landscape and composition\",\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "upscale_image",
+          "args": {
+            "scale_factor": 2,
+            "style": {
+              "mode": "preserve"
+            },
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/e5ca0123-4078-4d19-8688-dc9450a96d97-image-0.jpg"
+            },
+            "name": "Lake photo - clarity enhancement"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make this pic or this pic clearer\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/d719e3f3-d8e8-48b1-aa80-3016623e7034-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/e5ca0123-4078-4d19-8688-dc9450a96d97-image-0.jpg]\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"Either blurry-dog.jpg or lake-small.jpg; which image is not specified\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Make the picture clearer\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Preserve the original subject and composition\",\"source\":\"derived\"}]}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "Yes—which would you like me to make clearer: **the dog, the lake, or both**?\n\nThe lake should sharpen more naturally. The dog is heavily blurred, so enhancing it may reconstruct details rather than recover the exact original features."
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make this pic or this pic clearer\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/d719e3f3-d8e8-48b1-aa80-3016623e7034-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/e5ca0123-4078-4d19-8688-dc9450a96d97-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Yes—which would you like me to make clearer: **the dog, the lake, or both**?\\n\\nThe lake should sharpen more naturally. The dog is heavily blurred, so enhancing it may reconstruct details rather than recover the exact original features.\"},{\"role\":\"user\",\"text\":\"the lake one, lake-small.jpg\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"lake-small.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Make the lake picture clearer\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Preserve the original landscape and composition\",\"source\":\"derived\"}]}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "upscale_image",
+          "arguments": "{\"scale_factor\":2,\"style\":{\"mode\":\"preserve\"},\"assets\":{\"image_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/e5ca0123-4078-4d19-8688-dc9450a96d97-image-0.jpg\"},\"name\":\"Lake photo - clarity enhancement\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn’t enhance the lake photo because your Magic Hour account has insufficient credits. No enhanced image was created.\n\nYou can add credits and ask me to retry, or I can suggest free ways to sharpen it."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Yes—which would you like me to make clearer: **the dog, the lake, or both**?\n\nThe lake should sharpen more naturally. The dog is heavily blurred, so enhancing it may reconstruct details rather than recover the exact original features."
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "upscale_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t enhance the lake photo because your Magic Hour account has insufficient credits. No enhanced image was created.\n\nYou can add credits and ask me to retry, or I can suggest free ways to sharpen it.",
+        "refuse": "",
+        "tier_move": "I couldn’t enhance the lake photo because your Magic Hour account has insufficient credits. No enhanced image was created.\n\nYou can add credits and ask me to retry, or I can suggest free ways to sharpen it.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 46
+    }
+  ],
+  "started": "2026-11-10T05:12:33.331Z",
+  "persona": "stupid",
+  "opening": {
+    "id": "B13c",
+    "persona": "stupid",
+    "text": "can you make this pic or this pic clearer",
+    "withheld": [
+      "Use the lake picture, not the dog picture.",
+      "You can choose the picture size.",
+      "You can choose how to improve it.",
+      "Keep the whole lake picture and its original proportions.",
+      "Do not add any text."
+    ],
+    "extras": [],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 46,
+  "usage": {
+    "responses": 5,
+    "input": 148375,
+    "output": 775,
+    "reasoning": 35,
+    "cached": 146895
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "http://127.0.0.1:8770/",
+    "local": true,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "B13c.trace.json"
+}

@@ -1,0 +1,47 @@
+{
+ "id": "d03f1fabab",
+ "key": "must:E27b:Original shot sequence, framing and 10 s duration preserved",
+ "symptom": "Original shot sequence, framing and 10 s duration preserved",
+ "item": "E27b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Original shot sequence, framing and 10 s duration preserved' not met?",
+    "because": "Neither chat produced a video. The only file is a separate 15 s WAV music track. The grader had no clip to check for shots, framing or a 10 s length.",
+    "evidence": "s3.old.stupid.E27b/grade.json: check 'a video was made' failed with got [\".wav\"], check 'about 10 s' failed with got '15 s', and the must-have reason is 'No video output. The audio is 15 s, not 10 s'. Both calls.jsonl files list only assets/01-wait_for_audio_project.wav."
+   },
+   {
+    "why": "Why did the assistant deliver only an audio file and no video?",
+    "because": "In both builds the assistant called only generate_music and wait_for_audio_project. It never uploaded talk-two.mp4 and never called a video tool. In its first reply it said that none of its tools can mix a music track into an existing video.",
+    "evidence": "old calls.jsonl line 4: 'none of my Magic Hour tools can mix a music track into an existing video'. new calls.jsonl line 4 says the same, and line 9 says 'My tools can't edit the sound of a video you already have'. The only create call in each chat is generate_music with duration 15."
+   },
+   {
+    "why": "Why did the assistant think no tool could put music on the clip?",
+    "because": "That is correct for the tool list. No tool takes an existing video plus an audio track and returns the same frames with the audio mixed in. Every video-input tool either generates new frames or replaces the speech: edit_video changes appearance or content from a prompt, create_lip_sync_video changes lip movement to match replacement audio, translate_video replaces the speech, and create_video_from_audio / create_animation generate new visuals. Any of these would break the brief's 'leave the clip and conversation as they are'.",
+    "evidence": "tools-old.json: edit_video 'Edits the appearance or content of a supplied video segment using a text prompt'; create_lip_sync_video 'Adjusts an existing video's lip movements to match supplied replacement audio'; create_video_from_audio 'Generates an audio-guided video from a supplied audio track'. No tool for adding or muxing audio appears. I read tools-old.json up to line ~2800; tools-new.json starts with the same tools and adds plan_request."
+   },
+   {
+    "why": "Why was the delivered track 15 s instead of the clip's 10 s?",
+    "because": "The music generator has a 15 s minimum length. Both assistants applied it (the new build's plan_request records it as 'derived: clip is 10 sec; tool minimum 15'). The assistant had no trim or mux tool, so it could not cut the track to 10 s or lay it under the clip.",
+    "evidence": "old calls.jsonl line 6 and new calls.jsonl line 12: generate_music args duration 15. new calls.jsonl lines 6 and 11: plan_request params seconds=15, from 'clip is 10 sec; tool minimum 15'. Both delivery messages tell the user to trim the track in CapCut or iMovie. I did not read the generate_music schema line itself, so the 15 s minimum is taken from the assistant's statements and the plan_request echo."
+   },
+   {
+    "why": "Why does the server have no way to mix music into an existing video?",
+    "because": "This is the axiom. The Magic Hour toolset, in both the hosted and the local build, has no audio-mux/compose operation for a user's video. The brief (E27b, expect.beyond_free='no', refuse=false) assumes this capability exists, but the server does not have it. The new build's plan_request only checks parameters. It does not add the capability.",
+    "evidence": "E27b.json must_haves[0] needs 'the original office video with an added audible music track, not just an audio file'. tools-new.json adds plan_request ('Read-only; spends no credits and creates nothing') but no audio-to-video mixing tool. The same failure happens in both builds."
+   }
+  ],
+  "axiom": "The Magic Hour MCP toolset (old and new) has no tool that mixes an audio track into an existing video without regenerating its frames or speech. The music generator also cannot make tracks shorter than 15 s. So the only possible output is a separate 15 s WAV, and no 10 s video with the original shots can exist for the grader to check.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add an 'add_audio_to_video' (mux) tool to the server. It takes video_file_path + audio_file_path, a music volume/ducking level and an option to keep the original audio. It trims the audio to the video length and returns the same frames with the music mixed under the existing dialogue. Then state in the generate_music description that its output can be passed to this tool for 'put music on my clip' requests. If this capability is out of scope, mark E27b as beyond the tool set so the grader does not score the duration/framing item on an audio-only result."
+ },
+ "error": null,
+ "seconds": 46,
+ "usd": 0.5964592
+}

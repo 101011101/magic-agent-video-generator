@@ -1,0 +1,52 @@
+{
+ "id": "0ecee77ba8",
+ "key": "check:silent:H",
+ "symptom": "silent as asked",
+ "item": "H41b",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'silent as asked' not met in s4.old.stupid.H41b?",
+    "because": "The delivered file has an audio track with music and narration. The grader measured a peak of -0.4 dB.",
+    "evidence": "s4.old.stupid.H41b/grade.json: check 'silent as asked' pass=false, got 'audio track, peak -0.4 dB'. The must-have 'The video is silent' is 'no', with the reason 'music and narration'."
+   },
+   {
+    "why": "Why does the file have sound?",
+    "because": "The assistant asked for sound. It sent audio:true to create_video_from_text with ltx-2.5, and its prompt asked for 'Cheerful energetic background music and a friendly narrator saying: \"Get it done. Feel the calm.\"'",
+    "evidence": "s4.old.stupid.H41b/calls.jsonl lines 2-3: both create_video_from_text calls have audio:true and a prompt with music and a narrator. The final reply says '16:9, 480p, with sound'."
+   },
+   {
+    "why": "Why did the assistant ask for sound when the brief says 'no sound'?",
+    "because": "The user never said 'no sound'. The stupid persona sends only 'make an ad for a to do list app'. The no-sound fact is only in the persona's knowledge bank, and the user gives it only when asked.",
+    "evidence": "s4.old.stupid.H41b/chat.json: messages[0] = 'make an ad for a to do list app'. bank.Audio = 'No sound or voiceover.' The persona answers only questions it understands. H41b.json: spec.audio='none' and expect.asks='never'. These were set for the full brief."
+   },
+   {
+    "why": "Why did the assistant not ask about sound before it spent credits?",
+    "because": "The old tool surface has no step that makes it ask about missing parameters. The create_video_from_text description only says 'Preserve explicit requirements'. The audio field shows example:true. The assistant filled the gap with a typical 'upbeat ad with voiceover', and it guessed the length, the look and the missing name too.",
+    "evidence": "tools-old.json lines 1996 and 2068-2071: the description has no instruction to ask about unstated sound. The audio parameter has 'example': true. s4.old.stupid.H41b/calls.jsonl: the first action is a generation call with no question to the user."
+   },
+   {
+    "why": "Why is this a tool-surface cause and not just chance?",
+    "because": "In the new build, the same persona and the same opening message did not fail. There, plan_request marked sound as 'missing' and returned the question 'Should it have sound: music, a voice, or silent?'. The user replied 'silent', the plan set audio:false, and the join measured 'silent'.",
+    "evidence": "s4.new.stupid.H41b/calls.jsonl lines 2-8 and 12: questions include param 'sound'. The user replies '8 sec, silent...'. plan_video_production has audio:false. join_production_clips has checked 'No sound' -> 'silent'. s4.new.dumper.H41b/grade.json also has 'silent as asked' pass with 'no audio track'."
+   },
+   {
+    "why": "What about the 2 failing new-build chats?",
+    "because": "I could not find them. The listed evidence paths point to H40c/H41c, and s1/s3/s5 H41b folders do not exist. Every new-build H41b chat I read passed. The best-supported cause is the old-build mechanism above. A new-build failure would likely need a path that skips plan_request, which I cannot confirm.",
+    "evidence": "s4.new.stupid.H41b and s4.new.dumper.H41b both pass 'silent as asked'. Reads of s1/s3/s5 .../H41b/calls.jsonl returned 'File does not exist'."
+   }
+  ],
+  "axiom": "The old hosted server's tools never make the assistant ask about a sound preference the user left out (create_video_from_text only says 'Preserve explicit requirements', and its audio field shows example:true). So when a vague user hides 'no sound', the assistant fills the gap with a typical music-and-voiceover ad. The fact that the grader still checks spec.audio='none' even when the user never said it is a secondary benchmark artifact.",
+  "category": "mcp_tool_description",
+  "builds": "both",
+  "fix": "Add one rule to the old create_video_from_text (and the other video create tools): 'If the user did not say whether the video should have sound, ask (music, voice or silent) before you generate. Do not set audio:true on your own.' Also change the audio example from true to false. This is the new build's plan_request behavior. In the harness, apply spec.audio only after the user has actually stated it."
+ },
+ "error": null,
+ "seconds": 68,
+ "usd": 0.6851144
+}

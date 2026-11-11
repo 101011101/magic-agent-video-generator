@@ -1,0 +1,237 @@
+{
+  "id": "A05d",
+  "item": {
+    "id": "A05d",
+    "case": 5,
+    "case_name": "Headshot from the user's photo",
+    "group": "A",
+    "group_name": "Single images",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which person in the photo is the user: the bearded man on the left or the short-haired blonde woman on the right?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Choose The Right Headshot Subject",
+    "sub": "d",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "two-friends.jpg"
+        ],
+        "text": "Can you make me a square professional headshot from this?"
+      }
+    ],
+    "tests": "Clarifies the intended person in a two-person source before producing a single identity-preserving headshot.",
+    "answer_sheet": {
+      "Which person": "I'm the woman with short blonde hair on the right.",
+      "Clothing and background": "your call",
+      "Style and expression": "Natural and professional; keep my smile.",
+      "Platform and size": "No particular platform; square, 640 × 640 is fine.",
+      "Text": "No text."
+    },
+    "must_haves": [
+      "The only person in the final portrait is the short-haired blonde woman from the right of two-friends.jpg.",
+      "Her face, short blonde hairstyle and smile remain recognisable from the source.",
+      "The man is entirely absent, including any partial face, shoulder or arm.",
+      "The beach setting and casual presentation are replaced with professional clothing and an unobtrusive backdrop.",
+      "The output is a square head-and-shoulders portrait with natural-looking lighting and no visible editing artifacts."
+    ]
+  },
+  "session": "mcp-p1-dry-n-stupid-A05d",
+  "sessionDir": "sessions/mcp-p1-dry-n-stupid-A05d",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "can you make a headshot from this pic",
+      "materials": [
+        "two-friends.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Sure—who should the headshot feature: the person on the left or the person on the right?",
+          "asked": [
+            "question"
+          ],
+          "user": "the woman with short blonde hair on the right",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t generate the headshot because your Magic Hour account has insufficient credits. No image was created.\n\nOnce you add credits, I can make a headshot of the woman on the right, preserving her likeness and removing the other person.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make a headshot from this pic\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/6650cb2a-56f4-41a6-8569-58ec0207f0ed-image-0.jpg]\"}],\"attachments\":[{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"source\":\"missing\"},{\"name\":\"edit\",\"value\":\"Make a headshot from the supplied photo\",\"source\":\"user\"},{\"name\":\"which_face\",\"source\":\"missing\"},{\"name\":\"keep\",\"value\":\"Preserve the selected person's likeness\",\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Make a headshot from the supplied photo\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the selected person's likeness\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make a headshot from this pic\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/6650cb2a-56f4-41a6-8569-58ec0207f0ed-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Sure—who should the headshot feature: the person on the left or the person on the right?\"},{\"role\":\"user\",\"text\":\"the woman with short blonde hair on the right\"}],\"attachments\":[{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"value\":\"The woman with short blonde hair on the right\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"The woman with short blonde hair on the right\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Make a headshot of only the selected woman from the supplied photo\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Preserve the woman's likeness and short blonde hair\",\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Make a headshot of only the selected woman from the supplied photo\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the woman's likeness and short blonde hair\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/6650cb2a-56f4-41a6-8569-58ec0207f0ed-image-0.jpg"
+              ]
+            },
+            "style": {
+              "prompt": "Create a natural photographic headshot of only the woman with short blonde hair on the right of the supplied image. Preserve her identity, facial features, short blonde hairstyle, and natural smile. Frame her alone from the shoulders up, centered with her full head visible. Remove the man entirely. Use a clean softly blurred neutral background and flattering natural lighting. Keep realistic skin texture and a faithful likeness."
+            },
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "image_count": 1
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make a headshot from this pic\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/6650cb2a-56f4-41a6-8569-58ec0207f0ed-image-0.jpg]\"}],\"attachments\":[{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"source\":\"missing\"},{\"name\":\"edit\",\"value\":\"Make a headshot from the supplied photo\",\"source\":\"user\"},{\"name\":\"which_face\",\"source\":\"missing\"},{\"name\":\"keep\",\"value\":\"Preserve the selected person's likeness\",\"source\":\"derived\"}]}",
+          "result": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Make a headshot from the supplied photo\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the selected person's likeness\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "Sure—who should the headshot feature: the person on the left or the person on the right?"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you make a headshot from this pic\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/6650cb2a-56f4-41a6-8569-58ec0207f0ed-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Sure—who should the headshot feature: the person on the left or the person on the right?\"},{\"role\":\"user\",\"text\":\"the woman with short blonde hair on the right\"}],\"attachments\":[{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"value\":\"The woman with short blonde hair on the right\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"The woman with short blonde hair on the right\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Make a headshot of only the selected woman from the supplied photo\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Preserve the woman's likeness and short blonde hair\",\"source\":\"derived\"}]}",
+          "result": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Make a headshot of only the selected woman from the supplied photo\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the woman's likeness and short blonde hair\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "I’ll make a headshot of her, preserving her likeness and short blonde hair."
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/6650cb2a-56f4-41a6-8569-58ec0207f0ed-image-0.jpg\"]},\"style\":{\"prompt\":\"Create a natural photographic headshot of only the woman with short blonde hair on the right of the supplied image. Preserve her identity, facial features, short blonde hairstyle, and natural smile. Frame her alone from the shoulders up, centered with her full head visible. Remove the man entirely. Use a clean softly blurred neutral background and flattering natural lighting. Keep realistic skin texture and a faithful likeness.\"},\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"image_count\":1}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn’t generate the headshot because your Magic Hour account has insufficient credits. No image was created.\n\nOnce you add credits, I can make a headshot of the woman on the right, preserving her likeness and removing the other person."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Sure—who should the headshot feature: the person on the left or the person on the right?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t generate the headshot because your Magic Hour account has insufficient credits. No image was created.\n\nOnce you add credits, I can make a headshot of the woman on the right, preserving her likeness and removing the other person.",
+        "refuse": "",
+        "tier_move": "I couldn’t generate the headshot because your Magic Hour account has insufficient credits. No image was created.\n\nOnce you add credits, I can make a headshot of the woman on the right, preserving her likeness and removing the other person.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 41
+    }
+  ],
+  "started": "2026-11-09T03:42:50.049Z",
+  "persona": "stupid",
+  "opening": {
+    "id": "A05d",
+    "persona": "stupid",
+    "text": "can you make a headshot from this pic",
+    "withheld": [
+      "I'm the woman with short blonde hair on the right.",
+      "Make it square, 640 by 640.",
+      "Keep it natural and professional.",
+      "Keep my smile.",
+      "You can choose the clothing and background.",
+      "It's not for any particular platform.",
+      "No text."
+    ],
+    "extras": [],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 41
+}

@@ -1,0 +1,46 @@
+{
+ "id": "6809724808",
+ "key": "must:E24d:Captions fit in vertical frame and clear of TikTok UI areas",
+ "symptom": "Captions fit in vertical frame and clear of TikTok UI areas",
+ "item": "E24d",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Captions fit in vertical frame and clear of TikTok UI areas' not met?",
+    "because": "The final video was never vertical. It stayed 858x480 landscape, so no 9:16 frame and no TikTok safe zone existed to judge. The captions sit lower-middle, over her torso and hands.",
+    "evidence": "grade.json in both chats: the item is 'no' because there is no vertical frame. The 'Vertical 9:16' must-have is also 'no', and the output measures 858x480. Note that the automatic 'aspect 9:16' check says pass on 858x480 files, so that check is broken. It did not change this verdict."
+   },
+   {
+    "why": "Why was the video not made vertical?",
+    "because": "In turn 2 the assistant only re-ran add_subtitles_to_video with new styling (highlight template, Montserrat bold 44-48px, vertical_position 'bottom'). It made no call that changes the frame shape.",
+    "evidence": "calls.jsonl in both chats, turn 2: add_subtitles_to_video takes only start/end, assets and style.custom_config arguments. wait_for_video_project returns width 858 and height 480. The stupid chat ran it a second time with end_seconds 300, still at 858x480."
+   },
+   {
+    "why": "Why did the assistant not call a tool to crop or reframe to 9:16?",
+    "because": "The old build has no tool that crops, reframes or pads to a new aspect ratio. add_subtitles_to_video has no aspect or size argument. upscale_video says it keeps the aspect ratio. edit_video has no aspect_ratio argument and regenerates the whole clip from a prompt.",
+    "evidence": "tools-old.json: the upscale_video description says 'while preserving its aspect ratio'. The edit_video schema has only start/end, model, resolution, style.prompt, references and assets, and no aspect field. The assistant told the user: 'My tools can't simply crop or reframe a video' (happy) and 'Every tool keeps the clip's 858×480 shape' (stupid)."
+   },
+   {
+    "why": "Why did the assistant not use edit_video with a 'make it vertical' prompt as a workaround?",
+    "because": "edit_video regenerates the footage. That risks changing her face, lip movement and voice, which breaks two explicit user requirements: keep her original voice, and keep her face undistorted. The assistant chose to keep the voice and face and openly declined the reframe.",
+    "evidence": "state/calls 'say' text, happy chat: 'It re-creates the whole clip. That risks changing her face, her lip movements and her voice'. Stupid chat: 'it redraws the whole video... I did not run it'. E24d.json answer_sheet: 'face stays visible and undistorted', 'original English voice; no added audio'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The old hosted server exposes no plain crop or reframe operation for an existing video. This is a capability gap of the server. The caption-placement item depends on that missing step, so it fails in a cascade. The assistant had no tool description or argument it could have used better.",
+    "evidence": "tools-old.json tool list: the only video tools are edit_video, translate_video, upscale_video, add_subtitles_to_video, generators and others, and none of them takes a target aspect for a supplied video. E24d.json spec.aspect '9:16' and must_haves[0] and [3] need it."
+   }
+  ],
+  "axiom": "The old Magic Hour MCP server has no operation that reframes or crops an existing video to 9:16 without regenerating it. The captions can only be placed in the source 858x480 landscape frame. So the 'captions in a vertical TikTok-safe frame' item fails as a cascade from the missing vertical conversion.",
+  "category": "mcp_tool_behavior",
+  "builds": "old",
+  "fix": "Add a reframe or crop capability: either a reframe_video tool, or an aspect_ratio argument ('9:16') with face-centred cropping on add_subtitles_to_video. It must keep the original audio and pixels, and it must run before the captions are rendered. Then captions can be placed above TikTok's bottom and right UI areas, for example with vertical_position set to middle-lower inside the 9:16 frame. Also fix the grader's 'aspect 9:16' auto-check, which passes 858x480 files."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.43651819999999997
+}

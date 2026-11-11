@@ -1,0 +1,47 @@
+{
+ "id": "d46761792e",
+ "key": "must:B11b:Plausible ground contact, scale, lighting, shadow",
+ "symptom": "Plausible ground contact, scale, lighting, shadow",
+ "item": "B11b",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "axiom": "The free-plan image edit models (qwen-edit and flux-2-klein at 640px) do not reliably obey prompt instructions on cast shadow, size and exact placement when they insert an object into a photo. This is a limit of the generation model. The assistant cannot fix it with prompt wording.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Partial fix only, because the model limit stays. Make fetch_image_download return the image content to the assistant (it now returns an empty result). Then the assistant can check shadow, size and placement and run the edit once more before it delivers. Otherwise the fix is none: inherent.",
+  "whys": [
+   {
+    "why": "Why was 'plausible ground contact, scale, lighting, shadow' not met?",
+    "because": "In every failed output the inserted chalkboard has a weak or missing cast shadow. In some outputs the board is also too large or in the wrong place: it covers the lower door, or it overlaps the left table and hides a chair.",
+    "evidence": "s1.new.dumper.B11b/grade.json: 'board overlaps the left table and hides one chair, and the shadow is weak'. s1.old.happy.B11b/grade.json: 'fairly large and has little visible cast shadow. It covers the lower door area'. s1.old.dumper.B11b/grade.json: 'no clear soft shadow is visible ... looks a bit flat and pasted on'. Frame s1.new.dumper.B11b/assets/01-wait_for_image_project.png shows the board in front of the left table with almost no shadow."
+   },
+   {
+    "why": "Did the assistant fail to ask for these properties?",
+    "because": "No. In most chats the assistant sent prompts that asked for them directly: feet on the paving, a soft shadow that matches the daylight, matching scale and perspective, and a named position. The model ignored these parts. In s1.new.stupid the prompt did not mention a shadow, but it did ask for a small board that keeps the same light.",
+    "evidence": "s1.old.happy calls.jsonl edit_image prompt: '...matching daylight and a soft shadow on the paving stones', with placement 'between the left table set and the door'. s1.new.dumper prompt: 'between the potted plant and the left table ... its feet rest on the paving stones, it casts a soft shadow ... scale and lighting match'. s1.old.dumper (flux-2-klein): 'casts a soft natural shadow on the ground'. s1.new.stupid prompt: 'small wooden A-frame chalkboard ... near the left table ... the light'."
+   },
+   {
+    "why": "Why did the output not follow those prompt instructions?",
+    "because": "The only edit models on the free plan are low-resolution models with one pass each: qwen-edit (10 credits) and flux-2-klein (5 credits), both at a 640px limit. They insert the object approximately. Placement drifts, size is not controlled, and they do not reliably make a cast shadow. The same failure happened with both models and on both builds, so tool wording is not the cause.",
+    "evidence": "edit_image args in all 4 calls.jsonl: resolution '640px', model qwen-edit or flux-2-klein. grade checks: output '640x384'. Across chats the same model also garbled the lettering ('TC 6O!', 'TO GE'), which shows weak control over the prompt."
+   },
+   {
+    "why": "Why was the flawed result delivered without a second try?",
+    "because": "The assistant could not see the output. fetch_image_download returned an empty result and no files, so the assistant could not check the shadow or the placement. It delivered the image and asked the user to check it. The simulated users did not ask for a second try in the graded turn.",
+    "evidence": "In s1.old.happy and s1.new.dumper calls.jsonl, fetch_image_download was called twice and returned output '' with files []. The replies say 'I couldn't open the result to check it' / 'I couldn't open the picture to check it myself'. In s1.new.stupid the reply says 'I haven't been able to look at the result myself'."
+   },
+   {
+    "why": "Why can the assistant not fix this with better prompting?",
+    "because": "The prompts already stated each property the grader checks. What is left is how faithfully the model renders those words. Inside this system that is a fixed property of the free-plan edit models.",
+    "evidence": "Compare the prompt text in calls.jsonl with the grader faults in grade.json across both builds (3 old and 2 new failures). The same shadow and placement faults appear whatever the persona and whatever the prompt detail."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.251831
+}

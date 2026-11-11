@@ -1,0 +1,47 @@
+{
+ "id": "6482c37e77",
+ "key": "must:B10d:One square image with no added text",
+ "symptom": "One square image with no added text",
+ "item": "B10d",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "Generation-model limit: when flux-2-klein edit_image gets a second picture as a style reference, it copies that picture's physical framing (white paper border, drop shadow, portrait poster shape) along with its colours. It does this even on a 1:1 canvas. No edit_image parameter limits the reference to style only. Neither prompt told the model to fill the whole frame.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "When edit_image gets a second image used as a style reference, the server (or the edit_image description, in both builds) should add to the prompt: \"use only the colours and look of image 2; the picture fills the whole frame edge to edge; no border, no frame, no paper, no drop shadow, no mockup\". It should also remove the word \"poster\". A stronger option: crop the style reference to its artwork before upload.",
+  "whys": [
+   {
+    "why": "Why was 'One square image with no added text' not met?",
+    "because": "Both files are 640x640 squares. But the visible picture inside is a portrait poster with a white margin and a drop shadow on a white canvas, so the grader did not see a clean square image.",
+    "evidence": "grade.json in both chats: the machine check 'aspect 1:1' passed with got ['640x640']. The must-have reason says 'portrait poster with a white border and a drop shadow'. assets/01-wait_for_image_project.png in both chats shows a portrait vaporwave panel with white paper edges and a shadow inside a square canvas."
+   },
+   {
+    "why": "Why does a square file contain a bordered portrait poster?",
+    "because": "The edit model copied the whole second attachment (style-ref.jpg, a vaporwave poster shown as a physical print) as the scene, frame included. It did not take only the palette and gradients from it.",
+    "evidence": "In calls.jsonl of both chats, edit_image gets image_file_paths [mascot png, style-ref jpg]. B10d.json answer_sheet calls style-ref 'the pink and teal vaporwave poster'. Both outputs show the same paper border, shadow and speckle marks. The old grade lists a fault: 'copies the poster's white border, paper edge and drop shadow ... poster's speckle marks remain'."
+   },
+   {
+    "why": "Why did the prompt not stop the model from copying the frame?",
+    "because": "Both assistants wrote prompts that point the model at the reference as a poster. Neither prompt asked for a full-bleed picture or ruled out a border, frame or shadow.",
+    "evidence": "Old prompt in calls.jsonl: 'in the style of the second image: an 80s synthwave retro poster ...'. New prompt: '...synthwave poster look. Square composition, fox centered...'. Neither prompt contains 'no border', 'no frame', 'edge to edge' or 'no shadow'."
+   },
+   {
+    "why": "Why did the aspect_ratio parameter not fix this?",
+    "because": "aspect_ratio sets only the canvas, and flux-2-klein seems to keep the first image's 1:1 size anyway. The old build sent 4:5 and still got a 640x640 file. So the canvas is square in both builds, but the model is free to place a portrait poster inside it.",
+    "evidence": "Old calls.jsonl: aspect_ratio '4:5' (the stupid user's first message did not say square, and the old assistant guessed). Old grade.json check: got ['640x640']. New calls.jsonl: aspect_ratio '1:1', plan_request returned aspect 1:1 from the user's 'just square'. Its output is also 640x640 with the same border."
+   },
+   {
+    "why": "Why did neither build's tool layer prevent it?",
+    "because": "No tool description or plan step in either build tells the assistant to limit a style reference to its look or to forbid frames. The new plan_request checks aspect and exact_words but not composition or framing. So the model's habit of copying the reference decides the result.",
+    "evidence": "tools-new.json plan_request description lists rows such as subject, edit, keep, aspect, exact_words and look. None of them covers borders or full-bleed output. The new plan_request result was ready:true with no warning, and the same failure happens in the old build, which has no plan_request call."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 0.2991912
+}

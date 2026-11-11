@@ -1,0 +1,52 @@
+{
+ "id": "39a637aa82",
+ "key": "must:G38b:Close-up clearly shows lid and matte surface without inventing features",
+ "symptom": "Close-up clearly shows lid and matte surface without inventing features",
+ "item": "G38b",
+ "n": 4,
+ "builds": {
+  "old": 2,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Close-up clearly shows lid and matte surface without inventing features' not met in 4 G38b chats?",
+    "because": "There are two failure modes. In both stupid chats (old and new) no close-up image exists. In both happy chats a close-up exists, but the lid is redesigned.",
+    "evidence": "s4.old.stupid/grade.json: 'No close-up was made. The three images are white, outdoor and gym.' s4.new.stupid/grade.json: 'No close-up was made. All three images show the full bottle.' s4.old.happy/grade.json: 'the lid is redesigned into a solid loop handle'. s4.new.happy/grade.json: 'loop is redrawn as a chunky square handle and the lid top has a recessed disc'."
+   },
+   {
+    "why": "Why did the assistant make no close-up in the stupid chats (the quoted symptom)?",
+    "because": "The assistant never got a request for a close-up. The only user message was 'make some product listing pics from this pic'. The assistant chose three scenes on its own: white + outdoor + gym (old) and white + kitchen + forest (new).",
+    "evidence": "s4.new.stupid/chat.json messages[0].text = 'make some product listing pics from this pic'. In both stupid state.json transcripts the assistant delivered on the first turn and named its own scenes. The user never mentioned a close-up, the lid or a gym bench."
+   },
+   {
+    "why": "Why did the user never say what views were needed?",
+    "because": "The stupid persona sends a vague opening message and gives facts from its knowledge bank only when the assistant asks a plain question. The assistant asked nothing and delivered at once, so the 'Required views' fact never came out.",
+    "evidence": "chat.json persona.reply: 'When a question is in plain words, answer it from your knowledge bank'. bank['Required views'] = 'A clean white-background shot, a gym-bench lifestyle shot, and a close-up of the lid and matte finish.' state.json: one user turn, msg 0, kind 'delivered'."
+   },
+   {
+    "why": "Why did the assistant not ask which views were wanted?",
+    "because": "The test is set up so that asking is not expected ('asks: never'), and the vague request reads as complete. 'Product listing pics' fits any set of scenes, so the assistant had no signal that three fixed views were required. Nothing in the tool descriptions bears on this.",
+    "evidence": "items/G38b.json expect.asks = 'never', asks_about = ''. The turn text in the item names all three views, but the stupid persona's opening message drops them."
+   },
+   {
+    "why": "Why is this graded as a failure anyway?",
+    "because": "The grader checks every chat against the full must_haves list, including the close-up and the gym bench. It does not account for the fact that the stupid user never stated these views, and the test says no question is expected. The result is a conflict built into the harness: the requirement can only come out through a question that the test says is not needed.",
+    "evidence": "s4.new.stupid/grade.json also fails 'gym bench' ('The lifestyle scenes are a kitchen counter and a forest rock'). The must_haves in G38b.json are the same for all personas."
+   },
+   {
+    "why": "Secondary cause: why did the happy chats fail even though they made a close-up?",
+    "because": "flux-2-klein edit_image regenerates the cap when asked for a macro crop. The source cap is a short cylinder with a cut-out window. The model drew a solid or square carry handle and a recessed lid. The assistant's prompt also called the cap a 'carry loop', which may have pushed the model toward a handle. This is mainly a fidelity limit of the generator.",
+    "evidence": "attachments/product-bottle.jpg shows a cylindrical cap top with a rectangular opening. Lid close-up prompts in s4.old.happy and s4.new.happy calls.jsonl: 'keeping the same cap with its carry loop' and 'the black lid with its carry loop'. Both grade.json files report an invented handle."
+   }
+  ],
+  "axiom": "The test's stupid persona opens with 'make some product listing pics from this pic' and hides the required views (close-up, gym bench) in its knowledge bank. The test says the assistant should never need to ask (expect.asks='never'), but the grader still holds the chat to the full must_have list. So the close-up can only appear if the assistant happens to guess it. This is a harness/brief defect, not an MCP defect. The happy chats add a second, separate cause: flux-2-klein cannot keep the exact cap design when it regenerates a close-up crop (generator limit).",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Harness: for items with asks='never', make the stupid persona's first message state the required deliverables in plain words, for example 'make 3 square pics: white background, on a gym bench, and a close-up of the lid'. Another option is to tell the grader to skip must_haves the user never stated. For the happy-chat failures (generator limit): make the close-up by cropping and upscaling the white-background output instead of regenerating the lid, and describe the cap as it looks in the photo, not as a 'carry loop'."
+ },
+ "error": null,
+ "seconds": 45,
+ "usd": 0.3281444
+}

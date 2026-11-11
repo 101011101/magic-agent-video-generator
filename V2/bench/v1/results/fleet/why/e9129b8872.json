@@ -1,0 +1,47 @@
+{
+ "id": "e9129b8872",
+ "key": "must:A04d:Closed blue notebook right of laptop",
+ "symptom": "Closed blue notebook right of laptop",
+ "item": "A04d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the image have no closed blue notebook to the right of the laptop?",
+    "because": "The prompt sent to generate_image never mentioned a notebook. The old build's prompt asked for a laptop, desk lamp, mug and plant. The new build's prompt asked only for an empty wooden desk.",
+    "evidence": "s1.old.stupid.A04d/calls.jsonl: generate_image prompt 'A clean wooden desk in a bright room, with a laptop, a desk lamp, a mug and a small plant…'. s1.new.stupid.A04d/calls.jsonl: prompt 'A wooden desk in a bright room, natural daylight. No text…'. Old grade reason: 'No notebook; lamp and plant are there instead'. New grade.json: 'No notebook', 'No laptop', 'No cup'."
+   },
+   {
+    "why": "Why did the prompts leave out the notebook, cup and layout?",
+    "because": "The assistant never had them. The stupid persona's only message was 'make a pic of a desk'. The laptop, cup, notebook, positions and top-down view existed only in the persona's private bank, and the persona shares bank facts only when a question asks for them.",
+    "evidence": "s1.old.stupid.A04d/chat.json: messages = ['make a pic of a desk']. The bank holds the full brief. The persona rule says: 'When a question is in plain words, answer it from your knowledge bank… Never invent a fact'."
+   },
+   {
+    "why": "Why did nobody ask the user what should be on the desk?",
+    "because": "Old build: the assistant asked no questions and filled the scene itself with a lamp, mug and plant. New build: the assistant followed plan_request, and plan_request asked only about where the image will be shown (aspect) and about on-screen words. It never asked about the desk's contents or the view, although 'look' was marked missing.",
+    "evidence": "Old calls.jsonl: generate_image is the first call, with no question turn before it. New calls.jsonl: the first plan_request returned questions only for 'aspect' and 'exact_words'. The second call returned ready:true with look value:null, source:'missing', questions:[]. The assistant then generated an image."
+   },
+   {
+    "why": "Why did plan_request return ready:true with a bare subject and look missing?",
+    "because": "plan_request only blocks on shape, length, sound and on-screen words. It accepts any subject value, even the bare noun 'a desk', and it treats 'look' as optional. Its description says 'do not guess shape, length, sound or on-screen words'. It does not say that a thin subject must be expanded through a question. The old build has no planning tool at all, so nothing there forces a content question either.",
+    "evidence": "tools-new.json plan_request description: 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' Subject and look are not on that list. New calls.jsonl: ready:true even though subject='a desk' and look=missing. tools-old.json has no plan_request."
+   },
+   {
+    "why": "Why is that the end of the chain?",
+    "because": "AXIOM: neither build has a tool rule that makes the assistant ask what the scene should contain when the user names only a bare subject. With a vague user, the content details never get into the prompt, and the model cannot draw objects nobody asked for.",
+    "evidence": "Both chats show the same pattern: a one-noun request, no question about content, and an image without the brief's objects. Both chats got the same grade on this item (met:no)."
+   }
+  ],
+  "axiom": "The MCP tools do not check whether the subject has enough detail. In the new build, plan_request asks only about shape, length, sound and on-screen words. It returns ready:true for the bare subject 'a desk' with look missing. The old build has no planning step at all. So when a vague user names only 'a desk', nothing makes the assistant ask what is on the desk. The laptop, cup and notebook stay in the user's head and never reach the generator.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Change plan_request (new build) so it treats a bare subject (a single noun phrase with no objects, layout or view) as not ready. In that case it should return a plain-words question such as 'What should be in the picture, and where should each thing go?'. Also make 'look' a question for images when it is missing. Add the same rule to the generate_image description: 'If the user names only a subject, ask what the scene should contain before you create.' That rule also covers the old build, which has no planning tool."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.15320940000000002
+}

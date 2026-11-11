@@ -1,0 +1,47 @@
+{
+ "id": "bb8b85bd90",
+ "key": "must:E24b:Spanish subtitle chunks follow the corresponding English speech and remain legible within the frame.",
+ "symptom": "Spanish subtitle chunks follow the corresponding English speech and remain legible within the frame.",
+ "item": "E24b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Spanish subtitle chunks follow the English speech and stay legible within the frame' not met?",
+    "because": "No subtitled video was made in either chat. Spanish subtitle text with guessed timings exists only in the chat, so no subtitle is shown on the footage and nothing is timed to the real speech.",
+    "evidence": "Both grade.json files have check 'something was made' = false, 'no file'. The old grader says 'Timings were guessed and nothing was rendered in a frame'. The new grader says 'the suggested timings are guesses'."
+   },
+   {
+    "why": "Why did the assistant give only chat text and make no video?",
+    "because": "In both chats the assistant said the subtitle tool has no language setting and gives English captions only. It also said translate_video would replace her English voice. It offered English subtitles or stopping. The dumper user turned down English subtitles. The user gave a summary, so the assistant wrote Spanish lines and guessed their timings.",
+    "evidence": "old calls.jsonl, line 5: 'It has no setting for a translation language'. Line 8 holds the .srt with 'I also had to guess the timings'. new calls.jsonl, line 5: 'Magic Hour's subtitle tool has no language setting'. Line 6: the user says 'I'll stop here'. Line 8: '0–3 s ... 3–10 s'."
+   },
+   {
+    "why": "Why could the assistant not make Spanish subtitles with the tools?",
+    "because": "add_subtitles_to_video only 'Adds automatically generated subtitles'. Its schema has only name, start_seconds, end_seconds, assets.video_file_path and style (template/custom_config). It has no language, translation or user-text/SRT field. translate_video dubs the speech into the target language and makes no captions. No other tool draws given text on a user's video. In the new build, captions exist only inside plan_video_production/join_production_clips, for narrator sentences in generated films.",
+    "evidence": "tools-new.json, add_subtitles_to_video (around lines 2028-2142) and translate_video (around lines 1505-1629: 'Translates speech ... into a supported target language'). The same tool limit is shown in the old chat, where the assistant describes the same schema."
+   },
+   {
+    "why": "Why were the timings guessed and not taken from the speech?",
+    "because": "No tool gives the assistant a transcript or word timings for the clip. Auto-subtitling gives only a burned-in English video, and no text is returned. The assistant cannot hear the clip. Its only source was the user's summary.",
+    "evidence": "No transcription tool is in tools-new.json. In both calls.jsonl files no upload or create call was made. The text came from the user's summary (old line 6, new line 6)."
+   },
+   {
+    "why": "Why does the test expect a result the tools cannot make?",
+    "because": "E24b has expect.asks='never' and beyond_free='no'. The test assumes translated burned-in subtitles are possible on the free plan. The MCP tool surface (old and new) has no way to add translated or user-supplied subtitle text to an uploaded video. In the new build, plan_request also returned ready:true with language='Spanish' for add_subtitles_to_video, and that tool has no language parameter. The assistant found the gap anyway.",
+    "evidence": "E24b.json, expect and answer_sheet: 'Put readable Spanish subtitles on the video'. new calls.jsonl, line 2: the plan_request output is {ready:true, params:[{name:'language', value:'Spanish'}]}."
+   }
+  ],
+  "axiom": "The Magic Hour MCP tool surface cannot add translated or user-supplied subtitle text to a user's video. add_subtitles_to_video only burns in automatic captions in the spoken language and has no language or text input. translate_video dubs the voice. No tool returns a transcript with timings. Because of this, Spanish subtitles timed to the English speech cannot be made. This is a tool-surface gap, not an assistant error.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a burn-subtitles path to the server. The new build already draws captions with code in join_production_clips. Two options: (a) add a `language`/`translate_to` option to add_subtitles_to_video, if the Magic Hour auto-subtitle API supports it, or (b) add a tool that returns the clip's transcript with word timings and burns assistant-supplied cues (text + start/end) onto the uploaded video at a legible size. Also make plan_request return ready:false or a warning when it gets a 'language' row for add_subtitles_to_video."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.40329740000000003
+}

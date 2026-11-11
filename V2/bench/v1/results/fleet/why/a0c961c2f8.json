@@ -1,0 +1,52 @@
+{
+ "id": "a0c961c2f8",
+ "key": "must:G38a:Same mug in all three",
+ "symptom": "Same mug in all three",
+ "item": "G38a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Same mug in all three' not met?",
+    "because": "In both chats the mugs in the three images do not match. New/dumper: the breakfast mug is a darker teal, taller and narrower, and has a slimmer handle than the matte sage mug in the white shot. Old/happy: the white 'hero' mug has two handles, and the breakfast and close-up mugs have one.",
+    "evidence": "s4.new.dumper.G38a/grade.json must[1] says 'Breakfast mug is a noticeably darker, bluer teal and taller/narrower...'. s4.old.happy.G38a/grade.json must[1] says 'Image 1 has two handles... image 2 has one handle'. The frames confirm both: new assets/01 (light sage, wide handle) against assets/02 (darker teal, thin handle); old assets/01 (two-handled cup) against assets/02 (one handle)."
+   },
+   {
+    "why": "Why did the mug change between images when the assistant tried to keep it the same?",
+    "because": "Both assistants used the right method. They made the white shot with generate_image and then made the breakfast and close-up shots with edit_image (flux-2-klein), with the white shot as the reference image. The prompts said 'this exact same sage-green ceramic mug, unchanged in shape, colour, glaze and handle'. The edit model still draws the mug again when it builds the new scene. It changes the proportions, the handle and the hue, and the warm 'morning window light' it was asked for also shifts the green.",
+    "evidence": "calls.jsonl in both chats: generate_image → wait → edit_image ×2, with image_file_paths = the white-shot URL, model flux-2-klein, and prompts that ask for the same mug. Project type is AI_IMAGE_EDITOR. Output frames assets/02 differ in shape and colour from assets/01."
+   },
+   {
+    "why": "Why was the old chat's reference mug already wrong (two handles)?",
+    "because": "The text-to-image model drew a two-handled cup, although the prompt asked for a 'simple rounded C-shaped handle'. The edit step then 'corrected' it to one handle, so a defect in the base image turned into a mismatch between images.",
+    "evidence": "s4.old.happy.G38a/calls.jsonl line 2: the prompt says 'simple rounded C-shaped handle'. assets/01-wait_for_image_project.png shows two handles. The grader's fault list rates this 'major'."
+   },
+   {
+    "why": "Why were the mismatches delivered and not caught and redone?",
+    "because": "Neither assistant looked at the outputs before it delivered them. The new-build assistant explicitly set include_inline_downloads:false on every wait_for_image_project call, although the tool's default is true and gives inline previews. It did not call fetch_image_download either. The old-build assistant told the user 'I couldn't look at the finished images myself' and handed the check to the user. Both said they would redo an image if the user asked, but the simulated user never replied.",
+    "evidence": "s4.new.dumper.G38a/calls.jsonl lines 4, 7 and 8 have args include_inline_downloads:false. tools-new.json wait_for_image_project has include_inline_downloads default true, and fetch_image_download is 'Fetch a completed project's image as inline MCP image content'. The old final message says 'I couldn't look at the finished images myself. Check that they match each other'."
+   },
+   {
+    "why": "Why did nothing in the tools push the assistant to check that the product matches?",
+    "because": "No tool description says that edit_image may change the subject, or that a matched product set must be compared visually before delivery. wait_for_image_project calls the previews 'optional'. plan_request handled only the first image (subject 'mug on pure white background') and said nothing about keeping the product the same across the set.",
+    "evidence": "tools-new.json wait_for_image_project description: 'with optional inline image previews'. The new plan_request call in calls.jsonl line 2 had tool generate_image and returned ready:true with no consistency note."
+   },
+   {
+    "why": "Why can't a careful prompt plus a reference image guarantee the same mug?",
+    "because": "Axiom: the image-edit model (flux-2-klein editor, free-plan 640px) cannot keep a product's exact geometry and colour through a change of scene or lighting. It redraws the object, so some drift is inherent. The only way to get a matching set is to check the outputs and regenerate when they differ.",
+    "evidence": "Both builds, with different prompts and personas, show the same drift on the edit_image outputs. The new chat's own reply says: 'AI edits can still change small details, though, such as the handle shape or the exact shade of green.'"
+   }
+  ],
+  "axiom": "The free-plan image-edit model (flux-2-klein editor) redraws the product when it puts it in a new scene. It cannot keep the exact shape, handle and colour, and the text-to-image model can itself make a defective base mug. Both assistants skipped the visual check (one turned off the inline previews), so the drift was never seen and never fixed.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the edit_image and wait_for_image_project descriptions, state that edit_image may change the subject's shape and colour. For a matched set (same product in several images), keep the inline previews on (do not pass include_inline_downloads:false), compare each output with the reference image, and regenerate any image whose product differs before delivering. For the hero shot, also check that the base product is correct (for example, one handle) before using it as the reference."
+ },
+ "error": null,
+ "seconds": 120,
+ "usd": 0.46401879999999995
+}

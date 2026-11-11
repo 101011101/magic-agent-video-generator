@@ -1,0 +1,47 @@
+{
+ "id": "09b255dc89",
+ "key": "must:C15c:Identities never switch or collapse",
+ "symptom": "Identities never switch or collapse",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Identities never switch or collapse' not met in s1.new.dumper.C15c?",
+    "because": "No face-swapped video was made, so the grader had nothing to judge.",
+    "evidence": "s1.new.dumper.C15c/grade.json: 'No swapped video exists to judge'. The checks show only 4 .png files, 'a video was made' = false, and 'no audio track'."
+   },
+   {
+    "why": "Why was no swapped video made?",
+    "because": "The assistant ran detect_faces, got 4 faces (0-0, 0-1, 0-2, 132-0), and then stopped. Its last turn asked the user which crop is the man and which is the woman. It never called swap_face_in_video.",
+    "evidence": "s1.new.dumper.C15c/calls.jsonl: the only calls are detect_faces, get_face_detection_results and fetch_image_download twice on 0-0. The final reply ends with 'Please tell me which letters are the man and which are the woman... Then I'll run the swap'."
+   },
+   {
+    "why": "Why did the assistant ask instead of mapping the faces itself?",
+    "because": "It said it could not see the crops: fetch_image_download gave back an empty text output both times. The clip also has 3 people, not the 2 the brief names. The item allows this question ('asking which one is fine').",
+    "evidence": "calls.jsonl lines 5-6: fetch_image_download output \"\". The reply says 'I can't view the face crops from my side'. C15c.json expect.asks_about: '(the clip has two men: asking which one is fine)'. grade.json fault 3 confirms three people."
+   },
+   {
+    "why": "Why did the chat end at the question, without the simulated user answering?",
+    "because": "The harness classifier (haiku) labeled the reply 'delivered', not 'question'. The harness then closed the conversation after the first turn, so the user never answered and the swap never ran.",
+    "evidence": "calls.jsonl line 8: kind 'delivered', why: 'It does not explicitly ask the user to choose or confirm anything, so it is not a question'. This is false: the text explicitly asks 'Please tell me which letters are the man and which are the woman'. The log then shows turn_end with kind 'delivered' and end. state.json has the same pattern for the old chat: 1 user message, then end."
+   },
+   {
+    "why": "Why does that end the analysis?",
+    "because": "The classifier misread a clear, allowed clarifying question as a finished delivery. This is a defect of the test harness, not of the MCP tools or the assistant. (The other failing chat, s1.old.happy.C15c, has a separate cause. There the swap ran with a correct mapping, 368e…=portrait-man for 0-0 and 132-0, and 512f…=portrait-woman for 0-2, but the grader saw no visible face change. That points to the face-swap model output, not to an identity switch.)",
+    "evidence": "s1.old.happy.C15c/chat.json maps 368e1022…=portrait-man.jpg and 512f8147…=portrait-woman.jpg. Its calls.jsonl line 11 has face_mappings that match. Its grade.json says 'No portrait identities appear'."
+   }
+  ],
+  "axiom": "The harness's haiku turn classifier labeled an explicit clarifying question ('Please tell me which letters are the man and which are the woman') as 'delivered'. The harness then ended the chat before the simulated user could answer, so no swap was ever made to judge. This is a defect of the test harness.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Fix the turn classifier. If the reply ends with a direct request for the user to choose or confirm, and no output file was made after the request, label it 'question' and let the simulated user answer. In practice: add a rule or regex fallback ('Please tell me', 'which … are', a question with no new output file) that overrides 'delivered'."
+ },
+ "error": null,
+ "seconds": 58,
+ "usd": 0.4696190000000001
+}

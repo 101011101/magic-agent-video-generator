@@ -1,0 +1,42 @@
+{
+ "id": "5606251b21",
+ "key": "must:E25b:The woman is centred and her face is fully visible during her answer.",
+ "symptom": "The woman is centred and her face is fully visible during her answer.",
+ "item": "E25b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The woman is centred and her face is fully visible during her answer' not met?",
+    "because": "No output video exists in either chat, so the grader failed every must-have.",
+    "evidence": "s3.old.happy.E25b/grade.json and s3.new.stupid.E25b/grade.json: check 'something was made' pass=false, got 'no file'. The reason for this item is 'No video was produced.' / 'No output exists.' The summary says 'The agent refused twice and produced no video'."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "In both builds the assistant answered 'cannot' and refused to start a job. It refused again after the user's push ('go ahead with the free settings anyway' / 'just try it').",
+    "evidence": "old/happy calls.jsonl: no tool calls, two 'say' events with kind=cannot ('No tool here crops or reframes a video'). new/stupid calls.jsonl: two kind=cannot replies. The only calls are join_videos with the raw file path (HTTP 404 not_found) and detect_faces/get_face_detection_results (status rendering). There is no create or edit job."
+   },
+   {
+    "why": "Why did the assistants judge the task impossible?",
+    "because": "The task needs a speaker-following 9:16 crop of the user's real footage with the original audio. No tool in the list can crop a video or change its aspect ratio. The video tools either keep the source frame or redraw the content with AI.",
+    "evidence": "tools-new.json: edit_video 'Edits the appearance or content ... using a text prompt' and has no aspect or crop parameter. upscale_video works 'while preserving its aspect ratio'. join_videos only joins clips ('Every video is fitted to the first one's size'). create_video_from_text has aspect_ratio but makes a new video from text. plan_request lists 'trim_video' as a tool value, but I found no trim_video tool in the part of the list I read, and nothing in it describes crop or reframe. The old build's replies give the same picture ('The editor has no aspect-ratio or crop setting'). I did not read tools-old.json itself."
+   },
+   {
+    "why": "Why does the test still expect success with no questions on the free plan?",
+    "because": "The test was written for a deterministic reframe/crop ability ('Centre the current speaker in a full-frame portrait crop; a clean cut at the speaker change is fine'), and neither MCP build has that ability. So the assistants' refusal was correct, and the failure comes from a missing server capability.",
+    "evidence": "items/E25b.json: expect.asks='never', beyond_free='no', spec aspect 9:16, seconds 10, audio 'required'. answer_sheet 'Layout and transitions'. Neither build's tool set has an operation that crops by time segment."
+   }
+  ],
+  "axiom": "Neither Magic Hour MCP build has a tool that can crop or reframe an existing video to 9:16. The test expects a speaker-centred portrait crop of the user's footage with the original audio, so the assistant cannot make it and correctly refuses.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a server-side reframe_video/crop_video tool. It takes a video, a target aspect such as 9:16, and a list of time segments, each with a crop centre (optionally set automatically from detect_faces). It crops with ffmpeg, keeps the original audio and full length, and spends no credits. Point plan_request and the edit_video/join_videos descriptions to this tool for portrait recuts of the user's footage."
+ },
+ "error": null,
+ "seconds": 56,
+ "usd": 0.6038338000000001
+}

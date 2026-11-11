@@ -1,0 +1,338 @@
+{
+  "id": "C14b",
+  "item": {
+    "id": "C14b",
+    "case": 14,
+    "case_name": "Face swap on a photo",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which person in two-friends.jpg should receive the user's face: the bearded man on the left or the blonde woman on the right?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Which Friend Gets My Face",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "two-friends.jpg"
+        ],
+        "text": "Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone."
+      }
+    ],
+    "tests": "Tests clarification of an ambiguous target face and preservation of the unselected person.",
+    "answer_sheet": {
+      "Which person to replace": "The blonde woman on the right. Leave the bearded man on the left alone.",
+      "Source face": "Use my face from portrait-woman.jpg.",
+      "Style": "Keep it looking like the original beach photo; I want to be recognisable, so my hair can come with my face.",
+      "Size and platform": "Keep the original wide 16:9 framing; free-tier size is fine.",
+      "Other edits or text": "No text or other edits."
+    },
+    "must_haves": [
+      "Only the woman on the right receives the face from portrait-woman.jpg.",
+      "The bearded man on the left still looks like the same person (small drift from a redrawn photo is acceptable).",
+      "The woman on the right is recognisably the person in portrait-woman.jpg (her hair may come with the face), blended to the beach lighting and head angle.",
+      "The bodies, clothing, beach background and wide framing look the same at a glance.",
+      "No text is added."
+    ],
+    "changed": [
+      "2026-11-01: recognisable over untouched (user decision): the hair, and on video the clothes, may come with the new person; everything else stays"
+    ]
+  },
+  "session": "mcp-p2-dry-n-happy-C14b",
+  "sessionDir": "sessions/mcp-p2-dry-n-happy-C14b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.",
+      "materials": [
+        "portrait-woman.jpg",
+        "two-friends.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Whose face goes where (which person in the picture)?",
+          "asked": [
+            "question"
+          ],
+          "why": "It asks the user to specify which person in the picture should receive each face.",
+          "user": "Use my face from portrait-woman.jpg to replace the blonde woman on the right. Leave the bearded man on the left alone.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t complete the swap because your Magic Hour account has insufficient credits. Nothing was changed or generated.\n\nThe swap costs 10 credits and is set to replace only the blonde woman’s face on the right, leaving the bearded man untouched.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/bf43f4cc-de79-44b5-9e2f-11c18238fedd-image-0.jpg]\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg]\"}],\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"other\"}],\"tool\":\"swap_face_in_photo\",\"params\":[{\"name\":\"subject\",\"value\":\"Use the user's face from portrait-woman.jpg as source for one face in two-friends.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Swap exactly one face\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Leave everything else alone, including the other face\",\"source\":\"user\"},{\"name\":\"which_face\",\"source\":\"missing\"}]}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":false,\"params\":[{\"name\":\"which_face\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"which_face\",\"question\":\"Whose face goes where (which person in the picture)?\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/bf43f4cc-de79-44b5-9e2f-11c18238fedd-image-0.jpg]\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg]\"},{\"role\":\"user\",\"text\":\"Use my face from portrait-woman.jpg to replace the blonde woman on the right. Leave the bearded man on the left alone.\"}],\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"other\"}],\"tool\":\"swap_face_in_photo\",\"params\":[{\"name\":\"subject\",\"value\":\"Face from portrait-woman.jpg onto the blonde woman in two-friends.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Replace exactly one face\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Leave the bearded man on the left and everything else alone\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"The blonde woman on the right\",\"source\":\"user\"}]}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":true,\"params\":[{\"name\":\"which_face\",\"value\":\"The blonde woman on the right\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "detect_faces",
+          "arguments": "{\"assets\":{\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg\"}}",
+          "output": "{\"id\":\"59a1df20-5092-43c7-b3e5-39e6c75db260\",\"credits_charged\":0}",
+          "error": null
+        },
+        {
+          "name": "get_face_detection_results",
+          "arguments": "{\"id\":\"59a1df20-5092-43c7-b3e5-39e6c75db260\"}",
+          "output": "{\"id\":\"59a1df20-5092-43c7-b3e5-39e6c75db260\",\"credits_charged\":0,\"status\":\"complete\",\"faces\":[{\"path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-0.png\",\"url\":\"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-0.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261110%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261110T041519Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=3eb275355b24ac96a517812587602d896f17fabb1970b77657f7ee68e2a9f0c99466713efdd8272ae101232bcf191e4df304150bbf42c35d0f67d583996127d590132d61426e99ef841a0119bd53dceafa579c216ae339c524eb153dbb60ddd022acb18795407859a0be89373f76ef534f0ef365129e6c0479e55285de8d462d92fcf0b4c4d657ef74dbfc30b0fdda4b7214bbf11b2f027d5173e18c894d3d99744f676883b64663b6da1ed2fa63086531ac3f13e4093be1b34610f216ed26a2cf3af12f0ab9c8191d76901ff87f9a9c17a0b8c9275739e8dadf0aa7a5601f195dd3089c9e1c094de6f1718750c12fe9092d2cc0503b2ac94e2bb85c171ee0fd\"},{\"path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-1.png\",\"url\":\"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-1.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261110%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261110T041519Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=e938e5fefa52fe2946a3986f8500f036f36813f629395641678753e2f5209b15e08cfcc399166ee9d2379120b31a0a66d8fac8be7b9baa1176d744520776f4888cbd48c06a5cda81371575081ccc9027bbf8cd5df693bc9b9939d7e79a911507d7089a7c2a6ac33741d826fa6a86748b3b57a6695f1994fd536d7a529b646c79c0a515d6e35260acc65e83a5681f6ff7e27c77562fdb4e3ae2e268cbe7cb7c2c1d517074e6c4290ae65cb8951367c0152ba9bc803d40d7a023dd296b7ab6d21437535fb7738a186b0fc82a7a88f532a365b1518416790472e341cb80ba66b08a3fc8e84a4161bcbe27249a2ddd78061d68c648c0d2b29d82957b27e64ad0eca6\"}],\"error\":null}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "detect_faces",
+          "args": {
+            "assets": {
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg"
+            }
+          },
+          "approve": true,
+          "reason": "",
+          "est": 0
+        },
+        {
+          "name": "swap_face_in_photo",
+          "args": {
+            "assets": {
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg",
+              "face_swap_mode": "individual-faces",
+              "face_mappings": [
+                {
+                  "new_face": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/bf43f4cc-de79-44b5-9e2f-11c18238fedd-image-0.jpg",
+                  "original_face": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-1.png"
+                }
+              ]
+            },
+            "name": "Beach photo — right woman face swap"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/bf43f4cc-de79-44b5-9e2f-11c18238fedd-image-0.jpg]\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg]\"}],\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"other\"}],\"tool\":\"swap_face_in_photo\",\"params\":[{\"name\":\"subject\",\"value\":\"Use the user's face from portrait-woman.jpg as source for one face in two-friends.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Swap exactly one face\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Leave everything else alone, including the other face\",\"source\":\"user\"},{\"name\":\"which_face\",\"source\":\"missing\"}]}",
+          "result": "{\"tool\":\"swap_face_in_photo\",\"ready\":false,\"params\":[{\"name\":\"which_face\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"which_face\",\"question\":\"Whose face goes where (which person in the picture)?\"}]}"
+        },
+        {
+          "type": "said",
+          "text": "Whose face goes where (which person in the picture)?"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/bf43f4cc-de79-44b5-9e2f-11c18238fedd-image-0.jpg]\\n[Attached: two-friends.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg]\"},{\"role\":\"user\",\"text\":\"Use my face from portrait-woman.jpg to replace the blonde woman on the right. Leave the bearded man on the left alone.\"}],\"attachments\":[{\"name\":\"portrait-woman.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"other\"}],\"tool\":\"swap_face_in_photo\",\"params\":[{\"name\":\"subject\",\"value\":\"Face from portrait-woman.jpg onto the blonde woman in two-friends.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Replace exactly one face\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Leave the bearded man on the left and everything else alone\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"The blonde woman on the right\",\"source\":\"user\"}]}",
+          "result": "{\"tool\":\"swap_face_in_photo\",\"ready\":true,\"params\":[{\"name\":\"which_face\",\"value\":\"The blonde woman on the right\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "detect_faces",
+          "arguments": "{\"assets\":{\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg\"}}",
+          "result": "{\"id\":\"59a1df20-5092-43c7-b3e5-39e6c75db260\",\"credits_charged\":0}"
+        },
+        {
+          "type": "call",
+          "name": "get_face_detection_results",
+          "arguments": "{\"id\":\"59a1df20-5092-43c7-b3e5-39e6c75db260\"}",
+          "result": "{\"id\":\"59a1df20-5092-43c7-b3e5-39e6c75db260\",\"credits_charged\":0,\"status\":\"complete\",\"faces\":[{\"path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-0.png\",\"url\":\"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-0.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261110%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261110T041519Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=3eb275355b24ac96a517812587602d896f17fabb1970b77657f7ee68e2a9f0c99466713efdd8272ae101232bcf191e4df304150bbf42c35d0f67d583996127d590132d61426e99ef841a0119bd53dceafa579c216ae339c524eb153dbb60ddd022acb18795407859a0be89373f76ef534f0ef365129e6c0479e55285de8d462d92fcf0b4c4d657ef74dbfc30b0fdda4b7214bbf11b2f027d5173e18c894d3d99744f676883b64663b6da1ed2fa63086531ac3f13e4093be1b34610f216ed26a2cf3af12f0ab9c8191d76901ff87f9a9c17a0b8c9275739e8dadf0aa7a5601f195dd3089c9e1c094de6f1718750c12fe9092d2cc0503b2ac94e2bb85c171ee0fd\"},{\"path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-1.png\",\"url\":\"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-1.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261110%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261110T041519Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=e938e5fefa52fe2946a3986f8500f036f36813f629395641678753e2f5209b15e08cfcc399166ee9d2379120b31a0a66d8fac8be7b9baa1176d744520776f4888cbd48c06a5cda81371575081ccc9027bbf8cd5df693bc9b9939d7e79a911507d7089a7c2a6ac33741d826fa6a86748b3b57a6695f1994fd536d7a529b646c79c0a515d6e35260acc65e83a5681f6ff7e27c77562fdb4e3ae2e268cbe7cb7c2c1d517074e6c4290ae65cb8951367c0152ba9bc803d40d7a023dd296b7ab6d21437535fb7738a186b0fc82a7a88f532a365b1518416790472e341cb80ba66b08a3fc8e84a4161bcbe27249a2ddd78061d68c648c0d2b29d82957b27e64ad0eca6\"}],\"error\":null}"
+        },
+        {
+          "type": "call",
+          "name": "swap_face_in_photo",
+          "arguments": "{\"assets\":{\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/eb6f92dc-f4f6-462f-a650-9dfe2b30ba44-image-0.jpg\",\"face_swap_mode\":\"individual-faces\",\"face_mappings\":[{\"new_face\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/bf43f4cc-de79-44b5-9e2f-11c18238fedd-image-0.jpg\",\"original_face\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/59a1df20-5092-43c7-b3e5-39e6c75db260/0-1.png\"}]},\"name\":\"Beach photo — right woman face swap\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn’t complete the swap because your Magic Hour account has insufficient credits. Nothing was changed or generated.\n\nThe swap costs 10 credits and is set to replace only the blonde woman’s face on the right, leaving the bearded man untouched."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Whose face goes where (which person in the picture)?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "swap_face_in_photo: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t complete the swap because your Magic Hour account has insufficient credits. Nothing was changed or generated.\n\nThe swap costs 10 credits and is set to replace only the blonde woman’s face on the right, leaving the bearded man untouched.",
+        "refuse": "",
+        "tier_move": "I couldn’t complete the swap because your Magic Hour account has insufficient credits. Nothing was changed or generated.\n\nThe swap costs 10 credits and is set to replace only the blonde woman’s face on the right, leaving the bearded man untouched.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "detect_faces",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "two-friends.jpg"
+            ],
+            "produces": "01-detect_faces.png",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "detect_faces",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "two-friends.jpg"
+            ],
+            "produces": "02-detect_faces.png",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "detect_faces",
+          "state": "done",
+          "output": "assets/01-detect_faces.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "detect_faces",
+          "state": "done",
+          "output": "assets/02-detect_faces.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 92
+    }
+  ],
+  "started": "2026-11-10T04:14:24.118Z",
+  "persona": "happy",
+  "opening": {
+    "text": "Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone.",
+    "as_written": true
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 92,
+  "usage": {
+    "responses": 7,
+    "input": 211485,
+    "output": 1009,
+    "reasoning": 14,
+    "cached": 208573
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "http://127.0.0.1:8770/",
+    "local": true,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "C14b.trace.json"
+}

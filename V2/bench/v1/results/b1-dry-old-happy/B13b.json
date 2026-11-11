@@ -1,0 +1,154 @@
+{
+  "id": "B13b",
+  "item": {
+    "id": "B13b",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Sharpen a Blurry Dog Photo",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg"
+        ],
+        "text": "This phone pic of my dog came out blurry. Can you make it clearer and bigger, 640 pixels on the long side? Keep it looking natural."
+      }
+    ],
+    "tests": "Enhances a blurry supplied photo rather than replacing its subject or merely enlarging the blur.",
+    "answer_sheet": {
+      "Source picture": "blurry-dog.jpg",
+      "Enhancement style": "Natural-looking blur reduction and sharpening, not a stylised remake.",
+      "Size and framing": "640 pixels on the long side; preserve the original proportions and framing.",
+      "Subject and background": "Keep the same dog, pose, expression, and background.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The same golden retriever from blurry-dog.jpg remains recognisable in the same pose.",
+      "The dog's visible contours and facial features are clearer than in the blurry source.",
+      "Fur and edges look natural, without pronounced sharpening halos or invented decorative detail.",
+      "The background and full original framing are preserved.",
+      "The delivered image has a 640-pixel long edge and preserves the source aspect ratio."
+    ]
+  },
+  "session": "mcp-b1-dry-old-happy-B13b",
+  "sessionDir": "sessions/mcp-b1-dry-old-happy-B13b",
+  "baseline": "mcp",
+  "provider": "anthropic",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "This phone pic of my dog came out blurry. Can you make it clearer and bigger, 640 pixels on the long side? Keep it looking natural.",
+      "materials": [
+        "blurry-dog.jpg"
+      ],
+      "dialog": [],
+      "agent": "I couldn't make the clearer version of your dog photo. Magic Hour turned down the request because your account doesn't have enough credits, so nothing was created and you have no download link yet.\n\nI'd tried to sharpen it with the cheapest image model on the free plan (flux-2-klein, which starts at 5 credits per image), keeping the dog, pose, colours and park background the same. Your balance is lower than that.\n\n**To get this done:**\n- **Add credits**, by buying a credit pack or upgrading your plan, then ask me to run it again.\n- **Or wait** for your free credits to refresh, if your plan gives you more each month.\n\n**Before you try again:** your photo looks like it's already about 1024 pixels on each side, so 640 pixels on the long side would actually make it smaller. Do you mean 640 pixels as you said, or did you want it bigger than it is now? The image upscaler can double the size (free plans get 2×, about 2048 pixels) and costs 50 credits on its most natural-looking setting.",
+      "calls": [],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "image_count": 1,
+            "aspect_ratio": "auto",
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/a2fd71c8-0bb3-48bd-8687-c01a24686deb-image-0.jpg"
+              ]
+            },
+            "style": {
+              "prompt": "Deblur and sharpen this photo so it looks like a crisp, in-focus phone photo. Keep everything exactly the same: same golden retriever, same pose, same face, fur color, open mouth and tongue, same grassy park background, framing, lighting and colors. Restore natural fur detail and sharp eyes and nose. Natural and realistic, no stylization, no added objects, no over-sharpening."
+            },
+            "name": "Blurry dog - sharpened 640px"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "thought",
+          "text": "I'm checking the size: the image seems to already be 1024x1024, so asking for 640 pixels on the long side would actually shrink it. The upscaler only offers 2x on the free plan, which would give 2048 pixels, not 640.\n\nI'm weighing a free option: running edit_image with flux-2-klein at 640px to sharpen the picture, which hits the 640 long side the user asked for. Since the source looks like 1024px, \"bigger\" conflicts with 640, so I should mention that. The alternative, a 2x upscale, would give 2048px instead, which misses the explicit 640 target, so I'm leaning toward the edit at 640px with auto aspect.\n\n"
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"image_count\":1,\"aspect_ratio\":\"auto\",\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/a2fd71c8-0bb3-48bd-8687-c01a24686deb-image-0.jpg\"]},\"style\":{\"prompt\":\"Deblur and sharpen this photo so it looks like a crisp, in-focus phone photo. Keep everything exactly the same: same golden retriever, same pose, same face, fur color, open mouth and tongue, same grassy park background, framing, lighting and colors. Restore natural fur detail and sharp eyes and nose. Natural and realistic, no stylization, no added objects, no over-sharpening.\"},\"name\":\"Blurry dog - sharpened 640px\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "thought",
+          "text": "I don't have enough credits for this 5-credit action, so I can't carry it out. I should explain that to the user and also mention that the size is a problem.\n\n"
+        },
+        {
+          "type": "said",
+          "text": "I couldn't make the clearer version of your dog photo. Magic Hour turned down the request because your account doesn't have enough credits, so nothing was created and you have no download link yet.\n\nI'd tried to sharpen it with the cheapest image model on the free plan (flux-2-klein, which starts at 5 credits per image), keeping the dog, pose, colours and park background the same. Your balance is lower than that.\n\n**To get this done:**\n- **Add credits**, by buying a credit pack or upgrading your plan, then ask me to run it again.\n- **Or wait** for your free credits to refresh, if your plan gives you more each month.\n\n**Before you try again:** your photo looks like it's already about 1024 pixels on each side, so 640 pixels on the long side would actually make it smaller. Do you mean 640 pixels as you said, or did you want it bigger than it is now? The image upscaler can double the size (free plans get 2×, about 2048 pixels) and costs 50 credits on its most natural-looking setting."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn't make the clearer version of your dog photo. Magic Hour turned down the request because your account doesn't have enough credits, so nothing was created and you have no download link yet.\n\nI'd tried to sharpen it with the cheapest image model on the free plan (flux-2-klein, which starts at 5 credits per image), keeping the dog, pose, colours and park background the same. Your balance is ",
+        "refuse": "",
+        "tier_move": "I couldn't make the clearer version of your dog photo. Magic Hour turned down the request because your account doesn't have enough credits, so nothing was created and you have no download link yet.\n\nI'd tried to sharpen it with the cheapest image model on the free plan (flux-2-klein, which starts at 5 credits per image), keeping the dog, pose, colours and park background the same. Your balance is ",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 17
+    }
+  ],
+  "started": "2026-11-11T00:48:10.863Z",
+  "persona": "happy",
+  "opening": {
+    "text": "This phone pic of my dog came out blurry. Can you make it clearer and bigger, 640 pixels on the long side? Keep it looking natural.",
+    "as_written": true
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 17,
+  "usage": {
+    "responses": 2,
+    "input": 143560,
+    "output": 1186,
+    "reasoning": 0,
+    "cached": 71339
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "https://mcp.magichour.ai/",
+    "local": false,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "B13b.trace.json"
+}

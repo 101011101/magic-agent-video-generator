@@ -1,0 +1,47 @@
+{
+ "id": "024e79717d",
+ "key": "must:B12a:The delivered image is square.",
+ "symptom": "The delivered image is square.",
+ "item": "B12a",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why is the delivered image not square?",
+    "because": "The file Magic Hour returned is 640x384. That is about 5:3, close to the shape of the wide 16:9 source, and not 1:1.",
+    "evidence": "s1.new.happy.B12a/grade.json and s1.old.dumper.B12a/grade.json: the check 'aspect 1:1' records got [\"640x384\"]. The must-have is 'no' with the reason 'Output is about 640x384, still wide, not 1:1'."
+   },
+   {
+    "why": "Why is the output wide? Did the assistant forget to ask for a square?",
+    "because": "No. In every chat I read, on both builds, the assistant called edit_image with aspect_ratio \"1:1\", model flux-2-klein and resolution 640px. Its prompt also asked the model to extend the scene into a square. The request was right, but the server sent back a picture with the same shape as the input.",
+    "evidence": "calls.jsonl of s1.old.dumper, s1.old.stupid, s1.new.happy and s1.new.stupid: each edit_image args has \"aspect_ratio\":\"1:1\",\"model\":\"flux-2-klein\",\"resolution\":\"640px\". Each wait_for_image_project result is status complete with no error and no warning."
+   },
+   {
+    "why": "Why did the server not apply aspect_ratio 1:1?",
+    "because": "For an edit with flux-2-klein (the only cheap edit model the tool offers for a free plan), the backend keeps the shape of the input image. It scales the long edge to 640px and ignores aspect_ratio. It does not reject the request or warn about it, so the request 'succeeds' with a wide picture.",
+    "evidence": "Every chat gives the same result: input is a 16:9 photo, args say 1:1, output is 640x384. The output follows the source shape and not the argument. The tool result has no field that reports the real size or a dropped parameter (wait_for_image_project output in all four calls.jsonl)."
+   },
+   {
+    "why": "Why did the assistant not choose another way to get a square?",
+    "because": "The tool description says aspect_ratio works and gives no per-model limit. It lists 1:1 as a valid value: 'The aspect ratio of the output image(s)'. It also recommends flux-2-klein 640px as the free-plan option. By contrast, resolution and the model list do give per-model limits. The new build's plan_request also returned aspect 1:1 with ready=true. So the assistant had no signal that it needed another route, such as padding the image itself or using a model that respects the ratio.",
+    "evidence": "tools-new.json, edit_image (line ~3316 onward): aspect_ratio enum [auto,16:9,9:16,4:3,3:2,1:1,4:5,2:3] with no per-model notes. The description recommends 'flux-2-klein at 640px with image_count=1' for a Free account. s1.new.stupid calls.jsonl: plan_request returned ready:true with aspect '1:1'."
+   },
+   {
+    "why": "Why was the wrong shape delivered without anyone noticing?",
+    "because": "The assistant could not see the real size. fetch_image_download returned an empty output, and wait was called with include_inline_downloads=false. The assistant then claimed '640×640' or 'square (1:1)' anyway. The harness's own 'aspect 1:1' check also passes on 640x384, so only the LLM grader caught it.",
+    "evidence": "s1.new.happy and s1.old.dumper calls.jsonl: fetch_image_download output \"\". The final messages say 'The result is 640×640' and 'square (1:1) version is done'. grade.json in both: 'aspect 1:1' pass:true, got 640x384 (a secondary harness defect, not the cause)."
+   }
+  ],
+  "axiom": "When Magic Hour edits an image with flux-2-klein, it keeps the input image's shape and ignores aspect_ratio, with no error or warning. The edit_image tool description in both builds still lists 1:1 as a valid output ratio for every model and recommends flux-2-klein to free accounts. This is a limit of the generation backend, and the MCP tool layer does not report or work around it.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the MCP edit_image handler, compare the aspect_ratio that was asked for with the real width and height of the output. Do the same check on input: when the model is flux-2-klein, which keeps the input shape, and the ratio asked for differs from the input's, first pad the source image to that ratio (for example 1:1) on the server. Then send the padded image so the model fills in the new area. If the server cannot do this, return an explicit warning such as 'output 640x384, aspect_ratio ignored by flux-2-klein'. Also add a per-model note to the aspect_ratio description, and make wait_for_image_project report the output size. The harness 'aspect 1:1' check must also fail on 640x384."
+ },
+ "error": null,
+ "seconds": 58,
+ "usd": 0.6587328
+}

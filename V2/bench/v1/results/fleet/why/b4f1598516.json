@@ -1,0 +1,47 @@
+{
+ "id": "b4f1598516",
+ "key": "must:B09d:Same candle jar and wax preserved on a pale kitchen counter",
+ "symptom": "Same candle jar and wax preserved on a pale kitchen counter",
+ "item": "B09d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'same candle jar and wax on a pale kitchen counter' not met?",
+    "because": "Both images show the jar and wax kept, but on a white marble bathroom counter or ledge with a towel and eucalyptus. Neither image shows a kitchen.",
+    "evidence": "s1.new.stupid.B09d/grade.json must[0]: 'Jar and wax are preserved, but the setting is a white marble bathroom ledge, not a kitchen counter.' The old grade gives the same reason (bathroom counter with towel)."
+   },
+   {
+    "why": "Why did the generator put the candle in a bathroom?",
+    "because": "The assistant asked for a bathroom in its edit_image prompt. The model followed the prompt. This is not a model failure.",
+    "evidence": "old calls.jsonl edit_image style.prompt: 'Place the candle on a white marble bathroom counter next to a folded linen towel...'. new calls.jsonl edit_image style.prompt: 'on a white marble bathroom ledge beside a rolled towel and a small eucalyptus sprig'."
+   },
+   {
+    "why": "Why did the assistant pick a bathroom and not a kitchen?",
+    "because": "The only user message never mentions a kitchen, a counter, sunlight or a light direction. It only says 'somewhere else'. So the assistant had to choose a setting itself, and it chose a spa bathroom.",
+    "evidence": "chat.json messages[0].text (both builds): 'make a pic of the candle in this pic somewhere else'. The full brief in B09d.json turns[0] says 'onto a pale kitchen counter with warm sunlight coming from the upper left'."
+   },
+   {
+    "why": "Why did the assistant not ask where to put the candle?",
+    "because": "Nothing told it to ask. In the new build, plan_request returned ready:true with an empty questions list and dropped the missing 'look' parameter. The old build has no planning step, and the assistant went straight to generating. The item also sets expect.asks='never', so the test itself expects no question. A question would have made the chat fail that expectation.",
+    "evidence": "new calls.jsonl plan_request output: '\"ready\":true ... \"questions\":[]' (the 'look' value, sent as missing, is not in the returned params). B09d.json expect.asks: 'never'. persona bank holds 'New setting: A pale kitchen counter', so the user would have answered only if asked."
+   },
+   {
+    "why": "Why is the result graded against a kitchen counter the assistant was never told about?",
+    "because": "The harness rewrites the brief into the vague 'stupid' persona's opening message, and that rewrite drops the setting. The grader still scores the image against the full brief's must_haves. The item says asking is never needed, but in this persona the setting is only available if the assistant asks. The judge says so itself: 'The user did not specify a location, so this is only a mismatch with the checklist.'",
+    "evidence": "s1.new.stupid.B09d/grade.json faults[0]; B09d.json must_haves[0] and expect.asks='never'; chat.json persona 'stupid' and messages[0]."
+   }
+  ],
+  "axiom": "This is a test harness and grader artifact. The stupid persona's opening message ('somewhere else') leaves out the one fact a must-have depends on (a pale kitchen counter). The item says asks='never', and the grader still checks that fact. No assistant can meet both conditions unless it guesses 'kitchen' by chance.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Change the harness so that facts named in must_haves are kept in the persona's first message, e.g. 'put the candle on my kitchen counter with sun from the left'. Another option: mark B09d must_haves[0] as conditional, so it is graded only when the setting was given to the assistant or the assistant asked for it."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.1532558
+}

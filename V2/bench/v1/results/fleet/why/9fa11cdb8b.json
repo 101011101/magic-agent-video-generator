@@ -1,0 +1,47 @@
+{
+ "id": "9fa11cdb8b",
+ "key": "must:H40a:One playable 9:16 ad ~15 s",
+ "symptom": "One playable 9:16 ad ~15 s",
+ "item": "H40a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'One playable 9:16 ad ~15 s' marked not met in s4.new.stupid.H40a?",
+    "because": "The grader only had the three separate 5 s clips and a 17 s music file. It never got the joined 15 s film, so it judged from about 10 s of clips.",
+    "evidence": "s4.new.stupid.H40a/grade.json: checks 'about 15 s' got '5.2 s'. Files are [.mp4,.mp4,.mp4,.wav]. The must-have reason says 'Only two 5.2 s clips ... The final 15 s cut was not provided'. Black-frame checks exist only for 01- and 02-wait_for_video_project.mp4."
+   },
+   {
+    "why": "Why did the grader not get the joined film?",
+    "because": "The harness tried to download the film from the URL the assistant delivered, and that download returned 404.",
+    "evidence": "calls.jsonl line 21: join_production_clips 'files': ['download failed: download 404 http://127.0.0.1:8000/films/e8cf6b20fa9d473b84025d934be20673.mp4']."
+   },
+   {
+    "why": "Was the film actually missing or wrong, or was this a failure of the agent or the tools?",
+    "because": "The film was built correctly. The new build's join step measured it as 15.5 s at 480x858 (9:16) with music under the whole film, and the assistant passed on that exact URL. The only failure was serving or fetching the file at the local URL.",
+    "evidence": "calls.jsonl line 21 output: seconds 15.5, width 480, height 858, clips 3, checked 'One file, 15 s, 9:16' -> 'yes'. Line 23: the assistant delivers http://127.0.0.1:8000/films/e8cf...mp4. Plan (line 12) had 3 x 5 s clips + 17 s music, join [1,2,3]."
+   },
+   {
+    "why": "Why does a 404 on a local URL decide the grade?",
+    "because": "In the new build, join_production_clips returns a link to a local film server (127.0.0.1:8000/films/...), not a hosted Magic Hour URL. The harness depends on that local server still serving the file when it downloads. Here it did not: maybe the server had stopped, the path was wrong, or the file was cleaned up. The logs cannot tell which. With no fallback, the grader fell back to the partial clips.",
+    "evidence": "Every other asset downloaded from videos.magichour.ai (files 01-04 present). Only the localhost film failed. The logs show no server-side error that explains the 404."
+   },
+   {
+    "why": "Is the old-build failure (s4.old.dumper.H40a) the same cause?",
+    "because": "No. The old build made one real 15 s file, but it is square. edit_image was asked for aspect_ratio 9:16 but returned 640x640 frames. Image-to-video kept that shape. The assistant itself said the result was square. This is a separate free-plan or model aspect limit, and the grader handled it correctly.",
+    "evidence": "s4.old.dumper.H40a/calls.jsonl line 3-4: edit_image aspect_ratio '9:16'. Line 12: video width 640, height 640, end_seconds 15. grade.json: 'got': ['640x640',...], must reason '15 s but square 640x640, not 9:16.'"
+   }
+  ],
+  "axiom": "For the quoted chat (new build): this is a test-harness artifact. The joined 15.5 s 9:16 film existed and was measured by join_production_clips. The harness download of its local URL http://127.0.0.1:8000/films/... returned 404, so the grader never saw it and judged only the separate 5 s clips. The logs do not show why the local server returned 404 (server down, wrong path, or file cleaned up). The old-build chat failed for a different reason: edit_image returned square 640x640 frames on the free plan even though the assistant asked for 9:16, and image-to-video kept that square shape.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the harness keep the joined film reliably. Option 1: copy the film into the chat's assets folder right after join_production_clips returns. Option 2: keep the local film server running, with files kept, until grading ends. Then retry the download, and if it still fails, mark the chat 'harness error' instead of grading the partial clips."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.3859928
+}

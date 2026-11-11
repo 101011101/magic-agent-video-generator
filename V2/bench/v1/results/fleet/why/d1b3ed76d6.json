@@ -1,0 +1,52 @@
+{
+ "id": "d1b3ed76d6",
+ "key": "must:H41b:Predominantly blue and white, calm",
+ "symptom": "Predominantly blue and white, calm",
+ "item": "H41b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'Predominantly blue and white, calm' item not met?",
+    "because": "The generated scene in both chats is a warm, sunny, beige/pastel room with a grey-and-white app UI. Nothing blue appears in the frames the grader saw.",
+    "evidence": "new grade.json: 'The scene is warm beige, white and grey. The app UI is grey and white with no blue... The blue end card wasn't provided.' The old prompt in calls.jsonl asks for 'sunny desk... modern pastel colors'. The new clip-1 prompt asks for 'bright, airy modern apartment in soft morning sunlight... light pastel tones'."
+   },
+   {
+    "why": "Why did the assistant prompt for pastel/sunny colours instead of blue and white?",
+    "because": "The assistant never learned that the user wanted blue and white. The stupid persona's opening line is only 'make an ad for a to do list app'. The persona adds facts from its bank only when asked a plain question, and 'Style and mood: Calm, blue and white' stays in the bank.",
+    "evidence": "old chat.json: messages[0] = 'make an ad for a to do list app'. The persona rule is 'answer it from your knowledge bank' only when a question is asked. bank 'Style and mood': 'Calm, blue and white.'"
+   },
+   {
+    "why": "Why was the user never asked about the look?",
+    "because": "Old build: the assistant asked nothing. It went straight to create_video_from_text with its own 'bright, upbeat' prompt, and it even added audio. New build: plan_request listed 'look' as missing but returned questions only for seconds, aspect and sound. The assistant passed on exactly those questions, and the user answered them.",
+    "evidence": "old calls.jsonl: the first call is create_video_from_text with no user turn first. new calls.jsonl line 2: params include {name:'look', source:'missing'}, but questions = [seconds, aspect, sound] only. The assistant's reply lists those 3 questions. The user's reply covers length, silence, name and wide, with no colour."
+   },
+   {
+    "why": "Why did the new build go ahead with the look still unknown?",
+    "because": "On the second plan_request call, the assistant filled look with a default ('clean bright modern product ad', source 'default'). The tool accepted the default and returned ready:true, and the assistant then wrote a 'light pastel tones' setting. The only blue was the code-drawn end card (#4A90E2), which the assistant chose itself.",
+    "evidence": "new calls.jsonl line 7: look value 'clean bright modern product ad', source 'default' → ready:true, questions:[]. Line 8: plan_video_production setting 'light pastel tones', card background '#4A90E2'."
+   },
+   {
+    "why": "Why could the blue end card not save the item in the new chat?",
+    "because": "The harness got a 404 when it downloaded the joined 8 s film. The grader therefore judged only the 5 s clip 1 and never saw the blue card. Even with the card, 3 s of blue after 5 s of beige would hardly count as 'predominantly' blue.",
+    "evidence": "new calls.jsonl line 12: files = ['download failed: download 404 http://127.0.0.1:8000/films/...mp4']. grade.json check 'about 8 s' got '5 s'. Must-haves say 'end card frames were not provided'."
+   },
+   {
+    "why": "Why is the missing look question the root cause?",
+    "because": "Axiom: plan_request treats 'look' (colour and mood) as a param that can take a default, not one it must ask about. When a vague user leaves out the colour, the system fills in a generic bright/pastel style and never asks, so a colour requirement that only lives in the user's head is lost.",
+    "evidence": "new plan_request output: 'look' source 'missing' produced no question, while 'seconds', 'aspect' and 'sound' did. A later 'default' value was accepted as ready."
+   }
+  ],
+  "axiom": "plan_request (new) never asks about look/colour: it lets 'look' take a generic default. The old assistant asked no questions at all. So the stupid user's unspoken 'calm blue-and-white' requirement never reached the prompt, and both builds made a beige/pastel scene. In the new chat, a harness 404 on the joined film also hid the blue end card from the grader.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, when 'look' is missing for an ad or branded video, add a plain-words question such as 'Any colours or mood you want (e.g. calm blue and white, bold and bright)?'. Do not accept source:'default' as ready for look until the user has had one chance to answer. In the old build's create_video_from_text description, add a matching step: ask about colours and style before making a branded ad. Separately, fix the harness so it can download the joined film (127.0.0.1:8000 gave a 404)."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.2231072
+}

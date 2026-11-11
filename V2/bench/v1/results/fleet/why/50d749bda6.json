@@ -1,0 +1,47 @@
+{
+ "id": "50d749bda6",
+ "key": "must:J51b:The revised deliverable has a vertical 9:16 frame.",
+ "symptom": "The revised deliverable has a vertical 9:16 frame.",
+ "item": "J51b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'The revised deliverable has a vertical 9:16 frame' not met?",
+    "because": "No video file was delivered at any point in the chat, so the grader had no frame to check.",
+    "evidence": "s2r.old.dumper.J51b/grade.json: the check 'something was made' has pass=false, got 'no file'. The reason for the 9:16 item is 'No video was produced; all attempts were refused for 0 credits.' The summary says every attempt was refused for lack of credits."
+   },
+   {
+    "why": "Why was no video delivered, even when the assistant tried a 9:16 generation?",
+    "because": "Magic Hour refused every create_video_from_text call that used free-plan settings, because the account had 0 credits.",
+    "evidence": "calls.jsonl in all three chats: ltx-2.5 at 480p was refused with 'insufficient credits: this call needs about 120/192 credits and 0 remain on the account'. This includes the 9:16 retries: old.stupid line 12 (aspect_ratio 9:16), old.dumper line 11 (9:16 with prompted navy bands) and new.stupid line 16 (9:16). Only the first old call used model 'default', which was refused as not on the free plan, and the assistant fixed this right away."
+   },
+   {
+    "why": "Why was the user's choice ('option 1'), or a later nudge, not enough to get the 9:16 video made?",
+    "because": "The assistant did act on the choice. It sent a correct vertical 9:16 call right away. The block came from the account balance, not from the assistant's behavior or the tool descriptions.",
+    "evidence": "s2r.old.stupid.J51b state.json: the user says 'the first one i guess, whatever fills the screen'. calls.jsonl line 12 then sends aspect_ratio '9:16' and gets the same 0-credit refusal. The new build does the same: plan_request derives aspect 9:16 from 'tiktok', and the 9:16 call is refused."
+   },
+   {
+    "why": "Why did turn 2 ask to 'resize the video you made' when no video existed?",
+    "because": "The harness sends the brief's second turn as a fixed script. It does not check whether turn 1 delivered a video. The whole test assumes a finished 16:9 clip, and the 0-credit account cannot produce one.",
+    "evidence": "J51b.json turns[1] is a fixed text: 'Nice, actually I need that for TikTok. Just resize the video you made...'. calls.jsonl shows this text sent with next_message=true immediately after turn 1 ended with kind 'cannot'."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The benchmark's free-plan test account was already used up before or during the fleet run. This is a fact about the test environment's setup, not about the free plan's normal limits or about either build.",
+    "evidence": "The refusals in old and new chats report '0 remain on the account' from the very first allowed call (old.dumper line 3, new.stupid line 8). Nothing in any chat spent credits, so the balance was already 0 when the chat started."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits when these chats ran, so no generation could succeed. The harness still sent the scripted 'resize the video you made' turn and graded the chat as a normal fail. It did not flag the chat as invalid.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each fleet run, top up or reset the free-plan test account, and check that its credit balance covers at least one 8-second 480p video (about 192 credits). If a call returns 'insufficient credits ... 0 remain', mark the chat as invalid and do not grade it. Send the scripted turn 2 of J51b only if turn 1 delivered a file."
+ },
+ "error": null,
+ "seconds": 26,
+ "usd": 0.1530858
+}

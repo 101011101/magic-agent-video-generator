@@ -1,0 +1,46 @@
+{
+ "id": "8141ebd3ab",
+ "key": "must:I47c:Each label legible and with its stage, in order",
+ "symptom": "Each label legible and with its stage, in order",
+ "item": "I47c",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Each label legible and with its stage, in order' not met?",
+    "because": "In the frames the grader saw, the labels do not stay for their stages. In the dumper chat 'Condensation' shows at 0.3 s and is gone by 1.2 s. In the happy chat 'Evaporation' is missing and 'Condensation' also fades by 1.2 s. In both chats no 'Precipitation' label was seen.",
+    "evidence": "s5.new.dumper.I47c/grade.json must[3]: 'Condensation is visible at 0.3 s but gone by 1.2 s… There is no Precipitation label.' s5.new.happy.I47c/grade.json must[3]: ''Condensation'... fades out by 1.2 s. 'Evaporation' is absent. 'Precipitation' was not seen.'"
+   },
+   {
+    "why": "Why does a label that was drawn into the start frame disappear during the clip?",
+    "because": "The assistant took the planner's 'still' option for all three labels. In this option qwen-image draws a still with the word, and then ltx-2.5 image-to-video animates that still. The video prompt the planner builds never mentions the label. It only describes the motion ('the rising vapor gathers… forms puffy white clouds that grow larger') and adds 'no title cards, no captions'. So nothing tells the model to keep the text, and the prompt even works against text that looks like a caption.",
+    "evidence": "calls.jsonl in both chats: plan_video_production answers {words-1..3:'still'}. Each clip's steps are generate_image (prompt: 'The words \"Condensation\" are written large and clear…') then create_video_from_image ltx-2.5 (prompt: '…forms puffy white clouds that grow larger… No repeated shots, no title cards, no captions, no other scenes.'). The label is not named in that prompt."
+   },
+   {
+    "why": "Why did the assistant expect the labels to stay on screen?",
+    "because": "The planner's question promised it. The 'still' option text says 'Exact; the words stay on screen for the whole clip.' The planner sends no instruction or later step to make that true, and the checklist marks the words as checked 'from the picture made with them' (the still), not from the moving clip.",
+    "evidence": "plan_video_production output, questions[].options.still in both calls.jsonl. After the answers, checklist words-1..3 has how: 'by eye: from the picture made with them'. join_production_clips puts these lines in 'unchecked'."
+   },
+   {
+    "why": "Why does ltx-2.5 not keep the text when nothing asks it to?",
+    "because": "An image-to-video model treats the start frame as a scene to change. As clouds form or vapour moves, the model redraws the area and the overlay text fades away. The planner's own statistics also show that ltx-2.5 cannot spell text (0 of 4). So it cannot redraw the word once it has blurred it. This is a property of the generation model.",
+    "evidence": "plan output: 'ltx-2.5 got them wrong 0 of 4 times'. grade.json faults: 'The Condensation label disappears after the first moments' (dumper) and 'shows only briefly at the start of clip 2 and then disappears. It sits over the cloud' (happy)."
+   },
+   {
+    "why": "Why was 'Precipitation' never seen, even though clip 3 was made?",
+    "because": "This is a separate harness artifact that makes the result look worse. join_production_clips returned a local URL that gave 404 when the harness tried to download it. So the grader never got the joined 10 s film. It judged only the separate clip files, and its frames did not include clip 3 (it reported 'only two clips', 'no rain clip was provided'). The 'Condensation' fade is still a real defect without this artifact.",
+    "evidence": "calls.jsonl join_production_clips files: 'download failed: download 404 http://127.0.0.1:8000/films/…mp4' (both chats). grade.json checks 'about 10 s' got '3 s'/'4 s'. dumper must[0]: 'Only two clips (4 s and 3 s…)'. happy must[1]: 'No rain clip was provided'."
+   }
+  ],
+  "axiom": "The new build's 'still' route for exact on-screen words depends on ltx-2.5 image-to-video to keep text from the start frame. That model does not keep overlay text: it redraws the area and the label fades within about 1 s. The planner sends no step that keeps the label, but it tells the assistant that 'the words stay on screen for the whole clip'. A second cause (harness artifact): the joined film gave 404 and the grader did not see clip 3, so 'no Precipitation' was never truly checked.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In the planner's 'still' (exact words) route, stop relying on the video model to keep the text. Make the clip from the still without the text, then burn the exact label into the clip's beat time range at join time (ffmpeg drawtext/overlay in join_production_clips). The label then stays exact and on screen for the whole stage. Until that exists, change the 'still' option text so it no longer says the words stay for the whole clip. Separately, fix the harness so the joined film URL can be downloaded and is the file the grader sees."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.5002202
+}

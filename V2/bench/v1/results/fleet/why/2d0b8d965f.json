@@ -1,0 +1,47 @@
+{
+ "id": "2d0b8d965f",
+ "key": "must:H44c:All three lines fully inside the frame and readable together for at least 3 s",
+ "symptom": "All three lines fully inside the frame and readable together for at least 3 s",
+ "item": "H44c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'all three lines inside the frame and readable together for at least 3 s' not met in either chat?",
+    "because": "In both chats the text that reached the frames was wrong or did not stay. In old, the text is misspelled in both videos and the 16:9 video has no date. In new, the text is gone by about 4 s in both clips, the 9:16 title reads 'Jizz', and the 16:9 date is garbled.",
+    "evidence": "s4.old.happy.H44c/grade.json: exact_text 'Rooffop Jazz', 'Sky Teracce, Manstacer', 16:9 date 'missing'. s4.new.dumper.H44c/grade.json: 'Text is visible only near the start. It is gone by 4 s in both clips'; 16:9 date read as 'TCU1W0I226' / '1sL.llay2026'."
+   },
+   {
+    "why": "Why was the text misspelled in the old build?",
+    "because": "In the old build the assistant asked ltx-2.5 text-to-video to draw the three lines inside the generated scene. No exact-text overlay existed, so the model's own lettering was the only text.",
+    "evidence": "s4.old.happy.H44c/calls.jsonl: two create_video_from_text calls, model 'ltx-2.5', 480p, prompt '...\"Rooftop Jazz\" as the main title, below it \"18 July 2026\"... Text spelled exactly'. The assistant's reply says 'AI video often misspells words... add the three lines in an editor'."
+   },
+   {
+    "why": "Why did the new build's 'still' route (picture with the text first, then animate it) also fail?",
+    "because": "The new planner sent the exact words to qwen-image-2.1, which garbled the 16:9 date. It then animated the still with ltx-2.5 image-to-video, using a prompt that asks for a 'slow camera push-in' and says 'no title cards, no captions'. The model zoomed or redrew the lettering out of the picture within a few seconds.",
+    "evidence": "s4.new.dumper.H44c/calls.jsonl, plan_video_production result with answers {words-1:'still'}: steps generate_image (qwen-image-2.1) then create_video_from_image (ltx-2.5) with prompt '...slow camera push-in... No repeated shots, no title cards, no captions'. grade.json: text gone by 4 s; 16:9 date garbled; 'the 9:16 push-in crops' in late frames."
+   },
+   {
+    "why": "Why did the assistant choose that route and present the text as fixed?",
+    "because": "The planner's option text for 'still' promised 'Exact; the words stay on screen for the whole clip'. The assistant trusted that promise and could not see the frames to check. The join's 'checked' list measures only duration and music. It left the words line 'unchecked', so nothing flagged the loss.",
+    "evidence": "plan_video_production questions.options.still: 'Exact; the words stay on screen for the whole clip.' join_production_clips output: 'unchecked': ['On screen, spelled exactly: ...'], 'not_met': []. The assistant's reply: 'the text stays on screen for all 10 seconds... I couldn't view the finished frames myself'."
+   },
+   {
+    "why": "Why can't any of these routes keep the exact text?",
+    "because": "Every route puts the words in through generative pixels: ltx-2.5 t2v, qwen still, or ltx-2.5 i2v. On the free plan these models do not spell or keep text reliably. The new planner itself reports 'ltx-2.5 got them wrong 0 of 4 times'. Neither build has a deterministic overlay that draws the text in code on the final video.",
+    "evidence": "plan_video_production question words-1: 'ltx-2.5 got them wrong 0 of 4 times; minimax-h3 right 2 of 2'. Old calls are fixed at ltx-2.5/480p. Only the 'card' option is called 'Always exact', and it puts the text on a separate card, not over the scene the brief asks for."
+   }
+  ],
+  "axiom": "The free-plan generators (ltx-2.5 video and qwen-image) cannot spell exact text or keep it stable on screen. Neither build has a code-drawn text overlay on the scene. In the new build the planner also promises that the 'still' route keeps the text exact for the whole clip, but its image-to-video prompt (camera push-in, 'no captions') breaks that promise.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-drawn overlay option to join_production_clips (for example ffmpeg drawtext with the beat's exact_words, inside safe margins, for the whole beat). Make it the recommended answer for exact_words over a scene. Until then, in the 'still' route remove 'camera push-in' and 'no captions' from the create_video_from_image prompt. Also change the 'still' option text so it no longer promises 'exact for the whole clip'."
+ },
+ "error": null,
+ "seconds": 48,
+ "usd": 0.4367722
+}

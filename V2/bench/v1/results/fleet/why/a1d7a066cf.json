@@ -1,0 +1,46 @@
+{
+ "id": "a1d7a066cf",
+ "key": "must:B12a:The retained floor and background match the source photo, with no added text or decorative elements.",
+ "symptom": "The retained floor and background match the source photo, with no added text or decorative elements.",
+ "item": "B12a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the delivered images fail 'retained floor and background match the source, no decorative elements'?",
+    "because": "In both chats the room background was not kept. Stupid chat: the room and grey floor became a beige studio with added green leaves. Dumper chat: the wall, floor and clutter were redrawn and moved.",
+    "evidence": "s1.old.stupid.B12a/grade.json must[4]: 'room and grey floor were replaced with a beige studio background, and decorative green leaves were added'. s1.old.dumper.B12a/grade.json must[4]: 'background is rearranged and redrawn... floor was extended and changed'."
+   },
+   {
+    "why": "Why was the background changed?",
+    "because": "Both assistants used edit_image with model flux-2-klein at 640px, the only free-plan option the tool description points to. This model makes a new image from a prompt. It does not crop or pad the source pixels.",
+    "evidence": "s1.old.*.B12a/calls.jsonl: one edit_image call each, model 'flux-2-klein', resolution '640px', aspect_ratio '1:1'. tools-old.json edit_image description: 'For a Free account with no requested model, flux-2-klein at 640px with image_count=1 is an available option'."
+   },
+   {
+    "why": "Why didn't the dumper chat keep the background, when its prompt asked for it?",
+    "because": "The dumper assistant asked for the scene to be extended and said 'Do not change ... any existing content'. The model still redrew the whole image, and the result was not even square. Both outputs are 640x384, so flux-2-klein ignored aspect_ratio 1:1 as well as the preservation instruction.",
+    "evidence": "s1.old.dumper.B12a/calls.jsonl prompt: 'continue the grey floor below and the wall ... Do not change the sneaker, colors, lighting or any existing content'. Both grade.json files: checks 'aspect 1:1' got ['640x384']. Dumper grade.json: 'Output is about 640×384, still wide'; 'shoe looks regenerated'."
+   },
+   {
+    "why": "Why did the stupid chat go further and ask for a new background and props?",
+    "because": "The stupid persona's opening message dropped every constraint ('can you make a post with this pic'). The 'square' and 'change nothing else' facts were only in the hidden answer bank, and the persona reveals bank facts only when asked. The assistant did not ask, read 'post' as 'make it a premium product shot' and invented the studio background and leaves. Nothing in the tool descriptions caused this choice.",
+    "evidence": "s1.old.stupid.B12a/chat.json messages[0].text: 'can you make a post with this pic'. Its bank: 'Keep the original photo appearance. No added text or other edits.' calls.jsonl prompt: 'Replace the cluttered room background with a minimal soft beige studio backdrop ... a few small green leaves as tasteful props'. B12a.json expect.asks: 'never'."
+   },
+   {
+    "why": "Why could no assistant deliver a faithful square version?",
+    "because": "The old server has no tool that crops or pads the source image without redrawing it. The edit_image description does not warn that edits redraw the whole scene, or that aspect_ratio may not be applied. A resize request can only go through a generative model that redraws the scene and ignores the size you ask for.",
+    "evidence": "tools-old.json: the image tools are edit_image, generate_image, upscale_image, remove_image_background, face/head swap, colorize and others. None crops or pads. edit_image aspect_ratio says only 'The aspect ratio of the output image(s)'. Neither assistant opened a preview: dumper reply 'I couldn't open a preview'. The stupid assistant called wait_for_image_project with include_inline_downloads=false."
+   }
+  ],
+  "axiom": "The free-plan edit model, flux-2-klein, makes a new image instead of keeping the source pixels. It ignored both the 'do not change existing content' instruction and aspect_ratio 1:1: both outputs are 640x384. The old server has no tool that crops or pads a picture without redrawing it. In the stupid chat, the persona's vague opening message ('make a post') added a second cause: the assistant invented a studio background on its own.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a server tool that resizes without redrawing: it crops to 1:1 or pads to 1:1 (with a mirrored or blurred edge fill) using the source pixels. Point resize requests to that tool in the edit_image description. The description should also say that edit_image redraws the whole image, and that aspect_ratio may not be applied, so the assistant must check the output size. Separately, fix the harness's 'aspect 1:1' check: it passes 640x384 files."
+ },
+ "error": null,
+ "seconds": 73,
+ "usd": 0.692179
+}

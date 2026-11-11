@@ -1,0 +1,156 @@
+{
+  "id": "IS07",
+  "item": {
+    "id": "IS07",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Trim a clip",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Trim a clip",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "video",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "v4-classroom-wipe.mp4"
+        ],
+        "text": "cut this down"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "range": "keep the first 6 seconds"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "trim_video"
+  },
+  "session": "mcp-mim-IS07",
+  "sessionDir": "sessions/mcp-mim-IS07",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "cut this down",
+      "materials": [
+        "v4-classroom-wipe.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "Which part should be kept (from when to when, or 'the best 10 seconds')?",
+          "asked": [
+            "question"
+          ],
+          "user": "Keep the first 6 seconds.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "Got it—keep **0:00–0:06**. I don’t have a trimming tool available in this chat, so I haven’t changed the file.\n\nWith FFmpeg, you can make the cut using:\n```bash\nffmpeg -i v4-classroom-wipe.mp4 -t 6 -c:v libx264 -c:a aac classroom-6s.mp4\n```",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"cut this down\\n[Attached: v4-classroom-wipe.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/617f21e4-14dd-4f58-97ee-6d9a37d2ed33-video-0.mp4]\"}],\"attachments\":[{\"name\":\"v4-classroom-wipe.mp4\",\"kind\":\"video\"}],\"tool\":\"trim_video\",\"params\":[{\"name\":\"edit\",\"value\":\"cut this down\",\"source\":\"user\"},{\"name\":\"range\",\"source\":\"missing\"},{\"name\":\"seconds\",\"source\":\"missing\"}]}",
+          "output": "{\"tool\":\"trim_video\",\"ready\":false,\"params\":[{\"name\":\"range\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"range\",\"question\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"cut this down\\n[Attached: v4-classroom-wipe.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/617f21e4-14dd-4f58-97ee-6d9a37d2ed33-video-0.mp4]\"},{\"role\":\"assistant\",\"text\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"},{\"role\":\"user\",\"text\":\"Keep the first 6 seconds.\"}],\"attachments\":[{\"name\":\"v4-classroom-wipe.mp4\",\"kind\":\"video\"}],\"tool\":\"trim_video\",\"params\":[{\"name\":\"range\",\"value\":{\"start_seconds\":0,\"end_seconds\":6},\"source\":\"derived\",\"from\":\"Keep the first 6 seconds.\"}]}",
+          "output": "{\"tool\":\"trim_video\",\"ready\":true,\"params\":[{\"name\":\"range\",\"value\":{\"start_seconds\":0,\"end_seconds\":6},\"source\":\"derived\",\"from\":\"Keep the first 6 seconds.\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Which part should be kept (from when to when, or 'the best 10 seconds')?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "Got it—keep **0:00–0:06**. I don’t have a trimming tool available in this chat, so I haven’t changed the file.\n\nWith FFmpeg, you can make the cut using:\n```bash\nffmpeg -i v4-classroom-wipe.mp4 -t 6 -c:v libx264 -c:a aac classroom-6s.mp4\n```",
+        "refuse": "",
+        "tier_move": "Got it—keep **0:00–0:06**. I don’t have a trimming tool available in this chat, so I haven’t changed the file.\n\nWith FFmpeg, you can make the cut using:\n```bash\nffmpeg -i v4-classroom-wipe.mp4 -t 6 -c:v libx264 -c:a aac classroom-6s.mp4\n```",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 30
+    }
+  ],
+  "started": "2026-11-05T09:15:22.949Z",
+  "spent": 0,
+  "seconds": 32
+}

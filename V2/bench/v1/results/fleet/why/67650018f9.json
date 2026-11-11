@@ -1,0 +1,47 @@
+{
+ "id": "67650018f9",
+ "key": "must:B11a:Caption reads exactly 'A little room to breathe' without quotes",
+ "symptom": "Caption reads exactly 'A little room to breathe' without quotes",
+ "item": "B11a",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Caption reads exactly A little room to breathe' not met?",
+    "because": "In all 3 chats the finished image shows the caption with a wrong letter: a different misspelling each time, so this is not one repeated mistake.",
+    "evidence": "grade.json read_as values: s1.new.happy = 'A little room to breæthe'; s1.new.stupid = 'A little room to breatle.'; s1.old.happy = 'A Alittle room to breathe'. In each chat the other three must-haves (white, near the bottom, framing kept, flat overlay) are met."
+   },
+   {
+    "why": "Why did the image have wrong letters? Did the assistant send the wrong text?",
+    "because": "No. The assistant sent the exact caption in the edit_image prompt and told the model to spell it exactly. The letters were drawn by the image model, which got them wrong.",
+    "evidence": "calls.jsonl edit_image args: new.happy prompt 'Add the caption text \"A little room to breathe\" ... spelled exactly like that'; old.happy has the same text; new.stupid 'Spell it exactly: A little room to breathe.'. In new.happy, plan_request returned exact_words ['A little room to breathe'] correctly."
+   },
+   {
+    "why": "Why does the image model draw the words wrong when it gets the right string?",
+    "because": "edit_image draws the caption as pixels with a diffusion edit model (flux-2-klein in old.happy and new.stupid, qwen-edit in new.happy) at the free-plan 640px size. These models do not place letters one by one from a font. They often add, drop or change a letter, and the build or model does not change this.",
+    "evidence": "calls.jsonl: model 'flux-2-klein' / 'qwen-edit', resolution '640px'. The output is 640x384 (grade.json checks). Errors appear across both models and both builds with good prompts."
+   },
+   {
+    "why": "Why was the bad image delivered and not redone?",
+    "because": "The assistant could not see the result. fetch_image_download returned empty content to it, so it could not check the spelling and retry. It only told the user to check the spelling.",
+    "evidence": "calls.jsonl fetch_image_download output: \"\" in old.happy and new.happy. In new.stupid there is no fetch call. The final replies say 'I couldn't open the finished picture here to check it' / 'I couldn't preview the result here'. In new.stupid the reply wrongly says the caption is right."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Neither build has a step that writes text exactly. Text in an image depends on the generative model, and the server does not check the result. The spelling error comes from the model itself; the missing preview only stopped the assistant from catching it.",
+    "evidence": "Different garbles in 3 of the runs with correct prompts on both builds and two models. The new build adds plan_request (tools-new.json), which checks the words before the call, not the pixels after it."
+   }
+  ],
+  "axiom": "The generative image-edit models (flux-2-klein, qwen-edit) at the free 640px size cannot reliably draw an exact text string. Even with a correct, spelled-out prompt they add or garble letters at random.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add an exact-text path for 'add a caption over my photo' requests. The server draws exact_words as a font overlay on the uploaded image (deterministic compositing, no diffusion), so the spelling is always right. As a fallback, return the output image to the assistant from fetch_image_download (now the content is empty), so the assistant can check the spelling and run the edit again before it delivers."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.19856820000000003
+}

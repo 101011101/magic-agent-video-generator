@@ -1,0 +1,47 @@
+{
+ "id": "4247685af7",
+ "key": "must:D23a:Opening title reads exactly 'A quieter kind of morning'",
+ "symptom": "Opening title reads exactly 'A quieter kind of morning'",
+ "item": "D23a",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why is no 'A quieter kind of morning' title seen in the graded frames?",
+    "because": "In all 3 chats the file the grader looked at has no title card. Both stupid chats show only lake footage. The dumper chat was graded on the raw 4 s lake clip instead of the joined 6 s film.",
+    "evidence": "s3.new.stupid grade.json: 'No title appears in any sampled frame, including 0.6 s'. s3.new.dumper grade.json: 'The clip supplied is 4 s of lake footage only', duration check 'got 4 s'. The old stupid chat delivered a single 5 s lake clip (calls.jsonl)."
+   },
+   {
+    "why": "Why did the two stupid chats make a lake clip with no title?",
+    "because": "The assistant never knew a title was wanted. Its generation prompts had only lake details. The new build's prompt even says 'No text.' and plan_request got exact_words=[].",
+    "evidence": "s3.old.stupid calls.jsonl: create_video_from_text prompt 'A serene mountain lake at sunrise ... slow cinematic camera glide', no title. s3.new.stupid calls.jsonl: plan_request params exact_words value [] source 'derived'; create_video_from_text prompt ends 'No text.'"
+   },
+   {
+    "why": "Why did the assistant not know about the title?",
+    "because": "The harness gave the stupid persona the opening line 'make a video of a mountain lake'. That line drops the title, the card colours and the 2 s timing, which are the whole point of the test. The full request exists only in the persona's private knowledge bank.",
+    "evidence": "chat.json (old and new stupid): messages[0].text = 'make a video of a mountain lake'. bank holds 'Title wording: A quieter kind of morning...'."
+   },
+   {
+    "why": "Why did the title not come out during the dialogue?",
+    "because": "The persona only answers questions it is asked, in plain words, from its bank. The old assistant asked nothing. The new plan_request listed exact_words as missing but its questions were only about seconds, aspect and sound, so the user only answered '6 sec, silent... wide like youtube'. The item also sets expect.asks='never', so the test does not expect the assistant to ask.",
+    "evidence": "s3.new.stupid calls.jsonl line 2: questions = seconds/aspect/sound only. Line 6 user reply. Persona reply rule in chat.json: 'answer it from your knowledge bank'. D23a.json expect.asks 'never'."
+   },
+   {
+    "why": "Why does the grader still require the exact title?",
+    "because": "The grader scores every persona against the full must_haves of D23a, including text that the vague persona never said. So the check cannot pass unless the assistant guesses unseen words. This is a defect of the harness design, not of the MCP tools. In the dumper chat (a separate cause) the new build did draw the card, but the harness could not download the joined film (404 on 127.0.0.1:8000) and graded the 4 s raw clip.",
+    "evidence": "s3.new.stupid grade.json must[0] graded against 'A quieter kind of morning'. s3.new.dumper calls.jsonl: plan_video_production has a card beat with exact_words ['A quieter kind of morning']; join_production_clips returned http://127.0.0.1:8000/films/...mp4; files: 'download failed: download 404'."
+   }
+  ],
+  "axiom": "Harness defect: the stupid persona's opening message ('make a video of a mountain lake') leaves out the exact title. The title exists only in the hidden bank, and the persona only gives it when asked. The grader still demands that exact text. In the dumper chat, the harness could not download the joined film from the local server (404), so the grader only saw the raw lake clip.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the opening message of every persona contain the brief's non-negotiable exact_text, for example 'make a lake video that starts with a title saying A quieter kind of morning'. Or skip the exact-text must-have when the persona never gave it. Separately, make the harness fetch the joined film so the dumper chat is graded on the right file: serve the 127.0.0.1:8000 /films output or copy the file to the harness directly."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.2437492
+}

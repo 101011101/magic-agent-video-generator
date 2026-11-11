@@ -1,0 +1,52 @@
+{
+ "id": "8a24e0921c",
+ "key": "must:A03b:Exactly four text blocks separated by clear space",
+ "symptom": "Exactly four text blocks separated by clear space",
+ "item": "A03b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "The grader did not judge the block rule correctly. The text in the delivered image is in four groups with clear space between them. The second group wraps onto two lines with normal line spacing, and the grader counted that wrap as a fifth block. The answer sheet asks only that the date and time stay together in the second block, and they do. The real errors in that image are a different check: the generator wrote 22:30 instead of 22:00. The generator wrapped the line because a 352px-wide 9:16 canvas is narrow. That is a limit of the model, and it is not a block error. The old-build chat failed this item for a separate reason. The 'stupid' simulated user sent only 'can you make a night market flyer'. The assistant made a flyer at once with made-up text and did not ask for the wording. The harness then ended the chat after that first delivery, so the user never gave the four blocks.",
+  "category": "grader_artifact",
+  "builds": "new",
+  "fix": "Change the grader rubric for 'Exactly four text blocks'. Tell the grader to count blocks by the large vertical gaps between text groups, not by lines. Text that wraps onto two lines inside one group with normal line spacing counts as one block, and the date and time staying together satisfies block 2. Optional, to stop the wrap at the source: the assistant prompt can say 'keep \"18 September 2027 | 18:00–22:00\" on one line', or the image can be made at 1:1 before the 4:5 reframe so the line has more width.",
+  "whys": [
+   {
+    "why": "Why was 'Exactly four text blocks separated by clear space' marked not met in the new-build chat?",
+    "because": "The grader read the second block as two blocks, because the date breaks after 'September'.",
+    "evidence": "s1.new.dumper.A03b/grade.json must[0]: 'The date line is split into two lines ('18 September' / '2027 | 18:00–22:30'), so it reads as five lines/blocks.' The exact_text entry reads it as '18 September / 2027 | 18:00–22:30'."
+   },
+   {
+    "why": "Why is the date text on two lines?",
+    "because": "qwen-image-2.1 wrapped the long string when it made the 9:16 image at 352px width. The qwen-edit reframe to 4:5 kept that layout. The assistant's prompt gave the string as one block but did not say it must fit on one line.",
+    "evidence": "calls.jsonl line 15: generate_image with aspect_ratio 9:16, resolution 640px, prompt 'Block 2, medium: \"18 September 2027 | 18:00–22:00\"'. assets/01-wait_for_image_project.png (352x640) already shows the break. assets/02 (512x640, the 4:5 edit) shows the same break. grade.json checks show sizes ['352x640','512x640']."
+   },
+   {
+    "why": "Why was the image made on a narrow 9:16 canvas and not directly at 4:5?",
+    "because": "The assistant says the image maker supports only 1:1, 16:9 or 9:16. The new build's plan_request changed the user's 4:5 to 9:16. So the assistant made a 9:16 image and then reframed it to 4:5.",
+    "evidence": "calls.jsonl line 3 and later: plan_request returns aspect value '9:16' after the user gave '4:5'. state/calls line 12: the assistant says 'the image maker only makes 1:1, 16:9 or 9:16 ... reframe it to 4:5 with the image editor'. Line 17: edit_image with aspect_ratio 4:5."
+   },
+   {
+    "why": "Does the wrap really create a fifth block under the rubric?",
+    "because": "No. In the image the two date lines have normal line spacing. The gaps between NIGHT MARKET, the date group, Old Mill Courtyard and Free entry are much larger. So there are four groups with clear space between them, and the date and time stay together in group 2, as the answer sheet asks. The grader counted lines, not blocks.",
+    "evidence": "assets/02-wait_for_image_project.png: four groups with wide gaps; the '18 September' and '2027 | 18:00–22:30' lines are close together. items/A03b.json answer_sheet 'Text grouping': 'Exactly four separate blocks with clear space between them; the date and time belong together in the second block.'"
+   },
+   {
+    "why": "Why does the rubric let the grader count a wrapped line as a block?",
+    "because": "The must_have says only 'four text blocks visibly separated by clear space'. It does not say what a block is or that a wrapped line inside a block is allowed. This leaves room to count lines. The real defect in this image, 22:30 instead of 22:00, is already counted under the 'Second block' item.",
+    "evidence": "items/A03b.json must_haves[0]. grade.json must[1] separately fails the date/time for 22:30."
+   },
+   {
+    "why": "Why did the other failing chat (old, stupid) fail the same item?",
+    "because": "The failure has a different cause in that chat. The simulated user sent only a vague first message. The assistant generated at once with made-up copy and did not ask for the wording. The harness ended the chat after that first delivery, so the user never gave the four blocks.",
+    "evidence": "s1.old.stupid.A03b/chat.json messages: 'can you make a night market flyer'. calls.jsonl line 2: the prompt invents 'Street Food • Live Music • Local Makers'. Lines 6-7: turn_end / end 'delivered' at msg 0. grade.json: 'Only two text blocks: title and tagline.'"
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 57,
+ "usd": 0.3156852
+}

@@ -1,0 +1,47 @@
+{
+ "id": "4a68fb22f7",
+ "key": "must:A05c:Curly dark hair and original expression recognisable",
+ "symptom": "Curly dark hair and original expression recognisable",
+ "item": "A05c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Curly dark hair and original expression recognisable' not met?",
+    "because": "The headshot shows a broad toothy smile. The source photo shows a subtle closed-mouth smile. The hair is kept.",
+    "evidence": "s1.new.stupid.A05c/grade.json: 'expression changed from a subtle closed-mouth smile to a broad toothy smile'. s1.old.stupid.A05c/grade.json gives the same reason. I compared attachments/portrait-woman.jpg (closed lips, park, grey sweater) with assets/01-wait_for_image_project.png (teeth showing, navy blazer, office)."
+   },
+   {
+    "why": "Why did the output change the expression?",
+    "because": "The face was made again by the AI_HEADSHOT job in its default 'Professional' style. No instruction to keep the source expression was sent.",
+    "evidence": "calls.jsonl in both chats: generate_headshot args = {assets:{image_file_path:...}} only, with no style.prompt. The result type is AI_HEADSHOT, 50 credits. The assistant's reply in both builds: 'default professional style' / 'standard professional headshot style'."
+   },
+   {
+    "why": "Why did the assistant send no prompt to keep the expression?",
+    "because": "The vague user never said she wanted to keep her expression, age or skin. Her only message was 'can you make a headshot from this pic'. The test expects the assistant never to ask, so the assistant went straight to the default.",
+    "evidence": "s1.new.stupid.A05c/chat.json: messages[0].text = 'can you make a headshot from this pic'. The bank holds 'Keep my facial proportions, expression...', but the stupid persona gives it only when asked. items/A05c.json: expect.asks = 'never'."
+   },
+   {
+    "why": "Why did the tool not lead the assistant to keep the expression anyway?",
+    "because": "The generate_headshot description tells the assistant to leave out the prompt. It does not warn that the default style makes the face again and can change the expression, so calling with no prompt looked safe.",
+    "evidence": "tools-new.json generate_headshot, style.prompt: 'We recommend omitting the prompt unless you want to customize your headshot.' The tool description says only 'Creates a headshot from a supplied photo... with optional appearance instructions'. The old build made the identical call, so it very likely saw the same text (I read only tools-new.json)."
+   },
+   {
+    "why": "Why does the default headshot style add a toothy smile?",
+    "because": "The headshot model makes the portrait again from a fixed professional style, and that style includes a friendly open smile. It does not copy the expression of the source. This is a property of the generation model. No chat sent a prompt to keep the expression, so I can't show whether a prompt would fix it.",
+    "evidence": "Both builds made the same call with no prompt from the same source. Both outputs have the same blazer, cream blouse, office background and toothy smile (both grade.json files). So the smile comes from the model's default, not from anything the assistant sent."
+   }
+  ],
+  "axiom": "The Magic Hour AI headshot model makes the face again in its default 'Professional' style, with a broad smile. It does not copy the source expression. The vague user never stated the keep-expression constraint, and the test does not let the assistant ask for it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Change the generate_headshot description: stop saying the prompt should be left out. Say that the default style makes the face again and can change the expression. Tell the assistant to always send a style.prompt such as 'Keep the person's exact facial expression, features, age and skin texture from the source photo; change only the outfit, background and lighting'. Also tell it to compare the result with the source before it delivers."
+ },
+ "error": null,
+ "seconds": 61,
+ "usd": 0.6536801999999999
+}

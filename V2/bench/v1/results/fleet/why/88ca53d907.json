@@ -1,0 +1,47 @@
+{
+ "id": "88ca53d907",
+ "key": "must:E27c:Music audible but subordinate, not muted",
+ "symptom": "Music audible but subordinate, not muted",
+ "item": "E27c",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Music audible but subordinate, not muted' not met?",
+    "because": "No video with music mixed in was delivered. Each chat delivered only a standalone music WAV, so the grader had no music-under-speech mix to judge.",
+    "evidence": "s3.new.happy.E27c/grade.json: 'a video was made' failed (got [\".wav\"]), and the must item says 'The music is only a standalone track. It is not placed under any speech.' In s3.new.dumper and s3.old.dumper, calls.jsonl shows only generate_music + wait_for_audio_project, and the output is assets/01-wait_for_audio_project.wav."
+   },
+   {
+    "why": "Why did the assistant deliver only a WAV and not a mixed video?",
+    "because": "In all three chats the assistant decided that no tool can put a music track under a video's existing audio while keeping the radio calls. It made the music and told the user to mix it in an editor.",
+    "evidence": "old.dumper reply: 'Magic Hour has no tool that adds a music track under a video's existing audio.' new.dumper reply: 'None of my tools can lay a music track under a video's existing audio and keep the original sound.' new.happy first reply: 'None of my tools can mix music into a video you already have and set the level'."
+   },
+   {
+    "why": "Was that decision correct, or did the assistant miss a tool?",
+    "because": "It was correct. In tools-new.json, the only mixer is join_production_clips with `sound`, and it accepts only clips and sound from a plan_video_production production. join_videos only joins videos with hard cuts and has a `silent` flag, but no audio input and no level control. plan_request's tool enum has no mixing tool. The old build has no mixer either: in the old-build chat the assistant made the same finding and called no video tool.",
+    "evidence": "tools-new.json: join_videos description 'Join videos end to end with hard cuts... `silent`: remove all sound'. join_production_clips 'mixes the music under it' only for a `production` and `made` clips. new.happy calls.jsonl: join_videos on the user's asset returned HTTP 404 (not_found), so it also cannot take an uploaded asset path."
+   },
+   {
+    "why": "Why is the WAV 15 s or 30 s and not 7 s (the grader's reason)?",
+    "because": "generate_music has a minimum length of 15 s, and no tool trims or places audio. The assistant could not make a 7 s bed, and new.happy guessed 30 s because it could not read the clip's length.",
+    "evidence": "old.dumper reply: '15 seconds is the shortest track the tool makes'. new.happy first reply: '1 credit per second, 15 s or longer'. new.happy grade: 'about 7 s' failed, got '30 s'."
+   },
+   {
+    "why": "Why does neither build give a way to mix audio into a user's video?",
+    "because": "The server has no 'add audio to existing video' capability (mix a track at a set level or with ducking under the original audio). The new build's mixer exists only inside the production pipeline for generated clips. This is a missing tool, not a model or free-plan limit.",
+    "evidence": "tools-new.json lists generate_music, trim_video, join_videos, join_production_clips and create_production_sound, but no tool takes (user video + audio track + gain/ducking). E27c.json expects beyond_free='no', so the test assumes the task is possible on the free plan."
+   }
+  ],
+  "axiom": "Neither MCP build has a tool that mixes a music track under the existing audio of a user's video at a set level or with ducking. The only mixer, join_production_clips with `sound`, works only on clips made through plan_video_production. generate_music also has a 15 s minimum. So the assistant correctly delivered only a separate track, and no 'music under speech' result could exist.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add an add_music_to_video tool. Inputs: a user video (an uploaded file_path, a URL or a project id) and an audio project id or URL. Options: music_gain_db (default about -18 dB) and duck_under_speech (sidechain ducking). It keeps the original audio and video stream unchanged and trims or fades the music to the video's length. It returns the download URL and loudness. Do the work with the same ffmpeg path that join_production_clips already uses for its music mix. Also let join_videos accept uploaded api-assets paths, so it no longer returns HTTP 404 on them."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.2994808
+}

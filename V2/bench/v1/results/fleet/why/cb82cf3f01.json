@@ -1,0 +1,47 @@
+{
+ "id": "cb82cf3f01",
+ "key": "must:E27b:Deliverable is the original office video with an added audible music track, not just an audio file",
+ "symptom": "Deliverable is the original office video with an added audible music track, not just an audio file",
+ "item": "E27b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'original office video with an added music track' not met?",
+    "because": "In both chats the only file delivered was a separate WAV music track. No video with the music on it was made.",
+    "evidence": "s3.new.dumper.E27b/grade.json: the check 'a video was made' fails with got [\".wav\"], and the grader says 'Only a standalone 15 s WAV was delivered'. In s3.old.dumper.E27b/calls.jsonl the only result file is assets/01-wait_for_audio_project.wav (60 s)."
+   },
+   {
+    "why": "Why did the assistant send only an audio file?",
+    "because": "After generate_music and wait_for_audio_project, the assistant made no further call to put the track under the clip. It told the user to mix the track themselves in CapCut or iMovie.",
+    "evidence": "old calls.jsonl: the calls are generate_music (60 s) and then wait_for_audio_project. The final reply says 'drop the track on an audio layer under it'. new calls.jsonl: the calls are generate_music (15 s) and then wait_for_audio_project. The final reply gives 'Tips for layering it under your 10-second clip'."
+   },
+   {
+    "why": "Why did it not call a tool to mix the audio into the video?",
+    "because": "Both assistants decided that no available tool can lay an audio track under an existing video without regenerating the picture. They said so before they spent any credits.",
+    "evidence": "old calls.jsonl, first reply: 'None of the Magic Hour tools I have can mix an audio track into an existing video... the AI video editor... regenerates the footage.' new calls.jsonl, first reply: 'I have no tool here that can lay a music track under an existing video and leave the picture and the dialogue untouched.'"
+   },
+   {
+    "why": "Was that decision correct for the tools offered?",
+    "because": "Yes. The new build's only mixing path is join_production_clips with `sound`, and it works only on clips made by plan_video_production. join_videos only joins videos end to end (and has an option to remove sound). It has no audio input. The new assistant tried join_videos on the upload path and got HTTP 404, because the tool accepts only project ids or URLs. Even with a valid input, it could not add music. No tool in the old list I read adds audio either, and both assistants independently reached the same conclusion.",
+    "evidence": "tools-new.json: join_videos says 'Join videos end to end... `silent`: remove all sound' and has no audio parameter. join_production_clips says 'mixes the music under it' only for 'the finished clips of a plan'. plan_request's tool enum has no mix or overlay tool. new calls.jsonl line 2: join_videos returns error 404 not_found."
+   },
+   {
+    "why": "Why does the toolset have no 'add audio to the user's video' operation?",
+    "because": "Neither build exposes a plain mixing tool (video plus audio in, video out), even though the new build already has this mixing code inside join_production_clips. The server is missing a capability that the test needs, so the assistant had to choose between a separate track and regenerating the clip.",
+    "evidence": "tools-new.json: music mixing exists only in the production pipeline (create_production_sound and join_production_clips). E27b.json: the 'tests' field says 'delivery of the edited clip rather than ... a separate soundtrack'."
+   }
+  ],
+  "axiom": "The MCP toolset in both builds has no tool that mixes an audio track into an existing uploaded video. Music can be mixed only into films built by the production pipeline. The best result the assistant can deliver is a separate soundtrack, and that is the outcome the test penalizes.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool such as add_audio_to_video(video: an upload file_path, a project id or a URL; audio: an audio project id or a URL; music_gain_db default -18; keep_original_audio=true; trim_to_video=true). It reuses the ffmpeg mix from join_production_clips and returns the mixed video's download URL. Also let join_videos accept upload file_paths, and list the new tool in plan_request's tool enum."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.2289078
+}

@@ -1,0 +1,52 @@
+{
+ "id": "ae87fa6b5f",
+ "key": "must:H41c:Scene 1 reads exactly 'Less scrolling. More doing.'",
+ "symptom": "Scene 1 reads exactly 'Less scrolling. More doing.'",
+ "item": "H41c",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did Scene 1 not read exactly 'Less scrolling. More doing.' in the 3 failed chats?",
+    "because": "In each chat the words on screen came from a generative model. No step drew them as fixed text. In old.dumper the video model misspelled the line. In both new chats the line was correct in the first frame, then the animation warped it or removed it.",
+    "evidence": "s4.old.dumper grade.json exact_text read_as 'Less scrorling, More doing.'. s4.new.happy grade.json: 'correct at 0.3 s. It then melts into barcode-like garbage by 2.1 s'. s4.new.dumper grade.json: 'shows at 0.3 s and is gone by 1.2 s'."
+   },
+   {
+    "why": "Why did the old build let the video model draw the words?",
+    "because": "The old build has no planner and no text step. The assistant made one create_video_from_text call (ltx-2.5, 9 s) with all three lines in the prompt and accepted the result. ltx-2.5 cannot spell text in a scene reliably.",
+    "evidence": "s4.old.dumper calls.jsonl: one create_video_from_text call with model ltx-2.5 and the prompt 'centered bold green text reads exactly: \"Less scrolling. More doing.\"'. The new planner's own data in s4.new.*/calls.jsonl says 'ltx-2.5 got them wrong 0 of 4 times'."
+   },
+   {
+    "why": "Why did the new build also fail, given that its planner asked how the words should be made?",
+    "because": "The assistant picked 'still' for all three lines and did not pick the recommended 'card'. With 'still', qwen-image draws the words into a first frame, and ltx-2.5 image-to-video then animates that frame.",
+    "evidence": "s4.new.happy and s4.new.dumper calls.jsonl, plan_video_production: questions words-1..3 have 'recommend':'card'. The next call sends answers {words-1:'still',words-2:'still',words-3:'still'}. The resulting steps are generate_image qwen-image-2.1, then create_video_from_image ltx-2.5."
+   },
+   {
+    "why": "Why did the assistant pick 'still' over the recommended 'card'?",
+    "because": "The planner's own option text calls 'still' 'Exact; the words stay on screen for the whole clip'. That reads as better than 'card', which is 'Always exact. The words are not over the scene.' The brief asks for the lines 'one per scene', so 'still' seemed to meet both needs. The option text gave no warning that the video step can change the words.",
+    "evidence": "plan_video_production output in s4.new.happy and s4.new.dumper calls.jsonl, options.still: 'A picture of the scene with the words is made first and the clip starts from it. Exact; the words stay on screen for the whole clip.'"
+   },
+   {
+    "why": "Why did the words not stay exact during the 'still' clip?",
+    "because": "Nothing in the planner keeps the text. The image-to-video prompt it writes does not mention the words. The prompt also says 'no title cards, no captions', and in new.happy the setting adds 'no letters or numbers anywhere'. So ltx-2.5 is free to redraw the text, or is even pushed to remove it. ltx-2.5 does not keep glyphs from the first frame stable while it adds motion.",
+    "evidence": "s4.new.happy calls.jsonl clip 1 create_video_from_image prompt: '...no letters or numbers anywhere. 0-3 s: Simple green checkmark shapes pop in... No repeated shots, no title cards, no captions'. The new.dumper prompt drops 'no text' but still has no instruction to keep the text, and the text was gone by 1.2 s."
+   },
+   {
+    "why": "Why was the failure not caught before delivery?",
+    "because": "The join step measures only duration and audio. The text lines stay 'unchecked', and the assistant cannot watch the frames. So it delivered with a warning and did not fix the scene.",
+    "evidence": "join_production_clips output in both new chats: 'unchecked':['On screen, spelled exactly: \"Less scrolling. More doing.\"',...]. In the final messages the assistant says 'I can't watch the video from here'."
+   }
+  ],
+  "axiom": "ltx-2.5, the free-plan video model, cannot render exact on-screen text, and it does not keep text from a first frame intact while it animates. The new planner's 'still' option claims the opposite ('Exact; the words stay on screen for the whole clip') and does nothing to protect the text. This steered the assistant away from the 'card' option, which is the only exact one.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the new build, add exact_words with code, not with a model. In create_production_clip or join_production_clips, burn the line onto the ltx clip with an ffmpeg drawtext overlay. Do this both for 'still' and for a new 'overlay' option. Until then, change the 'still' option text so it says the words can warp or disappear when animated. Also remove 'no captions / no letters' from the image-to-video prompt when exact_words are present. With these changes, ltx-2.5 never has to keep the text intact."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.49708620000000003
+}

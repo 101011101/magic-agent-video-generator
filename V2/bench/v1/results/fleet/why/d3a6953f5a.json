@@ -1,0 +1,47 @@
+{
+ "id": "d3a6953f5a",
+ "key": "must:B09c:Grey floor and clutter replaced by seamless white setting",
+ "symptom": "Grey floor and clutter replaced by seamless white setting",
+ "item": "B09c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'grey floor and clutter replaced by seamless white setting' not met?",
+    "because": "Both outputs have the clutter removed and a seamless backdrop, but the backdrop is light grey and not white.",
+    "evidence": "s1.old.stupid.B09c/grade.json: 'Clutter is gone and the background is seamless, but it is light grey rather than white.' The summary also says 'seamless light-grey studio background'."
+   },
+   {
+    "why": "Why is the backdrop light grey?",
+    "because": "In both builds the assistant asked the model for a light grey backdrop. The model did what the prompt said.",
+    "evidence": "old calls.jsonl edit_image style.prompt: '...replace it with a seamless soft light-grey studio backdrop...'. new calls.jsonl edit_image style.prompt: '...Replace the cluttered room background with a seamless light grey studio backdrop...'"
+   },
+   {
+    "why": "Why did the assistant pick light grey and not white?",
+    "because": "The user never said 'white'. The stupid persona's only message was 'make a product pic from this pic', so the background colour was the assistant's own choice. It chose light grey on purpose, likely for contrast with a white shoe, and offered pure white only as a later option.",
+    "evidence": "chat.json messages[0].text = 'make a product pic from this pic'. Old reply: 'I can make another version with a pure white background...'. New reply: 'for example a pure white background'."
+   },
+   {
+    "why": "Why did the assistant not learn the white requirement before it made the image?",
+    "because": "No step asked for the background colour. The old build asked no questions. In the new build, plan_request flagged only exact_words as missing and returned ready=true with the edit 'a clean studio backdrop', which gives no colour. The item also says the assistant should not need to ask (expect.asks = 'never').",
+    "evidence": "new calls.jsonl plan_request output: questions only about exact_words, then ready:true. B09c.json expect.asks='never'. The fact 'Plain seamless studio white' is only in the persona bank (chat.json bank.Background)."
+   },
+   {
+    "why": "Why is the white requirement only in the bank and not in what the user said?",
+    "because": "The harness gives the stupid persona a cut-down first message that drops the key must-have ('plain studio white'). The grader still scores the output against the full brief. The item says no question is needed (asks='never'), but the vague opener makes the colour unknowable without a question. This defect is in the test harness, and it needs no deeper cause.",
+    "evidence": "B09c.json turns[0].text has 'plain studio white'. chat.json for the stupid persona sends only 'make a product pic from this pic'. grade.json scores against must_haves that say 'seamless white setting'."
+   }
+  ],
+  "axiom": "The stupid-persona opener drops the brief's only background fact ('plain studio white'). The item says the assistant should never need to ask (asks='never'), yet the grader holds the output to 'white'. So the colour is unknowable from the conversation, and the assistant's reasonable default (light grey) fails. This is a test-harness/item design defect. A tie-breaking contributor: the assistant chose light grey and not the usual pure-white default for a product shot.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, make the stupid persona's opener keep every fact that a must_have depends on when expect.asks='never' (here: 'product pic on white'). Another option: set B09c expect.asks to allow a background question. Secondary: add a 'background' row to plan_request for edit_image, so that a missing backdrop colour is returned as a question or defaults to pure white for product shots."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.1632794
+}

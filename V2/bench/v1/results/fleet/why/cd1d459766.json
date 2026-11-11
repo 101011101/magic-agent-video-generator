@@ -1,0 +1,47 @@
+{
+ "id": "cd1d459766",
+ "key": "must:I47c:Labels read exactly Evaporation, Condensation, Precipitation",
+ "symptom": "Labels read exactly Evaporation, Condensation, Precipitation",
+ "item": "I47c",
+ "n": 4,
+ "builds": {
+  "new": 2,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did all 4 chats fail 'Labels read exactly Evaporation, Condensation, Precipitation'?",
+    "because": "The frames show labels that are garbled, missing, or gone after about 1 s. No chat shows all three words, spelled right, on its own stage.",
+    "evidence": "grade.json: old.dumper reads 'Conddstion', 'Prerípitatior!' and no Evaporation. old.stupid says 'No labels at all.' new.happy has no Evaporation, Condensation 'fades out by 1.2 s', Precipitation not seen. new.dumper has Evaporation and Condensation right, Condensation gone by 1.2 s, Precipitation absent."
+   },
+   {
+    "why": "Why are the labels garbled in the old build?",
+    "because": "The old server has no planner. The assistant put the labels in a single ltx-2.5 text-to-video prompt, so the video model had to draw the text itself. In old.stupid the user only wrote 'make a video explaining the water cycle', so the assistant never asked for labels at all.",
+    "evidence": "old.dumper calls.jsonl: create_video_from_text, model ltx-2.5, prompt '...the single on-screen label \"Evaporation\" appears...'. old.stupid chat.json: messages[0] is 'make a video explaining the water cycle', and the prompt in calls.jsonl has the stage words only in parentheses, not as labels."
+   },
+   {
+    "why": "Why does ltx-2.5 not spell the labels?",
+    "because": "ltx-2.5 cannot render exact text. The new planner's own statistics say so. On the free plan the only video models are ltx-2.5 and minimax-h3.",
+    "evidence": "new.happy calls.jsonl, plan_video_production questions: 'ltx-2.5 got them wrong 0 of 4 times; minimax-h3 right 2 of 2'. old.stupid calls.jsonl, rejection reason: 'the free plan's video models are ltx-2.5 and minimax-h3'."
+   },
+   {
+    "why": "Why did the new build lose the labels after the assistant chose the 'still' option?",
+    "because": "The planner makes a qwen-image still with the word, but the ltx-2.5 image-to-video prompt for that clip leaves the word out and adds 'no title cards, no captions'. The model then animates the text away, or drops it. This breaks the option's promise that 'the words stay on screen for the whole clip'.",
+    "evidence": "new.happy and new.dumper calls.jsonl, step 4/7 plan: the generate_image prompt says 'The words \"Evaporation\" are written large...'. The create_video_from_image prompt says '...No repeated shots, no title cards, no captions...' and does not mention the word. The 'still' option text says 'Exact; the words stay on screen for the whole clip.' grade.json: 'Condensation... fades out by 1.2 s'."
+   },
+   {
+    "why": "Why was 'Precipitation' never seen in the new chats?",
+    "because": "The joined film was not available to the harness: its download got a 404. So the grader saw only the separate clip files and saw no clip-3 frames, and its 'about 10 s' check measured a single clip.",
+    "evidence": "new.happy and new.dumper calls.jsonl, join_production_clips: files 'download failed: download 404 http://127.0.0.1:8000/films/...mp4'. grade.json: 'about 10 s' got '3 s', black-frame checks run only on 01 and 02, and the grader says 'No rain clip was provided'."
+   }
+  ],
+  "axiom": "The free plan's video model, ltx-2.5, cannot render exact on-screen text, and it does not keep text that is drawn into its start image. Every path that leaves the labels to the video model (old: the text-to-video prompt; new: the 'still' option followed by image-to-video) therefore loses or garbles them. In the new chats a harness 404 on the joined film adds to the failure, because it hid clip 3 from the grader.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Do not leave exact_words to the video model. In join_production_clips, have the new server burn each beat's exact_words onto that beat's time span as a code-drawn text overlay (for example ffmpeg drawtext), and make that overlay the recommended option. Until then, add 'keep the text \\\"X\\\" on screen, unchanged' to the image-to-video prompt for the 'still' option. Also fix the harness so it downloads the joined film from 127.0.0.1:8000 and grades that film, not the separate clips."
+ },
+ "error": null,
+ "seconds": 53,
+ "usd": 0.6093936
+}

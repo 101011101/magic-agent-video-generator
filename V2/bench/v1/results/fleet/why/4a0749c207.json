@@ -1,0 +1,52 @@
+{
+ "id": "4a0749c207",
+ "key": "must:A03d:Entire address in order",
+ "symptom": "Entire address in order",
+ "item": "A03d",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Entire address in order' not met in s1.new.stupid.A03d?",
+    "because": "The one flyer made has the headline, date and time right, but the address lines are garbled. Only 'Unit 14B' and 'Kingston upon Thames' can be read, the postcode reads as 'KT1 20A6', and the type is tiny and smeared.",
+    "evidence": "s1.new.stupid.A03d/grade.json: must 'Entire address in order' met=no; exact_text read_as 'Unit 14B, [garbled] / Old Foundry ... [garbled] / 'Kingston upon Thames, KT1 20A6''; faults 'The address text is very small and low-resolution' (major). I could not open a grade/*.jpg frame (01-wait_for_image_project.jpg does not exist), so I rely on the grader's reading."
+   },
+   {
+    "why": "Why is the address garbled when the assistant had the exact address?",
+    "because": "The full address did reach the model, word for word, in the prompt. The image model drew it as letter shapes and got them wrong. The assistant and the server passed the text on correctly; the model then rendered it wrong.",
+    "evidence": "s1.new.stupid.A03d/calls.jsonl line 11: generate_image style.prompt ends 'At the bottom in smaller text: Unit 14B, Second Floor, The Old Foundry Arts Centre, 127–129 St. John’s Road, Kingston upon Thames, KT1 2AB.' Headline, date and time from the same prompt came out exact (grade.json exact_text 'exact')."
+   },
+   {
+    "why": "Why did the model get the address wrong but render the shorter lines correctly?",
+    "because": "The address is about 105 characters. The prompt asked for it 'in smaller text' at the bottom of a 352x640 canvas, so each letter got only a few pixels. Diffusion text rendering breaks down on long strings at small size.",
+    "evidence": "calls.jsonl line 11: resolution '640px', aspect_ratio '9:16', 'in smaller text'; grade.json checks aspect got '[\"352x640\"]'. The assistant's own reply (line 14): 'AI image models often get long text wrong, especially a long address.'"
+   },
+   {
+    "why": "Why only 640px?",
+    "because": "640px is the largest image size on the free plan, so the run could not use a higher resolution to give the small text more pixels.",
+    "evidence": "s1.old.stupid.A03d/calls.jsonl line 5, the assistant's reply: '640px on the long side, the largest your free plan allows'. The new chat (line 14) says 'This is the free 640px size'."
+   },
+   {
+    "why": "Why did the server not route this around the model's text limit, for example by making text-free artwork and adding the exact text afterwards?",
+    "because": "The new build's plan_request checks only whether parameters are present. It returned ready=true with no warning about long exact text at the free size. It also set aspect to 9:16 'from the user's words', but the user never said 9:16. The assistant offered the overlay route only after generating. The server has no tool that renders exact text, so the model's text rendering is the only path.",
+    "evidence": "s1.new.stupid.A03d/calls.jsonl line 10: plan_request output ready=true, aspect '9:16' source 'user' from 'the user's words', questions []. The user's messages in line 6 never mention a shape. Line 14: 'You could also have the artwork made with no text and add your words in any editor'."
+   },
+   {
+    "why": "Why did the old build fail the same item?",
+    "because": "The cause is different. The old assistant never asked for the exact words. It made up its own text ('OPEN STUDIO', 'Live demos • Prints for sale…'), so no address was ever sent. Nothing in the old tool list prompts a question first, and the new build's plan_request is what made the new assistant ask.",
+    "evidence": "s1.old.stupid.A03d/calls.jsonl line 2: generate_image prompt has no address. grade.json: 'No address present.' chat.json: the stupid user's only message was 'make a flyer for a printmakers open studio'."
+   }
+  ],
+  "axiom": "The free-plan image model (qwen-image-2.1, capped at 640px) cannot reliably render a 105-character address in small type. Glyph rendering by diffusion is a limit of the generation model, and the free plan blocks a higher resolution. In the old build there is a separate cause: the assistant never asked the vague user for the exact text, so the address was never sent.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Change new-build plan_request so that it detects long exact text (more than about 40 characters per line) at the free 640px size. In that case it should return a warning and suggest two steps: generate the artwork with no text, then add the user's words exactly with a text overlay. That overlay can be a server-side text-overlay step or something the user adds in an editor. plan_request should also stop marking the aspect as 'user' when the user did not give one. For the old build, port the plan_request step so the assistant asks for the exact words before it generates."
+ },
+ "error": null,
+ "seconds": 56,
+ "usd": 0.48823160000000004
+}

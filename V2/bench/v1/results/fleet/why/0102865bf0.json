@@ -1,0 +1,47 @@
+{
+ "id": "0102865bf0",
+ "key": "must:H44c:Both versions display the three exact text lines",
+ "symptom": "Both versions display the three exact text lines",
+ "item": "H44c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "The new build's plan_request has a rule that lets exact_words stay \"missing\" while it still returns ready:true, and it never puts an on-screen-text question in its list. The old build has no step at all that collects on-screen words. The stupid persona only answers what it is asked. So in this setup the three lines can reach the video only if the tool or the assistant asks for them, and neither build asks.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request (new build), treat exact_words as a required question for promo, ad, poster and event subjects. While exact_words is missing, return ready:false and add the question \"Should any words show on screen? If yes, write them exactly.\" Rank it ahead of lower-value questions inside the 3-question limit, or ask it in the follow-up round. Only an explicit [] from the user may close it. For the old build, add the same instruction to the create_video_from_text description: ask for exact on-screen words before you generate a promo.",
+  "whys": [
+   {
+    "why": "Why did neither video show 'Rooftop Jazz', '18 July 2026' or 'Sky Terrace, Manchester'?",
+    "because": "The assistant never put the text into the generation request. In the new build it even told the model to show no text.",
+    "evidence": "old calls.jsonl: the create_video_from_text prompt has no event text. new calls.jsonl: the prompt ends 'No text, no titles, no logos on screen.' new grade.json lists all three exact_text items as 'missing'; grader reason: 'No on-screen text at all.'"
+   },
+   {
+    "why": "Why did the assistant leave out the text?",
+    "because": "The assistant never learned the words. The stupid user's only opening message was 'can you make a promo video for rooftop jazz'. The text exists only in the persona's knowledge bank, and the persona gives a bank fact only when asked for it.",
+    "evidence": "old chat.json: messages[0] = 'can you make a promo video for rooftop jazz'. The bank holds 'Exact event text'. The persona rule says: answer a plain-words question 'from your knowledge bank'."
+   },
+   {
+    "why": "Why was the user never asked for the words?",
+    "because": "Old build: the assistant generated at once, with no questions. New build: the assistant asked only the questions that plan_request returned, and those covered seconds, aspect and sound, not exact_words.",
+    "evidence": "old calls.jsonl: the first action is create_video_from_text; the chat ends after 1 assistant turn. new calls.jsonl line 2: plan_request output marks exact_words 'missing', but questions = [seconds, aspect, sound] only."
+   },
+   {
+    "why": "Why did plan_request let generation go ahead with exact_words still missing?",
+    "because": "On the second call, plan_request returned ready:true with exact_words still null/missing and questions:[]. The description says 'If ready is true, create with the returned values', so the assistant generated without text.",
+    "evidence": "new calls.jsonl line 7: output {\"ready\":true, ... {\"name\":\"exact_words\",\"value\":null,\"source\":\"missing\"} ..., \"questions\":[]}. tools-new.json plan_request description: 'If ready is true, create with the returned values ... do not guess ... on-screen words'."
+   },
+   {
+    "why": "Why does plan_request treat a missing exact_words as acceptable?",
+    "because": "Its rule for ready/questions treats exact_words as optional: no question is ever made for it, even for a promo or event subject where on-screen text is expected. The old build has no planning step, and nothing in its tool descriptions prompts the assistant to ask about text.",
+    "evidence": "new calls.jsonl lines 2 and 7: exact_words is missing in both calls, and neither call returns a question for it. old calls.jsonl: no planning or questioning tool was used. The assistant only offered text after delivery ('Just send me the exact words')."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 24,
+ "usd": 0.1763064
+}

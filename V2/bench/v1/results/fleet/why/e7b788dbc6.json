@@ -1,0 +1,46 @@
+{
+ "id": "e7b788dbc6",
+ "key": "must:B10d:Retains orange hoodie and friendly look",
+ "symptom": "Retains orange hoodie and friendly look",
+ "item": "B10d",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Retains orange hoodie and friendly look' not met?",
+    "because": "In both new-build outputs the hoodie, and the fox's fur too, turned hot pink/salmon. Only faint orange is left. The friendly face is kept.",
+    "evidence": "s1.new.happy.B10d/grade.json: 'The hoodie is recolored to hot pink/salmon by the neon light; only faint orange remains', fault 'orange hoodie, and the fox's fur, are shifted to pink'. s1.new.dumper.B10d/grade.json: 'Hoodie is recolored salmon pink and fur is pink', major fault, pants also changed from blue to teal, usable_as_is false."
+   },
+   {
+    "why": "Why did the image model recolor the hoodie?",
+    "because": "The assistant's edit prompt told the model to put pink and teal light on the fox itself, on top of moving the whole picture into the pink/teal palette. The 'keep' wording only named 'its orange hoodie' as a thing. It never said the colour must stay orange under the new light.",
+    "evidence": "calls.jsonl edit_image style.prompt. Happy: '...Keep the same fox character, its face, its orange hoodie... hot pink to teal gradient sky... Soft neon pink and teal rim light on the fox.' Dumper: '...its orange hoodie... Add pink and teal neon rim light on the fox.' Both send the style-ref image as the second input."
+   },
+   {
+    "why": "Why did the assistant add colored light on the subject and not protect the hoodie colour?",
+    "because": "plan_request sent back the keep row as given ('the fox and its orange hoodie, full body') with ready=true. It gave no advice that a style/palette transfer recolours kept clothing. It did not ask for a colour lock or say to keep palette effects off the subject. The assistant then wrote its own prompt and added neon rim light as a vaporwave touch. The brief's answer sheet says supporting details are 'your call', which allows that choice.",
+    "evidence": "calls.jsonl plan_request output: params keep value unchanged, questions [], ready true. tools-new.json plan_request description only says to pass rows (subject, edit, keep, look...). It has no guidance on keeping colours in a restyle. B10d.json answer_sheet: 'supporting background details are your call'."
+   },
+   {
+    "why": "Why was the colour change not caught and fixed before delivery?",
+    "because": "Neither assistant looked at the result. Happy called fetch_image_download (empty output) and told the user 'I couldn't preview the result from here'. Dumper never fetched it ('I haven't been able to open the result'). Both handed the check to the user and ended the turn as delivered.",
+    "evidence": "s1.new.happy.B10d/calls.jsonl line 5 fetch_image_download output '' and say text. s1.new.dumper.B10d/calls.jsonl has no fetch call. Both end with kind 'delivered'."
+   },
+   {
+    "why": "Why does a pink/teal light instruction recolor an orange garment at all?",
+    "because": "The free-plan edit model flux-2-klein at 640px uses the style reference and colour-light words across the whole image, including the subject's local colours. It does not keep one region's colour fixed while it changes the overall palette. This is how the model behaves, and the server cannot change it.",
+    "evidence": "calls.jsonl: model 'flux-2-klein', resolution '640px', two input images (mascot + style-ref). The grader says the colour change comes 'by the neon light' and covers both the fur and the pants (blue→teal). So the palette spread across the whole subject, not just the hoodie."
+   }
+  ],
+  "axiom": "The free-plan edit model (flux-2-klein, 640px) spreads the style reference's palette, and any coloured light named in the prompt, over the subject's own colours. A 'keep its orange hoodie' phrase does not lock a colour. The new build's plan_request accepted the keep row without adding a colour lock and without warning against lighting the subject in the style colours. The assistant added 'pink and teal neon rim light on the fox' and delivered without looking at the output.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "In the new build's plan_request (and edit_image guidance), handle a 'keep' row that names a colour (for example 'orange hoodie') in a restyle with a style reference. Return a prompt clause the assistant must copy word for word: 'Keep the hoodie bright orange and the fur its original orange; apply the pink/teal palette and neon light only to the background, not to the fox'. Also tell the assistant to inline the result (wait_for_image_project with inline previews or fetch_image_download), check kept colours, and regenerate once if they shifted."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.4620478
+}

@@ -1,0 +1,47 @@
+{
+ "id": "7ab359c5c7",
+ "key": "must:J55b:All lettering is black and clearly readable against the chosen background.",
+ "symptom": "All lettering is black and clearly readable against the chosen background.",
+ "item": "J55b",
+ "n": 4,
+ "builds": {
+  "new": 1,
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'All lettering is black and clearly readable' not met?",
+    "because": "No image was made, so the grader had no lettering to check. It only saw a plan described in text, for example black text on mustard yellow.",
+    "evidence": "s2r.old.stupid.J55b/grade.json: checks 'something was made' pass=false, got 'no file'. The reason for the item is 'No image exists to show black lettering; only a plan was described.'"
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "Every generate_image call was refused before it ran. Nothing failed inside the generation model.",
+    "evidence": "In all three calls.jsonl files (old.stupid, old.dumper, new.stupid), every generate_image call shows approve:false and reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. No call has an output or files."
+   },
+   {
+    "why": "Why were the calls refused?",
+    "because": "The free-plan account had 0 credits at the start of these chats. The cheapest image call needs about 10 credits, and even the cheapest model needs 5.",
+    "evidence": "old.dumper calls.jsonl, turn 1: the first call is already refused with '0 remain'. The assistant says 'Even the cheapest image model costs 5'. new.stupid: plan_request shows credits:0, and generate_image is then refused the same way."
+   },
+   {
+    "why": "Did the assistant or the build cause the refusal through bad arguments?",
+    "because": "No. In old.dumper and new.stupid the second-turn prompts were correct: square in old.dumper, solid background, black lettering only, the exact three lines, no pictures. They were still refused. The refusal does not depend on the arguments or the build. Some chats had other faults (9:16 aspect, an invented tagline in old.stupid), but those affect other items. They do not explain the missing image.",
+    "evidence": "old.dumper calls.jsonl: the 1:1 prompt says 'Solid warm cream background. Only black text... \"BOOK SWAP\"... \"Saturday 10-2\"... \"Maple Hall\"', and it is refused. new.stupid calls.jsonl line 13: a mustard background prompt with the exact wording, also refused."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "Earlier benchmark chats had used up the free-plan credits on the shared test account. These runs started with an empty balance, and the harness did not check or restore it. This is an axiom: a free-plan credit limit combined with the state of the run environment.",
+    "evidence": "All J55b chats on both builds hit '0 remain' on their very first generation attempt. Nothing in the conversation could have used the credits before that."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits before these chats started, so every generate_image call was refused. No image existed for the grader to judge. This is a free-plan credit limit and not a fault of the tools or the assistant.",
+  "category": "free_plan_limit",
+  "builds": "both",
+  "fix": "Make the harness check the account credit balance before each chat and stop if it is below the cost of one image (about 10 credits). Top up or reset the free-plan credits between runs. Mark chats with zero credits as invalid and do not grade them as failed must-haves."
+ },
+ "error": null,
+ "seconds": 25,
+ "usd": 0.1095566
+}

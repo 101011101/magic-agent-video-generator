@@ -1,0 +1,184 @@
+{
+  "id": "E24c",
+  "item": {
+    "id": "E24c",
+    "case": 24,
+    "case_name": "Subtitles",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Silent Clip Subtitle Check",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "text",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "talk-one-silent.mp4"
+        ],
+        "text": "Can you subtitle this clip? If there's no speech in the audio, just tell me."
+      }
+    ],
+    "tests": "Tests recognizing absent speech and reporting it instead of fabricating subtitles from visible mouth movements or a related source.",
+    "answer_sheet": {
+      "Source": "Check the attached talk-one-silent.mp4.",
+      "Subtitle language": "English if there is audible speech.",
+      "What to do without speech": "Just tell me there is no audible speech to subtitle; no edited video is needed.",
+      "Missing transcript or replacement audio": "I am not supplying either. Do not invent dialogue or add a voice.",
+      "Response wording": "Your call; a short explanation is fine."
+    },
+    "must_haves": [
+      "The response clearly states that the supplied clip has no audible speech to transcribe.",
+      "No dialogue is inferred from the woman's mouth movements or borrowed from another clip.",
+      "No subtitled video, fabricated transcript, or replacement voice is presented.",
+      "The response does not claim the silent file contains recognizable spoken words."
+    ]
+  },
+  "session": "mcp-b0-live-old-dumper-E24c",
+  "sessionDir": "sessions/mcp-b0-live-old-dumper-E24c",
+  "baseline": "mcp",
+  "provider": "anthropic",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you subtitle this clip? If there's no speech in the audio, just tell me.",
+      "materials": [
+        "talk-one-silent.mp4"
+      ],
+      "dialog": [],
+      "agent": "I couldn't add subtitles because the clip has no audio track at all, so there's no speech to turn into captions. Magic Hour checked the file and refused the job before it started, so no credits were used and nothing was made.\n\nIf you have a version of the clip with its sound, attach it and I'll subtitle that.",
+      "calls": [
+        {
+          "name": "add_subtitles_to_video",
+          "arguments": "{\"assets\":{\"video_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f53eef3-96b8-432e-970d-de196b4c11da-video-0.mp4\"},\"start_seconds\":0,\"end_seconds\":10,\"style\":{\"template\":\"cinematic\"}}",
+          "output": null,
+          "error": "{\"error\":{\"code\":\"unprocessable_entity\",\"message\":\"The file at 'api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f53eef3-96b8-432e-970d-de196b4c11da-video-0.mp4' has no audio track.\",\"http_status\":422,\"next_action\":\"Correct the values described by the API. Preserve the user's explicit model, references and settings; ask before changing them. Do not retry the unchanged request.\"}}"
+        }
+      ],
+      "approvals": [
+        {
+          "name": "add_subtitles_to_video",
+          "args": {
+            "assets": {
+              "video_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f53eef3-96b8-432e-970d-de196b4c11da-video-0.mp4"
+            },
+            "start_seconds": 0,
+            "end_seconds": 10,
+            "style": {
+              "template": "cinematic"
+            }
+          },
+          "approve": true,
+          "reason": "",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "thought",
+          "text": "The clip's length is still unknown, and the filename hints it might be silent, but I can't check the audio directly. Running the subtitle job would cost credits, and it needs an end time I don't have. I'm considering whether a test run would show whether there's any speech.\n\nI'm weighing a trial run of the subtitle job, since it would surface an error if there's no speech, but it needs an end time I don't know. Setting it to a guessed value like 10 seconds risks wasting credits, though I'll try it and handle whatever comes back.\n\n"
+        },
+        {
+          "type": "call",
+          "name": "add_subtitles_to_video",
+          "arguments": "{\"assets\":{\"video_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f53eef3-96b8-432e-970d-de196b4c11da-video-0.mp4\"},\"start_seconds\":0,\"end_seconds\":10,\"style\":{\"template\":\"cinematic\"}}",
+          "result": "Error: {\"error\":{\"code\":\"unprocessable_entity\",\"message\":\"The file at 'api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f53eef3-96b8-432e-970d-de196b4c11da-video-0.mp4' has no audio track.\",\"http_status\":422,\"next_action\":\"Correct the values described by the API. Preserve the user's explicit model, references and settings; ask before changing them. Do not retry the unchanged request.\"}}"
+        },
+        {
+          "type": "said",
+          "text": "I couldn't add subtitles because the clip has no audio track at all, so there's no speech to turn into captions. Magic Hour checked the file and refused the job before it started, so no credits were used and nothing was made.\n\nIf you have a version of the clip with its sound, attach it and I'll subtitle that."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn't add subtitles because the clip has no audio track at all, so there's no speech to turn into captions. Magic Hour checked the file and refused the job before it started, so no credits were used and nothing was made.\n\nIf you have a version of the clip with its sound, attach it and I'll subtitle that.",
+        "refuse": "",
+        "tier_move": "I couldn't add subtitles because the clip has no audio track at all, so there's no speech to turn into captions. Magic Hour checked the file and refused the job before it started, so no credits were used and nothing was made.\n\nIf you have a version of the clip with its sound, attach it and I'll subtitle that.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "add_subtitles_to_video",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "talk-one-silent.mp4"
+            ],
+            "produces": "add_subtitles_to_video-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": 10,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "add_subtitles_to_video",
+          "state": "failed",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": "{\"error\":{\"code\":\"unprocessable_entity\",\"message\":\"The file at 'api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f53eef3-96b8-432e-970d-de196b4c11da-video-0.mp4' has no audio track.\",\"http_status\":422,\"next_action\":\"Correct the values described by the API. Preserve the user's explicit model, references and set",
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 13
+    }
+  ],
+  "started": "2026-11-11T00:30:30.005Z",
+  "persona": "dumper",
+  "opening": {
+    "id": "E24c",
+    "persona": "dumper",
+    "text": "Can you subtitle this clip? If there's no speech in the audio, just tell me.",
+    "withheld": [],
+    "extras": [],
+    "as_written": true
+  },
+  "dry": false,
+  "spent": 0,
+  "seconds": 14,
+  "usage": {
+    "responses": 2,
+    "input": 140543,
+    "output": 574,
+    "reasoning": 0,
+    "cached": 69945
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "https://mcp.magichour.ai/",
+    "local": false,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "E24c.trace.json"
+}

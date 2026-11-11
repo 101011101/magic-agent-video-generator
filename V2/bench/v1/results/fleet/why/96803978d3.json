@@ -1,0 +1,47 @@
+{
+ "id": "96803978d3",
+ "key": "must:G33a:Headline reads exactly ONE LAST TRY, no extra words",
+ "symptom": "Headline reads exactly ONE LAST TRY, no extra words",
+ "item": "G33a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the headline not read ONE LAST TRY?",
+    "because": "Neither image had the right text. The old image says \"24 HOUR CHALLENGE\". The new image has no text at all.",
+    "evidence": "s4.old.stupid.G33a/grade.json: exact_text read_as \"24 HOUR CHALLENGE\". s4.new.stupid.G33a/grade.json: read_as \"no text visible\", why \"No text at all.\""
+   },
+   {
+    "why": "Why was the wrong text, or no text, sent to the generator?",
+    "because": "The assistant never learned the headline. The stupid user's first message was only \"make me a thumbnail for a gaming challenge\". \"ONE LAST TRY\" was only in the user's knowledge bank, and the user gives a bank fact only when asked in plain words.",
+    "evidence": "chat.json: messages[0] = \"make me a thumbnail for a gaming challenge\"; bank.Headline = \"ONE LAST TRY\"; persona.reply says to answer plain questions from the bank."
+   },
+   {
+    "why": "Why did the old build make up \"24 HOUR CHALLENGE\"?",
+    "because": "The old hosted server has no planning step. The assistant called generate_image at once, with no question. It made up a title and put it in the prompt. It only asked for the exact title after it delivered.",
+    "evidence": "s4.old.stupid.G33a/calls.jsonl line 2: generate_image prompt has 'bold large text \"24 HOUR CHALLENGE\"'. The transcript shows no question before delivery."
+   },
+   {
+    "why": "Why did the new build not ask for the headline, when it has plan_request?",
+    "because": "plan_request found that exact_words was missing. But it asked only one question, about aspect. On the second call it returned ready:true while exact_words was still missing and questions was []. The assistant followed the tool description: it did not guess the on-screen words and asked for no text in the image. It asked for the title only after it delivered.",
+    "evidence": "s4.new.stupid.G33a/calls.jsonl line 2: questions only about 'aspect', exact_words source 'missing'. Line 7: ready:true, exact_words missing, questions []. Line 8: prompt 'No text, no letters, no words.' The tools-new.json plan_request description says 'do not guess ... on-screen words' and 'If ready is true, create with the returned values.'"
+   },
+   {
+    "why": "Why does plan_request treat a missing exact_words as fine for a thumbnail?",
+    "because": "The planner does not count exact_words as a required parameter for generate_image, even when the subject is a thumbnail, a kind of image that almost always has a headline. So the missing value never turns into a question. Its rule 'do not guess' together with 'ready' gives an image with no text instead of a question.",
+    "evidence": "Line 7 output: ready:true with exact_words value null and source 'missing', and no question about it, while aspect alone was enough to block ready on line 2."
+   }
+  ],
+  "axiom": "The vague user leaves the headline out of the first message and gives it only when asked. No build asks for the on-screen words before generating. The old server has no planner, so the assistant makes up a title. The new plan_request treats exact_words as optional, returns ready:true with it missing, and the assistant obeys 'do not guess on-screen words', so the image has no text.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, treat exact_words as required when the subject is a kind of image that carries text (thumbnail, poster, banner, flyer, cover). If it is missing, return ready:false with the question 'What exact words should the title say? (or say no text)'. In the old build, the generate_image description should tell the assistant not to make up headline text and to ask the user for it."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.1959436
+}

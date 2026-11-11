@@ -1,0 +1,51 @@
+{
+ "id": "e3f57fe7e9",
+ "key": "must:H40b:Candle design consistent across shots",
+ "symptom": "Candle design consistent across shots",
+ "item": "H40b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "axiom": "The free-plan video model (ltx-2.5) draws a new jar and a new room each time it gets only a text prompt. The same words (\"clear straight-sided glass jar\") do not give the same object across separate generations. Only a shared picture (a last frame or a product still) keeps the look. The new build's planner removed that shared picture: when it put a word card between two scene beats, it reset the next scene clip to link \"new\" with reference \"none\". It also never makes a product still when the user has no photo.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In plan_video_production (new build), when an answer of \"card\" puts a drawn card between two scene beats of the same place or subject, keep the original link. The clip after the card must start from the last frame of the scene clip before it (reference last_frame, depends_on that clip), not link \"new\" / reference \"none\". When a product subject has no photo, also make one product still first and start every scene clip from that still. Add \"same-candle\" to the plan's warnings when two scene clips share no reference.",
+  "whys": [
+   {
+    "why": "Why is the candle design not consistent across shots?",
+    "because": "The two candle shots in each film are different generations, and each shows a different jar and a different room.",
+    "evidence": "s4.new.happy.H40b/grade.json: 'Shot 1's jar is taller and cylindrical with a rounded rim. Shot 2's jar is shorter and squarer… a different sofa, a rug and a table edge.' s4.new.dumper.H40b/grade.json: 'necked mason jar to a straight-sided tumbler, and the table and room differ.'"
+   },
+   {
+    "why": "Why do the two generations show different jars?",
+    "because": "Both shots were made by text-to-video with no reference image. The only link between them was the same text description, and that does not pin down the object.",
+    "evidence": "happy calls.jsonl line 10: clip 1 and clip 3 both 'create_video_from_text', 'link':'new', 'reference':{'kind':'none'}; wait_for_video_project results type 'TEXT_TO_VIDEO' for both. dumper calls.jsonl line 4: clip 1 and clip 3 both 'reference':{'kind':'none'}, both TEXT_TO_VIDEO (lines 10-11). Only dumper clip 4 used last_frame of clip 3."
+   },
+   {
+    "why": "Why did the second scene clip lose its reference when the assistant planned continuity?",
+    "because": "The assistant's story kept the shots linked. Then it answered the planner's question words-1 with 'card'. The planner put a drawn card after beat 1 and rebuilt the next scene beat as a new clip with link 'new' and reference 'none'. That broke the chain.",
+    "evidence": "happy line 9: first plan had beats 1+2 in ONE 11 s clip ('beats':[1,2], link 'continues'). After answers {'words-1':'card'} (line 10), the plan became clip1 (3 s) + card + clip3 (6 s, 'link':'new','reference':{'kind':'none'}). dumper line 2: clip 2 had 'link':'event','reference':{'kind':'last_frame','of_clip':1}. After the 'card' answers (line 4), the same beat became clip 3 with 'link':'new','reference':{'kind':'none'},'depends_on':[]."
+   },
+   {
+    "why": "Why did the assistant pick 'card' and accept the rebuilt plan?",
+    "because": "The planner recommended 'card'. Its option text says only 'A card of its own right after this beat, 2 s taken from the beat. Always exact.' It does not say that the card cuts the visual link to the next shot. The new plan also gave no problem or advice about it.",
+    "evidence": "plan_video_production output, questions[words-1]: 'recommend':'card', option 'card' text as quoted; the re-plan has 'problems':[], 'advice':[]. The checklist kept 'same-candle … looks the same in every clip' as 'by eye' only."
+   },
+   {
+    "why": "Why did nothing else anchor the candle, given that no photo existed?",
+    "because": "The planner treats a 'product' subject without a photo as words only. It does not first make a product still to start every clip from, so after the chain broke there was nothing left to share.",
+    "evidence": "In both chats the subject is {'id':'candle','role':'product'} with words only. Every plan step is create_video_from_text or create_video_from_image(last_frame); there is no image-generation step. Both assistants told the user 'the jar may look a little different between them' (happy line 19, dumper line 17)."
+   },
+   {
+    "why": "Why does text-only generation give different jars at all?",
+    "because": "This is a limit of the generation model: ltx-2.5 text-to-video samples a new design for each prompt. It is the axiom in this system.",
+    "evidence": "The same prompt text for the candle in clips 1 and 3 of both chats gave visibly different jars (grade.json faults: 'The candle isn't clearly the same product', severity major)."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.44910180000000005
+}

@@ -1,0 +1,46 @@
+{
+ "id": "7a93f28b81",
+ "key": "must:H41a:Screenshots recognizable and readable, no invented UI",
+ "symptom": "Screenshots recognizable and readable, no invented UI",
+ "item": "H41a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why were the screenshots judged unreadable, with invented UI?",
+    "because": "The app screens in the output are model-drawn copies inside a generated phone mockup, not the supplied pixels. The small UI text is warped and garbled, and extra tab-bar icons appear.",
+    "evidence": "s4.old.dumper.H41a/grade.json: 'The AI rebuilt the screens inside a phone mockup… text is not readable'. s4.old.happy.H41a/grade.json: 'Home screen text is garbled… Invented tab bar icons were added'. The faults also list garbled overlay copy ('Tracks tracked', 'smater')."
+   },
+   {
+    "why": "Why did the model redraw the screens and not show the supplied pixels?",
+    "because": "In both chats the assistant made the whole ad in one create_video_from_text call (minimax-h3, 480p, 16:9, 10 s). It passed the two screenshots only as named `references` (@home and @workout). A reference only guides a text-to-video generation. The model creates every frame again, so the screenshot content is redrawn and not pasted in.",
+    "evidence": "calls.jsonl line 3 in both chats: tool create_video_from_text, references [{name:'home'…},{name:'workout'…}], and the prompt 'its screen shows exactly the @home screenshot… do not alter their text'. The wait result has type 'TEXT_TO_VIDEO', 858x480."
+   },
+   {
+    "why": "Why did the assistant choose reference-guided text-to-video, which it knew could not keep the screens exact?",
+    "because": "No tool in the old build composites supplied images unchanged into a timed sequence (no stitch, overlay or slideshow editor). Every video tool generates new pixels. The only route that keeps a screenshot as an exact frame is create_video_from_image (first frame and end frame). That route gives one clip per call, it cannot place a portrait screenshot in 16:9 without regeneration, and it cannot join clips. The workflow guide the assistant read (ugc-ads) is for a spoken presenter and gave no guidance for this case.",
+    "evidence": "tools-old.json: the video tools are create_video_from_text, create_video_from_image, create_animation, create_video_from_audio, edit_video, restyle_video, upscale_video, add_subtitles_to_video, lip-sync, face swap and character replace. All of them generate. None concatenates or overlays. calls.jsonl line 2: get_workflow_guide('ugc-ads') returned presenter or script steps only."
+   },
+   {
+    "why": "Why did the tool description not stop the assistant or make it warn the user before it spent credits?",
+    "because": "The create_video_from_text `references` description says only 'Reference media for video generation' and lists supported counts. It does not say that references are reinterpreted and not reproduced, or that fine text in a reference will be lost. The assistant inferred this itself. It told the user only after delivery ('The AI rebuilt the screens, so the text… may be a bit off') and did not ask first or propose the first-frame route.",
+    "evidence": "tools-old.json create_video_from_text.references.description. s4.old.dumper.H41a/state.json: the final reply says 'Your screenshots went in as reference images, not as fixed frames… I could build the video from your exact screenshot as the opening frame instead'. s4.old.happy.H41a calls.jsonl line 6 has a similar caveat."
+   },
+   {
+    "why": "Why does a reference-guided generation garble the text even when the prompt spells out the exact strings?",
+    "because": "Diffusion video models do not render small dense UI text faithfully. The free plan also caps output at 480p (858x480). There a phone-sized screen inside a 16:9 frame has only a few pixels per glyph. Motion like the slide-ins and whip pans in the prompt makes the distortion worse. The overlay copy was garbled too, and that shows the model's text limit.",
+    "evidence": "Both chats used resolution 480p, and the dumper reply says this is 'the highest resolution the free plan allows'. grade.json faults: the overlay reads 'Your day, Tracks tracked' and the tagline reads 'Train smater' although the prompt gave the exact strings."
+   }
+  ],
+  "axiom": "The generative video models cannot reproduce small UI text from a reference image. At free-plan 480p this is worse. The old MCP build has no tool that puts supplied images into a video unchanged, so any route the assistant takes redraws the screenshots. A test that requires 'faithful, readable' screenshots cannot pass by generation alone.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Change the create_video_from_text `references` description, and add an app-ad note to the workflow guides. State that references are redrawn and not composited, and that UI text, logos and numbers in them will distort. When the user needs supplied screenshots kept exact, the assistant must say this before it spends credits. It must offer the exact-frame route: create_video_from_image with the screenshot as image_file_path or end_image_file_path and little motion. The better fix is a non-generative compositing tool that puts the supplied images in a timed sequence and adds a title card and a music track."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.5888947999999999
+}

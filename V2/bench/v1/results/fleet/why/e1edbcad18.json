@@ -1,0 +1,47 @@
+{
+ "id": "e1edbcad18",
+ "key": "check:length:J",
+ "symptom": "about 5 s",
+ "item": "J49c",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the 'about 5 s' check report 8 s in J49c?",
+    "because": "The duration check measures the 8-second first-turn clip, not the clip delivered after the user asked for 5 seconds. In 2 of the 3 J49c chats I read, a 5-second file exists and the check still says 8 s.",
+    "evidence": "s2.new.happy.J49c/grade.json and s2.old.dumper.J49c/grade.json: checks show 'a video was made' = 2 .mp4 files, 'aspect 16:9' = [854x480, 832x512], 'about 5 s' got '8 s'. In the same files the judge's must 'The final video lasts five seconds' = yes ('The clip is 5 s long'; 'The second clip is 5 s'). calls.jsonl (new.happy) line 16: the edit_video result has end_seconds 5 and is saved as assets/02-wait_for_video_project.mp4. Line 4: the 8 s original is saved as 01-wait_for_video_project.mp4."
+   },
+   {
+    "why": "Why does the check read the 8 s clip when a 5 s file exists?",
+    "because": "The checker runs the duration check once over all files and reports one value: the first or longest file (01, 8 s). It does not take the last delivered file. Other checks run once per file ('no black frames (01-…)', 'no black frames (02-…)'), but 'about 5 s' has no file name and runs once.",
+    "evidence": "grade.json checks list in new.happy and old.dumper: per-file entries exist for black frames and silence, but only one 'about 5 s' entry exists. The aspect check lists both files, so the checker sees both. The duration check still gives 8 s, which matches only file 01."
+   },
+   {
+    "why": "Why are there two files, with the original 8 s clip among them?",
+    "because": "The brief has two turns. Turn 1 asks for an 8 s video, so file 01 must be 8 s. Turn 2 asks for a cut to 5 s. The harness collects every generated file, but spec.seconds=5 applies only to the final turn.",
+    "evidence": "items/J49c.json: turns[0] '8-second widescreen video', turns[1] 'Shorter—5 seconds'; spec.seconds = 5; tests: 'trims the existing clip'."
+   },
+   {
+    "why": "Why does no true 5 s cut exist in some chats (a real failure in addition to the checker problem)?",
+    "because": "Neither build has a plain trim tool. When the assistant calls one, it gets 'Unknown tool'. The assistant then either re-renders 0–5 s with edit_video (which gives a 5 s file at 832x512) or tells the user to trim the clip themselves (which gives no 5 s file).",
+    "evidence": "new.happy calls.jsonl line 10: trim_video gives the error 'Unknown tool: trim_video'. plan_request (line 9) returned ready:true for the tool name 'trim_video', which does not exist. new.dumper state.json: 'None of my Magic Hour tools just cuts the end off a video'. The user then trims the clip in QuickTime, so only the 8 s file exists (grade: 1 file, 8 s, judge must = no). old.dumper state.json: 'None of my Magic Hour tools just trims a video'."
+   },
+   {
+    "why": "Why does the checker not use the final deliverable when the brief is a follow-up edit?",
+    "because": "The harness duration check does not know about turns. It compares one aggregate value with spec.seconds and does not pick the last file or the file from the final turn. This is a defect of the grader/harness. Nothing in the system explains it further.",
+    "evidence": "In grade.json, the deterministic 'about 5 s' check fails while the LLM judge's must says yes for the same chat. The result is the same in the old and new builds (old.dumper and new.happy have the same pattern)."
+   }
+  ],
+  "axiom": "The harness checks duration once over all files in the chat (it takes the first/longest file, the 8 s turn-1 original). It does not check the final-turn deliverable. So a correct 5 s follow-up file still reads as 8 s. A second, real cause exists: neither build has a trim tool, so some chats deliver no 5 s file at all (new.dumper).",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the harness check duration only on the last delivered file (the file from the final turn) and compare it with spec.seconds. Also add a real trim_video tool that does a stream-copy cut by start/end with no re-render to the MCP server. Make plan_request reject tool names that do not exist."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.2595842
+}

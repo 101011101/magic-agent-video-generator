@@ -1,0 +1,46 @@
+{
+ "id": "1898e25948",
+ "key": "must:E29b:Solid black end card occupies only final 2 s of 9 s output",
+ "symptom": "Solid black end card occupies only final 2 s of 9 s output",
+ "item": "E29b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "axiom": "The old (hosted) Magic Hour MCP server has no tool that joins clips or appends a segment to an existing video. Every video tool makes a new clip or changes the frames of one input clip. So no tool call can produce a 9-second \"source + end card\" file. The test expects this to be possible on the free plan (expect.beyond_free = \"no\", asks = \"never\"), which the old toolset cannot do.",
+  "category": "mcp_tool_behavior",
+  "builds": "old",
+  "fix": "Add a deterministic join/append tool to the server, for example append_end_card or concat_videos (ffmpeg concat). It should take the user's video plus either an image/clip or a solid colour with exact text lines (drawtext, centered), a duration and silent audio for the appended segment. It should match the source resolution and aspect ratio, and return one combined file. List it in the tool descriptions so the assistant uses it rather than generating a separate card.",
+  "whys": [
+   {
+    "why": "Why was 'Solid black end card occupies only final 2 s of 9 s output' not met?",
+    "because": "Neither chat produced a 9-second video. Each one delivered only a separate 2-second end-card clip (plus a PNG), so the card is not the final 2 s of anything.",
+    "evidence": "grade.json in both chats: checks 'about 9 s' got '2 s'. Must reason: 'No 9-second output exists. The 2 s card is black but stands alone.' Stupid chat: 'Only a standalone 2 s black card'."
+   },
+   {
+    "why": "Why did the assistant deliver a separate 2 s card and not the combined clip?",
+    "because": "The only tools it used were generate_image, then create_video_from_image with end_seconds=2 and audio=false on that image. That makes a new 2 s clip from a still image. The 7-second radio-lines.mp4 was never passed to any tool.",
+    "evidence": "calls.jsonl (happy): generate_image flux-2-klein, then create_video_from_image ltx-2.5 end_seconds 2, giving a 826x496, 2 s output. calls.jsonl (stupid): generate_image qwen-image-2.1, then create_video_from_image ltx-2.5 end_seconds 2, giving 864x474, 2 s. Neither call references the source clip."
+   },
+   {
+    "why": "Why didn't the assistant append the card to the source clip with a tool?",
+    "because": "In both chats it read the toolset and found that no tool joins clips or adds seconds to an existing video. It told the user this, then offered a separate card to join in CapCut/iMovie as the workaround.",
+    "evidence": "calls.jsonl happy first reply: 'No tool joins clips. None of the tools can add a new segment to the end of an existing video.' Stupid first reply: 'none of my tools can join clips or add new seconds to the end of an existing video'. The stupid user then picked 'option 2' (separate clip), and the happy user said 'go ahead with the free settings anyway'."
+   },
+   {
+    "why": "Why does no tool join clips?",
+    "because": "The old server's video tools only generate a clip (text/image to video) or change the frames of one input video. None of them does concatenation or appending with a silent segment. The new build's tool enum lists trim_video and add_subtitles_to_video as deterministic edit tools, but the old toolset that both failing chats used has nothing like a join operation.",
+    "evidence": "tools-old.json: the tool list the assistant saw (both chats are 'old' side). Both assistants independently state the same capability gap. tools-new.json plan_request enum (generate_image, edit_image, create_video_from_text, create_video_from_image, ..., add_subtitles_to_video, trim_video) also has no concat tool, but the symptom appears only in old-build chats. I did not scan the whole old file line by line, so the 'no join tool' claim rests on the assistants' reading plus the visible tool set."
+   },
+   {
+    "why": "Why is this a failure and not an accepted refusal?",
+    "because": "The test assumes the edit is doable on the free plan without questions (beyond_free 'no', asks 'never'), and the must_haves require one combined 9 s file. With no join tool, the server cannot meet that bar, whatever the assistant does.",
+    "evidence": "items/E29b.json: expect {asks:'never', beyond_free:'no'}, spec seconds 9, must_haves[1] 'A solid black end card occupies only the final 2 seconds of the 9-second output.'"
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.2538986
+}

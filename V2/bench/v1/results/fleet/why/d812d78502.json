@@ -1,0 +1,46 @@
+{
+ "id": "d812d78502",
+ "key": "must:H40c:Silent 9:16 ~15s video with three moving product shots",
+ "symptom": "Silent 9:16 ~15s video with three moving product shots",
+ "item": "H40c",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Silent 9:16 ~15s video with three moving product shots' not met in s4.old.stupid.H40c (the grader's quoted reason)?",
+    "because": "The delivered file is 854x480 (16:9), 5 s long, has an audio track and shows only two shots.",
+    "evidence": "s4.old.stupid.H40c/grade.json: checks 'aspect 9:16' failed (got 854x480), 'about 15 s' failed (got 5 s), 'silent as asked' failed (audio peak -0.4 dB). The must-have reason reads '16:9, 5 s, has sound, two shots only.'"
+   },
+   {
+    "why": "Why did the file have those properties?",
+    "because": "The assistant itself asked for them: end_seconds 5, aspect_ratio 16:9 and audio true, and the prompt described two scenes (pedestal, then runner) with 'energetic upbeat electronic music'. The tool did what it was told.",
+    "evidence": "s4.old.stupid.H40c/calls.jsonl line 3: create_video_from_text args {end_seconds:5, aspect_ratio:'16:9', model:'ltx-2.5', audio:true, prompt:'...rotates slowly on a glossy black pedestal... then a fast cut to a runner's feet... upbeat electronic music'}. The wait result is width 854, height 480, end_seconds 5."
+   },
+   {
+    "why": "Why did the assistant choose 16:9, 5 s and sound?",
+    "because": "It never heard the real spec. The user's only message was 'make a sneaker video ad'. The assistant did not ask a single question and filled every gap with its own defaults. It even made up a white-and-red shoe.",
+    "evidence": "s4.old.stupid.H40c/state.json transcript: the user says 'make a sneaker video ad', then the assistant delivers right away. calls.jsonl shows the generation call 5 s after 'begin', with no message to the user first. In its reply the assistant offers 'Vertical 9:16 for Reels or TikTok' only as a follow-up."
+   },
+   {
+    "why": "Why was the spec not in the user's message?",
+    "because": "The stupid persona sends a minimal opening and keeps the full brief (silent, 15 s, 9:16, three shots, captions) in a knowledge bank. It only gives those facts when asked in plain words such as 'tall or wide', 'how long' or 'with sound or silent'.",
+    "evidence": "s4.old.stupid.H40c/chat.json: messages = ['make a sneaker video ad']. bank['Format, duration and audio'] = 'One silent 15-second 9:16 video'. The persona reply rules say 'When a question is in plain words, answer it from your knowledge bank'."
+   },
+   {
+    "why": "Why did nothing in the tools push the assistant to ask before it spent credits?",
+    "because": "The old build's tool descriptions say nothing about checking format, length, sound or on-screen text with the user when a request leaves them out. The only guard that fired was the free-plan model check. So the assistant went straight to a credit-spending generation on guessed settings. The sibling happy chat got the full brief and passed format, length and silence. That shows the gap was the missing information, not the tool.",
+    "evidence": "tools-old.json: the descriptions of get_workflow_guide, wait_for_video_project and the other tools contain no instruction to confirm missing specs. calls.jsonl line 2 shows the only rejection: 'model \"default\" is not available on the free plan'. s4.old.happy.H40c/grade.json: aspect 9:16, about 15 s and silent all passed. That chat failed only on shot structure, because LTX 2.5 rendered the three planned shots as two (a generator limit, a separate secondary cause)."
+   }
+  ],
+  "axiom": "With a vague persona that sends only 'make a sneaker video ad', the assistant generated right away on its own default settings (16:9, 5 s, audio on, two invented scenes) and did not ask the user about format, length, sound or shots. The old build's tool descriptions give no rule to confirm missing core specs before spending credits. Secondary: in the happy chat the specs were correct, but LTX 2.5 rendered a three-shot prompt in one clip as only two shots. That is a generator limit.",
+  "category": "host_behavior",
+  "builds": "old",
+  "fix": "Add to the create_video_from_text description (and the video-generator workflow guide) one rule: 'If the user has not given aspect/orientation, length, sound and any required on-screen text, ask once in plain words (tall or wide, how long, sound or silent) before generating.' For multi-shot ads, also advise making one clip per shot rather than one prompt with timed cuts."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.2622772
+}

@@ -1,0 +1,47 @@
+{
+ "id": "ac7c958002",
+ "key": "must:E25b:The image is not stretched and contains no added captions.",
+ "symptom": "The image is not stretched and contains no added captions.",
+ "item": "E25b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The image is not stretched and contains no added captions' not met?",
+    "because": "No output video exists in either chat, so the grader had no image to check. The item failed as a side effect of 'nothing made', not because of stretching or captions.",
+    "evidence": "s3.old.happy.E25b/grade.json: check 'something was made' pass=false, got 'no file'; all five must-haves are 'no', and this item's reason is 'There is no output image to satisfy this.'"
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "In both builds the assistant declined the job. It replied 'cannot' twice, even after the simulated user nudged it ('Please go ahead with the free settings anyway' / 'huh? just try it').",
+    "evidence": "s3.old.happy.E25b/calls.jsonl: two 'say' events with kind=cannot, called=false, end kind=cannot. s3.new.stupid.E25b/calls.jsonl: after a question it says 'cannot' twice, end kind=cannot."
+   },
+   {
+    "why": "Why did the assistant decline instead of running a tool?",
+    "because": "The request needs a deterministic crop/reframe of the user's real footage to 9:16 that keeps the original audio. The assistant found no tool that crops or changes the aspect ratio of an existing video. The only video-input generator (edit_video) redraws every frame with AI and keeps the source frame shape.",
+    "evidence": "old reply: 'No tool here crops or reframes a video... edit_video... output keeps the original frame shape.' new reply: 'Magic Hour has no crop or reframe tool. Every video tool keeps your clip's shape or makes a new picture with AI.'"
+   },
+   {
+    "why": "Why did the new build's assistant not get the edit done with the tools it tried?",
+    "because": "In the new build it probed join_videos (failed with HTTP 404 on an asset path) and detect_faces (still rendering). Neither tool reframes video. The new tool list has trim_video, join_videos ('Every video is fitted to the first one's size') and production tools, but no crop, reframe or aspect-change tool for an uploaded video.",
+    "evidence": "s3.new.stupid.E25b/calls.jsonl lines 9-11: join_videos error 'HTTP 404 not_found', detect_faces / get_face_detection_results status 'rendering'. tools-new.json: join_videos description; plan_request tool enum lists trim_video but no crop/reframe tool."
+   },
+   {
+    "why": "Why is there no crop/reframe tool?",
+    "because": "Neither the hosted Magic Hour MCP server nor the upgraded local build offers a video crop/reframe operation, even though the test expects the task to be possible on the free plan without questions (expect.beyond_free='no', asks='never'). This missing capability is the root: the declines were correct given the tools.",
+    "evidence": "items/E25b.json: spec aspect 9:16, audio required; expect beyond_free 'no', refuse false; answer_sheet 'Centre the current speaker in a full-frame portrait crop; a clean cut at the speaker change is fine.' Both builds' assistants state no crop tool exists."
+   }
+  ],
+  "axiom": "Neither build has a tool that crops or reframes an uploaded video to a different aspect ratio. Without it, the assistant correctly declined, so no output existed, and the 'not stretched / no captions' item failed only as a side effect of 'nothing made'.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a free, deterministic crop_video/reframe_video tool, built on ffmpeg like join_videos and trim_video. Inputs: video, target aspect, and a list of time ranges, each with a crop centre (it can use detect_faces boxes). It keeps the original audio and adds no text. Also list it in plan_request's tool enum so the assistant can recut 16:9 to 9:16 with a cut at each speaker change."
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.20392880000000002
+}

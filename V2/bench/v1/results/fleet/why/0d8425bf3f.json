@@ -1,0 +1,47 @@
+{
+ "id": "0d8425bf3f",
+ "key": "must:E29c:Handle fixed bottom right with margin",
+ "symptom": "Handle fixed bottom right with margin",
+ "item": "E29c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Handle fixed bottom right with margin' not met?",
+    "because": "No '@flightschool' text appears anywhere in the output frames, so there is no handle whose position the grader can check. The position failure is a result of the text being missing, not of the text being placed wrong.",
+    "evidence": "grade.json for both chats: this item is 'no' ('No handle in the bottom right in any frame' / 'Nothing at bottom right'). exact_text '@flightschool' is seen 'missing' and read as 'not present in any frame'. The watermark-visible item and the styling item also fail for the same reason."
+   },
+   {
+    "why": "Why is the handle missing from the output?",
+    "because": "The assistant made the video with edit_video (model ltx-2.5, 480p). This tool builds every frame again from a text prompt. The prompt did ask for the watermark at the bottom right, inset from the edges, but the model did not draw it.",
+    "evidence": "calls.jsonl in both chats: one edit_video call. The prompt in both says to add small white '@flightschool' text in the bottom-right corner, set in from the edges, fixed for the whole clip. wait_for_video_project returned 'complete' at 832x512. grade.json faults say the footage was regenerated and looks different."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for a fixed text overlay?",
+    "because": "Neither build has a tool that puts fixed text on top of an existing video. Both assistants said this, refused at first, and named edit_video as the only (bad) option. The simulated user then said 'Please go ahead with the free settings anyway.', so the assistant ran it.",
+    "evidence": "calls.jsonl line 3 (old and new), kind 'cannot': 'Magic Hour has no tool that places/lays fixed text on top of a video'. Auto-subtitles only writes out speech. Line 4 is the user nudge. In the new build the assistant first tried join_videos with the source file and got HTTP 404, then used edit_video."
+   },
+   {
+    "why": "Why did the generative editor not draw the text, even though the prompt asked for it?",
+    "because": "A video-to-video diffusion model at 480p does not reliably draw small, exact, see-through text at a fixed spot. The model also changed the scene. This is a limit of the generation model, and the assistant could not control it through any parameter.",
+    "evidence": "Both assistants warned about this ahead of time ('AI is also bad at writing small, exact text'). grade.json faults say the cockpit and pilot differ, the picture has a soft AI look, and the resolution dropped. The same prompt failed in both builds."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The tool set in both builds has no deterministic overlay (drawtext/compositing) tool. The only way to get text into the video is a generative model, and that model cannot draw a small exact watermark. Nothing in the assistant's choices or in the tool descriptions explains the failure further.",
+    "evidence": "Same result in old and new. Both builds have the same capability gap: the only paths are edit_video and auto-subtitles, as the assistants listed in calls.jsonl line 3."
+   }
+  ],
+  "axiom": "The Magic Hour tool set (old and new) has no deterministic text or logo overlay tool. The only way to add the watermark is the generative edit_video model (ltx-2.5, 480p), and that model cannot reliably draw a small, exact, see-through watermark at a fixed spot.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic overlay tool to the MCP server, for example add_text_overlay(video, text, position, margin, font_size, color, opacity, shadow), that runs ffmpeg drawtext or a compositing step on the original video and copies the audio unchanged. Describe it as the tool to use for watermarks, logos and captions, so that the assistant does not fall back to edit_video."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.2114626
+}

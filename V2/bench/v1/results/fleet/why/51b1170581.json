@@ -1,0 +1,47 @@
+{
+ "id": "51b1170581",
+ "key": "must:A06c:Moon and letter edges intact, no halos or missing strokes",
+ "symptom": "Moon and letter edges intact, no halos or missing strokes",
+ "item": "A06c",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Moon and letter edges intact, no halos or missing strokes' not met in 3 chats?",
+    "because": "The grader judged the second delivered file, the transparent PNG. In that file the lettering is faded, smeared or gone, and the moon looks ghosted or glowing.",
+    "evidence": "grade.json in all 3 chats. old.dumper: 'In image 2 the edges are blurred… the final b is cut off or faded'. old.happy: 'In the second image the letters and moon are almost entirely lost'. new.dumper: 'image 2 shows the moon … mangled … ghosted ring'. In all 3 chats image 1 (the generated logo on white) was judged clean."
+   },
+   {
+    "why": "Why is the transparent PNG damaged when the source logo was clean?",
+    "because": "The remove_image_background step made the navy lettering partly or fully transparent. Only the gold moon came through intact. The grader saw the damaged alpha channel as smears, glow and a 'gold field' (the RGB pixels under the transparent areas showed through).",
+    "evidence": "assets/02-wait_for_image_project.png. old.happy: only the moon is left, the text is an almost invisible white smudge. new.dumper: only the moon is left, all lettering is gone. old.dumper: 'Mooncrumb' is readable, but 'oo' and the final 'b' are faded to near-transparent. The generated source (step 01) was clean in each chat."
+   },
+   {
+    "why": "Why did the assistant use the generic background remover on a flat logo?",
+    "because": "The free-plan image tools have no native transparent-output option. So the only route to a transparent PNG was: generate the logo on plain white, then call remove_image_background. All 3 chats did this, in both builds.",
+    "evidence": "calls.jsonl in old.dumper and new.dumper: generate_image (qwen-image-2.1 / flux-2-klein, prompt says 'isolated on a plain solid white background'), then remove_image_background with the output URL, 5 credits. old.happy shows the same pattern in its output."
+   },
+   {
+    "why": "Why did nobody catch the broken result before delivery?",
+    "because": "fetch_image_download returned no viewable image to the assistant. The assistant could not inspect the cutout, so it delivered it and claimed it was a clean transparent PNG.",
+    "evidence": "calls.jsonl: fetch_image_download output is \"\" in both builds. The final replies say 'I couldn't preview the image here' (old) and 'I couldn't preview the image myself' (new). The new build only adds a generic warning about a possible 'thin light outline'."
+   },
+   {
+    "why": "Why does the background remover erase the lettering?",
+    "because": "The Magic Hour background remover is a salient-subject matting model built for photos. It keeps the one dominant object (the moon) and treats thin dark text on a flat white field as background. This behaviour sits in the generation backend, not in the MCP server or the assistant.",
+    "evidence": "Same input type (flat logo on white) and same tool gave the same failure in both builds with 2 different generators. The moon always survived and the text was always lost or faded (assets/02 in all 3 chats)."
+   }
+  ],
+  "axiom": "The Magic Hour background-remover model is a photo-style salient-subject matter. On a flat logo it keeps the main shape and removes or fades thin text strokes. The free plan has no other way to get a transparent output.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a flat-background mode to the MCP server for logo and text images: a white/colour-key alpha step that makes near-white pixels transparent, used instead of the matting model. Also make fetch_image_download return the image inline so the assistant can check the cutout before it claims transparency. Until then, update the remove_image_background description to warn that it can erase text and thin strokes."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.26409380000000005
+}

@@ -1,0 +1,47 @@
+{
+ "id": "bfbb758ac5",
+ "key": "must:J51b:The complete original widescreen picture is centred with plain navy padding above and below, without cropping or distortion.",
+ "symptom": "The complete original widescreen picture is centred with plain navy padding above and below, without cropping or distortion.",
+ "item": "J51b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'complete original widescreen picture centred with navy padding' not met?",
+    "because": "None of the chats delivered any video file, so the grader had nothing to check for padding, cropping or distortion.",
+    "evidence": "s2r.old.stupid.J51b/grade.json: check 'something was made' pass=false, got 'no file'. The reason for this item is 'No deliverable exists'. The summary says 'The agent delivered no video because the account had 0 credits'."
+   },
+   {
+    "why": "Why was no video delivered?",
+    "because": "Every generation call was refused before it ran, because the account had 0 credits. This happened even with free-plan settings (ltx-2.5, 480p).",
+    "evidence": "old.stupid calls.jsonl lines 3 and 12, old.dumper lines 3 and 11, new.stupid lines 8 and 16: all show approve=false, reason 'insufficient credits: this call needs about 120/192 credits and 0 remain on the account'."
+   },
+   {
+    "why": "Why did turn 2 (resize) have nothing to work on?",
+    "because": "The resize turn assumes a clip from turn 1. No turn-1 clip existed, so the assistant correctly said 'there's no video to resize'. In two chats it then told the user to add the letterbox in CapCut or TikTok, or it moved to a full-frame 9:16 remake. That is the grader's 'user said they would letterbox it themselves'.",
+    "evidence": "old.stupid calls.jsonl line 10: 'There's no video to resize... set a 1080×1920 canvas, add a navy background'. The user then picks 'whatever fills the screen'. old.dumper line 9 gives the same answer. new.stupid line 14: 'I don't have a video to resize'."
+   },
+   {
+    "why": "Why did the build make no difference?",
+    "because": "The credit refusal happens at the account level, before either build's tool logic matters. The new build's plan_request ran correctly, but the create call still hit 0 credits.",
+    "evidence": "new.stupid calls.jsonl lines 2-8: plan_request returns ready=true, then create_video_from_text is refused for 0 credits. The old build was refused the same way."
+   },
+   {
+    "why": "Why did the account have 0 credits on a test marked as within the free plan?",
+    "because": "The benchmark account's free-credit balance was used up when these runs happened. J51b expects beyond_free='no', so the test assumes some free credits are present. The harness did not reset or check the balance, so the test could not run. This is the axiom.",
+    "evidence": "items/J51b.json expect.beyond_free='no', spec 8s video at 480p, which costs about 192 credits. Every call in all three chats reports '0 remain on the account'."
+   }
+  ],
+  "axiom": "The free-plan benchmark account had 0 credits when these runs happened. No turn-1 clip could be made, so there was nothing to pad. This is a harness or account-state defect, not a tool or model behaviour. A secondary point is not tested here: in both builds the assistant says no tool can just pad a clip without regenerating it. That could block this item even with credits, but it cannot be checked until a clip exists.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, make the harness check the account's credit balance and top it up, or skip the chat. A run that is refused with '0 remain on the account' should be marked invalid, not graded as a fail. Then rerun J51b. If it still fails, check whether a pad/letterbox tool exists (for example a video resize with padding colour)."
+ },
+ "error": null,
+ "seconds": 25,
+ "usd": 0.1344354
+}

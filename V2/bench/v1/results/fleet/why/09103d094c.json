@@ -1,0 +1,47 @@
+{
+ "id": "09103d094c",
+ "key": "must:H42a:Opening text 'Maple Street Café' and closing text 'Your morning starts here'",
+ "symptom": "Opening text 'Maple Street Café' and closing text 'Your morning starts here'",
+ "item": "H42a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Opening text Maple Street Café / closing text Your morning starts here' not met?",
+    "because": "Neither delivered video has any on-screen text. Both assistants said so themselves.",
+    "evidence": "s4.old grade.json and s4.new grade.json: exact_text lists both lines as 'missing'. In s4.new state.json the reply says 'There's no talking and no on-screen text.'"
+   },
+   {
+    "why": "Why did the assistants add no text?",
+    "because": "The simulated user never gave the wording. The stupid persona's opening message drops all of the brief's details, including both text lines.",
+    "evidence": "Both state.json files: the only opening message is 'make a video for my café with this pic this pic and this pic'. The full wording is only in the persona bank (chat.json bank 'Business and exact wording') and in the item's turns[0].text."
+   },
+   {
+    "why": "Why did the old chat not get the wording?",
+    "because": "The old assistant asked nothing. It went straight to a 16:9 10 s video, so the wording was never brought out of the bank. Even a perfect assistant could not guess the exact lines.",
+    "evidence": "s4.old state.json: one user turn, then a 'delivered' reply. It offers a voiceover with the café name only as a later option."
+   },
+   {
+    "why": "Why did the new chat not get the wording when the assistant asked for it directly?",
+    "because": "The new assistant asked four questions in one message, and the text question came last. The persona rule says to answer only part of a multi-question message, so the user answered shape, length and sound and skipped the text question. The bank has the wording, but the persona never used it.",
+    "evidence": "s4.new state.json: question 4 is 'On-screen text: ... send the exact wording. Otherwise I'll leave text out.' The user replied 'vertical, for instagram. and like 9 sec. soft happy music no talking'. chat.json persona.reply: 'When it asks more than two things at once, answer only the first one you understand.'"
+   },
+   {
+    "why": "Why is this scored as an assistant failure anyway?",
+    "because": "The grader applies the same must_haves for every persona. It does not check whether the user ever gave the exact text. The grader even says so in its reason.",
+    "evidence": "H42a.json must_haves[2] requires the exact lines. s4.new grade.json reason: 'The user was asked about text and never gave wording, but this item expects both lines.'"
+   }
+  ],
+  "axiom": "Harness artifact. The stupid persona's opening message leaves out the exact text lines, and its reply rule drops later questions in a multi-question message. The grader still requires the exact text that only the full brief contains. So the item cannot be met unless the persona happens to answer a text question. The assistant (new) asked for the wording, and the simulated user did not answer that question.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Harness: for vague personas, grade the exact_text must-have as 'not applicable' unless the user's messages contained the wording. As an alternative, change the stupid persona rule so that it always answers a plain-word question that asks for exact wording from its bank ('Business and exact wording'), even in a multi-question message."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.12673099999999998
+}

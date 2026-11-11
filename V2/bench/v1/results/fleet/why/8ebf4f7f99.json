@@ -1,0 +1,46 @@
+{
+ "id": "8ebf4f7f99",
+ "key": "must:I45c:One assembled 15-second 16:9 film in three distinct shots",
+ "symptom": "One assembled 15-second 16:9 film in three distinct shots",
+ "item": "I45c",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'One assembled 15-second 16:9 film in three distinct shots' not met?",
+    "because": "Neither old-build chat gave the grader three separate shots. The happy chat sent one continuous 15 s clip that reads as a single take with a drifting camera. The stupid chat sent one 5 s clip with no shot structure.",
+    "evidence": "s5.old.happy.I45c/grade.json must[0]: 'continuous generation with a drifting camera, not clearly three distinct shots'; faults: 'reads as one continuous take with a camera move, not three cuts'. s5.old.stupid.I45c/calls.jsonl: a single create_video_from_text call with end_seconds 5 (ltx-2.5) was delivered."
+   },
+   {
+    "why": "Why did the happy chat's video become one continuous take?",
+    "because": "The assistant made the whole story in one create_video_from_text call: minimax-h3, end_seconds 15, one @couple reference image. It wrote the three shots only as text in the prompt ('Shot 1 (0-5s)… cut to… Shot 3 (10-15s)'). It did not make three clips and join them.",
+    "evidence": "s5.old.happy.I45c/calls.jsonl line 6: one create_video_from_text call whose prompt holds three timed shot descriptions. The only other video call (line 5) is the same request rejected for a stray ' style' key. The assistant then wrote: 'I made all three shots as one 15-second clip … Making it in one piece, rather than three separate clips, keeps the cast from changing between cuts.'"
+   },
+   {
+    "why": "Why did the 'cut to' directions in the prompt not give hard cuts or the scarf beats?",
+    "because": "A single text-to-video generation from minimax-h3 makes one continuous camera shot. It does not reliably follow timed shot lists or hard cuts written in the prompt, so it also smeared the story beats. The scarf stays on her neck, and no drop, pick-up or return is shown.",
+    "evidence": "grade.json must[4]: 'No frame shows the drop, pick-up or handover. The scarf is still around her neck at 1.5 s and in later frames'. must[0]: 'drifting camera'. The prompt in calls.jsonl line 6 asked for exactly these beats and cuts."
+   },
+   {
+    "why": "Why did the assistant not make three clips and join them into one film?",
+    "because": "The old build has no tool that joins or concatenates clips. No old tool description explains a multi-shot pattern either (separate shots plus a shared reference, then assembly). create_video_from_text says only 'Generates a video from a text prompt, with optional supported reference inputs'. With three separate clips the user would get three files, not 'one assembled film'. So one generation was the only way to deliver a single file, and the assistant said that out loud.",
+    "evidence": "tools-old.json: the tool list (get_workflow_guide, upload, wait/fetch, edit_video, translate_video, upscale_video, create_animation, create_video_from_audio, add_subtitles_to_video, replace_character_in_video, swap_face_in_video, create_video_from_image, create_lip_sync_video, create_video_from_text, restyle_video, …) has no merge/concat/assemble tool. The create_video_from_text description (line 1996) gives no multi-shot guidance."
+   },
+   {
+    "why": "Why did the stupid chat fail as well?",
+    "because": "The simulated 'stupid' user's only message dropped the whole brief ('make a video of a woman and a man having a friendly encounter'). The assistant could not know about three shots, 15 s or the scarf, and it delivered a 5 s generic clip without asking. This chat fails because of the persona, not because of the tool path.",
+    "evidence": "s5.old.stupid.I45c/chat.json messages[0] and state.json transcript: one vague user message. calls.jsonl: an ltx-2.5 call with end_seconds 5, delivered at once."
+   }
+  ],
+  "axiom": "The old (hosted) build has no way to put separate clips together into one file, and no tool description explains a multi-shot workflow. So a 'single film in three shots' can only come from one text-to-video generation. That model (minimax-h3) makes one continuous camera take and does not follow 'cut to' shot lists written in the prompt. The second failing chat (stupid persona) adds a harness effect: the persona dropped the brief, so the assistant never learned the three-shot requirement.",
+  "category": "mcp_tool_description",
+  "builds": "old",
+  "fix": "Add a clip-join tool to the old build (for example, concatenate_videos taking ordered file_paths and returning one mp4). Then add a multi-shot note to create_video_from_text: 'For N distinct shots, make one clip per shot with the same character reference image, then join them with concatenate_videos. Do not rely on \"cut to\" text inside one prompt.' I did not check whether tools-new.json already has a tool like this."
+ },
+ "error": null,
+ "seconds": 55,
+ "usd": 0.6533994000000001
+}

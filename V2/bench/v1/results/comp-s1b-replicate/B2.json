@@ -1,0 +1,416 @@
+{
+  "id": "B2",
+  "item": {
+    "id": "B2",
+    "case": "B2",
+    "case_name": "Full fiction short, 30 s, 16:9, text only",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Walk Anyway, the short film",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "16:9",
+      "seconds": 30,
+      "outputs": 1,
+      "audio": "required",
+      "exact_text": [
+        "WALK ANYWAY"
+      ]
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make a 30-second 16:9 short film called Walk Anyway from this description. There are no reference images.\n\nCharacters: a tall woman with a silver bob, a red raincoat and yellow boots. An older man with a grey beard, a green coat and a black umbrella. Keep both looking the same in every shot.\n\nStart on a title card for 2 seconds: black background, white text \"WALK ANYWAY\".\n\nThen four shots, in this order:\n1. Night, rain. The woman waits alone at a bus stop.\n2. The man walks up with his umbrella and stops beside her.\n3. Close on both of them. He says out loud: \"You came back.\" She smiles.\n4. They walk away together under the umbrella, seen from behind.\n\nEnd on the same title card for 2 seconds, so the video loops back to its first frame.\n\nSound: rain, and his one line. No music and no narrator. Give me one finished video file."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests two described characters kept stable across four shots, one spoken line, an exact title card at both ends so the film loops, sound rules, and one joined 30-second file.",
+    "answer_sheet": {
+      "Characters": "A tall woman with a silver bob, a red raincoat and yellow boots. An older man with a grey beard, a green coat and a black umbrella. The same in every shot.",
+      "Title card": "Black background, white text WALK ANYWAY, 2 seconds at the start and the same card for 2 seconds at the end.",
+      "Shots": "Night, rain, she waits alone at a bus stop; he walks up with his umbrella and stops beside her; close on both, he says You came back. and she smiles; they walk away together under the umbrella, seen from behind.",
+      "Sound": "Rain, and his one line: You came back. No music and no narrator.",
+      "Format and duration": "One 30-second 16:9 video; free-tier resolution is fine.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable 16:9 video file runs for 30 seconds, plus or minus 1 second.",
+      "The video starts on a title card for 2 seconds: black background, white text WALK ANYWAY.",
+      "Four shots appear in the requested order.",
+      "The woman keeps her silver bob, red raincoat and yellow boots; the man keeps his grey beard, green coat and black umbrella.",
+      "The man says \"You came back.\" out loud, and no other words are spoken.",
+      "Rain is audible; there is no music and no narrator.",
+      "The video ends on the same title card, so the last frame matches the first frame."
+    ]
+  },
+  "session": "comp-s1b-replicate-B2",
+  "sessionDir": "sessions/comp-s1b-replicate-B2",
+  "baseline": "replicate",
+  "server": "Replicate",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Make a 30-second 16:9 short film called Walk Anyway from this description. There are no reference images.\n\nCharacters: a tall woman with a silver bob, a red raincoat and yellow boots. An older man with a grey beard, a green coat and a black umbrella. Keep both looking the same in every shot.\n\nStart on a title card for 2 seconds: black background, white text \"WALK ANYWAY\".\n\nThen four shots, in this order:\n1. Night, rain. The woman waits alone at a bus stop.\n2. The man walks up with his umbrella and stops beside her.\n3. Close on both of them. He says out loud: \"You came back.\" She smiles.\n4. They walk away together under the umbrella, seen from behind.\n\nEnd on the same title card for 2 seconds, so the video loops back to its first frame.\n\nSound: rain, and his one line. No music and no narrator. Give me one finished video file.",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "I can help create the footage, but I can’t deliver the **single finished 30-second video** with the tools available on your connected account.\n\nThe available video model, **MiniMax video-01**, generates **6-second silent clips**. I don’t have an available tool to join the shots, add the exact 2-second title cards, or mix rain with “You came back.” Matching character references can improve consistency, but can’t guarantee identical appearances across shots.\n\nI can instead generate four matching 16:9 clips and the spoken line, then provide a local assembly script to produce **Walk Anyway.mp4**, including the title cards and rain audio. That would require you to run the final assembly on your computer.\n\nWould you like me to proceed with that alternative?",
+          "asked": [
+            "approval"
+          ],
+          "user": "Yes, go ahead.",
+          "calls_before": 3
+        }
+      ],
+      "agent": "The four video jobs are running. The account also refused speech generation, so I’ll make the assembly script use your computer’s built-in speech engine for “You came back.” It will prefer a male voice where available, though the voice may not sound elderly, and exact lip-sync isn’t guaranteed. No paid models or upgrades are being used.\nThe assembly timeline will be:\n\n- **0–2s:** “WALK ANYWAY”\n- **2–8.5s:** Woman waits alone\n- **8.5–15s:** Man approaches\n- **15–21.5s:** Close-up and his line\n- **21.5–28s:** They walk away\n- **28–30s:** The same title card\n\nI’ll keep rain and dialogue off the title cards so the loop has a quiet, matching boundary.\nWhile the shots render, here’s the local assembly script. It will produce **`Walk Anyway.mp4`**, not upload a finished file back to this chat.\n\n**Requirements:** Python 3 and FFmpeg (including `ffprobe` and the `drawtext` filter). On Linux, also install `espeak-ng`. Save the script as `make_walk_anyway.py` in a folder with the four downloaded clips named **`shot1.mp4`** through **`shot4.mp4`**, then run:\n\n```bash\npython make_walk_anyway.py\n```\n\nIt creates procedural rain and uses a local male text-to-speech voice. If you prefer a recorded performance, put a **`line.wav`** containing only “You came back.” in the same folder before running it. The line is placed at 16.1 seconds; this is approximate synchronization, not verified lip-sync.\n\n```python\nfrom pathlib import Path\nimport os\nimport shutil\nimport subprocess\nimport sys\n\nROOT = Path(__file__).resolve().parent\nos.chdir(ROOT)\n\ndef run(*args):\n    subprocess.run([str(x) for x in args], check=True)\n\ndef ff(*args):\n    run(\"ffmpeg\", \"-hide_banner\", \"-loglevel\", \"error\", \"-y\", *args)\n\nfor tool in (\"ffmpeg\", \"ffprobe\"):\n    if not shutil.which(tool):\n        raise SystemExit(f\"Install {tool} and put it on your PATH first.\")\n\nfor i in range(1, 5):\n    if not Path(f\"shot{i}.mp4\").exists():\n        raise SystemExit(f\"Missing shot{i}.mp4\")\n\ndef duration(path):\n    return float(subprocess.check_output([\n        \"ffprobe\", \"-v\", \"error\",\n        \"-show_entries\", \"format=duration\",\n        \"-of\", \"default=noprint_wrappers=1:nokey=1\", str(path)\n    ], text=True).strip())\n\n# Use an existing performance if provided; otherwise synthesize locally.\nif not Path(\"line.wav\").exists():\n    if sys.platform == \"darwin\":\n        voices = subprocess.check_output(\n            [\"say\", \"-v\", \"?\"], text=True\n        )\n        names = {line.split()[0] for line in voices.splitlines()\n                 if line.strip()}\n        voice = next((v for v in (\"Daniel\", \"Alex\", \"Fred\", \"Ralph\")\n                      if v in names), None)\n        if not voice:\n            raise SystemExit(\n                \"No supported male voice found. Add your own line.wav.\"\n            )\n        run(\"say\", \"-v\", voice, \"-r\", \"125\",\n            \"-o\", \"line.aiff\", \"You came back.\")\n        ff(\"-i\", \"line.aiff\", \"-ar\", \"48000\", \"line.wav\")\n    elif sys.platform == \"win32\":\n        target = str(ROOT / \"line.wav\").replace(\"'\", \"''\")\n        command = (\n            \"Add-Type -AssemblyName System.Speech;\"\n            \"$s=New-Object System.Speech.Synthesis.SpeechSynthesizer;\"\n            \"$s.SelectVoiceByHints(\"\n            \"[System.Speech.Synthesis.VoiceGender]::Male);\"\n            \"$s.Rate=-2;\"\n            f\"$s.SetOutputToWaveFile('{target}');\"\n            \"$s.Speak('You came back.');$s.Dispose();\"\n        )\n        run(\"powershell\", \"-NoProfile\", \"-Command\", command)\n    else:\n        engine = shutil.which(\"espeak-ng\") or shutil.which(\"espeak\")\n        if not engine:\n            raise SystemExit(\n                \"Install espeak-ng, or provide your own line.wav.\"\n            )\n        run(engine, \"-v\", \"en-us+m3\", \"-s\", \"130\", \"-p\", \"35\",\n            \"-w\", \"line.wav\", \"You came back.\")\n\n# Same encoding settings and frame rate for every segment.\nENC = [\n    \"-an\", \"-c:v\", \"libx264\", \"-preset\", \"medium\", \"-crf\", \"18\",\n    \"-pix_fmt\", \"yuv420p\", \"-r\", \"24\",\n    \"-video_track_timescale\", \"24000\"\n]\n\n# Both title appearances reuse the SAME encoded 48-frame segment.\nPath(\"title.txt\").write_text(\"WALK ANYWAY\", encoding=\"utf-8\")\nfont_candidates = [\n    os.environ.get(\"WALK_FONT\", \"\"),\n    \"C:/Windows/Fonts/arial.ttf\",\n    \"/System/Library/Fonts/Supplemental/Arial.ttf\",\n    \"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf\",\n    \"/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf\",\n]\nfont_option = \"\"\nfor candidate in font_candidates:\n    if candidate and Path(candidate).is_file():\n        shutil.copyfile(candidate, \"title-font.ttf\")\n        font_option = \"fontfile=title-font.ttf:\"\n        break\n\ntitle_filter = (\n    \"drawtext=\" + font_option +\n    \"textfile=title.txt:fontcolor=white:fontsize=64:\"\n    \"x=(w-text_w)/2:y=(h-text_h)/2,setsar=1\"\n)\nff(\"-f\", \"lavfi\", \"-i\", \"color=c=black:s=1280x720:r=24\",\n   \"-vf\", title_filter, \"-frames:v\", \"48\", *ENC, \"title.mp4\")\n\n# Normalize each shot to exactly 156 frames = 6.5 seconds.\n# The original generated sound, if any, is discarded.\nfor i in range(1, 5):\n    source = f\"shot{i}.mp4\"\n    d = duration(source)\n    stretch = 6.5 / d\n    vf = (\n        f\"setpts={stretch:.10f}*(PTS-STARTPTS),\"\n        \"scale=1280:720:force_original_aspect_ratio=increase,\"\n        \"crop=1280:720,setsar=1,fps=24,\"\n        \"tpad=stop_mode=clone:stop_duration=1,\"\n        \"trim=duration=6.5,setpts=PTS-STARTPTS\"\n    )\n    ff(\"-i\", source, \"-vf\", vf, \"-frames:v\", \"156\",\n       *ENC, f\"scene{i}.mp4\")\n\nsegments = [\"title.mp4\"] + [\n    f\"scene{i}.mp4\" for i in range(1, 5)\n] + [\"title.mp4\"]\nPath(\"sequence.txt\").write_text(\n    \"\".join(f\"file '{name}'\\n\" for name in segments),\n    encoding=\"utf-8\"\n)\n\n# Keep the one line inside the close-up, even if the local voice is slow.\npace = max(1.0, duration(\"line.wav\") / 3.0)\ntempo_filters = []\nwhile pace > 2.0:\n    tempo_filters.append(\"atempo=2\")\n    pace /= 2.0\ntempo_filters.append(f\"atempo={pace:.6f}\")\ntempo = \",\".join(tempo_filters)\n\n# Rain is synthesized noise, not a field recording.\n# It fades in after the opening card and out before the closing card.\naudio = (\n    \"anoisesrc=color=white:amplitude=0.12:\"\n    \"sample_rate=48000:duration=30:seed=17,\"\n    \"highpass=f=500,lowpass=f=9500,volume=0.65,\"\n    \"afade=t=in:st=2:d=0.25,\"\n    \"afade=t=out:st=27.75:d=0.25[rain];\"\n    f\"[1:a]aresample=48000,{tempo},atrim=duration=3,\"\n    \"asetpts=PTS-STARTPTS,volume=1.3,\"\n    \"adelay=16100:all=1,apad,atrim=duration=30[voice];\"\n    \"[rain][voice]amix=inputs=2:normalize=0,\"\n    \"alimiter=limit=0.95:latency=1,\"\n    \"aformat=sample_rates=48000:channel_layouts=stereo[a]\"\n)\n\nff(\"-f\", \"concat\", \"-safe\", \"0\", \"-i\", \"sequence.txt\",\n   \"-i\", \"line.wav\", \"-filter_complex\", audio,\n   \"-map\", \"0:v:0\", \"-map\", \"[a]\",\n   \"-c:v\", \"copy\", \"-c:a\", \"aac\", \"-b:a\", \"192k\",\n   \"-t\", \"30\", \"-movflags\", \"+faststart\", \"Walk Anyway.mp4\")\n\nprint(\"Created:\", ROOT / \"Walk Anyway.mp4\")\nprint(\"1280x720, 16:9, 24 fps, 30 seconds.\")\n```\n\nThe script has not been run here. You may need to adjust the dialogue timing after watching the close-up.\nThree clips are ready. Download and rename them as follows:\n\n1. [Woman waiting → `shot1.mp4`](https://replicate.delivery/xezq/yJlPY0YssKK9OJHk0CwLrG0s89seoJMwCEi1wlBMzQxEcQvLA/tmpcvnemy44.mp4)\n2. [Man approaching → `shot2.mp4`](https://replicate.delivery/xezq/NMr4dd8fQ63AOqzXXwXRyrzR9Qz4j4MEW7NfSovX6ZIW4geuA/tmpv5ibm9dx.mp4)\n3. [Close-up → `shot3.mp4`](https://replicate.delivery/xezq/DokZfLVPkkSFEyS5QsEAwepA8l96jUfQOxlAtNDIxXFExB9uA/tmpl_c05_8y.mp4)\n\nThe walking-away shot is still rendering. These are generated clips; I haven’t been able to visually check their continuity or performance here.\nAll four clips are ready:\n\n| Download | Save as |\n|---|---|\n| [1. Woman waiting](https://replicate.delivery/xezq/yJlPY0YssKK9OJHk0CwLrG0s89seoJMwCEi1wlBMzQxEcQvLA/tmpcvnemy44.mp4) | `shot1.mp4` |\n| [2. Man approaching](https://replicate.delivery/xezq/NMr4dd8fQ63AOqzXXwXRyrzR9Qz4j4MEW7NfSovX6ZIW4geuA/tmpv5ibm9dx.mp4) | `shot2.mp4` |\n| [3. Close-up](https://replicate.delivery/xezq/DokZfLVPkkSFEyS5QsEAwepA8l96jUfQOxlAtNDIxXFExB9uA/tmpl_c05_8y.mp4) | `shot3.mp4` |\n| [4. Walking away](https://replicate.delivery/xezq/imwhZbymCV4RNhKCaIHSyP6t3UlfYs4jhRmwdvd4chEgcQvLA/tmpptop2btx.mp4) | `shot4.mp4` |\n\nPut them beside the script above and run:\n\n```bash\npython make_walk_anyway.py\n```\n\nIt will assemble **`Walk Anyway.mp4`**: 30 seconds, 16:9, matching 2-second title cards, procedural rain, and locally synthesized dialogue—no music or narrator.\n\n**The finished video still requires that local step.** Character continuity and lip-sync remain unverified. Download the clips promptly; Replicate’s output links are temporary.",
+      "calls": [
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"minimax\",\"model_name\":\"video-01\",\"jq_filter\":\"{description, input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"description\": \"Generate 6s videos with prompts or images. (Also known as Hailuo). Use a subject reference to make a video with a character and the S2V-01 model.\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"prompt\"], \"properties\": {\"prompt\": {\"type\": \"string\", \"title\": \"Prompt\", \"description\": \"Text prompt for generation\"}, \"prompt_optimizer\": {\"type\": \"boolean\", \"title\": \"Prompt Optimizer\", \"default\": true, \"description\": \"Use prompt optimizer\"}, \"first_frame_image\": {\"type\": \"string\", \"title\": \"First Frame Image\", \"format\": \"uri\", \"description\": \"First frame image for video generation. The output video will have the same aspect ratio as this image.\"}, \"subject_reference\": {\"type\": \"string\", \"title\": \"Subject Reference\", \"format\": \"uri\", \"description\": \"An optional character reference image to use as the subject in the generated video (this will use the S2V-01 model)\"}}}}",
+          "error": null
+        },
+        {
+          "name": "list_collections",
+          "arguments": "{\"jq_filter\":\".results[] | select((.name+\\\" \\\"+.description|ascii_downcase|contains(\\\"free\\\"))) | {name,slug,description}\"}",
+          "output": "{\"name\": \"Try AI models for free\", \"slug\": \"try-for-free\", \"description\": \"Try AI Models for free: video generation, image generation, upscaling, and photo restoration\"}",
+          "error": null
+        },
+        {
+          "name": "get_collections",
+          "arguments": "{\"collection_slug\":\"try-for-free\",\"jq_filter\":\"{name,models:[.models[]|{owner,name,description}]}\"}",
+          "output": "{\"name\": \"Try AI models for free\", \"models\": [{\"owner\": \"black-forest-labs\", \"name\": \"flux-kontext-pro\", \"description\": \"A state-of-the-art text-based image editing model that delivers high-quality outputs with excellent prompt following and consistent results for transforming images through natural language\"}, {\"owner\": \"black-forest-labs\", \"name\": \"flux-dev\", \"description\": \"A 12 billion parameter rectified flow transformer capable of generating images from text descriptions\"}, {\"owner\": \"black-forest-labs\", \"name\": \"flux-1.1-pro\", \"description\": \"Faster, better FLUX Pro. Text-to-image model with excellent image quality, prompt adherence, and output diversity.\"}, {\"owner\": \"ideogram-ai\", \"name\": \"ideogram-v3-turbo\", \"description\": \"Turbo is the fastest and cheapest Ideogram v3. v3 creates images with stunning realism, creative designs, and consistent styles\"}, {\"owner\": \"google\", \"name\": \"imagen-4\", \"description\": \"Google's Imagen 4 flagship model\"}, {\"owner\": \"resemble-ai\", \"name\": \"chatterbox\", \"description\": \"Generate expressive, natural speech. Features unique emotion control, instant voice cloning from short audio, and built-in watermarking.\"}, {\"owner\": \"sczhou\", \"name\": \"codeformer\", \"description\": \"Robust face restoration algorithm for old photos / AI-generated faces\"}, {\"owner\": \"tencentarc\", \"name\": \"gfpgan\", \"description\": \"Practical face restoration algorithm for *old photos* or *AI-generated faces*\"}, {\"owner\": \"topazlabs\", \"name\": \"image-upscale\", \"description\": \"Professional-grade image upscaling, from Topaz Labs\"}, {\"owner\": \"topazlabs\", \"name\": \"video-upscale\", \"description\": \"Video Upscaling from Topaz Labs\"}, {\"owner\": \"minimax\", \"name\": \"video-01\", \"description\": \"Generate 6s videos with prompts or images. (Also known as Hailuo). Use a subject reference to make a video with a character and the S2V-01 model.\"}, {\"owner\": \"luma\", \"name\": \"reframe-video\", \"description\": \"Change the aspect ratio of any video up to 30 seconds long, outputs will be 720p\"}, {\"owner\": \"black-forest-labs\", \"name\": \"flux-2-pro\", \"description\": \"High-quality image generation and editing with support for eight reference images\"}]}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"black-forest-labs\",\"model_name\":\"flux-2-pro\",\"jq_filter\":\".latest_version.openapi_schema.components.schemas.Input\"}",
+          "output": "{\"type\": \"object\", \"title\": \"Input\", \"required\": [\"prompt\"], \"properties\": {\"seed\": {\"type\": \"integer\", \"title\": \"Seed\", \"x-order\": 7, \"description\": \"Random seed. Set for reproducible generation\"}, \"width\": {\"type\": \"integer\", \"title\": \"Width\", \"maximum\": 2048, \"minimum\": 256, \"x-order\": 4, \"nullable\": true, \"description\": \"Width of the generated image. Only used when aspect_ratio=custom. Must be a multiple of 16 (if it's not, it will be rounded to nearest multiple of 16).\"}, \"height\": {\"type\": \"integer\", \"title\": \"Height\", \"maximum\": 2048, \"minimum\": 256, \"x-order\": 5, \"nullable\": true, \"description\": \"Height of the generated image. Only used when aspect_ratio=custom. Must be a multiple of 16 (if it's not, it will be rounded to nearest multiple of 16).\"}, \"prompt\": {\"type\": \"string\", \"title\": \"Prompt\", \"x-order\": 0, \"description\": \"Text prompt for image generation\"}, \"resolution\": {\"allOf\": [{\"$ref\": \"#/components/schemas/resolution\"}], \"default\": \"1 MP\", \"x-order\": 3, \"description\": \"Resolution in megapixels. Up to 4 MP is possible, but 2 MP or below is recommended. The maximum image size is 2048x2048, which means that high-resolution images may not respect the resolution if aspect ratio is not 1:1.\\n\\nResolution is not used when aspect_ratio is 'custom'. When aspect_ratio is 'match_input_image', use 'match_input_image' to match the input image's resolution (clamped to 0.5-4 MP).\"}, \"aspect_ratio\": {\"allOf\": [{\"$ref\": \"#/components/schemas/aspect_ratio\"}], \"default\": \"1:1\", \"x-order\": 2, \"description\": \"Aspect ratio for the generated image. Use 'match_input_image' to match the first input image's aspect ratio.\"}, \"input_images\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"format\": \"uri\"}, \"title\": \"Input Images\", \"default\": [], \"x-order\": 1, \"description\": \"List of input images for image-to-image generation. Maximum 8 images. Must be jpeg, png, gif, or webp.\"}, \"output_format\": {\"allOf\": [{\"$ref\": \"#/components/schemas/output_format\"}], \"default\": \"webp\", \"x-order\": 8, \"description\": \"Format of the output images.\"}, \"output_quality\": {\"type\": \"integer\", \"title\": \"Output Quality\", \"default\": 80, \"maximum\": 100, \"minimum\": 0, \"x-order\": 9, \"description\": \"Quality when saving the output images, from 0 to 100. 100 is best quality, 0 is lowest quality. Not relevant for .png outputs\"}, \"safety_tolerance\": {\"type\": \"integer\", \"title\": \"Safety Tolerance\", \"default\": 2, \"maximum\": 5, \"minimum\": 1, \"x-order\": 6, \"description\": \"Safety tolerance, 1 is most strict and 5 is most permissive\"}}}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"ideogram-ai\",\"model_name\":\"ideogram-v3-turbo\",\"jq_filter\":\".latest_version.openapi_schema.components.schemas.Input\"}",
+          "output": "{\"type\": \"object\", \"title\": \"Input\", \"required\": [\"prompt\"], \"properties\": {\"mask\": {\"type\": \"string\", \"title\": \"Mask\", \"format\": \"uri\", \"x-order\": 5, \"nullable\": true, \"description\": \"A black and white image. Black pixels are inpainted, white pixels are preserved. The mask will be resized to match the image size.\"}, \"seed\": {\"type\": \"integer\", \"title\": \"Seed\", \"maximum\": 2147483647, \"x-order\": 8, \"nullable\": true, \"description\": \"Random seed. Set for reproducible generation\"}, \"image\": {\"type\": \"string\", \"title\": \"Image\", \"format\": \"uri\", \"x-order\": 4, \"nullable\": true, \"description\": \"An image file to use for inpainting. You must also use a mask.\"}, \"prompt\": {\"type\": \"string\", \"title\": \"Prompt\", \"x-order\": 0, \"description\": \"Text prompt for image generation\"}, \"resolution\": {\"allOf\": [{\"$ref\": \"#/components/schemas/resolution\"}], \"default\": \"None\", \"x-order\": 2, \"description\": \"Resolution. Overrides aspect ratio. Ignored if an inpainting image is given.\"}, \"style_type\": {\"allOf\": [{\"$ref\": \"#/components/schemas/style_type\"}], \"default\": \"None\", \"x-order\": 6, \"description\": \"The styles help define the specific aesthetic of the image you want to generate.\"}, \"aspect_ratio\": {\"allOf\": [{\"$ref\": \"#/components/schemas/aspect_ratio\"}], \"default\": \"1:1\", \"x-order\": 1, \"description\": \"Aspect ratio. Ignored if a resolution or inpainting image is given.\"}, \"style_preset\": {\"allOf\": [{\"$ref\": \"#/components/schemas/style_preset\"}], \"default\": \"None\", \"x-order\": 9, \"description\": \"Apply a predefined artistic style to the generated image (V3 models only).\"}, \"magic_prompt_option\": {\"allOf\": [{\"$ref\": \"#/components/schemas/magic_prompt_option\"}], \"default\": \"Auto\", \"x-order\": 3, \"description\": \"Magic Prompt will interpret your prompt and optimize it to maximize variety and quality of the images generated. You can also use it to write prompts in different languages.\"}, \"style_reference_images\": {\"type\": \"array\", \"items\": {\"type\": \"string\", \"anyOf\": [], \"format\": \"uri\"}, \"title\": \"Style Reference Images\", \"x-order\": 7, \"nullable\": true, \"description\": \"A list of images to use as style references.\"}}}",
+          "error": null
+        },
+        {
+          "name": "create_models_predictions",
+          "arguments": "{\"model_owner\":\"minimax\",\"model_name\":\"video-01\",\"input\":{\"prompt\":\"16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 1, one continuous locked-off medium-wide shot, six seconds. Night, steady visible rain, empty glass city bus shelter, wet reflective pavement, cool blue lighting and one warm amber streetlamp. A tall slender pale woman age 45 waits ALONE, standing still beneath the edge of the shelter, looking down the empty street with quiet hope. She has an angular oval face and a straight chin-length silver bob with blunt fringe. She wears a fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. Her boots are visible. Subtle breathing and a small turn of her head. No man, no other people, no bus arriving. Grounded naturalistic 35mm cinema, restrained emotion, consistent costume and face, realistic rain. Single shot, no cuts, no titles, no text, horizontal landscape.\",\"prompt_optimizer\":false},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"s4qa5jb8txrmy0d1nd2s0hqy54\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "create_models_predictions",
+          "arguments": "{\"model_owner\":\"minimax\",\"model_name\":\"video-01\",\"input\":{\"prompt\":\"16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 2, one continuous six-second medium-wide shot. Night, steady visible rain, empty glass city bus shelter, wet reflective pavement, cool blue lighting and one warm amber streetlamp. On screen left a tall slender pale woman age 45 waits, angular oval face, straight chin-length silver bob with blunt fringe, fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. From screen RIGHT an older shorter light-skinned man age 70 walks slowly toward her carrying one open plain BLACK umbrella overhead. He has a kind lined face, a full neatly trimmed GREY beard, receding short grey hair; FOREST GREEN thigh-length coat, charcoal trousers, dark brown boots. He stops immediately beside her on her right and gently holds the umbrella over both. Both stay at bus stop. Restrained hopeful emotion, realistic proportions and physics, naturalistic 35mm cinema, no extra people, no text, no cuts, horizontal landscape.\",\"prompt_optimizer\":false},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"gyj0vacje5rmw0d1nd2r64a5y8\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "create_models_predictions",
+          "arguments": "{\"model_owner\":\"minimax\",\"model_name\":\"video-01\",\"input\":{\"prompt\":\"16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 3, one continuous intimate six-second close two-shot at eye level. Night, steady visible rain beyond a plain BLACK umbrella sheltering two people outside a glass city bus shelter. Cool blue night and one soft warm amber streetlamp reflected in wet background, naturalistic 35mm cinema. Screen LEFT tall slender pale woman age 45, angular oval face, straight chin-length SILVER bob with blunt fringe, fully buttoned RED belted raincoat. Screen RIGHT shorter older light-skinned man age 70, kind lined face, full neatly trimmed GREY beard, receding short grey hair, FOREST GREEN coat, holding umbrella over both. First second they look at each other in silence. During seconds two to three the man moves his lips naturally to say exactly the short sentence 'You came back.' Then his lips stop. During seconds four to six she gives him a small warm emotional smile without speaking; he smiles gently back. Preserve these two distinct faces and costumes. No subtitles, no text, no other people, no cuts. Locked camera, realistic restrained acting, horizontal landscape.\",\"prompt_optimizer\":false},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"n9t4ete4c9rmr0d1nd2txb1txg\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "create_models_predictions",
+          "arguments": "{\"model_owner\":\"minimax\",\"model_name\":\"video-01\",\"input\":{\"prompt\":\"16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 4, one continuous six-second medium-wide REAR VIEW. Night, steady visible rain, empty glass city bus shelter at left, wet reflective pavement, cool blue lighting and one warm amber streetlamp. Two people walk slowly AWAY FROM CAMERA together down the sidewalk beneath ONE open plain BLACK umbrella, staying close side by side. LEFT: tall slender pale woman age 45 with straight chin-length SILVER bob with blunt fringe, fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. RIGHT: shorter older light-skinned man age 70, full neatly trimmed GREY beard and receding short grey hair, FOREST GREEN thigh-length coat, charcoal trousers, dark brown boots, holding umbrella above both. Show backs of heads and coats and boots, never turn around. Quiet tender hopeful ending, realistic natural walking, naturalistic 35mm cinema. Static camera allows them to recede gently. No extra people, no vehicles, no titles, no text, no cuts, horizontal landscape.\",\"prompt_optimizer\":false},\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"ce2nptzf39rmy0d1nd2s53dqeg\", \"status\": \"starting\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_models",
+          "arguments": "{\"model_owner\":\"resemble-ai\",\"model_name\":\"chatterbox\",\"jq_filter\":\"{version:.latest_version.id,input:.latest_version.openapi_schema.components.schemas.Input}\"}",
+          "output": "{\"version\": \"1b8422bc49635c20d0a84e387ed20879c0dd09254ecdb4e75dc4bec10ff94e97\", \"input\": {\"type\": \"object\", \"title\": \"Input\", \"required\": [\"prompt\"], \"properties\": {\"seed\": {\"type\": \"integer\", \"title\": \"Seed\", \"default\": 0, \"x-order\": 5, \"description\": \"Seed (0 for random)\"}, \"prompt\": {\"type\": \"string\", \"title\": \"Prompt\", \"x-order\": 0, \"description\": \"Text to synthesize\"}, \"cfg_weight\": {\"type\": \"number\", \"title\": \"Cfg Weight\", \"default\": 0.5, \"maximum\": 1, \"minimum\": 0.2, \"x-order\": 3, \"description\": \"CFG/Pace weight\"}, \"temperature\": {\"type\": \"number\", \"title\": \"Temperature\", \"default\": 0.8, \"maximum\": 5, \"minimum\": 0.05, \"x-order\": 4, \"description\": \"Temperature\"}, \"audio_prompt\": {\"type\": \"string\", \"title\": \"Audio Prompt\", \"format\": \"uri\", \"x-order\": 1, \"description\": \"Path to the reference audio file (Optional)\"}, \"exaggeration\": {\"type\": \"number\", \"title\": \"Exaggeration\", \"default\": 0.5, \"maximum\": 2, \"minimum\": 0.25, \"x-order\": 2, \"description\": \"Exaggeration (Neutral = 0.5, extreme values can be unstable)\"}}}}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"s4qa5jb8txrmy0d1nd2s0hqy54\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"s4qa5jb8txrmy0d1nd2s0hqy54\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"gyj0vacje5rmw0d1nd2r64a5y8\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"gyj0vacje5rmw0d1nd2r64a5y8\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"n9t4ete4c9rmr0d1nd2txb1txg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"n9t4ete4c9rmr0d1nd2txb1txg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"ce2nptzf39rmy0d1nd2s53dqeg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"ce2nptzf39rmy0d1nd2s53dqeg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"s4qa5jb8txrmy0d1nd2s0hqy54\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"s4qa5jb8txrmy0d1nd2s0hqy54\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"gyj0vacje5rmw0d1nd2r64a5y8\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"gyj0vacje5rmw0d1nd2r64a5y8\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"n9t4ete4c9rmr0d1nd2txb1txg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"n9t4ete4c9rmr0d1nd2txb1txg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"ce2nptzf39rmy0d1nd2s53dqeg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"ce2nptzf39rmy0d1nd2s53dqeg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"s4qa5jb8txrmy0d1nd2s0hqy54\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"s4qa5jb8txrmy0d1nd2s0hqy54\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"gyj0vacje5rmw0d1nd2r64a5y8\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"gyj0vacje5rmw0d1nd2r64a5y8\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"s4qa5jb8txrmy0d1nd2s0hqy54\",\"jq_filter\":\"{id,status,output,error,logs,created_at,started_at}\"}",
+          "output": "{\"id\": \"s4qa5jb8txrmy0d1nd2s0hqy54\", \"status\": \"processing\", \"output\": null, \"error\": null, \"logs\": \"Warning: Moderation check failed: Error code: 401 - {'error': {'message': 'The OpenAI account associated with this API key has been deactivated. If you are the developer for this OpenAI app, please check your email for more information. If you are seeing this error while using another app or site, please reach out to them for more help.', 'type': 'invalid_request_error', 'code': 'account_deactivated', 'param': None}, 'status': 401}\\nGenerating video...\\nStill generating...\\nStill generating...\\nStill generating...\\n\", \"created_at\": \"2026-11-05T10:33:35.191Z\", \"started_at\": \"2026-11-05T10:33:35.204260918Z\"}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"n9t4ete4c9rmr0d1nd2txb1txg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"n9t4ete4c9rmr0d1nd2txb1txg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"ce2nptzf39rmy0d1nd2s53dqeg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"ce2nptzf39rmy0d1nd2s53dqeg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"s4qa5jb8txrmy0d1nd2s0hqy54\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"s4qa5jb8txrmy0d1nd2s0hqy54\", \"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/yJlPY0YssKK9OJHk0CwLrG0s89seoJMwCEi1wlBMzQxEcQvLA/tmpcvnemy44.mp4\", \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"gyj0vacje5rmw0d1nd2r64a5y8\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"gyj0vacje5rmw0d1nd2r64a5y8\", \"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/NMr4dd8fQ63AOqzXXwXRyrzR9Qz4j4MEW7NfSovX6ZIW4geuA/tmpv5ibm9dx.mp4\", \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"n9t4ete4c9rmr0d1nd2txb1txg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"n9t4ete4c9rmr0d1nd2txb1txg\", \"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/DokZfLVPkkSFEyS5QsEAwepA8l96jUfQOxlAtNDIxXFExB9uA/tmpl_c05_8y.mp4\", \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"ce2nptzf39rmy0d1nd2s53dqeg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"ce2nptzf39rmy0d1nd2s53dqeg\", \"status\": \"processing\", \"output\": null, \"error\": null}",
+          "error": null
+        },
+        {
+          "name": "get_predictions",
+          "arguments": "{\"prediction_id\":\"ce2nptzf39rmy0d1nd2s53dqeg\",\"jq_filter\":\"{id,status,output,error}\"}",
+          "output": "{\"id\": \"ce2nptzf39rmy0d1nd2s53dqeg\", \"status\": \"succeeded\", \"output\": \"https://replicate.delivery/xezq/imwhZbymCV4RNhKCaIHSyP6t3UlfYs4jhRmwdvd4chEgcQvLA/tmpptop2btx.mp4\", \"error\": null}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "black-forest-labs",
+            "model_name": "flux-2-pro",
+            "Prefer": "wait",
+            "input": {
+              "prompt": "Cinematic photographic character continuity reference, single photograph, full length portrait of two fictional adults standing side by side facing camera beneath one open plain black umbrella at a rainy city bus shelter at night. Woman on LEFT: tall slender woman age 45, pale skin, angular oval face, straight chin-length silver bob with blunt fringe, red knee-length belted raincoat fully buttoned, mustard yellow rubber boots, black trousers. Man on RIGHT: shorter older man age 70, light skin, kind lined face, full neatly trimmed grey beard, short grey hair with receding hairline, forest green thigh-length coat, charcoal trousers, dark brown boots, holding umbrella in right hand. Neutral gentle expressions, faces clear and recognizable, realistic proportions. Wet reflective pavement, cool blue night and soft amber streetlamp, understated intimate independent film, 35mm photography, realistic rain, no text, no collage, no extra people. Both visible from head to boots.",
+              "aspect_ratio": "16:9",
+              "output_format": "png"
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": false,
+          "reason": "the model owner \"black-forest-labs\" is not in the free collection; for video only minimax/video-01 runs"
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "ideogram-ai",
+            "model_name": "ideogram-v3-turbo",
+            "Prefer": "wait",
+            "input": {
+              "prompt": "Cinematic live-action film still, full-length two-person portrait at a glass bus shelter at night in rain. Woman on LEFT: tall slender pale woman age 45, angular oval face, chin-length straight silver bob with blunt fringe, red knee-length belted raincoat, black trousers, yellow rubber boots. Man on RIGHT: shorter white man age 70, full neatly trimmed grey beard, receding short grey hair, kind lined face, forest green thigh-length coat, charcoal trousers, dark brown boots, holding a plain open black umbrella. Both clearly visible head to boots and faces well-lit. Cool blue night with amber streetlamp, wet reflective pavement, intimate naturalistic 35mm independent drama. No other people, no text, no montage.",
+              "aspect_ratio": "16:9",
+              "magic_prompt_option": "Off"
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": false,
+          "reason": "the model owner \"ideogram-ai\" is not in the free collection; for video only minimax/video-01 runs"
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "minimax",
+            "model_name": "video-01",
+            "Prefer": "wait",
+            "input": {
+              "prompt": "16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 1, one continuous locked-off medium-wide shot, six seconds. Night, steady visible rain, empty glass city bus shelter, wet reflective pavement, cool blue lighting and one warm amber streetlamp. A tall slender pale woman age 45 waits ALONE, standing still beneath the edge of the shelter, looking down the empty street with quiet hope. She has an angular oval face and a straight chin-length silver bob with blunt fringe. She wears a fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. Her boots are visible. Subtle breathing and a small turn of her head. No man, no other people, no bus arriving. Grounded naturalistic 35mm cinema, restrained emotion, consistent costume and face, realistic rain. Single shot, no cuts, no titles, no text, horizontal landscape.",
+              "prompt_optimizer": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": false,
+          "reason": "Prefer: wait is not accepted here; create the prediction without it, then read it with get_predictions"
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "minimax",
+            "model_name": "video-01",
+            "input": {
+              "prompt": "16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 1, one continuous locked-off medium-wide shot, six seconds. Night, steady visible rain, empty glass city bus shelter, wet reflective pavement, cool blue lighting and one warm amber streetlamp. A tall slender pale woman age 45 waits ALONE, standing still beneath the edge of the shelter, looking down the empty street with quiet hope. She has an angular oval face and a straight chin-length silver bob with blunt fringe. She wears a fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. Her boots are visible. Subtle breathing and a small turn of her head. No man, no other people, no bus arriving. Grounded naturalistic 35mm cinema, restrained emotion, consistent costume and face, realistic rain. Single shot, no cuts, no titles, no text, horizontal landscape.",
+              "prompt_optimizer": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "minimax",
+            "model_name": "video-01",
+            "input": {
+              "prompt": "16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 2, one continuous six-second medium-wide shot. Night, steady visible rain, empty glass city bus shelter, wet reflective pavement, cool blue lighting and one warm amber streetlamp. On screen left a tall slender pale woman age 45 waits, angular oval face, straight chin-length silver bob with blunt fringe, fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. From screen RIGHT an older shorter light-skinned man age 70 walks slowly toward her carrying one open plain BLACK umbrella overhead. He has a kind lined face, a full neatly trimmed GREY beard, receding short grey hair; FOREST GREEN thigh-length coat, charcoal trousers, dark brown boots. He stops immediately beside her on her right and gently holds the umbrella over both. Both stay at bus stop. Restrained hopeful emotion, realistic proportions and physics, naturalistic 35mm cinema, no extra people, no text, no cuts, horizontal landscape.",
+              "prompt_optimizer": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "minimax",
+            "model_name": "video-01",
+            "input": {
+              "prompt": "16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 3, one continuous intimate six-second close two-shot at eye level. Night, steady visible rain beyond a plain BLACK umbrella sheltering two people outside a glass city bus shelter. Cool blue night and one soft warm amber streetlamp reflected in wet background, naturalistic 35mm cinema. Screen LEFT tall slender pale woman age 45, angular oval face, straight chin-length SILVER bob with blunt fringe, fully buttoned RED belted raincoat. Screen RIGHT shorter older light-skinned man age 70, kind lined face, full neatly trimmed GREY beard, receding short grey hair, FOREST GREEN coat, holding umbrella over both. First second they look at each other in silence. During seconds two to three the man moves his lips naturally to say exactly the short sentence 'You came back.' Then his lips stop. During seconds four to six she gives him a small warm emotional smile without speaking; he smiles gently back. Preserve these two distinct faces and costumes. No subtitles, no text, no other people, no cuts. Locked camera, realistic restrained acting, horizontal landscape.",
+              "prompt_optimizer": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_models_predictions",
+          "args": {
+            "model_owner": "minimax",
+            "model_name": "video-01",
+            "input": {
+              "prompt": "16:9 widescreen cinematic live-action independent short film WALK ANYWAY, shot 4, one continuous six-second medium-wide REAR VIEW. Night, steady visible rain, empty glass city bus shelter at left, wet reflective pavement, cool blue lighting and one warm amber streetlamp. Two people walk slowly AWAY FROM CAMERA together down the sidewalk beneath ONE open plain BLACK umbrella, staying close side by side. LEFT: tall slender pale woman age 45 with straight chin-length SILVER bob with blunt fringe, fully buttoned RED knee-length belted raincoat, black trousers, bright YELLOW rubber boots. RIGHT: shorter older light-skinned man age 70, full neatly trimmed GREY beard and receding short grey hair, FOREST GREEN thigh-length coat, charcoal trousers, dark brown boots, holding umbrella above both. Show backs of heads and coats and boots, never turn around. Quiet tender hopeful ending, realistic natural walking, naturalistic 35mm cinema. Static camera allows them to recede gently. No extra people, no vehicles, no titles, no text, no cuts, horizontal landscape.",
+              "prompt_optimizer": false
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": true,
+          "reason": ""
+        },
+        {
+          "name": "create_predictions",
+          "args": {
+            "version": "resemble-ai/chatterbox:1b8422bc49635c20d0a84e387ed20879c0dd09254ecdb4e75dc4bec10ff94e97",
+            "input": {
+              "prompt": "You came back.",
+              "exaggeration": 0.35,
+              "cfg_weight": 0.5,
+              "seed": 42
+            },
+            "jq_filter": "{id,status,output,error}"
+          },
+          "approve": false,
+          "reason": "the version \"resemble-ai/chatterbox:1b8422bc49635c20d0a84e387ed20879c0dd09254ecdb4e75dc4bec10ff94e97\" is not in the free collection; for video only minimax/video-01 runs"
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "approval",
+          "question": "I can help create the footage, but I can’t deliver the **single finished 30-second video** with the tools available on your connected account.\n\nThe available video model, **MiniMax video-01**, generates **6-second silent clips**. I don’t have an available tool to join the shots, add the exact 2-second title cards, or mix rain with “You came back.” Matching character references can improve consiste"
+        }
+      ],
+      "files": [
+        {
+          "file": "assets/01-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/yJlPY0YssKK9OJHk0CwLrG0s89seoJMwCEi1wlBMzQxEcQvLA/tmpcvnemy44.mp4",
+          "type": "video/mp4",
+          "bytes": 1265394
+        },
+        {
+          "file": "assets/02-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/NMr4dd8fQ63AOqzXXwXRyrzR9Qz4j4MEW7NfSovX6ZIW4geuA/tmpv5ibm9dx.mp4",
+          "type": "video/mp4",
+          "bytes": 1613382
+        },
+        {
+          "file": "assets/03-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/DokZfLVPkkSFEyS5QsEAwepA8l96jUfQOxlAtNDIxXFExB9uA/tmpl_c05_8y.mp4",
+          "type": "video/mp4",
+          "bytes": 1053176
+        },
+        {
+          "file": "assets/04-replicate.mp4",
+          "url": "https://replicate.delivery/xezq/imwhZbymCV4RNhKCaIHSyP6t3UlfYs4jhRmwdvd4chEgcQvLA/tmpptop2btx.mp4",
+          "type": "video/mp4",
+          "bytes": 1422975
+        }
+      ],
+      "kind": "delivered",
+      "denied": [
+        "the model owner \"black-forest-labs\" is not in the free collection; for video only minimax/video-01 runs",
+        "the model owner \"ideogram-ai\" is not in the free collection; for video only minimax/video-01 runs",
+        "Prefer: wait is not accepted here; create the prediction without it, then read it with get_predictions",
+        "the version \"resemble-ai/chatterbox:1b8422bc49635c20d0a84e387ed20879c0dd09254ecdb4e75dc4bec10ff94e97\" is not in the free collection; for video only minimax/video-01 runs"
+      ],
+      "spent": 0,
+      "seconds": 293
+    }
+  ],
+  "started": "2026-11-05T10:32:14.554Z",
+  "seconds": 293,
+  "spent": 0,
+  "gate": {
+    "creates": 4,
+    "spent": 0,
+    "max": null
+  }
+}

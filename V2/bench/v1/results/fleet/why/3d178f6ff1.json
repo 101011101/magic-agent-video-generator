@@ -1,0 +1,47 @@
+{
+ "id": "3d178f6ff1",
+ "key": "must:J52b:Two separate square images are supplied, not a combined collage.",
+ "symptom": "Two separate square images are supplied, not a combined collage.",
+ "item": "J52b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Two separate square images are supplied' not met?",
+    "because": "No image file was produced in any of the failing chats, so the grader had nothing to check.",
+    "evidence": "s2r.old.dumper.J52b/grade.json: check 'something was made' pass=false, got 'no file'. The must-have reason is 'No images were produced; both edits were refused for lack of credits.'"
+   },
+   {
+    "why": "Why was no image produced?",
+    "because": "Every generation call was blocked before it ran. In all three chats each edit_image call came back approve=false with the same reason.",
+    "evidence": "calls.jsonl in old.stupid (3 edit_image calls), old.dumper (2 calls) and new.stupid (1 call): each has \"approve\":false,\"reason\":\"insufficient credits: this call needs about 5 credits and 0 remain on the account\"."
+   },
+   {
+    "why": "Why were the calls refused? Were the assistant's arguments wrong or too expensive?",
+    "because": "No. The assistant already chose the cheapest free-plan settings: flux-2-klein, 640px, 1:1, image_count 1, at about 5 credits per image. The only reason for the refusal is the account balance of 0. In old.dumper the assistant split the request into two separate square edits, which is exactly what the brief asks for.",
+    "evidence": "old.dumper calls.jsonl: two edit_image calls, 'Bottle on white' and 'Bottle at mountain lake', each aspect_ratio 1:1 and 640px. new.stupid ran plan_request, got ready=true, then sent a correct edit_image call."
+   },
+   {
+    "why": "Why did the account have 0 credits, when the test expects the request to fit the free plan?",
+    "because": "The test is written to be doable on the free plan, but the free-plan account had already been used up when these chats ran. Both builds use the same Magic Hour account (same api-assets/cmsla3fmt01cnio0zhjlc2wsv path), so the shortfall hits old and new alike. It does not depend on the build or on the persona.",
+    "evidence": "J52b.json expect.beyond_free = 'no'. chat.json and the calls in both old and new use the same asset owner id cmsla3fmt01cnio0zhjlc2wsv. The refusal reason says 0 credits remain before the first call of each chat."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The test harness ran the graded chats on a shared account that had no credits left. It did not top up or reset the balance, and it did not mark the chats as invalid. The grader then scored the missing output as a failed check. The failure is an artifact of the run setup, not a defect of the MCP server, its tool descriptions or the assistant.",
+    "evidence": "All 4 failing chats end in kind 'cannot' with the same 0-credit reason. The assistant's replies (e.g. old.stupid) correctly say nothing was made or charged."
+   }
+  ],
+  "axiom": "The benchmark's shared free-plan Magic Hour account had 0 credits when these chats ran. Every edit_image call was refused before it ran, so no images existed to grade. This is a test-harness artifact (an exhausted test account), not a fault of either build.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, the harness checks the account balance and tops it up or resets it, for example with a dedicated funded account per run. A chat that fails with 'insufficient credits: 0 remain' on an item marked beyond_free='no' gets marked invalid and run again, not graded as a failure."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.1194192
+}

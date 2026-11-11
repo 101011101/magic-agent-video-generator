@@ -1,0 +1,47 @@
+{
+ "id": "93aa372217",
+ "key": "must:D20b:Caption contrast and placement legible",
+ "symptom": "Caption contrast and placement legible",
+ "item": "D20b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Caption contrast and placement legible' not met in both chats?",
+    "because": "Neither video had any on-screen text, so the grader had no caption to judge for legibility.",
+    "evidence": "old grade.json and new grade.json: must item 'Caption contrast and placement legible' met=no, why='No captions present.' In both files, every exact_text entry ('Come on in' … 'Stay a while') is seen='missing'."
+   },
+   {
+    "why": "Why did the videos have no captions?",
+    "because": "The assistant never asked for text in any generation call, and no step added text afterward. Old build: one create_video_from_text call whose prompt has no caption words. New build: five clips joined, and the assistant reported 'no on-screen text'.",
+    "evidence": "old calls.jsonl line 2: the style.prompt describes the storefront, interior, barista, latte and pastries shots and has no caption strings. new state.json final assistant turn: 'Sound and text: you didn't pick any, so it has no sound and no on-screen text.'"
+   },
+   {
+    "why": "Why did the assistant leave out the captions?",
+    "because": "The assistant never received the caption words. The simulated user's only opening message was 'make a café video with this pic and this pic and this pic and this pic and this pic'. That message has no captions, no 'vertical' and no music.",
+    "evidence": "new chat.json messages[0].text and old state.json transcript[0] show the same message. The real brief in D20b.json turns[0].text lists the five exact captions."
+   },
+   {
+    "why": "Why did the new-build assistant still not get the captions after it asked for on-screen text?",
+    "because": "The assistant asked 4 questions in one message, and on-screen text was question 4. The stupid persona rule says to answer only the first question it understands when asked more than two things. So the user replied only 'like 10 sec', and the assistant then went ahead with no text. The old-build assistant asked nothing and delivered at once (the item sets asks='never').",
+    "evidence": "new chat.json persona.reply: 'When it asks more than two things at once, answer only the first one you understand.' new state.json: the assistant's turn has questions 1-4, with question 4 about on-screen text, and the user replied 'like 10 sec'. The caption mapping exists only in the persona bank ('Photo order and caption mapping')."
+   },
+   {
+    "why": "Why does the harness let required exact text get lost?",
+    "because": "The harness rewrites the opening message for the stupid persona as a vague request and drops the spec.exact_text strings, and the persona's rules block the user from offering them. Content that the assistant cannot infer (the exact caption wording) then cannot reach the assistant. The grader still checks that content.",
+    "evidence": "D20b.json spec.exact_text has the 5 captions, and expect.asks is 'never'. The stupid opening message in both chats leaves them all out. Both builds fail the same way, so the cause does not come from the MCP tools."
+   }
+  ],
+  "axiom": "Harness defect: the stupid-persona version of the opening message drops the brief's required exact caption text, and the persona's 'answer only the first question' rule stops the user from supplying it. The assistant never received the captions, so it could not make them, and the grader still scored caption legibility.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the persona harness, keep every spec.exact_text string word for word in the stupid persona's opening message (e.g. 'put these words on: Come on in, Coffee first, ...'). Also let the persona answer any question that its bank holds an exact answer for (such as on-screen text), even when the assistant asks several questions in one message. If the harness does neither, mark the caption must_haves as not applicable for vague personas."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.1704624
+}

@@ -1,0 +1,47 @@
+{
+ "id": "60b2c3ef4f",
+ "key": "must:E29c:Original footage unchanged apart from watermark, no extra card or scene",
+ "symptom": "Original footage unchanged apart from watermark, no extra card or scene",
+ "item": "E29c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Original footage unchanged apart from watermark, no extra card or scene' not met?",
+    "because": "The delivered clip is a regenerated copy of radio-lines.mp4. In it the pilot, cockpit and framing differ from the source, and the image is softer at 832x512.",
+    "evidence": "s3.new.dumper.E29c/grade.json: 'Footage was regenerated: the first frames show a different cockpit and pilot from the original'. s3.old.stupid.E29c/grade.json: 're-rendered and softer at 832x512. The pilot and framing look a bit different'. In both calls.jsonl the wait_for_video_project result shows width 832, height 512, type VIDEO_EDITOR."
+   },
+   {
+    "why": "Why was the footage regenerated?",
+    "because": "In both chats the assistant's only edit was edit_video with model ltx-2.5 at 480p. It sent the source clip and a text prompt: 'Keep the video exactly the same ... only add a small ... watermark \"@flightschool\"'. This editor makes every frame again from the prompt. It does not composite a layer on the original pixels.",
+    "evidence": "calls.jsonl (old, line 6; new, line 5): tool edit_video, args.model 'ltx-2.5', resolution '480p', style.prompt as quoted, assets.video_file_path = the user's clip. Neither chat made any other create or edit call."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for a pixel-exact overlay task?",
+    "because": "No tool in either build can put a fixed text or image layer on an existing video. The assistant said this itself before it ran anything. The new assistant first refused. It ran edit_video only after the simulated user's nudge ('please just go ahead and try it anyway'). The old assistant explained the limit, and the 'stupid' user said 'ya go'.",
+    "evidence": "s3.new.dumper.E29c/calls.jsonl line 3: 'No overlay tool: Nothing I have can place a fixed text layer on top of an existing video ... The AI video editor would redo every frame'. Line 4 is the nudge. s3.old.stupid.E29c/calls.jsonl line 4: 'Magic Hour has no watermark tool. The only way to do it is the AI video editor. It redraws the clip'. tools-new.json plan_request tool enum: there is only add_subtitles_to_video (captions from speech) and trim_video. No overlay or drawtext tool exists. Code-drawn cards exist only for whole-screen production cards in plan_video_production."
+   },
+   {
+    "why": "Why can't a prompt like 'keep everything exactly the same' keep the footage?",
+    "because": "ltx-2.5 video-to-video regenerates the full frame sequence at 480p on the free plan. A prompt can't force pixel identity, so faces and set details drift. The model also failed to draw the watermark at all.",
+    "evidence": "Both grade.json files: watermark 'missing' in every sampled frame, and the footage is altered. Both assistants warned that 'the AI redraws every frame, so things may still have changed'."
+   },
+   {
+    "why": "Are the 'added subtitles' also a real defect?",
+    "because": "Probably not. The subtitle lines are dialogue from the source clip (radio-lines), so they are most likely burned into the original. The old grader said 'It may come from the original'. That part of the new grader's reason is likely a grader artifact. The regeneration alone still fails the item. I could not open the source or output frames to confirm this, because the jpg file names are unknown.",
+    "evidence": "s3.new.dumper.E29c/grade.json exact_text read_as: subtitles 'Rook, you with me?' and 'Right here, Vega.'. s3.old.stupid.E29c/grade.json faults: 'It may come from the original'."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server has no deterministic overlay or compositing tool in either build. The only route to add a watermark is edit_video (ltx-2.5 video-to-video). That model regenerates every frame and cannot keep the source footage unchanged.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a code-based overlay tool to the server, for example add_text_overlay_to_video using ffmpeg drawtext/overlay. It takes text, position, inset, size, colour, opacity and shadow, and keeps the source video and audio stream as they are. Then list it in plan_request as the route for exact on-screen words on a user's video, in place of edit_video."
+ },
+ "error": null,
+ "seconds": 46,
+ "usd": 0.25574240000000004
+}

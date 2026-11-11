@@ -1,0 +1,47 @@
+{
+ "id": "fac3ad723c",
+ "key": "must:G33b:Uses a frame from talk-one.mp4, retaining identity and source appearance",
+ "symptom": "Uses a frame from talk-one.mp4, retaining identity and source appearance",
+ "item": "G33b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "axiom": "Neither build has a tool that takes a chosen still frame from a video the user uploaded. Old has no frame tool at all. New has only get_last_frame. That tool takes only \"a finished video project id or a video URL\", and it fails on an uploaded api-assets file: a 404 for the path and a 403 for the unsigned URL. So the only way to get a picture of the person was the face crop from detect_faces. The only way to compose that crop into a thumbnail was edit_image (flux-2-klein), a generative model that redraws the whole scene. A generative model cannot keep the source frame's pixels.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool, or extend get_last_frame into extract_frame(video, at_seconds), that accepts an uploaded file_path (api-assets/...) as input. It downloads the file with a signed URL, returns the frame as a full 16:9 still and uploads it as a file_path. Then put the text on that real frame with an exact overlay done by code (as for production cards), not with edit_image. If no frame tool exists, the edit_image description must say that it redraws the whole scene.",
+  "whys": [
+   {
+    "why": "Why was the item 'uses a frame from talk-one.mp4, retaining identity and source appearance' not met?",
+    "because": "The delivered image is an AI-redrawn woman: the kitchen is new, the sweater is different and the smile is different. It is not a real frame from the video.",
+    "evidence": "s4.old.happy.G33b/grade.json must[1]: 'Background and outfit are regenerated; the face is a re-rendered lookalike...'. s4.new.happy.G33b/grade.json must[1]: 'AI-regenerated woman with a new kitchen background and different clothing... not a source frame'."
+   },
+   {
+    "why": "Why was the scene redrawn?",
+    "because": "In both chats the assistant made the thumbnail with edit_image (flux-2-klein, 640px). The prompt asked the model to place the person in a 'cozy bright kitchen' with golden light. Only a face crop was attached, so the model had to invent everything outside the face.",
+    "evidence": "old calls.jsonl line 7 and new calls.jsonl line 9: edit_image with image_file_paths=[.../0-0.png], and the prompt describes a new kitchen background and new framing."
+   },
+   {
+    "why": "Why was a face crop the only input, and not a full frame?",
+    "because": "The assistant could not get a still frame from the uploaded video. It fell back to detect_faces, which returns only a tight crop of the face (150x213 in the grade files).",
+    "evidence": "old calls.jsonl lines 2-4: detect_faces then get_face_detection_results returns faces[0] 0-0.png. Grade checks list a '150x213' file. In the old reply the assistant says: 'My tools can't take a full still frame from a video. The closest option was face detection'."
+   },
+   {
+    "why": "Why could the new build not extract a frame when it has get_last_frame?",
+    "because": "get_last_frame accepts only a finished project id or a video URL. With the uploaded asset path, the server treated the path as a project id: HTTP 404. With the plain CDN URL, the request was refused: 403 Forbidden, because the URL had no signature. join_videos failed the same way. The tool also gives only the last frame, not a frame the assistant chooses.",
+    "evidence": "new calls.jsonl lines 2, 5, 7: 404 on /v1/video-projects/api-assets/...mp4, 403 for https://videos.magichour.ai/api-assets/...mp4, 404 from join_videos. tools-new.json get_last_frame: '`video`: a finished video project id or a video URL'."
+   },
+   {
+    "why": "Why does neither tool list offer a way to get a frame from an uploaded video?",
+    "because": "Frame extraction is not in the hosted server (old). In the new build it exists only for chaining generated clips (the last frame as the start image of create_video_from_image). It does not handle files the user uploads. This is a gap in the MCP tool behaviour, not an error by the assistant: in both builds the assistant explained the limit to the user and offered a screenshot workaround.",
+    "evidence": "tools-new.json get_last_frame description: 'usable as the start image of create_video_from_image'. The old chat has no frame tool call. Both replies say that the tools cannot take a still frame from an uploaded video."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 26,
+ "usd": 0.2620922
+}

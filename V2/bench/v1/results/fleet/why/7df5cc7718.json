@@ -1,0 +1,52 @@
+{
+ "id": "7df5cc7718",
+ "key": "must:H40a:Multiple moving views/close-ups in clean studio setting",
+ "symptom": "Multiple moving views/close-ups in clean studio setting",
+ "item": "H40a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'multiple moving views/close-ups in a clean studio setting' not met?",
+    "because": "In both chats the generated shots show the bottle on the user's own wooden kitchen table in the home room, not in a studio. In the new chat the room behind the bottle also changes during the orbit.",
+    "evidence": "s4.new.dumper.H40a/grade.json: 'the setting is the original wooden kitchen table and room, not a clean white studio. The background also changes during the orbit (TV, shelf, door, window)'. s4.old.stupid.H40a/grade.json: 'One continuous push-in on a kitchen table, not a studio'. attachments/product-bottle.jpg shows the bottle on a wooden table in a bright home room with windows, a plant and a chair."
+   },
+   {
+    "why": "Why does the kitchen show up in the new build when the plan asked for a white studio?",
+    "because": "plan_video_production built clip 2 from the user's raw photo. Its prompt said 'a clean, bright white studio with a seamless light-grey backdrop' and 'Use @bottle as a likeness guide, not a pasted photo'. But minimax-h3 kept the kitchen background from that photo and ignored the setting text.",
+    "evidence": "s4.new.dumper.H40a/calls.jsonl line 2: clip 2 = create_video_from_text, model minimax-h3, reference {kind: picture, file: ...image-0.jpg}, setting text = white studio. The grader frames still show the kitchen table."
+   },
+   {
+    "why": "Why did the kitchen carry into the close-ups as well?",
+    "because": "The plan chained clips 3 and 4 (ltx-2.5) from the last frame of the clip before them (link 'event' → reference last_frame). So the kitchen in clip 2 was fixed as the first frame of every later shot. The prompt said 'Continue from it: the same people, place and light'.",
+    "evidence": "calls.jsonl line 2: clip 3 reference {kind:last_frame, of_clip:2}, clip 4 reference {kind:last_frame, of_clip:3}. Their prompts include 'The supplied image is the first frame. Continue from it'."
+   },
+   {
+    "why": "Why did the planner pass a photo with a busy home background straight in as the reference?",
+    "because": "The planner has no step that checks whether the reference picture's background conflicts with `setting`. It also has no step that first moves the product into a neutral studio still (with remove_image_background or edit_image) and passes that still as reference kind 'file'. Its advice list was empty, so the assistant got no warning.",
+    "evidence": "tools-new.json plan_video_production: the subject `picture` is only 'file_path of the user's picture of it', and the only extra option is reference kind 'file'. Nothing says that a picture reference also brings its background. calls.jsonl line 2 output: \"advice\":[] and \"problems\":[]."
+   },
+   {
+    "why": "Why was this not caught before delivery?",
+    "because": "The assistant could not see the clips. The planner's checklist had no 'setting' line, only same-bottle, order, cards and music. So the assistant told the user there was 'a clean white studio' when there was none.",
+    "evidence": "calls.jsonl line 2 checklist: file/order/card-1/card-5/same-bottle/music, with no line for the setting. The final reply (line 15) says 'A 4-second shot of the bottle in a clean white studio' and 'I couldn't watch the video myself'."
+   },
+   {
+    "why": "Why did the old build fail in the same way?",
+    "because": "The same raw photo was used as the image-to-video start frame. On top of that, the 'stupid' user's only message was 'make a video ad for the bottle in this pic' and never said 'studio'. The item expects no questions (asks: never), so the assistant asked nothing and wrote 'on the wooden table... bright room softly blurred behind'. Image-to-video then kept the photo's room by design.",
+    "evidence": "s4.old.stupid.H40a/chat.json messages[0].text = 'make a video ad for the bottle in this pic'. calls.jsonl line 3: create_video_from_image, ltx-2.5, image = user photo, prompt 'on the wooden table... bright room softly blurred behind'."
+   }
+  ],
+  "axiom": "When the user's product photo is the reference image, the free-plan video models (minimax-h3 with a picture reference, and ltx-2.5 starting from an image or last frame) keep that photo's real background. A 'white studio' line in the prompt does not override it. Nothing in either build first moves the product into a studio background. In the old stupid chat, the persona also never said 'studio', so the assistant had no reason to change the scene.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_video_production, check product-picture references against the setting. If a subject's `picture` has a real-world background and `setting` asks for a different place (for example a studio), first make a clean still: remove_image_background, then composite it onto the setting (or use edit_image 'place this exact bottle on a seamless light-grey studio backdrop'). Use that still as reference kind 'file' for the first scene clip, so the last-frame chain carries the studio and not the kitchen. Also add a 'setting matches: <setting>' line, checked by eye, to the checklist, and add advice when the user's picture shows a different setting."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.4478552
+}

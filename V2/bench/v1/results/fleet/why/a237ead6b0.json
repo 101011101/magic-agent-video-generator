@@ -1,0 +1,47 @@
+{
+ "id": "a237ead6b0",
+ "key": "must:C15c:Faces stay aligned without flicker or original-face reappearance",
+ "symptom": "Faces stay aligned without flicker or original-face reappearance",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "The Magic Hour video face-swap model (swap_face_in_video, individual-faces mode) produced a 480p output in which the two coworkers still read as the original actors. Their hair stayed brown and blonde, and no visible portrait identity appeared. This happened even though both builds received a correct mapping and charged 240 credits. It is a limit of the generation model, not of the tools, the assistant or the brief. I could not tell a weak swap (only inner features changed, hair kept) apart from no swap, because I could not find the grade/*.jpg frame files to inspect them.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "none: inherent. The swap model does not visibly replace these faces at 480p, and the server cannot change that. A secondary fix would only make the failure honest: the swap_face_in_video description and result should say that hair and head shape stay unchanged. Then the assistant would stop telling users that both faces were swapped.",
+  "whys": [
+   {
+    "why": "Why was 'Faces stay aligned without flicker or original-face reappearance' not met?",
+    "because": "The grader saw the original actors' faces in every sampled frame. The man was brown-haired, not the grey-haired portrait man. The woman was blonde, not the curly dark-haired portrait woman. With no replacement identity in the frames, alignment could not pass.",
+    "evidence": "s1.old.happy.C15c/grade.json: 'The original faces are visible throughout' and 'The man still has brown hair and a younger face... The woman is still blonde'. s1.new.stupid.C15c/grade.json: 'The original faces are visible in every sampled frame. Nothing replaced them.' Portraits in attachments/portrait-man.jpg (grey hair) and portrait-woman.jpg (dark curls)."
+   },
+   {
+    "why": "Why were the original faces still there? Did the assistant target the wrong faces?",
+    "because": "No. In both chats the assistant mapped the correct detected faces. Detection crop 0-0 is the brown-haired male coworker and 0-2 is the blonde female coworker. The new-build stupid chat guessed the mapping but still matched the old chat's correct mapping, 0-0 to the man and 0-2 to the woman.",
+    "evidence": "s1.old.happy.C15c/assets/01-get_face_detection_results.png (0-0 = brown-haired man), 03 (0-2 = blonde woman), 04 (132-0 = male profile). calls.jsonl swap_face_in_video args: old maps 0-0 and 132-0 to 368e1022 (the man's portrait) and 0-2 to 512f8147 (the woman's portrait). New maps 0-0 to 368e1022 and 0-2 to 512f8147."
+   },
+   {
+    "why": "Were the portrait inputs or the call itself wrong?",
+    "because": "No. The new_face paths are exactly the Magic Hour file_paths that the harness gave for portrait-man.jpg and portrait-woman.jpg. The video path, face_swap_mode 'individual-faces' and the 0–10 s range are all correct. Both jobs completed without error and charged 240 credits.",
+    "evidence": "s1.old.happy.C15c/chat.json lists the attachment paths (368e1022…-image-0.jpg = portrait-man, 512f8147…-image-0.jpg = portrait-woman). calls.jsonl wait_for_video_project shows status complete, 858x480, credits_charged 240, error null, in both chats."
+   },
+   {
+    "why": "Then why does the output look unchanged?",
+    "because": "The swap model output did not visibly carry the portrait identities. In a face swap the hair and head stay, and at 480p the inner-face change, if any, was too weak to read as a new person. The new-build grader saw the clip as slightly 'softer and more AI-regenerated', which suggests the model processed the frames but did not make a recognizable swap.",
+    "evidence": "s1.new.stupid.C15c/grade.json fault (minor): 'The clip looks slightly softer and more AI-regenerated than the source.' The same outcome appears on both builds with different personas and different mapping paths, so the cause is downstream of the tool layer. The grade/*.jpg frames could not be found, so I could not confirm visually whether the change was weak or absent."
+   },
+   {
+    "why": "Why is this not a tool-description or assistant problem?",
+    "because": "Both builds produced the same failure from correct, near-identical calls. The old build even added the profile face 132-0. No description choice changed what the model rendered. Only the assistant's claim that 'the man has the face from your man's portrait' was wrong, because the assistant cannot see the result.",
+    "evidence": "Old happy and new stupid calls.jsonl: same video, the same portraits, the same core mapping, the same 240-credit 480p output, and the same grader verdict."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 69,
+ "usd": 0.6305816
+}

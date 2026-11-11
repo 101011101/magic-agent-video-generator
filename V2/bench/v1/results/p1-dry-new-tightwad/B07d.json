@@ -1,0 +1,133 @@
+{
+  "id": "B07d",
+  "item": {
+    "id": "B07d",
+    "case": 7,
+    "case_name": "Change one thing",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Change Only the Bottle",
+    "sub": "d",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "product-bottle.jpg"
+        ],
+        "text": "Turn just the black bottle forest green, still matte. Everything outside the bottle must stay exactly the same, including the table and shadow."
+      }
+    ],
+    "tests": "Tests tightly masked recolouring, checked by comparing all pixels outside the bottle against the source at matching resolution.",
+    "answer_sheet": {
+      "Target object": "The matte black bottle in product-bottle.jpg.",
+      "New appearance": "Forest green with the existing matte finish and shading.",
+      "Allowed edit area": "Only the bottle itself. Leave the table, background and cast shadow unchanged.",
+      "Size and framing": "Keep the square composition without cropping or shifting; free-tier resolution is fine.",
+      "Text or other changes": "None."
+    },
+    "must_haves": [
+      "The black bottle is now forest green and still looks matte.",
+      "The bottle retains its exact silhouette, position and surface details.",
+      "The wooden table, background and cast shadow are unchanged.",
+      "At matching resolution, comparison outside the bottle mask shows no visible alterations, allowing only encoding differences.",
+      "No green spill, editing halo, crop or framing shift is visible."
+    ]
+  },
+  "session": "mcp-p1-dry-n-tightwad-B07d",
+  "sessionDir": "sessions/mcp-p1-dry-n-tightwad-B07d",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "In this pic, turn just the black bottle forest green, keeping it matte. Everything outside the bottle must stay exactly the same, including the table and shadow. I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+      "materials": [
+        "product-bottle.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "**Nothing has been generated, and no generation credits have been spent.**\n\nThe lowest-cost Magic Hour option listed for this edit is:\n- **Model:** Flux 2 Klein, available on Free\n- **Output:** One image at 640px maximum\n- **Listed cost:** **From 5 credits per image.** I can’t verify an exact account-specific quote or your remaining balance with the available tools.\n\n**Important:** The AI editor can be instructed to recolor only the bottle forest green and preserve its matte finish, but it **cannot guarantee that everything outside the bottle stays pixel-for-pixel identical**, including the table and shadow.\n\nFor your exact requirement, the better, cheaper approach is a **masked color adjustment in a free editor such as Photopea or GIMP**. Selecting only the bottle and adjusting its color while retaining the original shading can leave all pixels outside the selection untouched. That costs **zero Magic Hour credits**.\n\nA smaller image isn’t listed as cheaper than the 640px option, and “shorter” doesn’t apply to a still-image edit.\n\nWould you prefer instructions for the free, masked edit, or an AI attempt with the limitations above? I won’t run generation without your approval.",
+          "asked": [
+            "question"
+          ],
+          "user": "ok, go ahead with that—give me instructions for the free masked edit so everything outside the bottle stays unchanged.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "Use **Photopea** in your browser—it’s free and won’t use any Magic Hour credits.\n\n### 1. Open and duplicate\n1. Go to **photopea.com** and open your photo.\n2. In the Layers panel, select the photo and press **Ctrl+J** (Windows) or **Cmd+J** (Mac).\n3. Keep the original bottom layer untouched as a backup.\n\n### 2. Select only the bottle\n1. Zoom to **200–400%**.\n2. Use the **Pen tool (P)** in **Path** mode to carefully trace the bottle’s outer edge, including the cap and handle.\n3. Right-click the path → **Make Selection**, using **0 px feather** and anti-aliasing enabled.\n4. Subtract the opening inside the handle from the selection—the background visible through it must remain unchanged.\n\n**Don’t include the table or cast shadow.** Accurate selection is the key to preserving everything else.\n\n### 3. Isolate it\nWith the duplicated photo selected, click **Add Raster Mask** at the bottom of the Layers panel. The duplicate should now contain only the bottle, with the unchanged original showing underneath.\n\n### 4. Apply forest green\n1. Double-click the empty area beside the isolated bottle layer’s name to open **Layer Style**.\n2. Enable **Color Overlay**.\n3. Choose a forest green such as **`#225238`**.\n4. Set the overlay’s blend mode to **Color** and opacity to **100%**.\n\nThis retains the bottle’s existing shading and texture rather than painting over them, helping keep the matte finish.\n\n**If it still looks almost black:** use **Image → Adjustments → Curves** on the isolated bottle layer. Lift the lower-middle part of the curve slightly, keeping the black endpoint fixed. Stop as soon as the green becomes visible—strong brightening can make it look washed out.\n\n### 5. Check the boundary\nToggle the isolated layer’s visibility on and off:\n- Only the bottle should change.\n- Inspect its edges and handle opening closely.\n- If green spills outside, select the mask and paint **black** over the spill with a small brush. Paint **white** to restore missed bottle areas.\n\n### 6. Export without changing the outside pixels\n- Keep the original **512 × 512** dimensions.\n- Choose **File → Export As → PNG**.\n- Save a **PSD** too if you want editable layers.\n\n**Use PNG, not JPEG:** re-saving as JPEG can alter pixels across the whole image through compression, even outside your mask. PNG preserves the unchanged outside pixels from the opened photo.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"image-editor\"}",
+          "output": "{\"workflow\":\"image-editor\",\"title\":\"Edit a portrait, scene or reference image\",\"input\":\"Source images and a description of the requested edit.\",\"product_url\":\"https://magichour.ai/products/ai-image-editor\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/image-projects/ai-image-editor\",\"creation_tool\":\"edit_image\",\"steps\":[\"Use the supplied reference images. With no source image, use generate_image instead of inventing image file paths.\",\"State what changes and what stays fixed: identity, pose, clothing, background, lighting and aspect ratio.\",\"Call edit_image with supported account settings, then wait_for_image_project. Review the still before using it as a video reference.\"],\"example_request\":\"Turn this portrait into a cinematic space-pilot scene. Preserve my face and keep the framing vertical for a short video.\",\"follow_up\":\"Animate the accepted still with create_video_from_image rather than recreating its identity from a text prompt.\",\"review\":\"Check identity, unchanged regions, anatomy and requested edits. Model and resolution eligibility depend on the account.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        }
+      ],
+      "approvals": [],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"image-editor\"}",
+          "result": "{\"workflow\":\"image-editor\",\"title\":\"Edit a portrait, scene or reference image\",\"input\":\"Source images and a description of the requested edit.\",\"product_url\":\"https://magichour.ai/products/ai-image-editor\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/image-projects/ai-image-editor\",\"creation_tool\":\"edit_image\",\"steps\":[\"Use the supplied reference images. With no source image, use generate_image instead of inventing image file paths.\",\"State what changes and what stays fixed: identity, pose, clothing, background, lighting and aspect ratio.\",\"Call edit_image with supported account settings, then wait_for_image_project. Review the still before using it as a video reference.\"],\"example_request\":\"Turn this portrait into a cinematic space-pilot scene. Preserve my face and keep the framing vertical for a short video.\",\"follow_up\":\"Animate the accepted still with create_video_from_image rather than recreating its identity from a text prompt.\",\"review\":\"Check identity, unchanged regions, anatomy and requested edits. Model and resolution eligibility depend on the account.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}"
+        },
+        {
+          "type": "said",
+          "text": "**Nothing has been generated, and no generation credits have been spent.**\n\nThe lowest-cost Magic Hour option listed for this edit is:\n- **Model:** Flux 2 Klein, available on Free\n- **Output:** One image at 640px maximum\n- **Listed cost:** **From 5 credits per image.** I can’t verify an exact account-specific quote or your remaining balance with the available tools.\n\n**Important:** The AI editor can be instructed to recolor only the bottle forest green and preserve its matte finish, but it **cannot guarantee that everything outside the bottle stays pixel-for-pixel identical**, including the table and shadow.\n\nFor your exact requirement, the better, cheaper approach is a **masked color adjustment in a free editor such as Photopea or GIMP**. Selecting only the bottle and adjusting its color while retaining the original shading can leave all pixels outside the selection untouched. That costs **zero Magic Hour credits**.\n\nA smaller image isn’t listed as cheaper than the 640px option, and “shorter” doesn’t apply to a still-image edit.\n\nWould you prefer instructions for the free, masked edit, or an AI attempt with the limitations above? I won’t run generation without your approval."
+        },
+        {
+          "type": "said",
+          "text": "Use **Photopea** in your browser—it’s free and won’t use any Magic Hour credits.\n\n### 1. Open and duplicate\n1. Go to **photopea.com** and open your photo.\n2. In the Layers panel, select the photo and press **Ctrl+J** (Windows) or **Cmd+J** (Mac).\n3. Keep the original bottom layer untouched as a backup.\n\n### 2. Select only the bottle\n1. Zoom to **200–400%**.\n2. Use the **Pen tool (P)** in **Path** mode to carefully trace the bottle’s outer edge, including the cap and handle.\n3. Right-click the path → **Make Selection**, using **0 px feather** and anti-aliasing enabled.\n4. Subtract the opening inside the handle from the selection—the background visible through it must remain unchanged.\n\n**Don’t include the table or cast shadow.** Accurate selection is the key to preserving everything else.\n\n### 3. Isolate it\nWith the duplicated photo selected, click **Add Raster Mask** at the bottom of the Layers panel. The duplicate should now contain only the bottle, with the unchanged original showing underneath.\n\n### 4. Apply forest green\n1. Double-click the empty area beside the isolated bottle layer’s name to open **Layer Style**.\n2. Enable **Color Overlay**.\n3. Choose a forest green such as **`#225238`**.\n4. Set the overlay’s blend mode to **Color** and opacity to **100%**.\n\nThis retains the bottle’s existing shading and texture rather than painting over them, helping keep the matte finish.\n\n**If it still looks almost black:** use **Image → Adjustments → Curves** on the isolated bottle layer. Lift the lower-middle part of the curve slightly, keeping the black endpoint fixed. Stop as soon as the green becomes visible—strong brightening can make it look washed out.\n\n### 5. Check the boundary\nToggle the isolated layer’s visibility on and off:\n- Only the bottle should change.\n- Inspect its edges and handle opening closely.\n- If green spills outside, select the mask and paint **black** over the spill with a small brush. Paint **white** to restore missed bottle areas.\n\n### 6. Export without changing the outside pixels\n- Keep the original **512 × 512** dimensions.\n- Choose **File → Export As → PNG**.\n- Save a **PSD** too if you want editable layers.\n\n**Use PNG, not JPEG:** re-saving as JPEG can alter pixels across the whole image through compression, even outside your mask. PNG preserves the unchanged outside pixels from the opened photo."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "**Nothing has been generated, and no generation credits have been spent.**\n\nThe lowest-cost Magic Hour option listed for this edit is:\n- **Model:** Flux 2 Klein, available on Free\n- **Output:** One image at 640px maximum\n- **Listed cost:** **From 5 credits per image.** I can’t verify an exact account-specific quote or your remaining balance with the available tools.\n\n**Important:** The AI editor c"
+        }
+      ],
+      "kind": "other",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "Use **Photopea** in your browser—it’s free and won’t use any Magic Hour credits.\n\n### 1. Open and duplicate\n1. Go to **photopea.com** and open your photo.\n2. In the Layers panel, select the photo and press **Ctrl+J** (Windows) or **Cmd+J** (Mac).\n3. Keep the original bottom layer untouched as a backup.\n\n### 2. Select only the bottle\n1. Zoom to **200–400%**.\n2. Use the **Pen tool (P)** in **Path** ",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 43
+    }
+  ],
+  "started": "2026-11-09T06:25:24.738Z",
+  "persona": "tightwad",
+  "opening": {
+    "id": "B07d",
+    "persona": "tightwad",
+    "text": "In this pic, turn just the black bottle forest green, keeping it matte. Everything outside the bottle must stay exactly the same, including the table and shadow. I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+    "withheld": [],
+    "extras": [
+      "I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs.",
+      "Is there a cheaper, shorter, or smaller way to do it?"
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 44
+}

@@ -1,0 +1,47 @@
+{
+ "id": "08f6a052c5",
+ "key": "must:E25a:Fills portrait frame without stretching or bars",
+ "symptom": "Fills portrait frame without stretching or bars",
+ "item": "E25a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Fills portrait frame without stretching or bars' not met?",
+    "because": "The one delivered file is 832x448, a landscape frame, so it cannot fill a 9:16 portrait frame.",
+    "evidence": "s3.new.dumper.E25a/grade.json: check 'aspect 9:16' pass=false, got ['832x448']; must item met=no, 'Frame is landscape, not portrait.' s3.old.happy.E25a/calls.jsonl: wait_for_video_project gives width 832, height 448."
+   },
+   {
+    "why": "Why is the output landscape when the assistant asked for 9:16?",
+    "because": "Both assistants used edit_video (ltx-2.5, 480p, 0-10 s). The only way they asked for 9:16 was in the text prompt ('Reframe this video as a vertical 9:16 portrait...'). edit_video has no aspect or crop parameter, and its output keeps the shape of the source clip.",
+    "evidence": "calls.jsonl in both chats: the edit_video args have only name, start/end_seconds, model, resolution, style.prompt and assets.video_file_path, with no aspect field. The result is 832x448 in both chats. In both final replies the assistant says 'The editor keeps the shape of the source clip, and a prompt can't change that.'"
+   },
+   {
+    "why": "Why did the assistants use edit_video at all if it cannot change the shape?",
+    "because": "In their first reply both assistants said no tool can crop or reframe and offered ffmpeg or CapCut. The simulated user then nudged 'go ahead anyway'. edit_video was the only tool that accepts the user's video, so they ran it as a best-effort try.",
+    "evidence": "calls.jsonl line 4 (both chats): say kind='cannot', 'None of the tools can reframe or crop a video to a new aspect ratio'. Line 5: user turn with nudge=true, 'Please go ahead with the free settings anyway' (old) and 'please just go ahead and try it anyway' (new)."
+   },
+   {
+    "why": "Why was there no tool that could crop the clip to 9:16?",
+    "because": "Neither build has a crop or reframe tool for existing video. The old tool list has upload, wait, fetch, edit, subtitle and generators. The new build adds plan_request and trim_video, but its create/edit enum has no crop or reframe operation and no aspect control for a user's video.",
+    "evidence": "tools-old.json: none of the tool names or schemas has a crop or reframe operation. tools-new.json plan_request.tool enum: generate_image, edit_image, create_video_from_text, create_video_from_image, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face..., create_talking_photo, trim_video. None of these crops video."
+   },
+   {
+    "why": "Why does the test expect success when the server cannot do it?",
+    "because": "E25a is written as an in-scope free task (expect.asks='never', beyond_free='no', refuse=false), and its answer sheet asks for a crop to fill the frame. The Magic Hour MCP server has no capability that matches this. The missing capability is the axiom.",
+    "evidence": "items/E25a.json: expect {asks: never, beyond_free: no, refuse: false}; answer_sheet 'Framing style': 'Crop to fill the frame without stretching'."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server (both builds) has no tool that crops or reframes an existing video to a new aspect ratio. Its only video-to-video editor (edit_video) regenerates frames at the source's shape and has no aspect parameter. A 16:9 to 9:16 recut of the user's footage therefore cannot be produced, whatever the assistant does.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a crop/reframe tool for existing video (for example crop_video with aspect='9:16' and a center or subject-tracking anchor that copies the source audio as-is). Also add 'crop' to the plan_request tool enum. Until the tool exists, relabel E25a as beyond the tools (expect a 'cannot' answer with a manual crop recipe), so a correct refusal is not graded as a failure."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.22807499999999997
+}

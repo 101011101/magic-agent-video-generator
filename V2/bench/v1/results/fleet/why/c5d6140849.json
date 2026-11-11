@@ -1,0 +1,46 @@
+{
+ "id": "c5d6140849",
+ "key": "must:E29b:Original cockpit audio is preserved during the source footage, followed by silence during the end card.",
+ "symptom": "Original cockpit audio is preserved during the source footage, followed by silence during the end card.",
+ "item": "E29b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'original cockpit audio preserved, then silence on the end card' not met?",
+    "because": "No 9-second combined video exists. The assistant delivered only a 2-second silent end card. The 7-second source clip with its audio is in no output.",
+    "evidence": "grade.json in both chats: 'No combined video exists, so the original audio was not preserved in any output' and the check 'something was made' = 'no file'. The final message in state.json / calls.jsonl says 'I couldn't attach it to your clip yet'."
+   },
+   {
+    "why": "Why was no combined video made?",
+    "because": "The only step that adds the user's clip to the card is join_videos. In both chats that call failed with HTTP 404.",
+    "evidence": "calls.jsonl (happy line 5, stupid line 9): join_videos args videos=['api-assets/cmsla3fmt01cnio0zhjlc2wsv/...-video-0.mp4', 'http://127.0.0.1:8000/films/...mp4'] -> error 'Magic Hour refused /v1/video-projects/api-assets/.../video-0.mp4 (HTTP 404) not_found'."
+   },
+   {
+    "why": "Why did join_videos refuse the clip?",
+    "because": "join_videos accepts only finished video project ids or video URLs. The user's upload is a Magic Hour file_path (api-assets/...). It is not a URL, so the server took it as a project id and asked for /v1/video-projects/<file_path>, which does not exist.",
+    "evidence": "tools-new.json join_videos: '`videos`: finished video project ids or video URLs.' The error URL shows the file_path appended to /v1/video-projects/. get_last_frame failed the same way on the same path (stupid calls.jsonl line 10)."
+   },
+   {
+    "why": "Why could the assistant not get the clip into the join some other way?",
+    "because": "The new build has no path that takes an uploaded user video into a join. plan_video_production beats are only 'scene' (generated) or 'card' (drawn). There is no beat kind for 'the user's source footage, unchanged'. join_production_clips takes only clips that the plan made. No tool turns an api-assets file_path into a URL or a project id that join_videos accepts.",
+    "evidence": "tools-new.json plan_video_production: beat kind enum ['scene','card']. The 'picture' field holds only a still picture on a card. join_production_clips takes `made` = project ids of the plan's clips. In both chats the plan made only the card clip (join:[1], seconds 2)."
+   },
+   {
+    "why": "Why is this the root and not an error by the assistant?",
+    "because": "Both assistants did the correct steps. They drew an exact silent card, then tried to append it to the user's clip. They refused to remake the footage with a generator, which is correct. The tool contract does not let a user-uploaded video be an input to join_videos. This is a defect of the new build's tool surface (input types of join_videos and the planner), not a model limit or a free-plan limit.",
+    "evidence": "Happy state.json: 'I won't run your clip through a video generator to get around this, because that would remake the footage'. Both chats spent 0 credits, so the free plan was not the cause. A secondary harness issue also shows: the card download_url 127.0.0.1:8000 returned 404 to the grader ('download failed'), but even with the card the clip is missing."
+   }
+  ],
+  "axiom": "In the new build, join_videos (and get_last_frame) accept only video project ids or URLs. They reject a user-uploaded Magic Hour file_path (api-assets/...). No planner beat kind and no other tool lets the user's own footage enter a join. So the build cannot add anything to an uploaded clip.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Make join_videos (and get_last_frame) accept an uploaded file_path: when the value is not a URL or a project id, resolve the api-assets path to a signed download URL. State 'finished video project ids, video URLs, or file_path of an uploaded video' in the description. Add a plan_video_production beat kind 'source' (file_path, kept unchanged with its own audio) so that join_production_clips can put the user's clip before the drawn card."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2367422
+}

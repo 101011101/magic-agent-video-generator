@@ -1,0 +1,47 @@
+{
+ "id": "3980c4633c",
+ "key": "must:B12d:Any added padding blends with the source background, with no text or decorative additions.",
+ "symptom": "Any added padding blends with the source background, with no text or decorative additions.",
+ "item": "B12d",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the checklist item say the padding does not blend with the source background and has additions?",
+    "because": "No chat added any padding. Each output is a whole new scene drawn by AI. Old/stupid has a white studio background with a drop shadow. Old/happy has invented clutter and a bag with a logo-like mark. New/happy has a new wall, a skirting band and a boot, and the original clutter is gone.",
+    "evidence": "grade.json of all three chats, last must-have line: s1.old.stupid ('plain white, not the source's grey... adds a drop shadow and replaces the whole scene'); s1.old.happy ('no square padding... invented clutter... bag with a logo-like mark'); s1.new.happy ('No padding was added. Instead the background was replaced with a new wall, a skirting band and a boot'). The new/happy output frame (assets/01-wait_for_image_project.png) shows a cleaned, redrawn room."
+   },
+   {
+    "why": "Why is there no padding, even though all three calls asked for a square?",
+    "because": "edit_image ignored aspect_ratio '1:1'. All three outputs are 640x256 (wide, ratio 2.5). That is close to the source's own ratio (1024x384, ratio 2.67). The model kept the input's shape, so it never made the space above and below that padding would fill.",
+    "evidence": "calls.jsonl of all three chats: edit_image args include \"aspect_ratio\":\"1:1\",\"resolution\":\"640px\",\"model\":\"flux-2-klein\". grade.json checks: 'aspect 1:1' pass:false, got [\"640x256\"] in all three. The source attachment sneaker-offcentre.jpg is 1024x384 with a flat grey strip on the right."
+   },
+   {
+    "why": "Why was the image redrawn and not padded with real pixels?",
+    "because": "The only tool the assistant could use for this job was the generative AI image editor (flux-2-klein, the only cheap free-plan option). That editor regenerates the whole frame from a text prompt. It cannot pad the source pixels. Even when the prompt asked it to keep everything and add plain padding that matches the grey floor, it rebuilt the scene.",
+    "evidence": "new/happy prompt: 'Keep the sneaker, floor and background exactly as they are. Fill any new space above and below with plain padding... no new objects'. The output still has a new wall and a boot. The assistant replies (calls.jsonl 'say') state: 'Magic Hour has no plain crop-and-pad tool... The editor redraws the whole image'. The assistant then gives the manual crop+pad steps as a workaround."
+   },
+   {
+    "why": "Why did the assistant not choose a tool that just crops and pads, or warn before spending credits?",
+    "because": "Neither build offers a crop, pad or resize tool for images that runs as code. The edit_image description does not say that flux-2-klein may ignore aspect_ratio or redraw the whole image. It only says aspect_ratio is 'The aspect ratio of the output image(s)'. The assistant therefore trusted the parameter and said the result was square.",
+    "evidence": "tools-new.json edit_image (around line 3315): the description recommends 'flux-2-klein at 640px with image_count=1' for Free accounts. The aspect_ratio description is 'The aspect ratio of the output image(s). If not specified, defaults to `auto`.' It gives no per-model caveat. No other image tool in the list does deterministic crop or pad: the code-only tools (join_videos, get_last_frame, code-drawn cards) cover video only. new/happy reply: 'Your square (1:1) version is ready'."
+   },
+   {
+    "why": "Why did the stupid-user chat go further and ask for a white studio background?",
+    "because": "That user's first message was only 'make a shop pic from this pic'. It did not mention padding, matching the background or 'no other edits'. The test expects the assistant never to ask, so the assistant read 'shop pic' as a studio product shot and asked for a pure white background with a soft shadow. Even with this prompt, the output came back 640x256, the same failure as in the other chats.",
+    "evidence": "s1.old.stupid.B12d/chat.json messages[0].text = 'make a shop pic from this pic'. B12d.json expect.asks = 'never'. calls.jsonl prompt: 'place the shoe on a seamless pure white studio background with a soft natural shadow beneath it'."
+   }
+  ],
+  "axiom": "The free-plan image editor (flux-2-klein, called through edit_image) does not honour aspect_ratio when it edits: it keeps the input's wide shape (640x256 from 1024x384) and regenerates the whole scene, so it cannot pad source pixels. Neither MCP build has a crop/pad tool that runs as code, and neither warns about this. The assistant therefore had no way to deliver plain, matching padding.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a code-only image tool to the MCP server (for example reframe_image: crop box plus target aspect, pad colour sampled from the source edge, no generation, no credits), and name it in the edit_image description as the route for 'make square / resize / pad, no other edits'. Also, in edit_image, compare the output's width and height with the requested aspect_ratio and return a warning when they differ, so the assistant does not claim the image is square."
+ },
+ "error": null,
+ "seconds": 72,
+ "usd": 0.8277851999999999
+}

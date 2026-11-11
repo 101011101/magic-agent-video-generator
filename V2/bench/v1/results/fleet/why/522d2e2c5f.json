@@ -1,0 +1,47 @@
+{
+ "id": "522d2e2c5f",
+ "key": "must:A06a:The name reads 'Little Sprout' clearly.",
+ "symptom": "The name reads 'Little Sprout' clearly.",
+ "item": "A06a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the 'Little Sprout' item fail?",
+    "because": "Neither delivered image has any text. Each one is only an icon of a sprout in a pot.",
+    "evidence": "s1.new.stupid.A06a/grade.json: exact_text 'Little Sprout' seen='missing', why='No text in the image.' The old chat has the same item failure (2 of 2 stupid chats)."
+   },
+   {
+    "why": "Why is there no text in the images?",
+    "because": "Both assistants told the model not to draw text. They wrote 'no text' into the generate_image prompt.",
+    "evidence": "old calls.jsonl generate_image style.prompt ends '...white background, no text'. new calls.jsonl generate_image style.prompt ends 'No text, no letters, no words.'"
+   },
+   {
+    "why": "Why did the assistants block text on a logo?",
+    "because": "They did not know the shop name. The stupid persona's opening message leaves it out, and both assistants chose not to guess on-screen words.",
+    "evidence": "old chat.json messages[0] = 'make a logo for my plant shop'. The bank has 'Little Sprout', but the user never said it. Both final replies say 'I didn't know your shop's name, so the logo has no text' / 'you didn't give me a shop name'."
+   },
+   {
+    "why": "Why did nobody ask for the name before generating? A stupid user answers plain questions from the bank, so 'what's your shop called?' would have returned 'Little Sprout'.",
+    "because": "Old build: the assistant generated straight away with no question. New build: plan_request flagged exact_words as missing but still returned ready=true. Its only question was about aspect ('Where will this be shown...'). On the second call it returned no questions at all.",
+    "evidence": "new calls.jsonl line 2: output params exact_words source 'missing', questions only about aspect. Line 7: exact_words still 'missing', but ready=true and questions=[]. old calls.jsonl: first call is generate_image, and no question was asked."
+   },
+   {
+    "why": "Why does plan_request treat missing exact_words as fine for a logo?",
+    "because": "Its readiness check does not count exact_words as required, even when the subject (a logo for a named business) clearly needs on-screen words. Its description also tells the assistant 'do not guess ... on-screen words' and to 'create with the returned values' when ready is true. So the assistant was pushed to ship without text instead of asking.",
+    "evidence": "tools-new.json plan_request description: 'If ready is true, create with the returned values. A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' This matches the ready=true result with exact_words missing."
+   }
+  ],
+  "axiom": "When the user leaves out the business name on a logo request, nothing in either build asks for it. The old build has no planning step, and the assistant generated at once. In the new build, plan_request does not treat exact_words as required for subjects that need text (logo, sign, poster). It returns ready=true and the description forbids guessing the words. So the logo ships with no name.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, make exact_words required when the subject is a logo, sign, poster, banner or a named brand. Return ready=false with a plain-words question such as 'What name or words should be on it?'. Do not ask about aspect when the user already said 'square'. Add the same rule to the generate_image description: for a logo, ask for the name before you generate, and do not write 'no text'. That also covers the old build."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.14631940000000002
+}

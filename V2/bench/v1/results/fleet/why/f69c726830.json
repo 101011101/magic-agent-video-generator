@@ -1,0 +1,47 @@
+{
+ "id": "f69c726830",
+ "key": "must:J55b:The time line reads exactly 'Saturday 10-2'.",
+ "symptom": "The time line reads exactly 'Saturday 10-2'.",
+ "item": "J55b",
+ "n": 4,
+ "builds": {
+  "new": 1,
+  "old": 3
+ },
+ "result": {
+  "axiom": "The benchmark ran these chats on a Magic Hour free-plan account that had 0 credits left. Every generate_image call was refused before anything was made. The test (J55b, expect.beyond_free = \"no\") assumes that a free account can afford one image. The harness did not refill or check the account balance before the runs.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each fleet run, the harness must check the account balance. It must top up the account, or use a fresh free account, so that at least about 10 credits remain per chat. If the balance is too low, the harness must mark the chat as an invalid run (an infrastructure failure) and not grade it.",
+  "whys": [
+   {
+    "why": "Why was 'The time line reads exactly Saturday 10-2' not met?",
+    "because": "No poster image exists, so the grader found no text to check.",
+    "evidence": "s2r.old.stupid.J55b/grade.json: check 'something was made' pass=false, got 'no file'. The grader says 'No poster was produced'. All six must-haves are 'no'. The summary says generation was refused for lack of credits."
+   },
+   {
+    "why": "Why does no image exist?",
+    "because": "Every generate_image call was refused before it could run. The call result says the account has no credits.",
+    "evidence": "In all three calls.jsonl files (old.dumper, old.stupid, new.stupid), each generate_image call has approve=false and reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. No call returned files."
+   },
+   {
+    "why": "Why did a correct, in-scope request get refused?",
+    "because": "The account had 0 credits from the start, so even a perfect call could not run. In old.dumper the arguments were fully correct: 1:1 aspect, the exact three lines, black on cream, no pictures. That call was still refused.",
+    "evidence": "s2r.old.dumper.J55b/calls.jsonl line 2: aspect_ratio '1:1', the prompt contains the exact text 'BOOK SWAP', 'Saturday 10-2', 'Maple Hall', and the result says '0 remain'. The assistant also says that even the cheapest model costs 5."
+   },
+   {
+    "why": "Why is the failure the same on both builds?",
+    "because": "The block comes from the shared account balance, not from the tool descriptions or the assistant. The new build's plan_request returned ready=true, but generate_image was still refused for credits.",
+    "evidence": "s2r.new.stupid.J55b/calls.jsonl lines 7-8 and 13: plan_request ready=true with exact_words [BOOK SWAP, Saturday 10-2, Maple Hall], then generate_image is refused with '0 remain'. The old-build chats show the same refusal."
+   },
+   {
+    "why": "Why does the account have 0 credits in a test that expects the job to fit the free plan?",
+    "because": "The harness ran the chats on a drained account and did not refill or check it first. J55b says the job is within free limits. The empty balance is a defect of the test setup, not of the brief or the model.",
+    "evidence": "items/J55b.json: expect.beyond_free = 'no', spec is one 1:1 image. In each calls.jsonl, the first call of the chat already shows '0 remain', so no credits were spent inside the chat."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 21,
+ "usd": 0.1100362
+}

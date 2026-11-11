@@ -1,0 +1,47 @@
+{
+ "id": "39a2eda179",
+ "key": "must:J55b:The final deliverable is one square poster.",
+ "symptom": "The final deliverable is one square poster.",
+ "item": "J55b",
+ "n": 4,
+ "builds": {
+  "new": 1,
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The final deliverable is one square poster' not met?",
+    "because": "No image was made in these chats. The grader marked every must-have as failed or cannot_tell because there was no output.",
+    "evidence": "s2r.old.dumper.J55b/grade.json: check 'something was made' pass=false, got 'no file'. The must-have reason is 'No image was produced; generation was refused due to 0 credits.'"
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "Every generate_image call was rejected before it ran: 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. This happened on both turns and in both builds.",
+    "evidence": "calls.jsonl in s2r.old.dumper.J55b (2 calls, aspect 1:1, prompt correct), s2r.old.stupid.J55b (2 calls) and s2r.new.stupid.J55b (2 generate_image calls after plan_request): all have approve=false with the same 0-credit reason."
+   },
+   {
+    "why": "Why were the calls rejected even when the arguments were correct?",
+    "because": "The assistant's arguments did not cause the rejection. In old.dumper the assistant sent a correct square, black-text-only prompt with the exact three lines on the cheap qwen-image-2.1 model at 640px. It was still refused. The account balance was the only blocker.",
+    "evidence": "s2r.old.dumper.J55b/calls.jsonl line 2: aspect_ratio '1:1', prompt with exactly 'BOOK SWAP', 'Saturday 10-2' and 'Maple Hall', cream background, no pictures. Result: refused, 0 credits remain."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The balance was already 0 at the first call of each chat. Nothing spent earlier in the chat could explain it. The test assumes the job fits inside the free plan, so the shared free-plan test account was already used up by earlier chats in the fleet run when these chats ran.",
+    "evidence": "In each calls.jsonl the first generate_image call already reports '0 remain'. items/J55b.json has expect.beyond_free='no', so one 640px image should fit in free credits. Neither build reported any credit spend in these chats."
+   },
+   {
+    "why": "Why is this the root cause and not the assistant or the tool?",
+    "because": "The harness ran a test that needs free credits on an account with no credits, so no build and no assistant could pass. A second flaw exists: in both stupid chats the assistant chose 9:16, and in the new build plan_request filled aspect 9:16 with source 'user' and from 'the user's words', which the user never said. That flaw would also fail 'square', but only after credits were available. The credit block alone explains all 4 failures.",
+    "evidence": "s2r.new.stupid.J55b/calls.jsonl line 2: plan_request output gives aspect '9:16', source 'user', from 'the user's words', but the user only said 'make a book swap poster'. s2r.old.stupid.J55b: aspect_ratio '9:16'. These are secondary, because the dumper chat was square and still failed."
+   }
+  ],
+  "axiom": "The test harness ran the chats on a free-plan account that already had 0 credits. Every generation was refused before it ran, whatever the build or the assistant did. Yet the item expects the job to fit inside the free plan (beyond_free='no').",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Reset the free-plan test account, or give it enough credits (at least about 10), before each chat. Mark chats where the first call reports 0 remaining credits as harness-invalid and leave them out of grading. Separately, fix the new build's plan_request so it no longer fills aspect '9:16' with source 'user' when the user gave no aspect."
+ },
+ "error": null,
+ "seconds": 27,
+ "usd": 0.11765
+}

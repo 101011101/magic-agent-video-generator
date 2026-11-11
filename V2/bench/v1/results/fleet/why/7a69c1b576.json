@@ -1,0 +1,47 @@
+{
+ "id": "7a69c1b576",
+ "key": "must:A03b:Four text blocks visibly separated by clear space",
+ "symptom": "Four text blocks visibly separated by clear space",
+ "item": "A03b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Four text blocks visibly separated by clear space' not met?",
+    "because": "In both final images the four text blocks are not evenly separated. Old: 'NIGHT MARKET' and the date line touch and form one cluster, then there are large uneven gaps. New: all four lines are stacked tight at the bottom.",
+    "evidence": "s1.old.happy.A03b/grade.json must[0]: 'Title and date line sit nearly touching… other gaps are large and uneven'. Frame assets/02-wait_for_image_project.png shows the title with the date directly under it. s1.new.stupid.A03b/grade.json must[0]: 'stacked tightly with almost no gap'. Frame assets/01 shows 4 lines tight at the bottom."
+   },
+   {
+    "why": "Why did the old build cluster the title and date, when the prompt asked for space?",
+    "because": "qwen-image-2.1 did not follow the spacing words in the prompt. It used a common poster pattern: a title with a subtitle under it. The edit step then copied that layout.",
+    "evidence": "s1.old.happy.A03b/calls.jsonl generate_image prompt: 'Exactly four separate text blocks… with generous empty space between each block'. The 9:16 result (assets/01) already puts the title and date together. The edit_image prompt says 'clear empty space between each block', but the 4:5 result (assets/02) keeps the same cluster."
+   },
+   {
+    "why": "Why did the new build not even ask for spacing?",
+    "because": "The vague user never said 'clear space'. plan_request has no row for layout or spacing, and exact_words is defined as 'one for each line of text'. So the plan did not ask about it, and the assistant's prompt only asked for 'exactly four lines of text'.",
+    "evidence": "s1.new.stupid.A03b/calls.jsonl: the user said '4 lines top to bottom … no other words'. The plan_request rows were subject/aspect/exact_words/look, and it returned ready:true. The generate_image prompt has no spacing words. tools-new.json plan_request lists rows 'subject, edit, keep, motion, seconds, aspect, sound, exact_words, look, mood…', with no layout or spacing row."
+   },
+   {
+    "why": "Why did neither assistant catch the bad spacing before delivering?",
+    "because": "Neither assistant looked at the finished image. Both told the user they could not view it, and both delivered it without checking the layout.",
+    "evidence": "Old reply: 'I couldn't see a preview of the finished image here, so I haven't checked the wording'. New reply: 'I couldn't view the picture myself'. Both chats end with kind 'delivered' and made no second attempt."
+   },
+   {
+    "why": "Why is a prompt the only way to control the spacing?",
+    "because": "The free-plan text-to-image and edit models only take a free-text prompt. No tool places text at set positions, so the model alone decides the gaps between blocks. It does not do this reliably.",
+    "evidence": "generate_image and edit_image args in both calls.jsonl files take only style.prompt, aspect_ratio, resolution and model. The text positions in the output come only from the model."
+   }
+  ],
+  "axiom": "The free-plan image model (qwen-image-2.1) does not reliably follow prompt instructions about the space between text blocks. It falls back to poster patterns: title with subtitle, or a tight stack of lines. No tool lets you place text deterministically. The new build adds a second cause: plan_request has no layout row, so the spacing request never reaches the prompt when the user does not say it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a layout or spacing row to plan_request so that a request with several text blocks always carries an explicit spacing instruction into the prompt. This fixes the new build's missing request. It does not stop the model from ignoring the instruction, as in the old chat. For that, the server needs a tool that places text deterministically: generate a background with no text, then place each text block with fixed vertical gaps."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.23841880000000001
+}

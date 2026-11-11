@@ -1,0 +1,156 @@
+{
+  "id": "E26b",
+  "item": {
+    "id": "E26b",
+    "case": 26,
+    "case_name": "Trim to the best part",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "either",
+      "asks_about": "What the user considers boring, or whether to prioritize action versus cockpit dialogue.",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Cut Out the Boring Parts",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 8,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "jet-30s.mp4"
+        ],
+        "text": "Cut the boring parts out of this. Just a quick 8-second version."
+      }
+    ],
+    "tests": "Tests sensible editing under a vague interest criterion, producing a short source-faithful highlight without requiring user-supplied timestamps.",
+    "answer_sheet": {
+      "Which parts are boring, and what should be kept?": "your call",
+      "Prioritize jet action or cockpit dialogue?": "your call",
+      "Length": "8 seconds.",
+      "Continuous excerpt or several cuts?": "your call",
+      "Sound": "Keep the original sound with the footage you use.",
+      "Framing, captions, and effects": "Keep the original framing. No captions or extra effects."
+    },
+    "must_haves": [
+      "One playable video lasts 8 seconds, within one frame of tolerance.",
+      "All footage comes from jet-30s.mp4, without generated replacement scenes or speed changes.",
+      "The edit favors visible action or meaningful cockpit interaction over inactive lead-ins, pauses, or repetitive footage.",
+      "Any cuts preserve understandable action and do not leave an included spoken line conspicuously chopped mid-word.",
+      "Original audio accompanies the retained footage in sync, with no added narration, music, or text."
+    ]
+  },
+  "session": "mcp-p2-dry-o-dumper-E26b",
+  "sessionDir": "sessions/mcp-p2-dry-o-dumper-E26b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you cut the boring parts out of this clip? I feel like it drags a bit when I watch it, which is why I’m asking for help. I just want a quick 8-second version of it. Basically, trim away the boring bits to make that shorter version.",
+      "materials": [
+        "jet-30s.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "You’re after an **8-second highlight edit using the original footage**, not a regenerated video.\n\nThe connected Magic Hour tools don’t support cutting out sections and joining the remaining footage, so I can’t produce that edit here. Their video editor regenerates footage rather than making precise timeline cuts.\n\nIf you tell me which moments you like best, I can turn them into an exact 8-second cut list or a ready-to-run FFmpeg command.",
+          "asked": [
+            "cannot"
+          ],
+          "why": "It explicitly says the connected tools cannot make the requested precise cuts and joins, so it cannot produce the edit here. The offer of a cut list or FFmpeg command is an alternative.",
+          "user": "Oh, please just go ahead and try it anyway. I'd rather have something than nothing, and I know the free plan has its limits, that's fine by me.",
+          "calls_before": 0,
+          "nudge": true
+        }
+      ],
+      "agent": "I tried the 8-second edit at the free-plan settings, but Magic Hour refused it because your account doesn’t have enough credits. **No video was created.**\n\nFor a no-credit fallback, this FFmpeg command extracts the middle 8 seconds without regenerating the footage:\n\n```bash\nffmpeg -i jet-30s.mp4 -ss 11 -t 8 -c:v libx264 -crf 18 -c:a aac jet-8s.mp4\n```\n\nThat’s a simple middle-section trim—not a reviewed highlight edit.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"media-apis\"}",
+          "output": "{\"workflow\": \"media-apis\", \"title\": \"Integrate image and video generation into an application\", \"input\": \"The application's required media inputs, outputs, quality criteria and budget.\", \"product_url\": \"https://magichour.ai/api\", \"api_docs_url\": \"https://docs.magichour.ai/get-started/quick-start\", \"creation_tool\": null, \"steps\": [\"Choose the workflow that matches the required result, then inspect its current API schema and account eligibility. For Kling 3.0, Creator annual is $144 paid upfront for 144,000 credits, enough for 600 five-second 720p videos with audio off ($0.24 each at full credit use, before tax). Audio, higher resolutions and video-reference inputs cost more credits; compare current annual plans at https://docs.magichour.ai/billing/subscription-pricing before choosing.\", \"Authenticate, upload local inputs, create once, retain the project id and poll the matching project endpoint until terminal.\", \"Download the accepted output using the exact signed URL; retain the project id for recovery and reuse.\"], \"example_request\": \"Help me add portrait-to-video generation to my app, including upload, completion polling, download and recovery without duplicate paid jobs.\", \"follow_up\": \"Measure real completion, usable output, retries and credits before expanding the workflow.\", \"review\": \"Select a task-specific endpoint. Compare cost per accepted output on matched inputs; do not infer production quality from mock responses.\", \"models_and_costs_url\": \"https://docs.magichour.ai/api-reference/models\", \"evaluation_url\": \"https://docs.magichour.ai/integration/evaluating-media-apis\", \"starter_recipes_url\": \"https://docs.magichour.ai/get-started/starter-recipes\", \"guidance\": [\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\", \"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\", \"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\", \"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\", \"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\", \"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\", \"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_video",
+          "args": {
+            "name": "Jet — 8-second pacing experiment",
+            "start_seconds": 11,
+            "end_seconds": 19,
+            "model": "ltx-2.5",
+            "resolution": "480p",
+            "assets": {
+              "video_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/4e33649a-838f-456e-8dd2-349a35f6b94d-video-0.mp4"
+            },
+            "style": {
+              "prompt": "Create a brisk, engaging eight-second edit of this jet footage. Preserve the original jet, setting, visual appearance, and realistic motion as closely as possible. Tighten pacing, minimize slow or uneventful moments, and emphasize the action already present in the source. No new objects, no invented stunts, no titles or overlays. Aim for a clean, natural-looking short clip rather than a stylized transformation."
+            }
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_video: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I tried the 8-second edit at the free-plan settings, but Magic Hour refused it because your account doesn’t have enough credits. **No video was created.**\n\nFor a no-credit fallback, this FFmpeg command extracts the middle 8 seconds without regenerating the footage:\n\n```bash\nffmpeg -i jet-30s.mp4 -ss 11 -t 8 -c:v libx264 -crf 18 -c:a aac jet-8s.mp4\n```\n\nThat’s a simple middle-section trim—not a rev",
+        "refuse": "",
+        "tier_move": "I tried the 8-second edit at the free-plan settings, but Magic Hour refused it because your account doesn’t have enough credits. **No video was created.**\n\nFor a no-credit fallback, this FFmpeg command extracts the middle 8 seconds without regenerating the footage:\n\n```bash\nffmpeg -i jet-30s.mp4 -ss 11 -t 8 -c:v libx264 -crf 18 -c:a aac jet-8s.mp4\n```\n\nThat’s a simple middle-section trim—not a rev",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 55
+    }
+  ],
+  "started": "2026-11-10T05:52:41.016Z",
+  "persona": "dumper",
+  "opening": {
+    "id": "E26b",
+    "persona": "dumper",
+    "text": "Can you cut the boring parts out of this clip? I feel like it drags a bit when I watch it, which is why I’m asking for help. I just want a quick 8-second version of it. Basically, trim away the boring bits to make that shorter version.",
+    "withheld": [],
+    "extras": [
+      "I feel like it drags a bit when I watch it, which is why I’m asking for help."
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 55,
+  "usage": {
+    "responses": 3,
+    "input": 126561,
+    "output": 1020,
+    "reasoning": 518,
+    "cached": 123873
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "https://mcp.magichour.ai/",
+    "local": false,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "E26b.trace.json"
+}

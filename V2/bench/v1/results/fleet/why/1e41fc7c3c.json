@@ -1,0 +1,47 @@
+{
+ "id": "1e41fc7c3c",
+ "key": "must:E24a:Subtitles cover the complete sentence without omissions or inventions",
+ "symptom": "Subtitles cover the complete sentence without omissions or inventions",
+ "item": "E24a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Subtitles cover the complete sentence' marked NOT met?",
+    "because": "In the grader's 1 s frame, the woman is speaking and no caption shows. The grader concluded that 'Hi everyone!' is missing. It judged the other three phrases present.",
+    "evidence": "s3.old.dumper.E24a/grade.json: exact_text 'Hi everyone!' seen=missing, 'No subtitle at the 1 s frame, while she is visibly speaking'. s3.new.stupid.E24a/grade.json: the same, and the fault reads 'It may have been missed or shown at another moment'."
+   },
+   {
+    "why": "Why is no caption visible at 1 s while she says the greeting?",
+    "because": "The burned-in captions come only from Magic Hour's auto-subtitle engine. The engine runs its own speech recognition and sets its own timing. The first caption it shows is the chunk 'Today I want to show you three easy', and that chunk is visible at 4.1 s. No greeting chunk is seen.",
+    "evidence": "calls.jsonl in both chats: one add_subtitles_to_video call, then wait_for_video_project returns type AUTO_SUBTITLE, status complete. grade.json read_as: 4 s shows 'Today I want to show you three easy', 7 s shows 'ways to make your mornings less stressful.'"
+   },
+   {
+    "why": "Why could the assistant not make sure the greeting appears?",
+    "because": "The tool accepts only the video, a time range and a style. It has no parameter for transcript or exact words. The tool result returns no transcript, so the assistant cannot check the words. The old assistant warned that the wording comes from automatic recognition and said it could not watch the video.",
+    "evidence": "s3.old.dumper.E24a/calls.jsonl args: {name, start_seconds 0, end_seconds 10, assets.video_file_path, style.template 'minimalist'}. s3.new.stupid.E24a args: style.template 'cinematic'. Neither result has a text field. The old reply says: 'The subtitles come from automatic speech recognition, so I can't promise the wording is exactly right.'"
+   },
+   {
+    "why": "Why does it fail in both builds and for every persona, not only in these 2 chats?",
+    "because": "The engine gives the same output for the same source file, whatever the build, persona or template. s3.new.happy and s3.old.happy also have no caption at 1 s and the same 4.1 s / 7.1 s chunks. The MCP layer has no part in the transcription.",
+    "evidence": "s3.new.happy.E24a/grade.json and s3.old.happy.E24a/grade.json: 'Hi everyone!' seen=missing, with identical chunk text. The templates differ: minimalist (old dumper), cinematic (new stupid)."
+   },
+   {
+    "why": "Why can the evidence not show for sure that the greeting is absent from the video?",
+    "because": "The grader samples only about 4 frames (1, 4.1, 7.1, 9.6 s). A short greeting caption could show between 1 s and 4 s and not be sampled. Two grader reasons say so: 'could be timing' and 'may be absent or between frames'. Missing evidence: dense frames in 0–3 s or the subtitle track. I could not open the grade/*.jpg frames. The better-supported reading: the engine does not caption the greeting while she speaks it, because she is visibly speaking at 1 s with no caption.",
+    "evidence": "s3.old.happy.E24a/grade.json: 'Frame at 1s shows no Hi everyone! subtitle (could be timing)'. s3.new.stupid.E24a/grade.json: 'frames at 1 s and 9.6 s show none'."
+   }
+  ],
+  "axiom": "Magic Hour's auto-subtitle engine makes captions by its own speech recognition and timing. The caller cannot supply or check the words. In this clip the engine gives no visible caption during the opening greeting at about 1 s. That is a fixed behavior of the engine. Neither the assistant nor either MCP build can change it. The 4-frame grader sampling cannot tell whether the greeting is dropped entirely or only shown late and briefly.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Change the grader harness for subtitle items: take frames every 0.25-0.5 s in the first 3 s, and around each exact_text phrase, or OCR the subtitle track. This shows whether the greeting is truly dropped or only falls between samples. If it is truly dropped: none, inherent to Magic Hour's auto-subtitle model. The tool has no transcript parameter."
+ },
+ "error": null,
+ "seconds": 84,
+ "usd": 0.42488699999999996
+}

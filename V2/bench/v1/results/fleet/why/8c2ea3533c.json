@@ -1,0 +1,47 @@
+{
+ "id": "8c2ea3533c",
+ "key": "must:G39b:Caption legible, inside image, contrasting",
+ "symptom": "Caption legible, inside image, contrasting",
+ "item": "G39b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Caption legible, inside image, contrasting' marked not met in both chats?",
+    "because": "The text in the delivered image is badly laid out. In the old chat the word 'OVERFLOWING' wraps mid-word as 'OVERFLOWI / NG'. In the new chat the black caption runs past the left and right edges of the scroll, over its yellow border. The text is not unreadable in either chat; the grader failed it on layout and fit.",
+    "evidence": "s4.old.stupid.G39b/grade.json: must item 'no', fault 'OVERFLOWING is split mid-word' (major), score 3. s4.new.stupid.G39b/grade.json: 'it overflows the scroll's left and right edges; the text runs over the yellow border (e.g. Sleeping and make)'."
+   },
+   {
+    "why": "Why did the assistant not control where the caption goes or how it wraps?",
+    "because": "In both chats the assistant made one create_meme call and sent only a topic and template 'Random'. The meme service chose the template, wrote the caption and drew the text. The assistant never sent any caption text, font, size or position.",
+    "evidence": "Both calls.jsonl, line 2: create_meme args {name:'Monday Meme', style:{topic:'Mondays', template:'Random'}}. Old got a Left Exit 12 template; new got Scroll of Truth (grade.json)."
+   },
+   {
+    "why": "Why did the assistant send only those arguments?",
+    "because": "The create_meme schema gives no other options. It has only topic (max 200 characters), a template enum that contains only 'Random', and searchWeb. It has no field for caption text, font size, wrapping or text box. The description says only 'Creates a meme from a topic and template selection.'",
+    "evidence": "tools-new.json, create_meme (around line 3691): template enum ['Random'], no caption or layout fields. Both builds sent the same args, so the old build exposes the same create_meme interface."
+   },
+   {
+    "why": "Why did the badly fitted text reach the user without a fix?",
+    "because": "Neither assistant looked at the image before it delivered. The old assistant called wait_for_image_project with include_inline_downloads:false. The new assistant used the default inline preview, but it said nothing about the text and did not call create_meme again. Both replies were classified as 'delivered' after one try. Even if an assistant had seen the problem, a new call could only give another random result, because no parameter controls the layout.",
+    "evidence": "old calls.jsonl line 3: args include_inline_downloads:false. new calls.jsonl line 3: only id. Both 'say' events: kind 'delivered', with no mention of how the text fits."
+   },
+   {
+    "why": "Why does the meme service wrap words mid-word or let text spill out of the template's text area?",
+    "because": "AXIOM: Magic Hour's AI_MEME renderer draws the text it generates into a fixed template box. It does not use word-aware wrapping or shrink the text to fit the box. This is a limit of the generation backend, and no tool parameter exposes it.",
+    "evidence": "wait_for_image_project output: type 'AI_MEME', status complete, 10 credits, the same backend in both builds. The defects (mid-word break in old, edge overflow in new) appear with two different random templates."
+   }
+  ],
+  "axiom": "Magic Hour's AI_MEME backend lays out the caption it generates without word-aware wrapping or fit-to-box. create_meme gives no control over caption text or layout (template is only 'Random'), so the assistant cannot prevent mid-word breaks or text overflow.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the new build, add a meme route that makes a text-free image with generate_image. The server then draws the caption itself with word-boundary wrapping and auto-shrink-to-fit inside a safe margin, and adds a contrasting outline. Also state in the create_meme description that its text layout cannot be controlled, and tell the assistant to check the inline preview before it delivers."
+ },
+ "error": null,
+ "seconds": 56,
+ "usd": 0.6292658
+}

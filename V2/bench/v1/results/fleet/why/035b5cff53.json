@@ -1,0 +1,51 @@
+{
+ "id": "035b5cff53",
+ "key": "must:F32a:Gentle upbeat electronic music audible beneath speech without masking",
+ "symptom": "Gentle upbeat electronic music audible beneath speech without masking",
+ "item": "F32a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Gentle upbeat electronic music audible beneath speech without masking' not met?",
+    "because": "No file with both music and voice existed. The grader got two separate parts and a request to mix them by hand.",
+    "evidence": "s2.old.happy.F32a/grade.json: met=no, 'Voice and music were never mixed. The user was told to mix them in an editor.' s2.old.dumper.F32a/grade.json: met=no, 'Music and voice were never mixed.'"
+   },
+   {
+    "why": "Why were voice and music never mixed?",
+    "because": "In both chats the assistant made a voice track with ai_voice_generator_create_audio and an instrumental track with generate_music. It polled both with wait_for_audio_project and then stopped. It made no call that layers the two tracks.",
+    "evidence": "calls.jsonl in both chats: voices_list → ai_voice_generator_create_audio (Hazel cv-0035, exact script) → generate_music (duration 20, instrumental:true) → two wait_for_audio_project calls → final reply. There is no further tool call."
+   },
+   {
+    "why": "Why did the assistant make no mix call?",
+    "because": "It concluded that the server has no tool that mixes audio, and it told the user so in both chats. It gave two download links and Audacity/GarageBand steps (voice at 0:03, music −10–15 dB).",
+    "evidence": "calls.jsonl 'say' text: happy run 'Magic Hour has no tool that mixes a voice over music. So I couldn't give you one finished file'; dumper run 'Magic Hour has no tool that layers a voice over music, so I can't hand you a single mixed file.'"
+   },
+   {
+    "why": "Why did the assistant believe there is no mix tool?",
+    "because": "The belief is correct for the old build. Its audio tools only create or fetch single tracks: generate_music (text to music, instrumental or with lyrics), ai_voice_generator_create_audio and ai_voice_cloner_create_audio (text to speech), and get/wait/fetch audio project. No tool takes two audio inputs. get_workflow_guide lists no audio-mix workflow. The tools that combine audio with something else all output video (create_video_from_audio, create_talking_photo, create_lip_sync_video).",
+    "evidence": "tools-old.json: generate_music schema has only name, duration, style{prompt, instrumental, lyrics}, so it cannot take a voice file. The voice generator schema takes text only. The get_workflow_guide enum has no audio-mix value. In the sections I read, no tool accepts two audio files or returns a mixed audio file."
+   },
+   {
+    "why": "Why can the single music-generation call not carry the voice?",
+    "because": "generate_music only accepts sung lyrics, and its duration is at least 15 s. It cannot take a supplied spoken voiceover. So the brief's need (exact spoken script by a warm female voice over a music bed, as one audio file) cannot be met by any one call in the old build. The tools also offer no step that does post-production.",
+    "evidence": "tools-old.json generate_music: 'Generates music from a description, with optional custom lyrics or instrumental-only output'; duration minimum 15; there is no audio input. F32a.json must_haves need speech and music together in one ~20 s file, and 'tests' says 'with mixed music rather than only ... a short music sample'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "AXIOM: the old hosted server exposes no audio compositing or mixing capability. This is a fact about the server's feature set, and nothing deeper in the tool descriptions or the chats explains it. The new build had no failures on this item. I did not check tools-new.json for a mix tool, so the reason the new build passes is not confirmed.",
+    "evidence": "Symptom counts are builds {old:2} only. The old tool list has no mixing tool. The assistant's behaviour was correct given those tools: it delivered both parts and stated the limit honestly."
+   }
+  ],
+  "axiom": "The old (hosted) Magic Hour MCP server has no audio-mixing or compositing tool. Every audio tool takes one input and returns one track: text to speech, or text to music with sung lyrics only and no voice input. So a spoken voiceover over a music bed cannot become one file. The assistant correctly delivered two separate tracks, and the grader correctly found no mix.",
+  "category": "mcp_tool_behavior",
+  "builds": "old",
+  "fix": "Add a server-side audio mix tool to the old/hosted build, for example mix_audio(voice_file_path, music_file_path, voice_offset_seconds, music_gain_db or ducking, fade_in_seconds, fade_out_seconds, total_seconds) that returns one audio project for wait_for_audio_project. Name it in the generate_music and ai_voice_generator_create_audio descriptions ('to put a voiceover over music, call mix_audio with both outputs'). If the new build already has such a tool, port it to the hosted server."
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 1.006753
+}

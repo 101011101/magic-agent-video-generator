@@ -1,0 +1,46 @@
+{
+ "id": "50255b4e06",
+ "key": "must:J50c:The headline reads exactly 'NIGHT MARKET'.",
+ "symptom": "The headline reads exactly 'NIGHT MARKET'.",
+ "item": "J50c",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the headline 'NIGHT MARKET' not met?",
+    "because": "No poster file exists, so the grader had no rendered headline to check.",
+    "evidence": "s2r.old.dumper.J50c/grade.json: check 'something was made' pass=false, got 'no file'. Headline reason: 'No image exists, so no text was rendered; it was only stated in the plan.' The happy chat's reason is the same: 'No poster exists'."
+   },
+   {
+    "why": "Why does no poster exist?",
+    "because": "The server refused both generate_image calls (turn 1 orange, turn 2 navy), so the chat produced no output.",
+    "evidence": "s2r.old.happy.J50c/calls.jsonl lines 2 and 7: approve=false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account', then 'needs about 5 credits and 0 remain'. The dumper calls.jsonl shows the same two refusals."
+   },
+   {
+    "why": "Why were the calls refused? Was it the assistant's fault?",
+    "because": "No. The assistant sent valid, well-formed requests. The prompts held the exact text 'NIGHT MARKET' / 'SATURDAY 6–10 PM', and it even fell back to the cheapest model (flux-2-klein, 5 credits). The only cause of refusal was the credit balance.",
+    "evidence": "calls.jsonl args: model qwen-image-2.1 and then flux-2-klein, resolution 640px, prompts quote both text lines exactly. The refusal reason names credits only, not the arguments."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of the chat?",
+    "because": "The old-build chats ran live against the hosted server on a shared free-plan account. Earlier chats in the fleet had already used up all its credits. The very first call of each chat already saw 0 remaining.",
+    "evidence": "chat.json: mode 'live', url 'https://mcp.magichour.ai/', side 'old'. The first call in both chats (line 2, first tool call of the chat) reports '0 remain on the account'. The symptom hits only the old build (3/3 old, any persona), so persona and conversation do not matter."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The test harness ran the old-build chats on an account with no credits left. Nothing in the tool descriptions, the brief or the assistant's behaviour could make a poster with 0 credits. This is a harness defect: the run did not reset credits or check them before each chat.",
+    "evidence": "All three failing chats are old-build, across happy, dumper and stupid personas. Each failed at the first call with 0 credits. The assistant replied honestly with 'cannot' in both turns (calls.jsonl say entries)."
+   }
+  ],
+  "axiom": "The shared free-plan account used by the old (hosted, live) build had 0 credits before the J50c chats began. Every generate_image call was refused, so no poster, and no headline, could exist. This is a harness artifact (credit exhaustion across the fleet run), not a tool, model or assistant defect.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "In the bench harness, check the account credit balance before each live chat and top it up or reset it. Use a fresh or refilled free-plan account per chat or per batch. If credits are below the cost of the cheapest test run, mark the chat as 'harness: no credits' and exclude it from grading, so it is not scored as a must-have failure."
+ },
+ "error": null,
+ "seconds": 25,
+ "usd": 0.0980228
+}

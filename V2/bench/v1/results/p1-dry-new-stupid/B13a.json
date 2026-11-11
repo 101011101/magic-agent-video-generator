@@ -1,0 +1,184 @@
+{
+  "id": "B13a",
+  "item": {
+    "id": "B13a",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Restore a Faded Family Scan",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "old-photo.jpg"
+        ],
+        "text": "Can you clean up this old family scan and enlarge it to 640 pixels on the long side? Keep the sepia look and everyone's faces the same."
+      }
+    ],
+    "tests": "Restores and enlarges the supplied scan while preserving identity, historical appearance, and composition.",
+    "answer_sheet": {
+      "Source picture": "old-photo.jpg",
+      "Restoration style": "Reduce noise and fading gently; keep the original sepia look, not modern colourisation.",
+      "Size and framing": "640 pixels on the long side; preserve the original proportions and full framing.",
+      "Faces and scene": "Preserve everyone's identity, expression, clothing, and the original setting.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The result depicts the same family and setting as old-photo.jpg, not a replacement family photo.",
+      "Visible scan noise is reduced and faded forms have clearer, natural contrast.",
+      "The photograph retains its sepia appearance without colourisation.",
+      "Faces, expressions, clothing, and framing remain faithful to the source.",
+      "The delivered image has a 640-pixel long edge and preserves the source aspect ratio."
+    ]
+  },
+  "session": "mcp-p1-dry-n-stupid-B13a",
+  "sessionDir": "sessions/mcp-p1-dry-n-stupid-B13a",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "can you clean up this pic",
+      "materials": [
+        "old-photo.jpg"
+      ],
+      "dialog": [],
+      "agent": "I couldn’t restore the photo because your Magic Hour account has insufficient credits. No image was generated.\n\nOnce credits are available, I can retry the cleanup while keeping the original vintage tone.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you clean up this pic\\n[Attached: old-photo.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0cd159c0-77f5-4f57-b30e-5d2eec83d12b-image-0.jpg]\"}],\"attachments\":[{\"name\":\"old-photo.jpg\",\"kind\":\"image\",\"role\":\"other\",\"aspect\":\"1:1\"}],\"params\":[{\"name\":\"subject\",\"value\":\"Attached vintage family photograph\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Clean up and restore the photograph\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Preserve the people, facial likenesses, clothing, composition and original vintage tone\",\"source\":\"derived\"}],\"tool\":\"edit_image\"}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Clean up and restore the photograph\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the people, facial likenesses, clothing, composition and original vintage tone\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"derived\",\"from\":\"the shape of old-photo.jpg\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "style": {
+              "prompt": "Carefully restore and clean up this vintage family photograph. Reduce noise and blur, improve contrast and exposure, correct uneven fading, and gently recover natural detail. Preserve the exact four people, their facial likenesses, ages, expressions, poses, clothing, and the house and garden background. Preserve original composition and warm vintage monochrome tone; do not colorize. Avoid invented facial details, over-sharpening, artificial skin smoothing or modernizing anything."
+            },
+            "resolution": "640px",
+            "aspect_ratio": "1:1",
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/0cd159c0-77f5-4f57-b30e-5d2eec83d12b-image-0.jpg"
+              ]
+            },
+            "model": "flux-2-klein",
+            "name": "Restored family photo",
+            "image_count": 1
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"can you clean up this pic\\n[Attached: old-photo.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0cd159c0-77f5-4f57-b30e-5d2eec83d12b-image-0.jpg]\"}],\"attachments\":[{\"name\":\"old-photo.jpg\",\"kind\":\"image\",\"role\":\"other\",\"aspect\":\"1:1\"}],\"params\":[{\"name\":\"subject\",\"value\":\"Attached vintage family photograph\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Clean up and restore the photograph\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Preserve the people, facial likenesses, clothing, composition and original vintage tone\",\"source\":\"derived\"}],\"tool\":\"edit_image\"}",
+          "result": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Clean up and restore the photograph\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the people, facial likenesses, clothing, composition and original vintage tone\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"derived\",\"from\":\"the shape of old-photo.jpg\"}],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "I’ll reduce the blur and fading while preserving everyone’s likeness and the photo’s vintage tone."
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"style\":{\"prompt\":\"Carefully restore and clean up this vintage family photograph. Reduce noise and blur, improve contrast and exposure, correct uneven fading, and gently recover natural detail. Preserve the exact four people, their facial likenesses, ages, expressions, poses, clothing, and the house and garden background. Preserve original composition and warm vintage monochrome tone; do not colorize. Avoid invented facial details, over-sharpening, artificial skin smoothing or modernizing anything.\"},\"resolution\":\"640px\",\"aspect_ratio\":\"1:1\",\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/0cd159c0-77f5-4f57-b30e-5d2eec83d12b-image-0.jpg\"]},\"model\":\"flux-2-klein\",\"name\":\"Restored family photo\",\"image_count\":1}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn’t restore the photo because your Magic Hour account has insufficient credits. No image was generated.\n\nOnce credits are available, I can retry the cleanup while keeping the original vintage tone."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t restore the photo because your Magic Hour account has insufficient credits. No image was generated.\n\nOnce credits are available, I can retry the cleanup while keeping the original vintage tone.",
+        "refuse": "",
+        "tier_move": "I couldn’t restore the photo because your Magic Hour account has insufficient credits. No image was generated.\n\nOnce credits are available, I can retry the cleanup while keeping the original vintage tone.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 23
+    }
+  ],
+  "started": "2026-11-09T03:51:32.203Z",
+  "persona": "stupid",
+  "opening": {
+    "id": "B13a",
+    "persona": "stupid",
+    "text": "can you clean up this pic",
+    "withheld": [
+      "The picture is an old scanned family photo.",
+      "Make the picture larger, with the long side measuring 640 pixels.",
+      "Gently reduce noise and fading.",
+      "Keep the original sepia look rather than adding modern colours.",
+      "Keep the original proportions and the whole picture without cropping.",
+      "Keep everyone's faces, identity and expressions unchanged.",
+      "Keep the original clothing and setting.",
+      "Do not add any text."
+    ],
+    "extras": [],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 23
+}

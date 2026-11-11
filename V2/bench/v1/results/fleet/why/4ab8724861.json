@@ -1,0 +1,46 @@
+{
+ "id": "4ab8724861",
+ "key": "must:J51a:The video lasts approximately 6 seconds and contains no text or audio.",
+ "symptom": "The video lasts approximately 6 seconds and contains no text or audio.",
+ "item": "J51a",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'about 6 seconds, no text or audio' item not met?",
+    "because": "No video file was made in these chats, so the grader had nothing to check for length, text or audio.",
+    "evidence": "s2r.old.happy.J51a/grade.json: check 'something was made' pass=false, got 'no file'. The reason for this item: 'No video was delivered; only settings for a 6s clip were prepared.'"
+   },
+   {
+    "why": "Why was no video made?",
+    "because": "Every create_video_from_text call was refused before it ran, with approve=false. This includes the final 9:16 call that the user approved.",
+    "evidence": "s2r.old.happy.J51a/calls.jsonl lines 5 and 10: approve=false, reason 'insufficient credits: this call needs about 144 credits and 0 remain on the account'. s2r.old.stupid.J51a/calls.jsonl lines 3 and 8: same refusal, 'needs about 120 credits and 0 remain'."
+   },
+   {
+    "why": "Were the assistant's arguments the cause?",
+    "because": "No. In the happy chat the arguments were correct: ltx-2.5, 480p, 6 s, 9:16, audio false, and a prompt that fits the brief. These are valid free-plan settings. The only reason the call was refused was the balance. The assistant also told the user the truth.",
+    "evidence": "s2r.old.happy.J51a/calls.jsonl line 10 args: end_seconds 6, aspect_ratio 9:16, model ltx-2.5, resolution 480p, audio false. The say entries (kind 'cannot') report the 0-credit refusal."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The old-build chats ran one after another on a shared live free-plan account (url mcp.magichour.ai, mode live). By the time these chats ran, the balance was already 0, before they made any call. The 0 balance is account state that the harness carried in from earlier work. The build and the brief did not cause it: a 6 s 480p clip (about 144 credits) is normally allowed on the free plan. The failures appear only on the old side ({old:3}), which fits a drained account on that side and not a model or tool limit.",
+    "evidence": "s2r.old.stupid.J51a/chat.json: side old, url https://mcp.magichour.ai/, mode live. The first credit check in each chat already reports '0 remain'. The calls.jsonl timestamps of the happy and stupid chats follow one another (…573 / …589)."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The test harness did not refill or check the account's credits before it started each chat. The result is a 'cannot' outcome that does not measure the MCP server or the assistant. This is a defect of the harness.",
+    "evidence": "No per-chat credit reset appears in any file. All chats with this symptom end with kind 'cannot' and the same 0-credit reason (calls.jsonl, line 'end')."
+   }
+  ],
+  "axiom": "The shared live free-plan account used for the old-build run had 0 credits before these chats started, so the credit check refused every generation call. The test harness did not refill or check the balance before each chat.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Make the harness check the account balance before each chat. Refill it (or use a fresh account for each side) so that it holds at least the brief's estimated cost, which is about 150 credits here. If the balance is too low, mark the chat 'skipped: no credits' instead of grading it."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.1105382
+}

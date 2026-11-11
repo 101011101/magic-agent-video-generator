@@ -1,0 +1,47 @@
+{
+ "id": "094f332a23",
+ "key": "must:E27c:Original radio calls remain present and synchronized, including 'Rook, you with me?'",
+ "symptom": "Original radio calls remain present and synchronized, including 'Rook, you with me?'",
+ "item": "E27c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Original radio calls remain present and synchronized, including Rook, you with me?' not met?",
+    "because": "Neither chat delivered a video. Both delivered only a separate 15 s WAV music file, so no output exists where the radio calls and the music play together in sync.",
+    "evidence": "s3.new.stupid.E27c/grade.json: check 'a video was made' failed, got [\".wav\"]; 'about 7 s' failed, got 15 s; must item reason: 'No mixed output; the track is separate from the clip'. Both calls.jsonl files end with generate_music followed by wait_for_audio_project, and the only file is assets/01-wait_for_audio_project.wav."
+   },
+   {
+    "why": "Why did the assistant deliver only a standalone music track?",
+    "because": "In both builds the assistant decided early on that no tool could put audio under an existing video. It told the user so, made the music with generate_music, and told the user to mix it in CapCut or iMovie.",
+    "evidence": "old calls.jsonl line 4: 'none of my Magic Hour tools can lay a music track under an existing video... add to the clip in any video editor'. new calls.jsonl line 5: 'none of my tools can put a sound track onto a video you already have'. In the new build's final reply it said: 'I have no tool that mixes it into your clip... Lower the music to about -18 to -20 dB'."
+   },
+   {
+    "why": "Why did the assistant believe no tool could mix music into the user's clip?",
+    "because": "That belief was correct. The tool lists have no tool that takes a user video plus an audio track and mixes them. join_videos only joins videos end to end, and its only sound option is 'silent'. join_production_clips mixes music only under clips made through plan_video_production, not under an uploaded clip. edit_video and translate_video re-generate the footage or the speech, which the brief forbids ('Don't change the footage').",
+    "evidence": "tools-new.json: join_videos description: 'Join videos end to end with hard cuts... silent: remove all sound', and it has no audio input. join_production_clips: 'pass sound: the ids from create_production_sound... mixes the music under it', limited to a production plan. edit_video: 'Edits the appearance or content... using a text prompt'. The plan_request tool enum lists generate_music, add_subtitles_to_video, trim_video and others, but no audio-mix tool."
+   },
+   {
+    "why": "Why does the server have no way to add music to an existing video, when the new build already mixes audio in code?",
+    "because": "The new build's code-side mixing (ffmpeg-style, no credits) is only wired into the production pipeline (join_production_clips with sound). It is not offered as a standalone tool for a user's own clip. The old hosted server has no mixing at all. This is a missing capability in the MCP server, not a model or free-plan limit. The test marks the task as possible on the free plan (beyond_free 'no', asks 'never').",
+    "evidence": "items/E27c.json: expect.beyond_free = 'no', spec.kind = 'video', audio 'required', case_name 'Add music to a clip'. tools-new.json: join_production_clips and join_videos run in code ('Spends no credits'), but neither accepts an external video plus a music track."
+   },
+   {
+    "why": "Why is this the axiom and not assistant error or a grader defect?",
+    "because": "Given the tools it had, the assistant did the best it honestly could: an instrumental tense bed, with the limit disclosed. The grader correctly says that a separate WAV cannot keep the calls synchronized. The failure comes from the toolset lacking a 'mix audio under video' operation, in both builds.",
+    "evidence": "new grade.json summary: 'The agent was honest about its limits... but it delivered no video with music under the dialogue'. Both builds followed the same path and got the same failure."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server (old and new) has no tool that mixes a generated audio track under a user-supplied video while keeping its original audio. The new build's code-side mixing exists only inside the plan_video_production / join_production_clips pipeline. So a request to add music under an uploaded clip cannot produce a video where the original speech stays in sync.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a standalone, no-credit code tool, e.g. add_audio_to_video(video, audio, music_gain_db=-18, duck_under_speech=true, trim_to_video=true). It keeps the original video stream and audio track, trims or fades the music to the clip length, and mixes it with sidechain ducking under speech. List it in plan_request's tool enum and mention it in generate_music's description ('to put music under a user's clip, call add_audio_to_video with the finished audio id'). Then the assistant can return one 7 s MP4 with the radio calls in sync."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.3375402
+}

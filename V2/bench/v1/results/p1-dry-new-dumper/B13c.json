@@ -1,0 +1,230 @@
+{
+  "id": "B13c",
+  "item": {
+    "id": "B13c",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which of the two attached pictures should be upscaled?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resolve the Upscale Target",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg",
+          "lake-small.jpg"
+        ],
+        "text": "upscale it please"
+      }
+    ],
+    "tests": "Asks which attachment the user means, then upscales only the selected picture without guessing or processing both.",
+    "answer_sheet": {
+      "Which picture": "The lake one, lake-small.jpg.",
+      "Output size": "your call",
+      "Enhancement style": "your call",
+      "Framing": "Keep the whole lake picture and its original proportions.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The final deliverable is an upscaled version of lake-small.jpg, following clarification.",
+      "The lake, mountains, trees, clouds, and their arrangement remain faithful to the selected source.",
+      "The delivered image has larger pixel dimensions than lake-small.jpg, not merely a renamed copy.",
+      "The full original framing and aspect ratio are preserved.",
+      "Only one edited image is delivered; the dog photo is not included or blended into it."
+    ]
+  },
+  "session": "mcp-p1-dry-n-dumper-B13c",
+  "sessionDir": "sessions/mcp-p1-dry-n-dumper-B13c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Could you upscale it for me, please? I've been meaning to get around to this for a while. I've attached this dog pic and this lake pic here. I'd appreciate your help with the upscaling.",
+      "materials": [
+        "blurry-dog.jpg",
+        "lake-small.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Would you like me to upscale both photos, or just the dog or the lake?",
+          "asked": [
+            "question"
+          ],
+          "user": "Just the lake one, lake-small.jpg, please. Keep the whole lake picture and its original proportions, and I’m happy to leave the output size and enhancement style up to you.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "The upscale couldn’t run because your Magic Hour account has insufficient credits. No image was created, and your original photo is unchanged.\n\nOnce you add credits, I can retry the lake photo at 2× with detail-preserving enhancement, keeping the full picture and its original proportions.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Could you upscale it for me, please? I've been meaning to get around to this for a while. I've attached this dog pic and this lake pic here. I'd appreciate your help with the upscaling.\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/351ce78b-cba8-4c6e-bd09-59c4d20e0ecf-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/a0ce89ca-0ffb-4abf-b225-b68872c67a54-image-0.jpg]\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"params\":[{\"name\":\"subject\",\"value\":null,\"source\":\"missing\"},{\"name\":\"edit\",\"value\":\"Upscale the attached photo(s)\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Original image content and aspect ratio\",\"source\":\"derived\"}],\"tool\":\"upscale_image\"}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Could you upscale it for me, please? I've been meaning to get around to this for a while. I've attached this dog pic and this lake pic here. I'd appreciate your help with the upscaling.\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/351ce78b-cba8-4c6e-bd09-59c4d20e0ecf-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/a0ce89ca-0ffb-4abf-b225-b68872c67a54-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Would you like me to upscale both photos, or just the dog or the lake?\"},{\"role\":\"user\",\"text\":\"Just the lake one, lake-small.jpg, please. Keep the whole lake picture and its original proportions, and I’m happy to leave the output size and enhancement style up to you.\"}],\"attachments\":[{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"lake-small.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Upscale lake-small.jpg; output size and enhancement style left to assistant\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Whole lake picture and original proportions, no cropping\",\"source\":\"user\"},{\"name\":\"look\",\"value\":\"preserve\",\"source\":\"default\"}]}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "upscale_image",
+          "args": {
+            "scale_factor": 2,
+            "style": {
+              "mode": "preserve"
+            },
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/a0ce89ca-0ffb-4abf-b225-b68872c67a54-image-0.jpg"
+            },
+            "name": "Lake photo — 2x upscale"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Could you upscale it for me, please? I've been meaning to get around to this for a while. I've attached this dog pic and this lake pic here. I'd appreciate your help with the upscaling.\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/351ce78b-cba8-4c6e-bd09-59c4d20e0ecf-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/a0ce89ca-0ffb-4abf-b225-b68872c67a54-image-0.jpg]\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"params\":[{\"name\":\"subject\",\"value\":null,\"source\":\"missing\"},{\"name\":\"edit\",\"value\":\"Upscale the attached photo(s)\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Original image content and aspect ratio\",\"source\":\"derived\"}],\"tool\":\"upscale_image\"}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "Would you like me to upscale both photos, or just the dog or the lake?"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Could you upscale it for me, please? I've been meaning to get around to this for a while. I've attached this dog pic and this lake pic here. I'd appreciate your help with the upscaling.\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/351ce78b-cba8-4c6e-bd09-59c4d20e0ecf-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/a0ce89ca-0ffb-4abf-b225-b68872c67a54-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Would you like me to upscale both photos, or just the dog or the lake?\"},{\"role\":\"user\",\"text\":\"Just the lake one, lake-small.jpg, please. Keep the whole lake picture and its original proportions, and I’m happy to leave the output size and enhancement style up to you.\"}],\"attachments\":[{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"lake-small.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Upscale lake-small.jpg; output size and enhancement style left to assistant\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Whole lake picture and original proportions, no cropping\",\"source\":\"user\"},{\"name\":\"look\",\"value\":\"preserve\",\"source\":\"default\"}]}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "I’ll upscale the lake photo 2× with detail-preserving enhancement, keeping the full picture and its original proportions."
+        },
+        {
+          "type": "call",
+          "name": "upscale_image",
+          "arguments": "{\"scale_factor\":2,\"style\":{\"mode\":\"preserve\"},\"assets\":{\"image_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/a0ce89ca-0ffb-4abf-b225-b68872c67a54-image-0.jpg\"},\"name\":\"Lake photo — 2x upscale\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "The upscale couldn’t run because your Magic Hour account has insufficient credits. No image was created, and your original photo is unchanged.\n\nOnce you add credits, I can retry the lake photo at 2× with detail-preserving enhancement, keeping the full picture and its original proportions."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Would you like me to upscale both photos, or just the dog or the lake?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "upscale_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "The upscale couldn’t run because your Magic Hour account has insufficient credits. No image was created, and your original photo is unchanged.\n\nOnce you add credits, I can retry the lake photo at 2× with detail-preserving enhancement, keeping the full picture and its original proportions.",
+        "refuse": "",
+        "tier_move": "The upscale couldn’t run because your Magic Hour account has insufficient credits. No image was created, and your original photo is unchanged.\n\nOnce you add credits, I can retry the lake photo at 2× with detail-preserving enhancement, keeping the full picture and its original proportions.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 81
+    }
+  ],
+  "started": "2026-11-09T05:41:45.175Z",
+  "persona": "dumper",
+  "opening": {
+    "id": "B13c",
+    "persona": "dumper",
+    "text": "Could you upscale it for me, please? I've been meaning to get around to this for a while. I've attached this dog pic and this lake pic here. I'd appreciate your help with the upscaling.",
+    "withheld": [],
+    "extras": [
+      "I've been meaning to get around to this for a while."
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 82
+}

@@ -1,0 +1,111 @@
+{
+  "id": "D21b",
+  "item": {
+    "id": "D21b",
+    "case": 21,
+    "case_name": "Looping background clip",
+    "group": "D",
+    "group_name": "Short video from a picture or text",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Soft Glowing Phone Wallpaper",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "9:16",
+      "kind": "video",
+      "seconds": 8,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make me an 8-second looping video wallpaper for my phone, 9:16. Soft blue and purple glowing ribbons moving slowly on a dark background. Leave the top third mostly dark for the clock. No words or sound, and no jump when it loops."
+      }
+    ],
+    "tests": "Tests delivery of a genuinely animated seamless portrait wallpaper with a clock-safe composition, not a landscape clip padded into a phone frame.",
+    "answer_sheet": {
+      "Source image": "Generate it from scratch; no photo.",
+      "Style and colours": "Soft abstract glowing ribbons in blue and purple against a dark background.",
+      "Size and platform": "A vertical 9:16 phone wallpaper video.",
+      "Composition": "Keep the top third mostly dark and place most of the ribbons below it so the clock stays readable.",
+      "Duration and motion": "8 seconds, slow flowing motion, and a seamless repeat.",
+      "Text and audio": "No words, clock graphic or sound; my phone supplies the clock."
+    },
+    "must_haves": [
+      "The deliverable is an 8-second portrait 9:16 video, with artwork filling the frame rather than a landscape image surrounded by bars.",
+      "Soft blue and purple glowing ribbons visibly move slowly against a dark background.",
+      "The top third stays mostly dark and uncluttered throughout, with the brightest ribbons concentrated lower down.",
+      "Repeated playback has no visible jump, flash or abrupt reset at the loop boundary.",
+      "There are no words, clock graphics or other interface elements baked into the video.",
+      "The video has no audible sound."
+    ]
+  },
+  "session": "mcp-p1-dry-o-tightwad-D21b",
+  "sessionDir": "sessions/mcp-p1-dry-o-tightwad-D21b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Make me an 8-second looping video wallpaper for my phone in vertical 9:16, with soft blue and purple glowing ribbons moving slowly on a dark background. Leave the top third mostly dark for the clock. No words or sound, and make the loop seamless with no jump. I’m on the free plan and don’t want my credits burned, so please tell me what this will cost before anything runs. Is there a cheaper, shorter or smaller way to do it?",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "**I haven’t started a generation or spent any credits.**\n\nYour requested version would use **8 seconds, vertical 9:16, 480p, no audio**, with a free-plan-compatible model such as LTX 2.5. However, the connected tools don’t expose your balance or an exact video credit quote, so **I can’t reliably tell you its cost before running it**. I won’t submit it without that information and your approval.\n\nCheaper options:\n- **Shorter AI clip:** 3–4 seconds at 480p would generally cost less than 8 seconds; the exact savings need a quote.\n- **Smaller AI clip:** 480p is already the lowest supported free-plan video resolution.\n- **Best fit: procedural animation:** These abstract ribbons can be animated mathematically rather than AI-generated. Rendered locally in a suitable app, that uses **zero Magic Hour credits** and can make an exactly repeating 8-second loop—even at phone resolution. That rendering option isn’t available through my connected tools here.\n\n**Seamless-loop caveat:** An AI prompt can request matching beginning and ending motion, but text-to-video alone cannot guarantee a jump-free loop. A periodic procedural animation is more reliable for this particular design.\n\nI’d recommend the **zero-credit procedural route**, keeping the upper third nearly black and the slow blue/purple ribbons below it. I can provide code and export instructions for that, or you can check Magic Hour’s displayed quote before we proceed with AI generation.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "ok, go ahead with the cheapest option you listed",
+          "calls_before": 1,
+          "nudge": true
+        }
+      ],
+      "agent": "The cheapest option is **local procedural animation: zero Magic Hour credits**. I haven’t run any paid generation.\n\nI can’t render a local video directly through the connected tools, but this ready-to-run script creates **`ribbon_wallpaper.mp4`** with:\n- **8 seconds, vertical 9:16, 540 × 960**\n- Slowly glowing blue/purple ribbons on near-black\n- Top third kept dark for your clock\n- No text or audio\n- Periodic motion for a seamless loop—without a duplicated end frame\n\n### Run locally\nInstall [Python](https://www.python.org/) and [FFmpeg](https://ffmpeg.org/download.html), then run:\n```sh\npip install numpy\n```\n\nSave this as `wallpaper.py`, then run `python wallpaper.py`:\n\n```python\nimport subprocess\nimport numpy as np\n\nW, H, FPS, SECONDS = 540, 960, 24, 8\ny, x = np.mgrid[0:H, 0:W].astype(np.float32)\nx /= W\ny /= H\n\n# Suppress all ribbon light in the clock area.\nfade = np.clip((y - 0.35) / 0.22, 0, 1)\nfade = fade * fade * (3 - 2 * fade)\n\nbase = np.zeros((H, W, 3), dtype=np.float32)\nbase[:] = [0.002, 0.003, 0.009]\n\nribbons = [\n    (0.29, 0.13, 0.0, (0.08, 0.28, 0.95)),\n    (0.52, 0.16, 2.1, (0.38, 0.10, 0.85)),\n    (0.72, 0.12, 4.2, (0.10, 0.45, 0.85)),\n]\n\ncmd = [\n    \"ffmpeg\", \"-y\",\n    \"-f\", \"rawvideo\", \"-vcodec\", \"rawvideo\",\n    \"-pix_fmt\", \"rgb24\", \"-s\", f\"{W}x{H}\",\n    \"-r\", str(FPS), \"-i\", \"-\",\n    \"-an\", \"-c:v\", \"libx264\", \"-preset\", \"medium\",\n    \"-crf\", \"19\", \"-pix_fmt\", \"yuv420p\",\n    \"-movflags\", \"+faststart\",\n    \"ribbon_wallpaper.mp4\",\n]\nprocess = subprocess.Popen(cmd, stdin=subprocess.PIPE)\n\ntry:\n    for frame in range(FPS * SECONDS):\n        t = 2 * np.pi * frame / (FPS * SECONDS)\n        light = base.copy()\n\n        for center, amplitude, phase, color in ribbons:\n            curve = (\n                center\n                + amplitude * np.sin(5.5 * y + phase\n                                     + 0.32 * np.sin(t))\n                + 0.035 * np.cos(9 * y + phase + t)\n            )\n            width = 0.013 + 0.004 * np.sin(4 * y + phase + t)\n            distance = (x - curve) / width\n\n            core = np.exp(-0.5 * distance**2)\n            halo = np.exp(-0.5 * (distance / 4.5)**2)\n            glow = (0.30 * core + 0.075 * halo) * fade\n\n            light += glow[..., None] * np.array(color)\n\n        # Gentle display gamma preserves soft glow.\n        rgb = np.clip(light, 0, 1) ** (1 / 2.2)\n        process.stdin.write((rgb * 255).astype(np.uint8).tobytes())\nfinally:\n    process.stdin.close()\n\nif process.wait() != 0:\n    raise RuntimeError(\"FFmpeg could not finish the video.\")\n\nprint(\"Created ribbon_wallpaper.mp4\")\n```\n\nThe file will appear in the same folder. Your phone will need to support video wallpapers, or use a wallpaper app that loops videos without inserting a pause.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-generator\"}",
+          "output": "{\"workflow\": \"video-generator\", \"title\": \"Generate a new video from a text prompt\", \"input\": \"A description of a new scene; use image-to-video when a specific reference image matters.\", \"product_url\": \"https://magichour.ai/products/ai-video-generator\", \"api_docs_url\": \"https://docs.magichour.ai/api-reference/video-projects/text-to-video\", \"creation_tool\": \"create_video_from_text\", \"steps\": [\"Use text-to-video for a new scene without a required likeness; use an image reference and image-to-video when identity must stay consistent.\", \"Specify the subject, one action, camera move, framing and mood. Request only audio and duration supported by the selected model.\", \"Call create_video_from_text, then wait_for_video_project with the returned id and review the actual result.\"], \"example_request\": \"Create a short cinematic scene of a tiny astronaut discovering a glowing forest inside a glass bottle, with a slow orbiting camera.\", \"follow_up\": \"Edit or subtitle the accepted result instead of paying to regenerate unchanged footage.\", \"review\": \"Check prompt adherence, continuity, audio and output settings for the selected model.\", \"models_and_costs_url\": \"https://docs.magichour.ai/api-reference/models\", \"evaluation_url\": \"https://docs.magichour.ai/integration/evaluating-media-apis\", \"starter_recipes_url\": \"https://docs.magichour.ai/get-started/starter-recipes\", \"guidance\": [\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\", \"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\", \"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\", \"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\", \"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\", \"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\", \"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        }
+      ],
+      "approvals": [],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "The cheapest option is **local procedural animation: zero Magic Hour credits**. I haven’t run any paid generation.\n\nI can’t render a local video directly through the connected tools, but this ready-to-run script creates **`ribbon_wallpaper.mp4`** with:\n- **8 seconds, vertical 9:16, 540 × 960**\n- Slowly glowing blue/purple ribbons on near-black\n- Top third kept dark for your clock\n- No text or audi",
+        "refuse": "",
+        "tier_move": "The cheapest option is **local procedural animation: zero Magic Hour credits**. I haven’t run any paid generation.\n\nI can’t render a local video directly through the connected tools, but this ready-to-run script creates **`ribbon_wallpaper.mp4`** with:\n- **8 seconds, vertical 9:16, 540 × 960**\n- Slowly glowing blue/purple ribbons on near-black\n- Top third kept dark for your clock\n- No text or audi",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 43
+    }
+  ],
+  "started": "2026-11-09T05:22:58.581Z",
+  "persona": "tightwad",
+  "opening": {
+    "id": "D21b",
+    "persona": "tightwad",
+    "text": "Make me an 8-second looping video wallpaper for my phone in vertical 9:16, with soft blue and purple glowing ribbons moving slowly on a dark background. Leave the top third mostly dark for the clock. No words or sound, and make the loop seamless with no jump. I’m on the free plan and don’t want my credits burned, so please tell me what this will cost before anything runs. Is there a cheaper, shorter or smaller way to do it?",
+    "withheld": [],
+    "extras": [
+      "I’m on the free plan and don’t want my credits burned, so please tell me what this will cost before anything runs.",
+      "Is there a cheaper, shorter or smaller way to do it?"
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 43
+}

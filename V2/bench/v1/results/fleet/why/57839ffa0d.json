@@ -1,0 +1,42 @@
+{
+ "id": "57839ffa0d",
+ "key": "must:J52b:Neither image contains added text or logos.",
+ "symptom": "Neither image contains added text or logos.",
+ "item": "J52b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Neither image contains added text or logos' graded not met?",
+    "because": "No image was made in either chat, and the grader marks every must-have 'no' when there is no output, even a 'nothing must be present' item.",
+    "evidence": "s2r.old.stupid.J52b/grade.json: check 'something was made' pass=false, got 'no file'. The text/logo item reads 'There are no images, so there is nothing to satisfy this deliverable.' Summary: 'produced no images because the account had no credits, so every must-have fails.'"
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "Every generation call was blocked before it ran. The arguments were valid in both builds.",
+    "evidence": "old calls.jsonl: 3 edit_image calls (flux-2-klein, 640px, 1:1), each approve=false, reason 'insufficient credits: this call needs about 5 credits and 0 remain on the account'. new calls.jsonl: plan_request returned ready=true, then edit_image ('...No text, no other objects.') was blocked with the same reason."
+   },
+   {
+    "why": "Why were the calls blocked?",
+    "because": "The shared free-plan test account had a balance of 0 credits when these chats ran. Even the cheapest image edit (about 5 credits) could not run.",
+    "evidence": "In both calls.jsonl files the reason says '0 remain on the account'. Both chats use the same asset path api-assets/cmsla3fmt01cnio0zhjlc2wsv/..., so they share one account. The assistant's replies say the account has 0 credits."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of a chat?",
+    "because": "The fleet runs many chats on one free-plan account and does not reset or top up credits per chat. Earlier chats used up the balance, so later chats start empty. The cause is in the test setup, not in the assistant or the MCP tools.",
+    "evidence": "In both builds, the first credit-using call already sees 0 remaining. Nothing was spent inside these chats (the old chat says 'Nothing was made and nothing was charged'). So the balance was already gone before the chat started."
+   }
+  ],
+  "axiom": "The test harness ran these chats on a shared free-plan account whose credits were already at 0. No generation could run, and the grader then failed every must-have, including a 'no text' item that an empty output cannot meet. This is a harness/run-setup artifact, not a behavior of the assistant or of either build.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, check the account balance in the harness and reset it or top it up (or use one fresh account per chat). Mark chats where any generation call is refused for 'insufficient credits ... 0 remain' as invalid and run them again; do not grade them."
+ },
+ "error": null,
+ "seconds": 22,
+ "usd": 0.09539700000000001
+}

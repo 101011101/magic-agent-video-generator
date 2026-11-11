@@ -1,0 +1,27 @@
+{
+ "id": "0bf61fe38a",
+ "key": "must:D23c:Final ~3s plain black end card",
+ "symptom": "Final ~3s plain black end card",
+ "item": "D23c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Final ~3s plain black end card' not met in both chats?",
+    "because": "Neither graded file shows a black end card. Old: the only file is a 5 s, 854x480 coffee clip with no card. New: the grader saw only the 5 s coffee clip, and the assistant's reply says the card is dark coffee-brown.",
+    "evidence": "old grade.json: 'last frame at 4.8s is still the coffee scene', checks 854x480, 5 s. new grade.json: 'end card was not in the frames I was given ... dark coffee-brown, not black', 'about 8 s' check got 5 s."
+   }
+  ],
+  "axiom": "The 'stupid' persona opens with only 'make me a coffee video' and answers only the questions it is asked, so 'plain black end card' reaches the assistant only if a question asks for it. In the old build the assistant asked nothing and guessed. In the new build plan_request never asks about the card's look, and the assistant picked brown. The test-harness 404 on the joined file in the new chat is a second, separate defect that hid the card from the grader.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "When a card beat has exact_words, make plan_request ask about the card's look ('What background colour should the end card have?'), and give draw_card a black default background instead of letting the assistant choose one. Separately, fix the test harness so it can download the joined film from the local server (the 127.0.0.1:8000/films 404). Then the grader sees the real 8.1 s file with its card."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.2199448
+}

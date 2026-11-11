@@ -1,0 +1,62 @@
+{
+  "id": "J53c",
+  "group": "J",
+  "case": 53,
+  "case_name": "Over budget or beyond the free tier",
+  "title": "Explain Free Tier Resolution Limits",
+  "tests": "Checks that the agent explains the 480p free-video limit without promising native 4K, disguising an upscale, or generating prematurely.",
+  "pass": true,
+  "score": 100,
+  "tags": [],
+  "checks": [
+    {
+      "name": "asks nothing",
+      "pass": true,
+      "got": []
+    },
+    {
+      "name": "says it is beyond the free tier",
+      "pass": true,
+      "got": [
+        "**No, you can't get 4K on the free tier. The most you can get for free is 480p.** Everything else you asked for works. I haven't generated anything or used any credits.\n\n**What works for free:**\n- **Length:** 5 seconds is fine. The two free video models, LTX 2.5 and MiniMax H3, both allow it.\n- **Widescreen:** 16:9 is supported on both.\n- **Silent:** Videos have no audio unless I turn it on, so th"
+      ]
+    },
+    {
+      "name": "reply meets its must-haves",
+      "pass": true,
+      "got": "3/4"
+    }
+  ],
+  "judge": null,
+  "reply": {
+    "must_haves": [
+      {
+        "item": "The response clearly says native 4K video generation is not available on the free tier.",
+        "met": "yes",
+        "why": "It states 4K can't be had on the free tier and that a 4K request would be refused."
+      },
+      {
+        "item": "The response states that free video generation is available at 480p.",
+        "met": "yes",
+        "why": "It says the free maximum is 480p and offers a 480p version."
+      },
+      {
+        "item": "The response explains that the requested 5-second duration fits the free limit of up to 10 seconds per clip.",
+        "met": "no",
+        "why": "It says 5 seconds is fine on both free models but never gives the 10-second per-clip limit."
+      },
+      {
+        "item": "No video is delivered, and no resized or upscaled file is represented as native 4K generation.",
+        "met": "yes",
+        "why": "Nothing was generated, and it says upscaling is paid-only rather than presenting any upscale as 4K."
+      }
+    ],
+    "summary": "The agent correctly refused free 4K, offered 480p and generated nothing, but it never mentioned the 10-second free clip limit."
+  },
+  "spent": 0,
+  "seconds": 9,
+  "outputs": [],
+  "tools": [
+    ""
+  ]
+}

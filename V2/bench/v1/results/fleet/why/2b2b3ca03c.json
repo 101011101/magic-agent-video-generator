@@ -1,0 +1,47 @@
+{
+ "id": "2b2b3ca03c",
+ "key": "must:D22b:Waves move against rocks and a beam sweeps across the water",
+ "symptom": "Waves move against rocks and a beam sweeps across the water",
+ "item": "D22b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'waves move against rocks and a beam sweeps across the water' not met?",
+    "because": "Both videos show moving waves, but no lighthouse beam appears in any frame. The old video shows only a glowing lamp.",
+    "evidence": "s3.old.dumper.D22b/grade.json: 'The waves clearly move... No beam is visible in any frame, only a glowing lamp.' s3.new.stupid.D22b/grade.json: 'Waves clearly splash and move. No lighthouse beam is visible in any sampled frame.' Both graders list it as a major fault."
+   },
+   {
+    "why": "Why is there no beam? Did the assistant leave it out of the request?",
+    "because": "No. In both builds the assistant put the sweeping beam into the video prompt and picked the right image, length, shape and silence. The tool accepted the call and finished it without an error.",
+    "evidence": "old calls.jsonl line 8, create_video_from_image prompt: '...while the lighthouse beam slowly sweeps across the water in a wide arc...'. new calls.jsonl line 18 prompt: 'The lighthouse beam slowly sweeps across the water.' In the new build, plan_request (line 17) returned ready:true with motion = 'small waves roll against the rocks and the lighthouse beam slowly sweeps across the water'. Both wait_for_video_project results show status complete, 6 s, 854x480."
+   },
+   {
+    "why": "Why did a correct prompt still give no beam?",
+    "because": "Neither start picture has a beam in it. The old watercolor shows only a lit lantern against a bright orange-purple sky. The new photo shows golden-hour light and an unlit lantern. The video model would have to add a new light shape that is not in the start picture, and it did not.",
+    "evidence": "s3.old.dumper.D22b/assets/01-wait_for_image_project.png: glowing lantern, no beam, bright dusk sky. s3.new.stupid.D22b/assets/01-wait_for_image_project.png: daylight-bright golden sky, dark lantern, no beam. The first-turn image prompts (calls.jsonl line 2 old, line 11 new) did not ask for a beam, which is correct because the turn-1 brief does not mention one."
+   },
+   {
+    "why": "Why did the video model not add the beam?",
+    "because": "The video model (ltx-2.5 at 480p) moves what is already in the start picture well, such as the waves, which it even made too strong. It does not reliably create a new light effect that the picture does not contain, especially against a bright dusk sky. In two builds, two personas and two different source styles the result was the same, which points to the model and not to the build.",
+    "evidence": "Both chats used model 'ltx-2.5', resolution '480p' (calls.jsonl line 8 old, line 18 new). Both graders report wave motion that is too big ('large and splashy', 'large and crashing') but no beam. The result is the same for the watercolor (old) and the photoreal (new) source."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The brief asks for a beam in turn 2 for a picture made in turn 1 without one. Image-to-video models animate what the start frame contains. Adding a new light element is a limit of the generation model that no MCP build controls. The assistant also could not watch the output to check it and said so.",
+    "evidence": "items/D22b.json turn 1 does not ask for a beam, but turn 2 and must_haves[3] require one. old state/calls line 11: 'I couldn't watch the video from here. The AI may have made the beam weaker...'"
+   }
+  ],
+  "axiom": "The image-to-video model (ltx-2.5, free-plan 480p) animates what is in the start picture but does not reliably add a new light effect, here a sweeping lighthouse beam, that the start picture does not contain. The beam was missing from both source pictures because the turn-1 brief did not ask for one.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add one line to the create_video_from_image description. It should say that motion of things not visible in the start image (light beams, new objects) often fails. When the user asks for that, the assistant should first edit the still to add the element (for example, a faint beam over the water), then animate it, or warn the user before spending 144 credits."
+ },
+ "error": null,
+ "seconds": 40,
+ "usd": 0.285903
+}

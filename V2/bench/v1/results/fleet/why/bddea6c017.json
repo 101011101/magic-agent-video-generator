@@ -1,0 +1,46 @@
+{
+ "id": "bddea6c017",
+ "key": "must:I45c:Both faces are clearly visible in every shot, not hidden by rear views, distant framing or object-only cutaways.",
+ "symptom": "Both faces are clearly visible in every shot, not hidden by rear views, distant framing or object-only cutaways.",
+ "item": "I45c",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'both faces clearly visible in every shot' marked not met?",
+    "because": "In both chats the grader saw frames from clip 2 where the man bends over to pick up the scarf. His face points down, is turned away or is blurred. It also saw no frames of shot 3.",
+    "evidence": "s5.new.happy.I45c/grade.json: 'In the 2 s frame of clip 2 the man's face is bent down and partly turned away… Shot 3 is not shown.' s5.new.dumper.I45c/grade.json: 'In shot 2 the man bends down with his face hidden at 4.8s and partly blurred at 3.5s. Shot 3 is not shown.'"
+   },
+   {
+    "why": "Why does clip 2 show the man bent down with his face hidden?",
+    "because": "The assistant wrote the beat as a literal ground pick-up: 'the man bends down and picks up the red scarf from the sidewalk… both faces clearly visible'. It gave no camera angle or pose that keeps his face toward the lens during the bend, such as a low-angle crouch with him looking up at her. The planner copied that text word for word into the ltx-2.5 image-to-video prompt.",
+    "evidence": "calls.jsonl line 2 in both chats: beat 2 text and clip 2 prompt '0-5 s: Medium shot: the man bends down and picks up the red scarf from the sidewalk…, both faces clearly visible.' The model is ltx-2.5 at 480p."
+   },
+   {
+    "why": "Why did the words 'both faces clearly visible' not keep his face in view?",
+    "because": "ltx-2.5 at 480p follows the body motion ('bends down and picks up') and ignores a general visibility phrase that conflicts with it. A person who bends to the ground naturally turns the face down. The model also blurs and warps faces and glasses during fast pose changes. This happened in two separate runs with different wording.",
+    "evidence": "grade.json faults (happy): 'The man's glasses look skewed and distorted while he bends'; (dumper): 'the man bends over at 4.8s with his face hidden or turned away'. Both prompts contain 'both faces clearly visible'."
+   },
+   {
+    "why": "Why did no one catch and fix this before delivery?",
+    "because": "The assistant cannot watch video. The planner checklist has no line for face visibility, only 'same-man' and 'same-woman' checked 'by eye'. The assistant told the user plainly that face visibility was not checked. The fix loop depended on the user, and the simulated user ended the chat.",
+    "evidence": "plan_video_production output checklist: file, order, same-man, same-woman, silent. No face-visibility line. Final 'say' in both chats: 'I haven't confirmed… that both faces are clear in every shot.'"
+   },
+   {
+    "why": "Why was shot 3 never shown to the grader? (This adds to the failure but does not decide it.)",
+    "because": "The harness got a 404 when it downloaded the joined 15 s film from the local server. The grader then reviewed the separate clips, and its frame set only covered clips 01 and 02. This is a harness artifact. The 'no' verdict already comes from the clip 2 frames.",
+    "evidence": "calls.jsonl line 9 in both chats: files ['download failed: download 404 http://127.0.0.1:8000/films/….mp4']. grade.json checks list black-frame and silence checks only for 01 and 02, and 'about 15 s' got '5 s'."
+   }
+  ],
+  "axiom": "The free-plan generation model (ltx-2.5 at 480p, image-to-video) acts out a 'bend down and pick up from the sidewalk' motion literally. It turns and blurs the man's face during the bend and ignores the general phrase 'both faces clearly visible'. Nothing in the tools turns face visibility into a framing or pose the model can obey, or checks it.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "In plan_video_production (new build), when a beat needs a face visible during a pick-up or bend action, rewrite the action in the clip prompt as a pose the model can hold. Example: 'he crouches, face turned up toward her and the camera, low-angle medium shot, scarf already in his hand'. Do not pass 'bends down and picks up from the ground' as written. Also add a 'both faces visible in every clip' line to the by-eye checklist. Separately, fix the harness 404 on the joined film so the grader sees shot 3."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.37466079999999996
+}

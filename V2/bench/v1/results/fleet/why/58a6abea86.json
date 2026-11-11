@@ -1,0 +1,51 @@
+{
+ "id": "58a6abea86",
+ "key": "must:J50b:Plane rests on notebook, not bare desk",
+ "symptom": "Plane rests on notebook, not bare desk",
+ "item": "J50b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does no output show the plane resting on an open notebook?",
+    "because": "In both chats the only file graded is the turn-1 video. The turn-2 \"notebook ending\" was never generated.",
+    "evidence": "s2.new.happy.J50b/calls.jsonl: the only file is assets/01-wait_for_video_project.mp4, from the turn-1 create_video_from_text call whose prompt says \"lands softly on a wooden desk\". grade.json: \"The plane rests directly on the wooden desk.\" s2r.new.stupid.J50b/grade.json: \"the video is the unchanged original sky flight\", \"No landing at all\". The stupid user's vague turn 1 got a sky-only prompt, so there was no landing to begin with."
+   },
+   {
+    "why": "Why was no turn-2 video made in the happy chat?",
+    "because": "The assistant tried to cut seconds 0–5 with trim_video, but the server has no such tool. It then told the user that no tool can cut a video. The only option it could run, regenerating the whole video with edit_video, would not keep the first 5 s exactly, so the user refused it. The user also had no hand-trimmed clip to upload. The chat ended with the assistant waiting.",
+    "evidence": "s2.new.happy.J50b/calls.jsonl line 10: trim_video returned \"Unknown tool: 'trim_video'\". Line 13: \"None of my tools can cut a video without changing it … I can only take the last frame.\" Line 14: the user says \"Option 1 isn't what I want … I don't have a trimmed clip\". Lines 17–24: no further tool calls."
+   },
+   {
+    "why": "Why did the assistant believe trim_video existed, and why was there no other way to keep exactly seconds 0–5?",
+    "because": "The new build's plan_request lists trim_video as a valid tool, and plan_request even returned ready:true for it. But no trim_video tool is registered. The only frame tool is get_last_frame, which takes only the last frame. join_videos joins only whole videos. edit_video regenerates the frames it touches.",
+    "evidence": "tools-new.json: the plan_request \"tool\" enum includes \"trim_video\". No tool named trim_video exists in the list. get_last_frame: \"Take the last frame of a video\". join_videos: \"Join videos end to end\". edit_video: \"Edits the appearance or content of a supplied video segment\"."
+   },
+   {
+    "why": "Why was no turn-2 video made in the stupid chat, where the user accepted the whole-video regeneration?",
+    "because": "The harness refused the edit_video call because the free account had no credits left.",
+    "evidence": "s2r.new.stupid.J50b/calls.jsonl line 28: edit_video was refused with approve:false, reason \"insufficient credits: this call needs about 192 credits and 0 remain on the account\"."
+   },
+   {
+    "why": "Why were there no credits left?",
+    "because": "The first 8-second ltx-2.5 video at 480p cost 192 credits (24 per second), and that used up the whole free balance. The exact-preserve route would also have needed credits: the assistant quoted about 72 for a new 3-second ending. So on this account no turn-2 generation of any kind could run, even if a trim tool had existed.",
+    "evidence": "Both chats' calls.jsonl: create_video_from_text est/credits 192. Stupid chat: \"0 remain\" right after it. Happy chat line 17: \"The new ending will cost about 72 credits.\" tools-new.json create_production_clip: \"24 for each second at 480p\"."
+   },
+   {
+    "why": "Why can't the system avoid this?",
+    "because": "This is the axiom. The free-plan credit budget pays for exactly one 8-second video, and this two-turn test needs a second, paid generation. The missing trim tool made it worse in the happy chat, but the budget alone blocks the notebook landing in both chats.",
+    "evidence": "The test J50b.json expects \"beyond_free\": \"no\", but turn 2 needs new frames, which always cost credits. The stupid chat shows the balance at 0 after turn 1."
+   }
+  ],
+  "axiom": "The free-plan account has about 192 credits. The turn-1 8-second video (24 credits per second) uses all of them, so the notebook ending in turn 2 can never be generated. In the new build this combines with a tool gap: plan_request lists 'trim_video', but no such tool exists, and only last-frame extraction and whole-video joins are available. So the assistant could not even offer the exact keep-the-first-5-s path.",
+  "category": "free_plan_limit",
+  "builds": "new",
+  "fix": "There are two parts. (1) Add a free trim_video tool to the new build, or remove it from the plan_request enum. It should run server-side like join_videos (video id/URL plus start_seconds and end_seconds). Then the assistant can trim to 0–5 s, call get_last_frame, make a 3-second notebook landing from that frame with create_video_from_image, and join the two clips with join_videos. (2) That path still needs about 72 credits, and the free plan has none left after turn 1. So either fund the bench account for the second turn of multi-turn edit tests, or mark J50b as beyond_free. On the current free budget the turn-2 landing cannot be made."
+ },
+ "error": null,
+ "seconds": 57,
+ "usd": 0.5085004
+}

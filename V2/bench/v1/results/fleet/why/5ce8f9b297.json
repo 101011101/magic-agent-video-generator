@@ -1,0 +1,46 @@
+{
+ "id": "5ce8f9b297",
+ "key": "must:H41c:Scene 2 reads exactly 'Plan your day in one place.'",
+ "symptom": "Scene 2 reads exactly 'Plan your day in one place.'",
+ "item": "H41c",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does scene 2 not read exactly 'Plan your day in one place.'?",
+    "because": "In both new-build chats the scene 2 clip shows wrong or missing words. In the happy chat the words are misspelled. In the dumper chat the words are gone.",
+    "evidence": "s4.new.happy.H41c/grade.json: scene 2 'reads Plan your day in or une place with no period'. s4.new.dumper.H41c/grade.json: 'No text appears in any of the four sampled frames of the calendar scene'. In both chats scene 1 is also correct at 0.3 s and then melts or vanishes by about 1.2 to 2.9 s."
+   },
+   {
+    "why": "Why was a video model left to carry the words at all?",
+    "because": "Both assistants answered the server's words question with 'still' for all three lines and did not take the recommended 'card'. With 'still', qwen-image-2.1 draws the line into a picture and ltx-2.5 animates that picture with image-to-video.",
+    "evidence": "calls.jsonl in both chats: the first plan_video_production result has questions words-1..3 with recommend:'card'. The second call sends answers {words-1:'still',words-2:'still',words-3:'still'}. The plan steps are generate_image(qwen-image-2.1) and then create_video_from_image(ltx-2.5, 480p)."
+   },
+   {
+    "why": "Why did the assistants choose 'still' over the recommended card?",
+    "because": "The server's option text promises that 'still' is exact and keeps the words over the scene: 'Exact; the words stay on screen for the whole clip.' The card option says 'The words are not over the scene.' The brief says 'one per scene', so 'still' looked exact and also closer to the brief. The assistant followed the tool text. It did not ignore an instruction.",
+    "evidence": "plan_video_production output, questions[].options.still in both calls.jsonl. The happy and dumper assistants both tell the user in their delivery that 'the line stays on screen for the whole scene', which repeats the tool's claim."
+   },
+   {
+    "why": "Why did the words not survive the image-to-video step, when the still had them?",
+    "because": "The video prompt the server writes for the scene_still step does not say to keep the words. It even tells the model to remove text. The server reuses the text-to-video prompt, so it adds 'No repeated shots, no title cards, no captions'. In the happy chat it also copies the agent's setting 'no letters or numbers anywhere' into the prompt. ltx-2.5 gets a first frame with text and a prompt that says there is no text, so it morphs the text or removes it.",
+    "evidence": "Happy calls.jsonl line 4, clip 2 create_video_from_image prompt: '...simple clean shapes, no letters or numbers anywhere. 0-3 s: A simple green calendar grid... no title cards, no captions'. Dumper calls.jsonl line 6: the agent removed 'no text or letters anywhere' from the setting, but the prompt still has 'no title cards, no captions' and does not mention the words. Only the generate_image prompt names the words."
+   },
+   {
+    "why": "Why does a mention in the prompt matter so much here?",
+    "because": "ltx-2.5 cannot hold or render spelled text on its own. The server's own statistics say it got words wrong 4 of 4 times. In image-to-video mode it regenerates the frames after the first one, so text from the first frame decays unless something keeps it. With 'still', exact words are only guaranteed in the single input frame.",
+    "evidence": "Question text in both plan results: 'ltx-2.5 got them wrong 0 of 4 times'. Grade: scene 1 is 'correct at 0.3 s' and then 'dissolves into garbled vertical glyph fragments by 2.1–2.9 s' (happy), and 'gone by 1.2 s' (dumper)."
+   }
+  ],
+  "axiom": "ltx-2.5, the only video model on the free plan, cannot keep spelled text. In image-to-video it does not keep text from the first frame, and the new build's 'still' route depends on it doing so. The server tells the assistant this route is 'Exact', and its video prompt even says 'no captions' / 'no letters'. That is a tool-behavior and tool-description defect, layered on a model limit.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In plan_video_production, when a beat has reference scene_still, build the create_video_from_image prompt differently. Remove the 'no title cards, no captions' tail. Remove setting phrases that forbid text ('no text/letters/numbers'). Add 'The words \"<exact_words>\" from the first frame stay fixed, sharp and unchanged for the whole clip.' Change the 'still' option text from 'Exact; the words stay on screen for the whole clip' to state that the video model may blur or remove the words after the first frame, and that the frames must be checked. Only 'card' should be called exact."
+ },
+ "error": null,
+ "seconds": 45,
+ "usd": 0.47580160000000005
+}

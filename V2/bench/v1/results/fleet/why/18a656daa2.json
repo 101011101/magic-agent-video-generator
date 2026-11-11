@@ -1,0 +1,47 @@
+{
+ "id": "18a656daa2",
+ "key": "must:J55b:The location reads exactly 'Maple Hall'.",
+ "symptom": "The location reads exactly 'Maple Hall'.",
+ "item": "J55b",
+ "n": 4,
+ "builds": {
+  "new": 1,
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The location reads exactly Maple Hall' not met?",
+    "because": "No poster image was made in any of the failing chats, so the grader had no text to check.",
+    "evidence": "s2r.old.stupid.J55b/grade.json: check 'something was made' pass=false, got 'no file'. The Maple Hall item says 'No poster was produced'. The quoted reason for the other chats is 'No image exists'."
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "Every generate_image call was turned down before it reached the model. This happened in both turns of every chat I read.",
+    "evidence": "calls.jsonl in s2r.old.dumper, s2r.old.stupid and s2r.new.stupid: each generate_image call has approve:false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. No call has an output file."
+   },
+   {
+    "why": "Was the assistant's request the cause, for example a bad prompt or the wrong tool?",
+    "because": "No. In old.dumper the assistant sent a correct request: 1:1, cream background, black text, exactly 'BOOK SWAP' / 'Saturday 10-2' / 'Maple Hall'. In new.stupid the turn-2 prompt was also correct. Both were refused for credits only. The stupid persona made old.stupid plan a 9:16 poster with no 'Maple Hall' line, but that call was also refused for credits. So the empty account decides the result in every chat.",
+    "evidence": "s2r.old.dumper calls.jsonl lines 2 and 7: 1:1 prompt with all three lines, refused. s2r.new.stupid line 13: mustard background with all three lines, refused. s2r.old.stupid line 7: prompt has only 'BOOK SWAP' plus a made-up tagline, refused."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The run used a free-plan account whose balance was already 0 when these chats ran. The test expects the job to fit in the free plan (beyond_free 'no', one 640px image costs about 10 credits). So the empty balance comes from how the run was set up, not from the brief. The likely cause is that earlier chats in the fleet spent the shared balance, but these files do not show that.",
+    "evidence": "J55b.json expect.beyond_free = 'no'. chat.json mode 'live' on https://mcp.magichour.ai/. Every call reports '0 remain on the account', from the first call of the first turn onward."
+   },
+   {
+    "why": "Why does this count against the assistant or the build?",
+    "because": "The grader scores only the output. 'Nothing was made' fails every content item, even when the planned request was correct. So a harness credit state shows up as a content failure in both builds.",
+    "evidence": "s2r.old.stupid grade.json summary: 'generation was refused for lack of credits, so none of the must-haves are met'."
+   }
+  ],
+  "axiom": "The test harness ran the J55b chats on a live free-plan Magic Hour account that already had 0 credits. Every generation was refused before it ran ('0 remain on the account'), so no image existed and no text line could be graded. Neither build and no tool description caused this.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Check the account balance before each chat and refill it, or give each chat its own funded free-plan account, so that a ~10-credit image can run. Mark chats where every call fails with 'insufficient credits' as harness-invalid and do not grade them on content."
+ },
+ "error": null,
+ "seconds": 27,
+ "usd": 0.1325876
+}

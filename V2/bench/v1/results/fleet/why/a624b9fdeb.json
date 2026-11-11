@@ -1,0 +1,47 @@
+{
+ "id": "a624b9fdeb",
+ "key": "must:J55a:A recognizable sunflower is visibly present.",
+ "symptom": "A recognizable sunflower is visibly present.",
+ "item": "J55a",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was no recognizable sunflower visible?",
+    "because": "No video was made in any of the failing chats, so the grader had no frames to check. Each must-have was marked 'no' because nothing was made.",
+    "evidence": "s2r.old.happy.J55a/grade.json: check 'something was made' pass=false, got 'no file'; the sunflower item says 'No output exists, so no sunflower is visible.' The old.dumper and new.stupid calls.jsonl files also end with kind 'cannot' and files=[]."
+   },
+   {
+    "why": "Why was no video made?",
+    "because": "The server refused every create_video_from_text call before any job started. The account had 0 credits, and a 6 s video with ltx-2.5 at 480p costs about 144 credits.",
+    "evidence": "old.happy calls.jsonl line 3, old.dumper line 3 and new.stupid line 12 all show approve=false, reason 'insufficient credits: this call needs about 144 credits and 0 remain on the account'."
+   },
+   {
+    "why": "Why did the assistant not find a cheaper way to deliver?",
+    "because": "Any 6 s video needs credits above 0, and at about 24 credits per second even a 1 s clip needs more than 0. The assistant set the free-plan model and the lowest resolution correctly, so no change to the arguments could pass with 0 credits.",
+    "evidence": "old.happy and old.dumper first tried model 'default', got 'not available on the free plan', then retried with ltx-2.5 at 480p and got the credit refusal. In new.stupid the assistant says 'about 24 credits per second'."
+   },
+   {
+    "why": "Why was the balance 0 in both builds?",
+    "because": "The benchmark used a free-plan account that had no credits left when these chats ran. This is the account state the harness gave the assistant. It is not caused by any tool description or by anything the assistant did.",
+    "evidence": "Both builds (old on the hosted server, new on 127.0.0.1:8772) report the same '0 remain on the account' for the same request. The tool descriptions do not affect this result."
+   },
+   {
+    "why": "Why did the grader say in one chat that the planned flower was only 'a bright flower'?",
+    "because": "This is a secondary cause, and it matters only if credits exist. In new.stupid the harness's vague opener said 'a robot watering a flower'. The assistant never asked which flower, and its prompt asked for 'a single bright red flower'. So even with credits, that chat would likely have failed the sunflower item.",
+    "evidence": "new.stupid chat.json messages[0]: 'make a video of a robot watering a flower'. In calls.jsonl line 12 the prompt says 'a single bright red flower', while the bank says 'sunflower'."
+   }
+  ],
+  "axiom": "The test account had 0 credits when these chats ran. Every generation call needs about 144 credits, so the server refused all of them before anything was made. This is the account state the harness supplied, not a model or tool-description defect.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each fleet run, refill or reset the free-plan test account so it has enough credits for at least one 6 s ltx-2.5 480p video (more than 144). Also make the harness mark chats that end with an 'insufficient credits' refusal as infrastructure failures, not quality failures. Secondary fix for vague-user chats: make the plan step or the assistant keep the specific subject from the user's full request (sunflower), not a vague word ('flower')."
+ },
+ "error": null,
+ "seconds": 27,
+ "usd": 0.1219102
+}

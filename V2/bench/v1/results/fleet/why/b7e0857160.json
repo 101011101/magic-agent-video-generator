@@ -1,0 +1,47 @@
+{
+ "id": "b7e0857160",
+ "key": "must:E29c:Original footage unchanged apart from watermark, no extra card/scene",
+ "symptom": "Original footage unchanged apart from watermark, no extra card/scene",
+ "item": "E29c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the output fail 'Original footage unchanged apart from watermark, no extra card/scene'?",
+    "because": "The delivered clip is a regenerated version of the source. It is 832x512 at 480p, the pilot, cockpit and opening shot look different, and burned-in subtitles ('Rook, you with me?', 'Right here, Vega.') appear. The @flightschool watermark is missing.",
+    "evidence": "grade.json in both chats: the must item is 'no' because the footage was 're-rendered at 832x512 with softer detail; burned-in subtitles … added; Frame 1 also differs from the input'. exact_text '@flightschool' is 'missing'. calls.jsonl wait_for_video_project result: width 832, height 512, type VIDEO_EDITOR."
+   },
+   {
+    "why": "Why was the footage regenerated instead of only getting a text layer?",
+    "because": "In both chats the assistant made the video with edit_video (model ltx-2.5, resolution 480p). This is a generative video-to-video editor, and it redraws every frame from a prompt.",
+    "evidence": "old calls.jsonl line 5 and new calls.jsonl line 6: edit_video {model:'ltx-2.5', resolution:'480p', style.prompt:'Keep the video exactly the same… Only add a small, subtle watermark text \"@flightschool\"…'}. In its own first reply the assistant says edit_video 're-generates every frame of the clip'."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for a task that needs the original pixels kept?",
+    "because": "Neither build has a tool that puts fixed text over a video and leaves the frames unchanged. The assistant said this correctly and recommended CapCut or ffmpeg. Then the simulated user told it to go ahead anyway, so the only option left was edit_video.",
+    "evidence": "state.json/calls.jsonl: first reply kind='cannot' in both chats ('Magic Hour has no tool that lays fixed text over a video and leaves the rest of the frames untouched'). Next user turn nudge:true: 'Please go ahead with the free settings anyway' (new) and 'please just go ahead and try it anyway' (old). tools-new.json plan_request tool enum: generate_image, edit_image, create_video_from_text/image, add_subtitles_to_video, trim_video… There is no overlay or watermark tool."
+   },
+   {
+    "why": "Why did the regenerated clip get subtitles and lose the watermark, even though the prompt asked to keep everything and add only '@flightschool'?",
+    "because": "The LTX-2.5 video editor does not follow a 'change nothing except X' instruction. It re-renders the scene, drops small precise text, and here seems to have drawn the clip's spoken lines as captions. I could not check this against frames of the source radio-lines.mp4, so 'added by the model' rests on the grader's reading.",
+    "evidence": "Both prompts asked for the same thing, but the two different runs (old, new) gave the same failure: subtitles with the dialogue lines and no watermark (grade.json exact_text read_as for both). This points to the model's behavior, not to the wording of the arguments."
+   },
+   {
+    "why": "Why can't this be fixed by better prompting or arguments inside the current tools?",
+    "because": "A diffusion video editor cannot keep the source pixels by design. On the free plan it also outputs only 480p, which changes the resolution and framing. Without a deterministic compositing tool, the request 'leave everything else alone' cannot be met.",
+    "evidence": "E29c.json answer_sheet: 'Keep the original aspect ratio, framing, complete footage… Do not add an end card or other graphics'. The edit_video output is 832x512 at 480p in both builds."
+   }
+  ],
+  "axiom": "The Magic Hour toolset in both builds has no deterministic text or watermark overlay tool. The only video editor (LTX-2.5 edit_video, 480p on free plan) regenerates every frame. So it cannot keep the source footage unchanged, and it may drop the requested text and invent other text such as dialogue captions. This is a limit of the generation model.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic overlay tool (for example add_text_overlay_to_video, built on ffmpeg drawtext: text, position, inset, opacity, shadow, full duration, audio copied as is). Point the assistant to it for watermark and logo requests. Until then, state in the edit_video description that it regenerates all frames and must not be used when the user asks to keep the footage unchanged."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.22259000000000007
+}

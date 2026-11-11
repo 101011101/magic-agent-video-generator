@@ -1,0 +1,42 @@
+{
+ "id": "c419b89b77",
+ "key": "must:A01d:Amber glass hand soap bottle is main subject",
+ "symptom": "Amber glass hand soap bottle is main subject",
+ "item": "A01d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the bottle in both outputs not amber glass?",
+    "because": "The prompts the assistant sent to generate_image never mentioned amber or glass. They named a different bottle: clear or translucent, with clear or pale green soap.",
+    "evidence": "old calls.jsonl: flux-2-klein prompt 'sleek hand soap pump bottle with clear liquid soap, minimalist label'. new calls.jsonl: prompt 'translucent bottle with pale green liquid soap, blank label with no text'. new grade.json: 'Bottle is clear plastic with pale green soap, not amber glass.'"
+   },
+   {
+    "why": "Why did the assistant leave out amber glass?",
+    "because": "The user never said it. The stupid persona's only opening message was 'make a product pic of a hand soap bottle'. This message drops amber glass, the cream label and VELORA.",
+    "evidence": "old chat.json messages[0].text = 'make a product pic of a hand soap bottle'. The new plan_request messages carry the same text. A01d.json turns[0].text has the full brief with amber glass, cream label and VELORA."
+   },
+   {
+    "why": "Why did the assistant not ask about the product and get the facts back?",
+    "because": "Old: the assistant asked no question and generated at once. New: plan_request returned only one question, about platform/aspect. It treated subject 'a hand soap bottle' as complete. It left exact_words 'missing' but still returned ready:true after 'whatever, you pick'. So no one asked about bottle material, colour or brand. The user's bank had these facts ('Product and materials: An amber glass hand soap bottle...') and the persona would have given them in reply to a plain question.",
+    "evidence": "new calls.jsonl line 2: questions=[aspect only]. Line 7: ready:true, exact_words missing. old calls.jsonl: no question before generate_image. old chat.json bank has 'Product and materials' and 'Exact brand wording'."
+   },
+   {
+    "why": "Why does the brief not account for the need to ask?",
+    "because": "The test assumes the full brief arrives in the first turn: expect.asks='never'. But the harness rewrites the opener for the stupid persona and drops the facts that must be present. The grader then checks the output against the full must_haves, which include facts the user never said in the chat.",
+    "evidence": "A01d.json expect.asks='never', must_haves[0] 'An amber glass hand soap bottle is the main subject.' The grade.json files for both stupid chats fail this item. The failure happened only in stupid-persona chats (users {stupid:2})."
+   }
+  ],
+  "axiom": "Harness artifact: the stupid persona's generated opener cuts the facts this test requires (amber glass, cream label, VELORA). The test assumes those facts arrive with no questions (asks='never'), and the grader still checks the full must_haves. The assistant got no information about amber glass. On the old build it did not ask. On the new build, plan_request asked only about aspect.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, make the persona opener keep every fact that a must_have depends on (here: 'amber glass hand soap bottle, cream label, brand VELORA'). Another option: for vague personas, grade only against facts the user actually said in the chat. Secondary fix in the new build: when the subject has no material/colour details and exact_words is missing on a product shot, plan_request should return a plain-words question such as 'What should the bottle and label look like, and should it show a brand name?' before it returns ready:true."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.1526694
+}

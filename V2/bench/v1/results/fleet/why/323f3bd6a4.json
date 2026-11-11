@@ -1,0 +1,47 @@
+{
+ "id": "323f3bd6a4",
+ "key": "must:H40a:Opening 'Your everyday bottle' and ending 'Shop now'",
+ "symptom": "Opening 'Your everyday bottle' and ending 'Shop now'",
+ "item": "H40a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does neither video show 'Your everyday bottle' at the start or 'Shop now' at the end?",
+    "because": "Neither build ever sent those words to any generation or join step. Old sent one image-to-video prompt with no text in it. In new, plan_video_production ran with captions:false, and every clip prompt it built said 'no title cards, no captions'. Both assistants then told the user there was no on-screen text.",
+    "evidence": "old calls.jsonl: the create_video_from_image style.prompt has no text lines. new calls.jsonl line 12: story.captions=false, each clip prompt ends with 'No repeated shots, no title cards, no captions'. new line 23 says 'There's no voice and no on-screen text.' new grade.json: exact_text seen=missing for both lines, 'No text appears in any frame.'"
+   },
+   {
+    "why": "Why did the assistants not have the words?",
+    "because": "The stupid user's first message was only 'make a video ad for the bottle in this pic'. The two text lines were only in the user's knowledge bank. This persona answers only what it is asked, and never volunteers anything.",
+    "evidence": "old chat.json: messages[0].text='make a video ad for the bottle in this pic'. bank.Text holds 'Start with “Your everyday bottle” and end with “Shop now”'. persona.reply says to answer questions from the bank."
+   },
+   {
+    "why": "Why was the user never asked about on-screen words?",
+    "because": "Old: the assistant generated straight away with no clarifying question, and old has no planning tool to prompt for one. New: the assistant correctly passed exact_words with source 'missing' to plan_request. But plan_request returned only 3 questions (motion, seconds, sound), and exact_words was not one of them.",
+    "evidence": "old calls.jsonl: the first real call is create_video_from_image, and there is no question turn. new calls.jsonl line 2: args include {name:'exact_words', source:'missing'}. The output questions cover motion, seconds and sound only; the returned params list motion, seconds, aspect and sound."
+   },
+   {
+    "why": "Why did new's plan_request never ask about exact_words, even on the second round?",
+    "because": "plan_request ranks exact_words below the other gaps and caps questions at 3. On the second call it asked only about aspect and returned ready=false. It also dropped exact_words from the returned sheet, so the missing on-screen words were silently forgotten and not carried forward as an open question.",
+    "evidence": "new calls.jsonl line 7: the assistant left out the exact_words row on its second call. The output params have no exact_words, and the only question is about aspect. The tools-new.json plan_request description says it 'Returns ... up to 3 questions' and 'do not guess ... on-screen words'. It does not say that a missing exact_words row must produce a question."
+   },
+   {
+    "why": "Why did the downstream planner not catch the missing text?",
+    "because": "plan_video_production accepts captions:false and no text lines without warning. It then puts a 'no title cards, no captions' clause into every prompt by default, which turns 'unknown' into 'no text'.",
+    "evidence": "new calls.jsonl line 12: problems=[], advice=[], and the checklist has no text line, even though this is an ad brief."
+   }
+  ],
+  "axiom": "The planning tools let 'missing' on-screen words quietly become 'no text'. New plan_request never turns a missing exact_words row into a question: it ranks it below motion, seconds and sound under its 3-question cap, then drops it from the sheet. Old has no planning step at all. So a terse user who would have supplied the text if asked is never asked.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, when exact_words is 'missing' and the request is an ad, reel or promo, always return the question 'Should any words appear on screen, for example a headline at the start or a call to action at the end? Write them exactly.' Rank it above aspect, and keep exact_words in the sheet as missing until the user answers. Also make plan_video_production list 'on-screen words not confirmed' in problems instead of defaulting to 'no captions'."
+ },
+ "error": null,
+ "seconds": 40,
+ "usd": 0.3039394
+}

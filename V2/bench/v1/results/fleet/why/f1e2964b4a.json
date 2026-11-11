@@ -1,0 +1,51 @@
+{
+ "id": "f1e2964b4a",
+ "key": "must:D20c:One playable vertical reel runs for approximately 8 seconds.",
+ "symptom": "One playable vertical reel runs for approximately 8 seconds.",
+ "item": "D20c",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'One playable vertical reel runs for approximately 8 seconds' not met?",
+    "because": "The joined reel was 10.3 s, not 8 s. The assistant told the user this and delivered the reel anyway.",
+    "evidence": "s3.new.happy.D20c/calls.jsonl line 13: join_production_clips returned seconds 10.3 and checked 'One file, 8 s, 9:16' -> got '10.3 s, 480x858', result 'no'. Line 15: the assistant says 'It's 10.3 seconds long, not 8.' s3.new.dumper.D20c/grade.json: 'The assistant says the reel is 10.3 s.'"
+   },
+   {
+    "why": "Why was the joined reel 10.3 s when the plan added up to 8 s?",
+    "because": "Each clip came out longer than planned. The 1 s beats came out at about 1.6 s and the 2 s beats at about 2.3 s. Five clips: 2.3+1.6+2.3+1.6+2.3 ≈ 10.1–10.3 s.",
+    "evidence": "plan_video_production output (happy line 2, dumper line 2) gives seconds 8 with clips of 2,1,2,1,2 s, all minimax-h3. Both grade.json files show measured clips 'dog clip is 2.3 s and the cat clip is 1.6 s'. The 'about 8 s' check shows got '2.3 s' for the first file."
+   },
+   {
+    "why": "Why did the assistant not catch the extra length before the join?",
+    "because": "The tool results reported the requested length, not the real one. wait_for_video_project returned end_seconds 1 or 2 for each clip, so nothing showed the drift until the join measured the file.",
+    "evidence": "happy calls.jsonl lines 8-12: clip 1 'end_seconds':2, clip 2 'end_seconds':1, clip 4 'end_seconds':1, clip 5 'end_seconds':2. The real files are 2.3 s and 1.6 s (grade.json)."
+   },
+   {
+    "why": "Why did the join not cut the reel to the planned 8 s?",
+    "because": "join_production_clips joins the full clips with hard cuts. It does not trim each clip to its planned seconds. It only reports the mismatch in `checked`/`not_met`. The assistant had no trim step in the plan and told the user to trim it by hand.",
+    "evidence": "tools-new.json join_production_clips description: 'Joins the finished clips of a plan into one video file, in story order, with hard cuts' (says nothing about trimming). Join output: not_met ['One file, 8 s, 9:16']. Assistant: 'I don't have a tool here that can trim it.'"
+   },
+   {
+    "why": "Why did the planner accept a plan that it could not deliver at 8 s?",
+    "because": "The planner takes 1-second beats for minimax-h3 at face value. It gives no advice that the model pads short clips, and it gives no fix, so the overrun repeats for every short-beat plan.",
+    "evidence": "plan_video_production output in both chats: 'problems':[], 'advice':[]. tools-new.json beat 'seconds' has minimum 1 and gives no per-model minimum or overrun note."
+   },
+   {
+    "why": "Why does minimax-h3 return longer clips than requested?",
+    "because": "This is a property of the generation model. It makes a fixed minimum of about 0.3–0.6 s extra (1 s -> 1.6 s, 2 s -> 2.3 s), no matter what length was requested. The MCP cannot change this. It can only correct for it after generation.",
+    "evidence": "Same overrun pattern in both chats with different prompts (grade.json happy and dumper: 2.3 s and 1.6 s clips)."
+   }
+  ],
+  "axiom": "The minimax-h3 model returns clips longer than requested (about 1.6 s for 1 s, about 2.3 s for 2 s). The new build's join_production_clips concatenates clips at their full real length and does not trim each one to its planned beat seconds. So any plan of short beats overruns the target length.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In join_production_clips, trim each clip to the seconds it has in the plan before the hard-cut concat (e.g. ffmpeg -t <planned seconds>). Then the output matches the plan's total (8 s). Also make wait_for_video_project report the measured file duration, not the requested end_seconds."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.5027382
+}

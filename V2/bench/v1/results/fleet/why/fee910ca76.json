@@ -1,0 +1,46 @@
+{
+ "id": "fee910ca76",
+ "key": "must:D23c:End card reads exactly the URL",
+ "symptom": "End card reads exactly the URL",
+ "item": "D23c",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'End card reads exactly the URL' not met in the 2 old-build chats?",
+    "because": "The two chats failed in different ways. In stupid, the video has no end card and no text at all. In dumper, there is an end card but the URL on it is garbled.",
+    "evidence": "s3.old.stupid.D23c/grade.json: 'No text is visible in any frame', exact_text seen='missing'. s3.old.dumper.D23c/grade.json: read_as 'httpsxamacom/Gef:June.', seen='wrong', plus a fault for the added trailing period."
+   },
+   {
+    "why": "Why does the stupid chat's video have no URL at all?",
+    "because": "The assistant never got the URL. The stupid persona's only message was 'make me a coffee video'. The URL, the 9:16 format, the 8 s length and the end card existed only in the simulated user's knowledge bank. The assistant did not ask anything, so none of that came out. It made a 5 s 16:9 coffee clip with no text in the prompt.",
+    "evidence": "s3.old.stupid.D23c/chat.json: messages[0].text = 'make me a coffee video', and the URL appears only under bank. calls.jsonl: create_video_from_text with end_seconds 5, aspect_ratio 16:9, and a prompt with no URL and no end card. D23c.json expect.asks = 'never'."
+   },
+   {
+    "why": "Why would the URL still have failed if the assistant had received it, as it did in dumper?",
+    "because": "The only way the old build can put text on screen is to have the text-to-video model draw it from the prompt. In dumper, the assistant put the exact URL into the ltx-2.5 prompt ('reads exactly: https://example.com/Go?ref=June .', with exact-capitals instructions). The model drew the characters as pixels and garbled them.",
+    "evidence": "s3.old.dumper.D23c/calls.jsonl: one create_video_from_text call, model ltx-2.5, 480p, with the URL in style.prompt. No overlay or text tool was called. The assistant's reply says: 'The AI draws the end card's text as part of the picture... None of my tools can add exact typed text.'"
+   },
+   {
+    "why": "Why did the assistant not use a deterministic text overlay?",
+    "because": "The old toolset has no tool for that. Every generation tool is a model-based generator, and the free plan allows only ltx-2.5 or minimax-h3 at 480p for video. The assistant said it had no such tool, and it chose the free-plan model correctly.",
+    "evidence": "s3.old.stupid.D23c/calls.jsonl rejection: 'the free plan's video models are ltx-2.5 and minimax-h3'. The dumper reply says no tool can add exact typed text. tools-old.json lists generation and workflow tools. I only read the start of tools-old.json, so the absence of an overlay tool rests on the assistant's own statement."
+   },
+   {
+    "why": "Why does ltx-2.5 garble a 31-character, case-sensitive URL?",
+    "because": "Diffusion video models at 480p cannot reliably draw long exact strings with mixed case and punctuation (:// ? =). This is a limit of the generation model, and no prompt can fix it. The space before the final period in the assistant's prompt ('June .') may also have caused the extra trailing period, but that is a minor part.",
+    "evidence": "s3.old.dumper.D23c/grade.json: the colon, slashes, 'example', '?ref=' are missing or wrong. The prompt in calls.jsonl ends the URL with ' . '."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) cannot draw a long exact case-sensitive URL, and the old build has no deterministic text-overlay tool. So the URL fails even when the assistant gets it (dumper). In the stupid chat there is a second cause: the persona's vague opening ('make me a coffee video') hides the URL in the bank, while the item expects no questions (asks='never'). The URL never reached the assistant, but the grader still checked for it, which is a harness/test-design artifact.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a deterministic text-overlay or end-card tool that burns exact typed text onto a solid-colour card and joins it to the generated clip. Say in the create_video_from_text description that exact text, URLs and logos must use this tool, not the prompt. Separately, for D23c with the stupid persona, either let the persona reveal the must-have text or set expect.asks to allow one clarifying question."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.2206992
+}

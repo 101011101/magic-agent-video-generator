@@ -1,0 +1,52 @@
+{
+ "id": "4ea51566e8",
+ "key": "check:aspect:G",
+ "symptom": "aspect 16:9",
+ "item": "G33a",
+ "n": 13,
+ "builds": {
+  "old": 7,
+  "new": 6
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'aspect 16:9' not met?",
+    "because": "The delivered image is 640x384. That is 5:3 (1.667), not 16:9 (1.778). An exact 16:9 image at 640 px wide is 640x360.",
+    "evidence": "G33a symptom measured ['640x384']. s4.new.stupid.G33c/grade.json checks the same way: 'aspect 16:9' pass=false, got ['640x384']. The judge says '640x384 (5:3), not 16:9'."
+   },
+   {
+    "why": "Why is the file 640x384 when the assistant asked for 16:9?",
+    "because": "The assistant did ask for the right shape. It called generate_image with aspect_ratio '16:9', resolution '640px', model 'flux-2-klein'. Magic Hour still returned 640x384. Neither the arguments nor the user caused the wrong shape.",
+    "evidence": "s4.new.stupid.G33c/calls.jsonl line 8: generate_image args {model:'flux-2-klein', aspect_ratio:'16:9', resolution:'640px'}; output file assets/01-wait_for_image_project.png graded 640x384. Before that, plan_request returned aspect '16:9' with ready=true (line 7)."
+   },
+   {
+    "why": "Why does the backend change 16:9 into 640x384?",
+    "because": "The image model only makes sizes on a fixed grid of 64 px. 640 is 10×64, but 360 is not a multiple of 64. So the height is rounded to a grid value: 384 (6×64) for generate_image, or 320 (5×64) for edit_image. Exact 16:9 cannot be made at 640 px wide.",
+    "evidence": "G33c generate_image 16:9 gave 640x384. s4.new.stupid.G33b/calls.jsonl line 11: edit_image with aspect_ratio '16:9', 640px gave 640x320 (grade.json: '640x320' and '2:1, not exactly 16:9'). Both heights are multiples of 64, and both miss 360."
+   },
+   {
+    "why": "Why is the width 640, a size where 16:9 cannot land on the grid?",
+    "because": "The account is on the free plan. The free plan allows at most 640 px. At 640 px wide, no grid height gives 16:9. Exact 16:9 needs a width of 1024 (1024x576 = 16×64 by 9×64), and the free plan does not allow that.",
+    "evidence": "In the G33c and G33b replies, the assistant says '640px wide, the largest size the free plan allows'. s4.old.happy.G34b/calls.jsonl also uses resolution '640px' on every call. G33a answer_sheet: 'Free-tier resolution is fine.'"
+   },
+   {
+    "why": "Why did neither build correct the shape or warn about it?",
+    "because": "Neither server checks the returned width and height against the requested aspect. Neither pads or crops the result to the requested shape, and neither tells the assistant about the snap. The wait result has no width/height for images, so the assistant believed it had delivered 16:9.",
+    "evidence": "The wait_for_image_project output in G33c and G33b has no width/height fields. The video project result does report width/height (832x448). The G33c reply says 'Your YouTube thumbnail (16:9) is done.' The failure occurs in both builds (old 7, new 6), so the new build did not change this behaviour."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The 64 px size grid of the image model and the 640 px free-plan cap are fixed facts outside the MCP server. Together they make exact 16:9 impossible at the allowed width, whatever the assistant sends.",
+    "evidence": "The size rounds the same way across different tools (generate_image → 384, edit_image → 320), different personas and both builds, with correct 16:9 arguments each time."
+   }
+  ],
+  "axiom": "At the free-plan cap of 640 px width, the Magic Hour image models round the height to a multiple of 64 (384 or 320), not to 360. So an exact 16:9 image cannot be generated on the free plan. The servers return this snapped size without telling the assistant and without correcting it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the MCP image tools, compare the size of each finished image with the requested aspect_ratio. If they differ, center-crop or pad the image to the exact ratio before returning it (640x384 → 640x360 for 16:9, 640x320 → pad to 640x360). Also return the real width and height in wait_for_image_project, so the assistant can report the true size."
+ },
+ "error": null,
+ "seconds": 45,
+ "usd": 0.4085042
+}

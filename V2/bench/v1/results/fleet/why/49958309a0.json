@@ -1,0 +1,47 @@
+{
+ "id": "49958309a0",
+ "key": "must:D22b:Waves visibly move against the rocks and a beam sweeps across the water",
+ "symptom": "Waves visibly move against the rocks and a beam sweeps across the water",
+ "item": "D22b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'waves move against the rocks and a beam sweeps across the water' not met?",
+    "because": "The waves did move in both videos, but neither video shows a light beam crossing the water. In old there is only a glowing blob near the lantern that drifts left and right in the sky. In new there is no beam and the lantern never lights up.",
+    "evidence": "s3.old.happy.D22b/grade.json: 'Splashes and swells change visibly... The beam is only a glowing blob at the lantern that drifts left and right in the sky. No beam crosses the water.' s3.new.happy.D22b/grade.json: 'No beam is visible in any frame and the lantern shows no light.'"
+   },
+   {
+    "why": "Why did the image-to-video step not draw a beam over the water?",
+    "because": "The video model (ltx-2.5) only got the motion request as one clause of the text prompt. The start picture had no light source and no beam, so the model had to invent a new light effect that sweeps through the whole scene. It kept the scene close to the still and only animated what was already in the picture (the surf).",
+    "evidence": "calls.jsonl in both chats: create_video_from_image with model 'ltx-2.5', resolution '480p', prompt '...the lighthouse beam slowly sweeps across the water at dusk. Static camera, keep the watercolor style'. Both start images (assets/01-wait_for_image_project.png) show an unlit lantern, a pastel dusk sky and no beam."
+   },
+   {
+    "why": "Why did the start picture have no lit lantern or beam?",
+    "because": "The first-turn brief asked only for a striped lighthouse on a rocky coast at dusk. The assistant's image prompt in both builds did not ask for a lit lamp, so flux-2-klein drew a daytime-style lantern with no light. The beam request only came in turn 2, after the picture already existed.",
+    "evidence": "calls.jsonl: generate_image prompt 'Watercolor painting of a red-and-white striped lighthouse on a rocky coast at dusk, soft washes of purple, orange and pink sky, waves crashing on rocks...' (old), and nearly the same in new. D22b.json turn 1 text does not mention a beam."
+   },
+   {
+    "why": "Why did the assistant not fix this, for example by first editing the picture to add a lit beam, or by picking a stronger model?",
+    "because": "The assistant cannot see the picture or the video. Both builds send the same kind of single call, and their free-plan defaults lead to the same model (ltx-2.5 at 480p). The new build's plan_request checks only the parameter rows (motion, seconds, aspect, sound). It does not check whether the requested motion needs something the start image does not show, so it returned ready=true.",
+    "evidence": "old calls.jsonl line 13: 'I couldn't watch the clip myself, so please check that the motion looks right.' new calls.jsonl line 9: plan_request returned ready:true and questions:[]. Both builds sent the same model and resolution arguments."
+   },
+   {
+    "why": "Why does ltx-2.5 not create a sweeping volumetric beam from a picture that has no light in it?",
+    "because": "This is a limit of the free-plan image-to-video model. It keeps the start frame stable and adds local motion (surf). It does not reliably create and move a new lighting element across the scene, and the brief pairs that with a 'static camera' watercolor still. Both builds failed in the same way with nearly the same arguments, which points to the model and not to the tool layer.",
+    "evidence": "The same failure appears in both builds. Arguments differ only in wording, and both chats got 144 credits, 826x496 and 24 fps from ltx-2.5. Grader faults: old 'beam is a glowing blob', new 'clip reads like a near-still image'."
+   }
+  ],
+  "axiom": "The free-plan image-to-video model (ltx-2.5, 480p) animates what is already in the start frame (the surf). It cannot reliably create a new light beam and sweep it across the water when the start picture has an unlit lantern and no beam.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add guidance to the create_video_from_image description, or to the new build's plan_request check. If the requested motion needs an element that the start image does not show (for example a light beam or glow), first call edit_image to add it (a lit lantern with a visible beam on the water). Then animate the edited picture, and describe the beam in the prompt as a concrete, visible element ('a bright cone of light from the lantern sweeps left to right across the water')."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.25369200000000003
+}

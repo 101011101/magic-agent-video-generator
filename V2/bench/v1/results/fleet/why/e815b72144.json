@@ -1,0 +1,47 @@
+{
+ "id": "e815b72144",
+ "key": "must:J52a:Both show warm illustrated food stalls and string lights with matching palette",
+ "symptom": "Both show warm illustrated food stalls and string lights with matching palette",
+ "item": "J52a",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Both show warm illustrated food stalls and string lights with matching palette' not met in the 3 chats?",
+    "because": "No poster and no reel exist. The grader had nothing to judge, so every must-have failed.",
+    "evidence": "s2r.old.happy.J52a/grade.json: check 'something was made' pass=false, got 'no file'. The item's reason is 'No assets were made.' The summary says the agent 'produced no poster or reel because the account had 0 credits'."
+   },
+   {
+    "why": "Why was no asset produced?",
+    "because": "The first generate_image call was refused before it ran. No later call was made, because the reel is animated from the poster.",
+    "evidence": "All three calls.jsonl files show generate_image (qwen-image-2.1, 9:16, 640px) with approve=false and reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. old.happy and old.dumper refused on the first call. new.stupid refused after two plan_request calls and one question turn."
+   },
+   {
+    "why": "Why was the call refused? Did the assistant pick a model or setting that was too expensive?",
+    "because": "No. The assistant picked the cheapest valid setup: a free-plan model at free-plan resolution. Only about 10 credits were needed, but the account balance was 0. Any generation would have been refused.",
+    "evidence": "The args in all three chats show model 'qwen-image-2.1' and resolution '640px'. The old.happy reply calls it 'a free-plan model'. The new.stupid reply says the reel would need about 192 credits. The refusal states '0 remain on the account'."
+   },
+   {
+    "why": "Why did the account have 0 credits when the test expects the job to fit in the free plan?",
+    "because": "The fleet runs on one shared free-plan account, and other chats had already used up its credits. Chats on both builds ran almost at the same time (t≈1794364436–1794364579) and all got the same 0 balance. Nothing resets or tops up the balance before each chat. Nothing in the chat files shows how much other chats spent, but the identical 0 balance on both builds points to the harness, not to either server.",
+    "evidence": "J52a.json expect.beyond_free='no', so the task should fit in the free plan. All three chats see '0 remain' at their first paid call, whether the build is old (hosted) or new (local, chat.json url http://127.0.0.1:8772/). The assistant behaved correctly: in each chat it stopped and reported honestly that it could not proceed."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "Credit supply is a property of the test setup, not of the MCP tools, the tool descriptions or the assistant. The grader also scores a run that ended on an empty balance as a content failure, when it should count as an infrastructure failure.",
+    "evidence": "The classifier labels each final turn kind='cannot', blocked by the 'account's credit limit'. Grade.json still marks the content item 'no' without a flag for an infrastructure failure."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits when these chats ran. This is a harness fault that is not caused by either build. Every generate_image call was refused, even at the cheapest free-plan setting, so no assets existed to grade.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, give each chat its own account, or reset/top up the balance before each chat, with enough credits for the item's free-plan budget (about 10 for the poster plus about 192 for the 8-second 480p reel). Check the balance before the chat starts. If it is too low, or the chat fails with 'insufficient credits', mark the run as an infrastructure failure and re-run it, not grade it."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.119612
+}

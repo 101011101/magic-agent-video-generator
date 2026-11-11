@@ -1,0 +1,47 @@
+{
+ "id": "a6731c7968",
+ "key": "must:H41c:Only those lines appear as visible text",
+ "symptom": "Only those lines appear as visible text",
+ "item": "H41c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why do the required lines not appear as visible text in either video?",
+    "because": "The assistant never put them in the prompt. Old prompt: generic stressed-professional scene with a voiceover. New prompt: phone calendar scene that ends with 'No readable text.' The only text left is the garbled phone UI the model makes up.",
+    "evidence": "calls.jsonl for old and new: create_video_from_text style.prompt has none of 'Less scrolling. More doing.' / 'Plan your day in one place.' / 'Try DayNest today.' grade.json (old): 'None of the lines appear; the phone screen shows garbled pseudo-text.'"
+   },
+   {
+    "why": "Why did the assistant leave the lines out?",
+    "because": "It never learned them. The stupid persona opens with only 'make an ad for my planning app'. It answers from its bank only when it gets a plain-word question, and nobody asked about on-screen words.",
+    "evidence": "chat.json (new): messages[0] = 'make an ad for my planning app'. The bank holds 'Exact on-screen copy: Scene 1: Less scrolling...'. Persona rule: 'When a question is in plain words, answer it from your knowledge bank'."
+   },
+   {
+    "why": "Why did the old build never ask?",
+    "because": "The old build has no planning gate. The assistant generated at once (5 s, 9:16, with sound). It only said afterwards 'You didn't tell me the app's name' and asked for a tagline, after it had already delivered.",
+    "evidence": "s4.old.stupid.H41c/calls.jsonl: the first call is create_video_from_text with no question turn before it. The 'say' text after delivery asks for 'The app's name, tagline and main feature'."
+   },
+   {
+    "why": "Why did the new build not ask, even though the assistant marked exact_words as missing?",
+    "because": "plan_request returned only three questions (seconds, aspect, sound) and left out exact_words. After the user answered those, it returned ready:true while exact_words was still missing. The assistant followed ready:true and generated.",
+    "evidence": "s4.new.stupid.H41c/calls.jsonl: the first plan_request output has questions for seconds/aspect/sound only, with exact_words 'source':'missing'. The second plan_request output has 'ready':true, exact_words value null 'missing', questions []."
+   },
+   {
+    "why": "Why does plan_request treat missing exact_words as acceptable?",
+    "because": "Its readiness logic does not make on-screen words required for create_video_from_text, even for an ad. This goes against its own description, which says 'do not guess shape, length, sound or on-screen words'. The cap of 3 questions puts seconds/aspect/sound first, and the gate never comes back to ask about exact_words.",
+    "evidence": "tools-new.json plan_request description: 'Returns the checked sheet and up to 3 questions... A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' The behavior in calls.jsonl shows ready:true with exact_words missing."
+   }
+  ],
+  "axiom": "The vague user gives the exact copy only when asked in plain words. Neither build asks for it. The old build has no gate, and the assistant generated with no question first. The new plan_request gate returns ready:true while exact_words is still missing and never asks about on-screen words.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, make exact_words required for create_video_from_text when the subject is an ad, promo or title. Do not return ready:true while it is missing. Ask in plain words: \"Should any words show on screen? If yes, type them exactly; if no, say none.\" Ask this question in the next round when the 3-question cap pushes it out."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.1735148
+}

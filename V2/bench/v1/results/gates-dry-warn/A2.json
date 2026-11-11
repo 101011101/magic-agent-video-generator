@@ -1,0 +1,670 @@
+{
+  "id": "A2",
+  "item": {
+    "id": "A2",
+    "case": "A2",
+    "case_name": "Invented character, 12 s, 16:9, text only",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Walk anyway, 12 s",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "16:9",
+      "seconds": 12,
+      "outputs": 1,
+      "audio": "optional",
+      "exact_text": [
+        "walk anyway"
+      ]
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make a 12-second 16:9 video from this description. There are no reference images.\n\nCharacter: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\n\nThree beats, in this order:\n1. She waits at a bus stop in the rain.\n2. The bus passes without stopping.\n3. She laughs and walks away.\n\nEnd on her back as she walks away, with the words \"walk anyway\" on screen. Give me one finished video file."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests hard constraints with no visual anchor: a described character kept stable, beats in order, a specified ending, on-screen words, duration and aspect.",
+    "answer_sheet": {
+      "Character": "A tall woman with a silver bob, a red raincoat and yellow boots; the same in every shot.",
+      "Beats": "She waits at a bus stop in the rain; the bus passes without stopping; she laughs and walks away.",
+      "Ending": "Her back as she walks away, with the words walk anyway on screen.",
+      "Format and duration": "One 12-second 16:9 video; free-tier resolution is fine.",
+      "Sound": "Your call.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable 16:9 video file runs for 12 seconds, plus or minus 1 second.",
+      "The woman has a silver bob, a red raincoat and yellow boots in every shot.",
+      "The three beats appear in order: she waits at a bus stop in the rain, the bus passes without stopping, she laughs and walks away.",
+      "The last frame shows her back as she walks away.",
+      "The words \"walk anyway\" are readable on screen at the end."
+    ]
+  },
+  "session": "mcp-gdw-A2",
+  "sessionDir": "sessions/mcp-gdw-A2",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Make a 12-second 16:9 video from this description. There are no reference images.\n\nCharacter: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\n\nThree beats, in this order:\n1. She waits at a bus stop in the rain.\n2. The bus passes without stopping.\n3. She laughs and walks away.\n\nEnd on her back as she walks away, with the words \"walk anyway\" on screen. Give me one finished video file.",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "I couldn’t generate the video because your Magic Hour account has **0 credits remaining**. No video file was created.\n\nThe planned 12-second, 16:9 video—with consistent character references and the exact “walk anyway” ending text—is estimated at **408 credits**. Add credits to your Magic Hour account, then ask me to retry.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+          "calls_before": 16
+        }
+      ],
+      "agent": "Your account still has no generation credits, but I can provide a **self-contained animated version**: the same illustrated woman, all three beats over 12 seconds, and “walk anyway” at the end.\n\n**Save the code below as `walk-anyway.html` and open it in Chrome or Edge.** It plays immediately. Click **Download video** to render and download one silent WebM video locally—no credits needed.\n\nThis is a stylized animation, not a photorealistic generated video. I can’t attach a rendered video directly with the available tools.\n\n```html\n<!doctype html>\n<html lang=\"en\">\n<meta charset=\"utf-8\">\n<title>walk anyway</title>\n<style>\n  * { box-sizing: border-box }\n  body {\n    margin: 0; min-height: 100vh; background: #111b25;\n    color: #eef2ee; font: 15px system-ui;\n    display: grid; place-content: center; gap: 16px;\n    padding: 24px;\n  }\n  canvas {\n    width: min(960px, 94vw); height: auto;\n    box-shadow: 0 20px 80px #0006;\n  }\n  footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }\n  button {\n    border: 1px solid #ffffff50; background: #ffffff12;\n    color: white; padding: 11px 18px; border-radius: 7px;\n    cursor: pointer;\n  }\n  button:disabled { opacity: .45; cursor: wait }\n  #status { opacity: .7 }\n</style>\n<canvas id=\"film\" width=\"1280\" height=\"720\"></canvas>\n<footer>\n  <button id=\"replay\">Replay</button>\n  <button id=\"export\">Download video</button>\n  <span id=\"status\">12 seconds · 16:9 · silent</span>\n</footer>\n<script>\nconst canvas = document.querySelector(\"canvas\");\nconst g = canvas.getContext(\"2d\");\nconst replay = document.querySelector(\"#replay\");\nconst save = document.querySelector(\"#export\");\nconst status = document.querySelector(\"#status\");\nconst W = 1280, H = 720, DURATION = 12;\nlet animation, busy = false;\n\nfunction rect(x,y,w,h,color) {\n  g.fillStyle=color; g.fillRect(x,y,w,h);\n}\nfunction line(x,y,a,b,color,width=2) {\n  g.strokeStyle=color; g.lineWidth=width;\n  g.beginPath(); g.moveTo(x,y); g.lineTo(a,b); g.stroke();\n}\nfunction ellipse(x,y,rx,ry,color) {\n  g.fillStyle=color; g.beginPath();\n  g.ellipse(x,y,rx,ry,0,0,Math.PI*2); g.fill();\n}\nfunction shape(points,color) {\n  g.fillStyle=color; g.beginPath();\n  points.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));\n  g.closePath(); g.fill();\n}\nfunction clamp(x) { return Math.max(0,Math.min(1,x)); }\nfunction ease(x) { x=clamp(x); return x*x*(3-2*x); }\n\nfunction background(t) {\n  const sky=g.createLinearGradient(0,0,0,H);\n  sky.addColorStop(0,\"#647b88\");\n  sky.addColorStop(.65,\"#9baeb2\");\n  sky.addColorStop(1,\"#536d76\");\n  g.fillStyle=sky; g.fillRect(0,0,W,H);\n\n  // Quiet city silhouettes.\n  for(let i=0;i<13;i++) {\n    let x=i*112-28, h=115+(i*71%160);\n    rect(x,370-h,96,h,\"#526c7955\");\n    for(let r=0;r<4;r++)\n      for(let c=0;c<3;c++)\n        rect(x+14+c*25,390-h+r*32,9,14,\"#b4c4c228\");\n  }\n  rect(0,371,W,163,\"#405963\");\n  rect(0,534,W,186,\"#839599\");\n  rect(0,531,W,7,\"#c2c8bd\");\n  line(0,576,W,576,\"#d9e1d42b\",2);\n  line(0,655,W,655,\"#d9e1d41b\",2);\n  for(let i=0;i<8;i++) {\n    const x=(i*183+47)%W;\n    ellipse(x,480+(i%3)*65,70,3,\"#c2d4cc25\");\n  }\n\n  // Bus-stop sign and shelter.\n  rect(335,230,8,326,\"#344b56\");\n  rect(299,207,81,70,\"#e7e9da\");\n  rect(306,214,67,56,\"#244b60\");\n  rect(321,227,37,22,\"#e5e6ce\");\n  rect(325,231,12,10,\"#577985\");\n  rect(341,231,12,10,\"#577985\");\n  ellipse(329,251,4,4,\"#e5e6ce\");\n  ellipse(351,251,4,4,\"#e5e6ce\");\n  rect(92,276,8,277,\"#344b56\");\n  rect(246,276,8,277,\"#344b56\");\n  rect(86,272,174,12,\"#344b56\");\n  rect(102,287,142,204,\"#bad2d516\");\n  rect(115,475,113,10,\"#455961\");\n  rect(124,485,7,63,\"#455961\");\n  rect(211,485,7,63,\"#455961\");\n}\nfunction rain(t,foreground=false) {\n  g.save();\n  g.strokeStyle=foreground?\"#eff9fa65\":\"#e0eef040\";\n  g.lineWidth=foreground?1.8:1;\n  g.beginPath();\n  const count=foreground?85:145;\n  for(let i=0;i<count;i++) {\n    let x=(i*113.71-t*(foreground?110:65))%1380;\n    if(x<0)x+=1380;\n    let y=(i*67.31+t*(foreground?500:350))%790-35;\n    g.moveTo(x,y);g.lineTo(x-9,y+25);\n  }\n  g.stroke();g.restore();\n}\nfunction bus(t) {\n  // Appears only in beat two and never stops.\n  if(t<4||t>8)return;\n  const p=(t-4)/4, x=1500-p*3000;\n  g.save();g.translate(x,339);\n  ellipse(420,175,435,12,\"#172f3d55\");\n  rect(0,0,880,151,\"#d4cdb7\");\n  rect(0,101,880,48,\"#466f78\");\n  rect(11,12,850,68,\"#263e4b\");\n  for(let i=0;i<10;i++) {\n    rect(25+i*75,19,62,53,\"#8eafb4\");\n    shape([[25+i*75,19],[47+i*75,19],\n           [70+i*75,72],[48+i*75,72]],\"#d6e2d526\");\n  }\n  rect(778,82,63,67,\"#314c58\");\n  line(808,84,808,148,\"#94a7a4\",2);\n  [145,710].forEach(x=>{\n    ellipse(x,150,33,33,\"#223440\");\n    ellipse(x,150,15,15,\"#90a0a0\");\n  });\n  rect(6,103,12,22,\"#e4bd79\");\n  // Spray rolls along with the moving bus.\n  for(let i=0;i<18;i++)\n    ellipse(80+i*44,178+(i%3)*3,25,3,\"#d8e9e94d\");\n  g.restore();\n}\nfunction woman(t) {\n  const walking=clamp((t-8.8)/3.2);\n  const back=ease((t-8.65)/.65);\n  const s=1-walking*.24;\n  const x=641+walking*160;\n  const y=579-walking*76;\n  const stride=t>=8.8?Math.sin((t-8.8)*10):0;\n  const laugh=t>=8&&t<8.8?Math.sin((t-8)*21)*2:0;\n\n  ellipse(x,y+5,44*s,7*s,\"#263f4550\");\n  // Warm reflection in the wet pavement.\n  g.save();g.globalAlpha=.12;\n  shape([[x-26,y+14],[x+26,y+14],\n         [x+40,y+85*s],[x-40,y+85*s]],\"#e55b42\");\n  g.restore();\n\n  g.save();g.translate(x,y);g.scale(s,s);\n  g.translate(0,laugh+(walking?Math.abs(stride)*-2:0));\n\n  // Yellow boots and dark trouser legs.\n  line(-14,-61,-14+stride*10,-12,\"#283d49\",12);\n  line(14,-61,14-stride*10,-12,\"#283d49\",12);\n  rect(-25+stride*10,-26,21,26,\"#efc74d\");\n  rect(4-stride*10,-26,21,26,\"#efc74d\");\n  rect(-27+stride*10,-9,27,10,\"#f1ce59\");\n  rect(3-stride*10,-9,27,10,\"#f1ce59\");\n\n  // The same red raincoat throughout.\n  shape([[-25,-188],[25,-188],[40,-63],\n         [-40,-63]],\"#d8483b\");\n  shape([[-25,-188],[-10,-174],[-29,-68],\n         [-40,-63]],\"#e55c49\");\n  line(-29,-178,-43+stride*5,-105,\"#c53d35\",16);\n  line(29,-178,43-stride*5,-105,\"#c53d35\",16);\n  ellipse(-43+stride*5,-100,6,8,\"#dbad94\");\n  ellipse(43-stride*5,-100,6,8,\"#dbad94\");\n\n  if(back<.7) {\n    line(0,-170,0,-70,\"#f3a08b\",1.5);\n    shape([[-18,-186],[0,-173],[-7,-161]],\"#f27760\");\n    shape([[18,-186],[0,-173],[7,-161]],\"#b82e2e\");\n    [-148,-125,-102].forEach(y=>ellipse(7,y,2,2,\"#f0b69b\"));\n  } else {\n    shape([[-21,-186],[21,-186],[15,-165],\n           [0,-157],[-15,-165]],\"#be372f\");\n    line(-30,-102,-11,-99,\"#f17b64\",2);\n    line(11,-99,30,-102,\"#f17b64\",2);\n  }\n\n  rect(-7,-207,14,24,\"#d8a58f\");\n  // Silver bob: shared silhouette, changing only viewing direction.\n  ellipse(0,-225,27,34,\"#c8d2d1\");\n  rect(-27,-225,54,30,\"#c8d2d1\");\n  if(back<.75) {\n    ellipse(0,-220,19,25,\"#e2b6a0\");\n    shape([[-27,-229],[-19,-250],[5,-256],\n           [23,-240],[6,-240],[-8,-222]],\"#e0e5df\");\n    rect(-27,-230,9,35,\"#b8c5c5\");\n    rect(18,-232,9,37,\"#cbd6d3\");\n    line(-10,-221,-6,-221,\"#3b4950\",2);\n    line(7,-221,11,-221,\"#3b4950\",2);\n    if(t>=8&&t<8.85) {\n      // Visible laughing expression.\n      ellipse(1,-207,7,6,\"#783d3b\");\n      line(-12,-223,-6,-225,\"#3b4950\",2);\n      line(6,-225,12,-223,\"#3b4950\",2);\n    } else {\n      g.strokeStyle=\"#915f57\";g.lineWidth=1.5;\n      g.beginPath();g.arc(1,-210,5,.2,2.8);g.stroke();\n    }\n  } else {\n    shape([[-26,-233],[-16,-251],[6,-257],\n           [24,-242],[27,-197],[-26,-197]],\"#d4ddda\");\n    line(-13,-245,-16,-202,\"#b7c6c5\",2);\n    line(8,-248,13,-202,\"#e9ede5\",2);\n  }\n  g.restore();\n}\nfunction draw(t) {\n  background(t);\n  rain(t);\n  bus(t);\n  woman(t);\n  rain(t,true);\n\n  // Gentle cinematic vignette.\n  let v=g.createRadialGradient(640,330,180,640,360,780);\n  v.addColorStop(0,\"#001b2600\");v.addColorStop(1,\"#00121f70\");\n  g.fillStyle=v;g.fillRect(0,0,W,H);\n\n  if(t>=10) {\n    g.save();g.globalAlpha=ease((t-10)/.35);\n    g.textAlign=\"center\";g.font=\"500 44px system-ui\";\n    g.shadowColor=\"#132b38\";g.shadowBlur=15;\n    g.fillStyle=\"#fff7df\";g.fillText(\"walk anyway\",640,650);\n    g.restore();\n  }\n}\nfunction play(done) {\n  cancelAnimationFrame(animation);\n  const start=performance.now();\n  function tick(now) {\n    const t=Math.min(DURATION,(now-start)/1000);\n    draw(t);\n    if(t<DURATION)animation=requestAnimationFrame(tick);\n    else if(done)done();\n  }\n  animation=requestAnimationFrame(tick);\n}\nreplay.onclick=()=>{if(!busy)play();};\nsave.onclick=()=>{\n  if(!canvas.captureStream||!window.MediaRecorder) {\n    status.textContent=\"Video export needs Chrome or Edge.\";\n    return;\n  }\n  busy=true;save.disabled=true;replay.disabled=true;\n  cancelAnimationFrame(animation);draw(0);\n  const stream=canvas.captureStream(30);\n  const types=[\"video/webm;codecs=vp9\",\"video/webm;codecs=vp8\",\"video/webm\"];\n  const mimeType=types.find(t=>MediaRecorder.isTypeSupported(t));\n  const recorder=new MediaRecorder(stream,{\n    ...(mimeType?{mimeType}:{}),videoBitsPerSecond:5000000\n  });\n  const chunks=[];\n  recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};\n  recorder.onstop=()=>{\n    const blob=new Blob(chunks,{type:recorder.mimeType||\"video/webm\"});\n    const url=URL.createObjectURL(blob);\n    const a=document.createElement(\"a\");\n    a.href=url;a.download=\"walk-anyway.webm\";a.click();\n    setTimeout(()=>URL.revokeObjectURL(url),60000);\n    stream.getTracks().forEach(track=>track.stop());\n    busy=false;save.disabled=false;replay.disabled=false;\n    status.textContent=\"Video exported · replay or download again\";\n  };\n  recorder.start();\n  status.textContent=\"Rendering 12 seconds — keep this tab visible…\";\n  play(()=>recorder.stop());\n};\nplay();\n</script>\n</html>\n```",
+      "calls": [
+        {
+          "name": "start_request",
+          "arguments": "{\"original\":\"Make a 12-second 16:9 video from this description. There are no reference images.\\n\\nCharacter: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\\n\\nThree beats, in this order:\\n1. She waits at a bus stop in the rain.\\n2. The bus passes without stopping.\\n3. She laughs and walks away.\\n\\nEnd on her back as she walks away, with the words \\\"walk anyway\\\" on screen. Give me one finished video file.\"}",
+          "output": "{\"request\":\"eJw1kU1rwzAMhv-K8DkLtIPBch1jh7HTelt2UBI1NnWkzHIawth_n-LSg8HWx_s-kn_dJfDgGpfoZyHNrnKSwhgYowU_8EKAcDg-KPXCAxyemme4hoEEzkkmyD4oDKR9CnMOwjWcPCXrscMCic724p4gTDiS1i23_OIxYZ8pNSadMUZYZUKGNWRvEQ3xSgk66Sp7JRogYeBeMAMawUYxymppyVrDO9EM5ghRxAYZDYhAcTJDBjKdDdRLLr4nn4igI8xa7enCLmkwkJYPNXxa64ohK-xW0C0KmmW-lVKhMJ1jGbFkZ1QlLdyy5FI8G4MVPd7UIi6j14K9YrzYbcWtsLxaSLiQd9hfAM2r2N-rqts6duPVGBVatydNa7Ns6_Zu2zqRrfwtXAlsZGGCc-BgSsP9k0Kk2v4Uc8beT8RZXfP1_fcPzrewRA==.7824ff3176b9c0ad\",\"comparison\":\"SIMPLE: every item below is true.\\n- One idea: one subject doing one thing in one place (a robot waters a sunflower).\\n- At most 15 seconds.\\n- No exact words that must appear on screen, and no spoken line that must be said word for word.\\n- At most one attached file, used as the look or the start of the video.\\n- Not a continuation or an edit of an attached video.\\n\\nHARD: any item below is true.\\n- Two or more ideas: different places, different people at different times, shots listed in order, a card or end card.\\n- Longer than 15 seconds.\\n- Exact words on screen (a title, an end card, captions) or an exact spoken line or voice-over script.\\n- Two or more attached files, or a person and a product that must both stay the same.\\n- Continue, extend or edit an attached video, keeping part of it.\\n- Music or a voice-over across several shots.\\n\",\"questions\":{\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"seconds\":\"How long should it be?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"language\":\"Which language for the voice or captions?\",\"which_face\":\"Whose face goes where (which person in the picture)?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\",\"subject\":\"What should it show?\",\"edit\":\"What should change in the picture?\",\"keep\":\"What must stay exactly as it is?\",\"motion\":\"What should move, and how (small natural motion, a slow push in, something happening)?\",\"mood\":\"What mood or genre for the music?\",\"script\":\"What should be said, word for word? Or should I write it from the gist?\",\"range\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"},\"next\":\"Read the comparison. Call classify_request with `simple` or `hard` and the reasons, each naming the item it matches.\"}",
+          "error": null
+        },
+        {
+          "name": "classify_request",
+          "arguments": "{\"verdict\":\"hard\",\"request\":\"eJw1kU1rwzAMhv-K8DkLtIPBch1jh7HTelt2UBI1NnWkzHIawth_n-LSg8HWx_s-kn_dJfDgGpfoZyHNrnKSwhgYowU_8EKAcDg-KPXCAxyemme4hoEEzkkmyD4oDKR9CnMOwjWcPCXrscMCic724p4gTDiS1i23_OIxYZ8pNSadMUZYZUKGNWRvEQ3xSgk66Sp7JRogYeBeMAMawUYxymppyVrDO9EM5ghRxAYZDYhAcTJDBjKdDdRLLr4nn4igI8xa7enCLmkwkJYPNXxa64ohK-xW0C0KmmW-lVKhMJ1jGbFkZ1QlLdyy5FI8G4MVPd7UIi6j14K9YrzYbcWtsLxaSLiQd9hfAM2r2N-rqts6duPVGBVatydNa7Ns6_Zu2zqRrfwtXAlsZGGCc-BgSsP9k0Kk2v4Uc8beT8RZXfP1_fcPzrewRA==.7824ff3176b9c0ad\",\"reasons\":[\"Three shots listed in a required order: waiting, bus passing, laughing and walking away.\",\"Exact words \\\"walk anyway\\\" must appear at the end.\",\"Character identity must stay consistent across shots.\"]}",
+          "output": "{\"next\":\"Call submit_plan with the request token, the question sheet, the checklist and the steps.\",\"sheet\":{\"subject\":\"What should it show?\",\"seconds\":\"How long should it be?\",\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"},\"must_carry\":[{\"kind\":\"words\",\"value\":\"walk anyway\"},{\"kind\":\"seconds\",\"value\":\"12\"},{\"kind\":\"aspect\",\"value\":\"16:9\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_video_production",
+          "arguments": "{\"story\":{\"title\":\"Walk Anyway\",\"aspect\":\"16:9\",\"setting\":\"Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing.\",\"subjects\":[{\"id\":\"woman\",\"words\":\"A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots.\",\"role\":\"person\"}],\"beats\":[{\"text\":\"Wide three-quarter view of the woman waiting beneath a simple bus-stop sign in falling rain. Her full outfit is visible.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"},{\"text\":\"A city bus drives past the waiting woman without stopping, splashing through the wet street; she remains at the same bus-stop sign.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"event\"},{\"text\":\"She laughs, turns away from the road and walks away along the sidewalk. Camera ends behind her, showing her back as she keeps walking. During the final two seconds, display the exact lowercase words \\\"walk anyway\\\" clearly over the image.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"event\",\"exact_words\":[\"walk anyway\"]}],\"audio\":false,\"captions\":false}}",
+          "output": "{\"ok\":true,\"strategy\":\"person\",\"max_seconds\":15,\"needs_production\":false,\"seconds\":12,\"credits\":288,\"clips\":[{\"n\":1,\"kind\":\"scene\",\"beats\":[1,2,3],\"seconds\":12,\"link\":\"new\",\"reference\":{\"kind\":\"none\"},\"ends_on\":[],\"depends_on\":[],\"steps\":[{\"tool\":\"create_video_from_text\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":12,\"audio\":false,\"credits\":288,\"prompt\":\"A 12-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. 0-4 s: Wide three-quarter view of the woman waiting beneath a simple bus-stop sign in falling rain. Her full outfit is visible. 4-8 s: A city bus drives past the waiting woman without stopping, splashing through the wet street; she remains at the same bus-stop sign. 8-12 s: She laughs, turns away from the road and walks away along the sidewalk. Camera ends behind her, showing her back as she keeps walking. During the final two seconds, display the exact lowercase words \\\"walk anyway\\\" clearly over the image. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]}],\"join\":[1],\"rounds\":[[1]],\"checklist\":[{\"id\":\"file\",\"want\":\"One file, 12 s, 16:9\",\"how\":\"measured\"},{\"id\":\"order\",\"want\":\"3 beats in story order, each once, no repeats\",\"how\":\"by eye\"},{\"id\":\"same-woman\",\"want\":\"A tall adult woman with a straight chin-length silver bob looks the same in every clip\",\"how\":\"by eye\"},{\"id\":\"silent\",\"want\":\"No sound\",\"how\":\"measured\"}],\"problems\":[],\"production\":\"eJylVMFu1TAQ_JWVz2klJITE41SVA3cOPbQIbZLNy_IcO3idl0ZV_52xXyoK6gkuUbxrT2bGs3lyWbMXd3B37E90E7aVN9c4tlm6jPK7D4ePZb30Gt1hYG_SOJOcNRzRvtUgE2ftKHBeEnu1skisYaNO80aWk0huKJ4ldWyZLA6Zet68HkfUV8mUZPD4nJ6FZj7LJAGNacnSUxejx8PHZLRqHumsZ0XZxzyCwjW42dL-wGlzh_snpz1YrXHigM4aU4-yu6HM3hP3i89UmxcsLuy48KAOaFdewhFlUw-y1Ma2wZY21Q0JZE5B5GVTkdhFBlEOPW3ifVwpLW1bT8ZshVqK1dtZksXgnr81rhXemZp0MRR67xuX5bGYfae9UB5h2NXPhVMG1FllpTigKi_MWYv51EoAVhWh0-yF2sWuLMcZ62MgDYTb8mVnoXpNX4A2LLAhLnnQTGoAN229FKYnDcU564CK5ey5K8yBWSD_dHn3F2oAf8KuICt2yCN3-fvu-T26xlt9e27eVHtzCQg-QX3C3RsuH_moSneNv-8KpKkwmVFuyMDPyv0Xt-JyHC-nJO9x-0SGdUI0NRjxBdR4-suk_xYuZ0T1H6R_BR3P4G0NYWwKR8wdDSlOlWqK3NdcrZjKvck-Vr0QgpiUxjXdQlJiEsAjDzCkp1ES_BnjWtwZSxi5OxFbdeQkMlsFLbNDn5ekO-aggT3lNdJOt6Fei81bbVeBhIjXIS5RhFR6cAUKRMtf48FhKoWT3-qs12M68fH_4_W2y6-_7V5bjveO56wx2P7Hev4Fizi2zg==\",\"how\":\"Make the rounds in order. For each clip in a round call create_production_clip(production, clip, made); the clips of one round do not wait for each other. Then wait_for_video_project for each id. `made` maps each finished clip number to its video project id. After the last round call join_production_clips(production, made) and give the user its download_url. Before you deliver, go through `checklist`: the join returns `checked` for the lines code can measure; confirm the others from the clips. Tell the user plainly which lines are not met; do not present them as done.\"}",
+          "error": null
+        },
+        {
+          "name": "plan_video_production",
+          "arguments": "{\"story\":{\"title\":\"Walk Anyway — three ordered shots\",\"aspect\":\"16:9\",\"setting\":\"Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing.\",\"subjects\":[{\"id\":\"woman\",\"words\":\"A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots.\",\"role\":\"person\"}],\"beats\":[{\"text\":\"Wide shot: the woman waits at a bus-stop sign in falling rain. Show her full outfit. End with her still waiting.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"},{\"text\":\"Side view at the same bus-stop: a city bus drives past the woman without stopping, while she remains waiting beside the bus-stop sign.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"},{\"text\":\"Medium rear three-quarter view at the same bus-stop: the woman laughs, then turns and walks away along the sidewalk. End directly behind her with her back visible as she continues walking. Overlay the exact lowercase words \\\"walk anyway\\\" over the final two seconds, without cutting to a card.\",\"exact_words\":[\"walk anyway\"],\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"}],\"audio\":false}}",
+          "output": "{\"ok\":true,\"strategy\":\"person\",\"max_seconds\":15,\"needs_production\":true,\"seconds\":12,\"credits\":288,\"clips\":[{\"n\":1,\"kind\":\"scene\",\"beats\":[1],\"seconds\":4,\"link\":\"new\",\"reference\":{\"kind\":\"none\"},\"ends_on\":[\"woman\"],\"depends_on\":[],\"steps\":[{\"tool\":\"create_video_from_text\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":4,\"audio\":false,\"credits\":96,\"prompt\":\"A 4-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. 0-4 s: Wide shot: the woman waits at a bus-stop sign in falling rain. Show her full outfit. End with her still waiting. End with everyone from the last action still in frame, held still for the last second. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]},{\"n\":2,\"kind\":\"scene\",\"beats\":[2],\"seconds\":4,\"link\":\"new\",\"reference\":{\"kind\":\"last_frame\",\"of_clip\":1},\"ends_on\":[\"woman\"],\"depends_on\":[1],\"steps\":[{\"tool\":\"create_video_from_image\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":4,\"audio\":false,\"credits\":96,\"prompt\":\"A 4-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. The supplied image is the first frame. Continue from it: the same people, place and light. 0-4 s: Side view at the same bus-stop: a city bus drives past the woman without stopping, while she remains waiting beside the bus-stop sign. End with everyone from the last action still in frame, held still for the last second. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]},{\"n\":3,\"kind\":\"scene\",\"beats\":[3],\"seconds\":4,\"link\":\"new\",\"reference\":{\"kind\":\"last_frame\",\"of_clip\":2},\"ends_on\":[],\"depends_on\":[2],\"steps\":[{\"tool\":\"create_video_from_image\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":4,\"audio\":false,\"credits\":96,\"prompt\":\"A 4-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. The supplied image is the first frame. Continue from it: the same people, place and light. 0-4 s: Medium rear three-quarter view at the same bus-stop: the woman laughs, then turns and walks away along the sidewalk. End directly behind her with her back visible as she continues walking. Overlay the exact lowercase words \\\"walk anyway\\\" over the final two seconds, without cutting to a card. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]}],\"join\":[1,2,3],\"rounds\":[[1],[2],[3]],\"checklist\":[{\"id\":\"file\",\"want\":\"One file, 12 s, 16:9\",\"how\":\"measured\"},{\"id\":\"order\",\"want\":\"3 beats in story order, each once, no repeats\",\"how\":\"by eye\"},{\"id\":\"same-woman\",\"want\":\"A tall adult woman with a straight chin-length silver bob looks the same in every clip\",\"how\":\"by eye\"},{\"id\":\"silent\",\"want\":\"No sound\",\"how\":\"measured\"}],\"problems\":[],\"production\":\"eJzFVMFu2zAM_RVCZ7dYh2LAciuGHYcdeuihHQbaZmItipSJdNyg6L_vUU27Fhh2G3YxZJIi33sk9RAsWpKwCjectnSVjwsf6W5-_-7ikmyqIlTqKFVG0qmYhi6w7mUw3Lj4sPro__MYS1itOal0QcUs5g3cn2KWHVscKLPNlVNU_6kc85GGaEdSQ37rqBykDqxGWtZGIx9T3EywL2JUZZ1QLh6E9nyQnWQ4drMB0FBKwieVqrREm-gQDxHmVGwChHNg07n_gdsaVrcPIY5AtZQdZ3gW0II5XJFxSsTjnIya8ykXOzp2HDQg21mSvIFZYwJY6kvfIaSvLcDV2WaR5yCnOBQGUM4jHSWlslCd-77dhIoOrZYm-16qlhwev3WhFz4hVRlKdniXXTC5d7Fv4iitBSu0RZ6RcjQlNocy65la2QPhJlPMhH4kqNDAnNP1BAgT6q9nsC2zraOd02fAa2zdg-7A5SlP4m1jdsV0kCz43SceHDEqeaG36p50BQsU3SIqy4IIuefBvp-0voVX-dhOj90fWV47y0OUxUk5T-WdvHBbgWcbHBhorJgJxVCovVYEbMCOPHwPHhiiKSZXTtCmHbTQZ4rUi3o5v_xGvf_E_YuMcd4BJdenzTv7OXM1dOYvgvxmnnjeTNq5JRP2DUR9-hasNU6-1ZwKWLck4O2OpwkYYwWTBFkFkz62YXiZip6HLQBo7KEiaxMS0CHgLNqy-7TQV2xFQg3P3ogTZr5tteODBHQXPBiY_IW5C23pW_g6Zk5kS6GTKN1LF4e5PSZkxTvPdfwnrXkNLLzuE84D7y2WrKf37fEXk3fQGw==\",\"how\":\"Make the rounds in order. For each clip in a round call create_production_clip(production, clip, made); the clips of one round do not wait for each other. Then wait_for_video_project for each id. `made` maps each finished clip number to its video project id. After the last round call join_production_clips(production, made) and give the user its download_url. Before you deliver, go through `checklist`: the join returns `checked` for the lines code can measure; confirm the others from the clips. Tell the user plainly which lines are not met; do not present them as done.\"}",
+          "error": null
+        },
+        {
+          "name": "submit_plan",
+          "arguments": "{\"request\":\"eJw1kU1rwzAMhv-K8DkLtIPBch1jh7HTelt2UBI1NnWkzHIawth_n-LSg8HWx_s-kn_dJfDgGpfoZyHNrnKSwhgYowU_8EKAcDg-KPXCAxyemme4hoEEzkkmyD4oDKR9CnMOwjWcPCXrscMCic724p4gTDiS1i23_OIxYZ8pNSadMUZYZUKGNWRvEQ3xSgk66Sp7JRogYeBeMAMawUYxymppyVrDO9EM5ghRxAYZDYhAcTJDBjKdDdRLLr4nn4igI8xa7enCLmkwkJYPNXxa64ohK-xW0C0KmmW-lVKhMJ1jGbFkZ1QlLdyy5FI8G4MVPd7UIi6j14K9YrzYbcWtsLxaSLiQd9hfAM2r2N-rqts6duPVGBVatydNa7Ns6_Zu2zqRrfwtXAlsZGGCc-BgSsP9k0Kk2v4Uc8beT8RZXfP1_fcPzrewRA==.7824ff3176b9c0ad\",\"sheet\":{\"subject\":{\"source\":\"user\",\"quote\":\"Character: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\",\"answer\":\"One adult woman, consistent silver bob, red raincoat, yellow boots, in three sequential bus-stop scenes.\"},\"seconds\":{\"source\":\"user\",\"quote\":\"Make a 12-second 16:9 video from this description. There are no reference images.\",\"answer\":\"12 seconds: three 4-second clips.\"},\"aspect\":{\"source\":\"user\",\"quote\":\"Make a 12-second 16:9 video from this description. There are no reference images.\",\"answer\":\"16:9\"},\"sound\":{\"source\":\"your call\",\"answer\":\"Silent; no music or narration requested.\"},\"exact_words\":{\"source\":\"user\",\"quote\":\"End on her back as she walks away, with the words \\\"walk anyway\\\" on screen.\",\"answer\":\"Exact lowercase words walk anyway over the last two seconds of the walking shot.\"},\"look\":{\"source\":\"your call\",\"answer\":\"Cinematic naturalism, rainy overcast city street, cool background and colorful clothing; 480p free-plan LTX 2.5.\"}},\"checklist\":[{\"id\":\"file\",\"want\":\"One finished 12-second 16:9 video file.\",\"check\":\"Join output duration, aspect and URL.\"},{\"id\":\"identity\",\"want\":\"Tall woman with silver bob, red raincoat and yellow boots, same appearance in every shot.\",\"check\":\"Frame-reference chain and visual review if available.\"},{\"id\":\"order\",\"want\":\"Waits at rainy bus stop, bus passes without stopping, she laughs and walks away, in that order.\",\"check\":\"Review ordered generated clips.\"},{\"id\":\"ending\",\"want\":\"End on her back as she walks away, with exact words \\\"walk anyway\\\" on screen.\",\"check\":\"Inspect ending and text if preview accessible.\"}],\"steps\":[{\"n\":1,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Generate production clip 1 waiting at rainy bus stop, 480p 16:9.\",\"covers\":[\"identity\",\"order\"]},{\"n\":2,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Production clip 2 from last frame of clip 1: bus passes without stopping; preserve woman.\",\"covers\":[\"identity\",\"order\"]},{\"n\":3,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Production clip 3 from clip 2 last frame: woman laughs and walks away, ends on back, exact words walk anyway over final two seconds.\",\"covers\":[\"identity\",\"order\",\"ending\"]},{\"n\":4,\"tool\":\"join_production_clips\",\"does\":\"Join three completed production clips into one finished 12-second 16:9 file.\",\"covers\":[\"file\"]}]}",
+          "output": "{\"ok\":true,\"plan\":\"eJy1Vl2P0zoQ_SujPCcV7e5F0Pt4Beh-IBAs4oGukJtMG9-6Hst2mq0Q_51jpx_ZAgsP8FDJH-OZc2bOTPqp2GjbFPPCGWWLshCv19oqg5OXasOkaDqrAtdiG5o-nj-lnW5YaOVlS7HVgRoOtdcuarETumnZ4w1-VsjzCjtbM-mtWnOYLOzC_tUqr-rIfg7XURlDvWyVpV7HFidBmx17WsqyxM5zQ15pW4uKpIBgz8ZIj2uJYUL_MjtCRDIiYLEGIKagtghoieFnT6GVmOPetJ6ZlqxiKNN1xi6-AZCFnU7oLZ72SsdAKRQtu0AhihtMOaOAn1mmmG-dCoFDxi1dzMYOGGB0NXgzqlu3IcPuldlg1at9xvIMR2Iz8qWqN6QQK4c_WpVDOlLgHhgDLYp0CV973C6K9BpZZ0bKX-gdEyiLZVppq-GpORZJG56gpnXL9cboEIv5h0-FTtVOV7jplcVh8Wr89tv1HrvCi38EiQFvB-pN51UqPyoWHNdDpd69-W9SfC4P4eDDRh3355A3F6UfF_7BspdDhZVzDCVldd0r9gjkcw_L6izDuoXT7HCnQ6cMAu0096RXpHZKG7VMJE-gszrOiN8f1ZGg7U8KKR9SQ5kL-00lHFQIfznOGPebAVY-RyrWbBkZxqo22oURQrYNgpwh_qyw-A4t-ENpjRD9bYfKDgEzk8h3MWXOHZKo6ppD0EMKb8siRHYhC84W82lZRJE0VOAaVD46L01XJ9V8TKQQaisNJwMT76rZ5A-cDCqEj-vJo7JohLEsXhySQWcPOS00ze2b0X1dousnj1yWcyYlUEuCNpblUOzblFrgnf0yvK8vYM6G0WlUiFglJcvqQGD-kJL-TIkO7Hc8dM1PErn6bUSuBiIHUmc-80NXf0f0UFBIGkv6LO8JcSRDSsTSREKPxl7oAOgHnMtjPxzJX5_I_49xdUk9jLiPSdvOmBPrPOdi_nbUsnWGUxteSC-gk6PcH8AXQ_Q0Pk_o8wC-TY1iJfKRkAqVY1_VGI6wTqgrDEbwxC6luMopruAYSu84UUhlC9LhGz6sczJTTixXVvlhNGMPv0FsBY9Hi-Bkw7Yy2uZPQTqtxJp9hb8C6OVqy36dMH4BwZnMBQ==.9e6ea735a1275d17\",\"notes\":{\"ideas-per-call\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"About two ideas hold in one call of about 15 s. More ideas in one call: the model plays the shots more than once and mixes them.\",\"evidence\":\"B1 old MCP: 4 shots in one 30 s call played 3 times. C6 and C10: 4 seasons in one 20 s call played twice. An 18 s call with 2 shots played them twice. Calls of 5 to 13 s with 1 or 2 beats held.\"},\"ltx-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 does not spell words it is asked to show in a scene.\",\"evidence\":\"0 of 4: \\\"walk anway\\\" (A2 old), \\\"13 awway\\\" (A2 v1), \\\"walk anwwy\\\" (approach W1), \\\"Avalabile 12 Dembmer\\\" (A1 old end card).\"},\"ltx-sound\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 is silent when audio is off.\",\"evidence\":\"Approach C2: -91 dB.\"},\"last-frame-continues\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Image-to-video from the last frame of a clip continues it; joined after the clip, the cut is hard to see.\",\"evidence\":\"Approach C2 (ltx-2.5): similarity across the join 0.98. C3 (minimax-h3): 0.88, a small jump. C4 (minimax-h3 with the clip as a reference, no start frame): 0.41, a visible jump.\"},\"words-only-places-merge\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Without a picture reference, two places described in one call merged into one place.\",\"evidence\":\"C7 medium-only (ltx-2.5, 2 x 10 s): cherry trees on a beach; autumn and winter never came.\"},\"person-in-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A person described in words is the same inside one call and a look-alike across calls.\",\"evidence\":\"C7 one call per season: coats and hair held, faces changed. C10: Theo the same when his two seasons shared a call; Mara a look-alike in every split.\"},\"spoken-line\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A spoken line written inside a shot description was not spoken; the same line in one long call was spoken many times.\",\"evidence\":\"B2 v1 (ltx-2.5, 13 s clip): not spoken. B2 old MCP (one 30 s call): about 10 times. B2 Replicate (ltx-2.5-fast): once.\"},\"one-narration\":{\"applies_to\":[\"join_production_clips\"],\"finding\":\"One narration track and one music track across the joined film kept the script once and the music even.\",\"evidence\":\"B1 v1 with sound: 8 yes, 2 partly, 0 no; the old MCP's single call read the script 3 times and had no music.\"},\"join-silent\":{\"applies_to\":[\"join_production_clips\"],\"finding\":\"Joining with the sound off removes any sound the clips have.\",\"evidence\":\"Approach C2 to C4: -91 dB after the join.\"}},\"next\":\"Read every note. Call review_plan with one review for each note id: the steps it applies to, whether a step goes against it, and the change or the reason it is fine.\"}",
+          "error": null
+        },
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-generator\"}",
+          "output": "{\"workflow\":\"video-generator\",\"title\":\"Generate a new video from a text prompt\",\"input\":\"A description of a new scene; use image-to-video when a specific reference image matters.\",\"product_url\":\"https://magichour.ai/products/ai-video-generator\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/video-projects/text-to-video\",\"creation_tool\":\"create_video_from_text\",\"steps\":[\"Use text-to-video for a new scene without a required likeness; use an image reference and image-to-video when identity must stay consistent.\",\"Specify the subject, one action, camera move, framing and mood. Request only audio and duration supported by the selected model.\",\"Call create_video_from_text, then wait_for_video_project with the returned id and review the actual result.\"],\"example_request\":\"Create a short cinematic scene of a tiny astronaut discovering a glowing forest inside a glass bottle, with a slow orbiting camera.\",\"follow_up\":\"Edit or subtitle the accepted result instead of paying to regenerate unchanged footage.\",\"review\":\"Check prompt adherence, continuity, audio and output settings for the selected model.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "plan_video_production",
+          "arguments": "{\"story\":{\"title\":\"Walk Anyway\",\"aspect\":\"16:9\",\"setting\":\"Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing.\",\"subjects\":[{\"id\":\"woman\",\"words\":\"A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots.\",\"role\":\"person\"}],\"beats\":[{\"text\":\"Wide shot: the woman waits at a bus-stop sign in falling rain, her full outfit visible.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"},{\"text\":\"At the same bus-stop a city bus drives past the waiting woman without stopping. Keep the woman visible and stationary beside the sign.\",\"seconds\":4,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"},{\"text\":\"The woman laughs, then turns and starts walking away along the sidewalk. Camera moves behind her.\",\"seconds\":2,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"new\"},{\"text\":\"Rear view of the woman continuing to walk away along the rain-soaked sidewalk. Finish with her back visible as she walks away.\",\"seconds\":2,\"place\":\"busstop\",\"subjects\":[\"woman\"],\"link\":\"continues\",\"says\":[\"walk anyway\"]}],\"narrator\":\"A quiet clear adult female voice; used only to time exact captions, final delivered video will be muted.\",\"captions\":true,\"audio\":false}}",
+          "output": "{\"ok\":true,\"strategy\":\"person\",\"max_seconds\":15,\"needs_production\":true,\"seconds\":12,\"credits\":408,\"clips\":[{\"n\":1,\"kind\":\"scene\",\"beats\":[1],\"seconds\":4,\"link\":\"new\",\"reference\":{\"kind\":\"none\"},\"ends_on\":[\"woman\"],\"depends_on\":[],\"steps\":[{\"tool\":\"create_video_from_text\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":4,\"audio\":false,\"credits\":96,\"prompt\":\"A 4-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. 0-4 s: Wide shot: the woman waits at a bus-stop sign in falling rain, her full outfit visible. End with everyone from the last action still in frame, held still for the last second. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]},{\"n\":2,\"kind\":\"scene\",\"beats\":[2],\"seconds\":4,\"link\":\"new\",\"reference\":{\"kind\":\"last_frame\",\"of_clip\":1},\"ends_on\":[\"woman\"],\"depends_on\":[1],\"steps\":[{\"tool\":\"create_video_from_image\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":4,\"audio\":false,\"credits\":96,\"prompt\":\"A 4-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. The supplied image is the first frame. Continue from it: the same people, place and light. 0-4 s: At the same bus-stop a city bus drives past the waiting woman without stopping. Keep the woman visible and stationary beside the sign. End with everyone from the last action still in frame, held still for the last second. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]},{\"n\":3,\"kind\":\"scene\",\"beats\":[3,4],\"seconds\":4,\"link\":\"new\",\"reference\":{\"kind\":\"last_frame\",\"of_clip\":2},\"ends_on\":[],\"depends_on\":[2],\"steps\":[{\"tool\":\"create_video_from_image\",\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"seconds\":4,\"audio\":false,\"credits\":96,\"prompt\":\"A 4-second 16:9 clip. Cinematic naturalistic rainy city street, overcast soft daylight, wet reflective pavement, muted cool colors with vivid clothing. A tall adult woman with a straight chin-length silver bob, a bright red knee-length raincoat, and yellow rubber boots. The supplied image is the first frame. Continue from it: the same people, place and light. 0-2 s: The woman laughs, then turns and starts walking away along the sidewalk. Camera moves behind her. 2-4 s: Rear view of the woman continuing to walk away along the rain-soaked sidewalk. Finish with her back visible as she walks away. Each action happens once, in this order. No repeated shots, no title cards, no captions, no other scenes.\"}]}],\"join\":[1,2,3],\"rounds\":[[1],[2],[3]],\"sound\":{\"captions\":true,\"narration\":{\"parts\":[{\"beat\":4,\"clip\":3,\"inside\":2,\"at\":10.5,\"seconds\":2,\"lines\":[\"walk anyway\"]}],\"seconds\":5,\"model\":\"ltx-2.5\",\"resolution\":\"480p\",\"credits\":120,\"prompt\":\"A plain black screen for the whole clip; nothing appears and nothing moves. Sound only: an off-camera narrator, A quiet clear adult female voice; used only to time exact captions, final delivered video will be muted. The narrator reads these words once, exactly, at a relaxed pace, with a clear pause after each sentence, and then stays silent: \\\"walk anyway\\\" No music, no other sound.\"}},\"checklist\":[{\"id\":\"file\",\"want\":\"One file, 12 s, 16:9\",\"how\":\"measured\"},{\"id\":\"order\",\"want\":\"4 beats in story order, each once, no repeats\",\"how\":\"by eye\"},{\"id\":\"same-woman\",\"want\":\"A tall adult woman with a straight chin-length silver bob looks the same in every clip\",\"how\":\"by eye\"},{\"id\":\"voice\",\"want\":\"Voice-over says once, in order: \\\"walk anyway\\\"\",\"how\":\"measured: placed; words by ear\"},{\"id\":\"captions\",\"want\":\"The voice-over's sentences drawn on the picture when they are said\",\"how\":\"measured\"}],\"problems\":[],\"production\":\"eJzFlE1r20AQhv_KoLMSaCmFuqdQ6KW3UsghhDKSRvbW6111Z2RFhPz3viPZcVpKL4X2Yqz9mH3edz4eKwsWpdpUtxz3dJPmieeqrlgHaQ3Lr95u3vn32IVcbXqOKnWlYhbSFtsfQpIDW2gpsY2FY1D_KBzSTG2wmdSKiNWUj1JaViPNvVHHcwzbHdYnMSrSRzwXjkIDH-UgCRuH0aSjNueIn5iL0hRsR8dwDFiO2XZAuAabjs033NZqc_dYhQ5UUz5wws6US4fl6oaMYyTuxmi0bK6x2OnYOahFtKsoaYtlDRGw1OSmxpGmLAcKYPZJ5HzIJbaZAcqpo1lizBOVsWmWm9nU0UpevB2kaE7V031dNcInUpU2J8d7U1cmD272beiEdJdtQ7aTMykHU2JzlFGv1PIAwm2ikAj5iHBhgalph6f7EULzaH0wWKWhieIg-5DcGG0lCT6HyK2DIaDH-9nEk32ARew9TiWZcEIeuLWvJ0vvsKs8L_-e6t-KubFFhPJBLuC8FgW-qSvItyLhuh50na7lkh_IIL81eKLpk8jwwpaTuMV9NZRgTlwQWdRNXF6GSf9U--tn7V-eMSOP253WDpQIHZL0TFyQ1QlN55oZXUccM_6u5J341jV9gHuF6ZDdqkZQpJ2n-T_J-ixcYLxMlPsXqcA5ZG50IZYXTb8K8vq80sx7NNFF3MeQgu7WVvTabbjdX_Kq6ARZoukS7q81nzBF_6C8WunXMXjvDYuqKmy5LGPk-xgwrtroPqzTpMf4A-0xh1be06gQmFOc3QgLqPzlIWp58AJFHfQhcaROIorfRwqGmcCzgK5tZJ15LvR8odpYGeXpBx9a91I=\",\"how\":\"Make the rounds in order. For each clip in a round call create_production_clip(production, clip, made); the clips of one round do not wait for each other. Then wait_for_video_project for each id. `made` maps each finished clip number to its video project id. After the last round call join_production_clips(production, made) and give the user its download_url. Before you deliver, go through `checklist`: the join returns `checked` for the lines code can measure; confirm the others from the clips. Tell the user plainly which lines are not met; do not present them as done. This plan has sound: call create_production_sound(production) once (at any time), wait for the ids it returns, and pass them to join_production_clips as `sound`.\"}",
+          "error": null
+        },
+        {
+          "name": "submit_plan",
+          "arguments": "{\"request\":\"eJw1kU1rwzAMhv-K8DkLtIPBch1jh7HTelt2UBI1NnWkzHIawth_n-LSg8HWx_s-kn_dJfDgGpfoZyHNrnKSwhgYowU_8EKAcDg-KPXCAxyemme4hoEEzkkmyD4oDKR9CnMOwjWcPCXrscMCic724p4gTDiS1i23_OIxYZ8pNSadMUZYZUKGNWRvEQ3xSgk66Sp7JRogYeBeMAMawUYxymppyVrDO9EM5ghRxAYZDYhAcTJDBjKdDdRLLr4nn4igI8xa7enCLmkwkJYPNXxa64ohK-xW0C0KmmW-lVKhMJ1jGbFkZ1QlLdyy5FI8G4MVPd7UIi6j14K9YrzYbcWtsLxaSLiQd9hfAM2r2N-rqts6duPVGBVatydNa7Ns6_Zu2zqRrfwtXAlsZGGCc-BgSsP9k0Kk2v4Uc8beT8RZXfP1_fcPzrewRA==.7824ff3176b9c0ad\",\"sheet\":{\"subject\":{\"source\":\"user\",\"quote\":\"Character: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\",\"answer\":\"Consistent adult woman, three ordered rainy bus-stop scenes.\"},\"seconds\":{\"source\":\"user\",\"quote\":\"Make a 12-second 16:9 video from this description. There are no reference images.\",\"answer\":\"12 seconds, three 4-second clips.\"},\"aspect\":{\"source\":\"user\",\"quote\":\"Make a 12-second 16:9 video from this description. There are no reference images.\",\"answer\":\"16:9\"},\"sound\":{\"source\":\"your call\",\"answer\":\"Deliver silent. Generate temporary narration solely for deterministic caption overlay, then remove all sound.\"},\"exact_words\":{\"source\":\"user\",\"quote\":\"End on her back as she walks away, with the words \\\"walk anyway\\\" on screen.\",\"answer\":\"Add exact words using join captions on final walking beat, not scene-generated lettering.\"},\"look\":{\"source\":\"your call\",\"answer\":\"Cinematic naturalism, rainy cool city, vivid clothing, 480p LTX 2.5 free-plan.\"}},\"checklist\":[{\"id\":\"file\",\"want\":\"One finished 12-second 16:9 video file.\",\"check\":\"Measured join result.\"},{\"id\":\"identity\",\"want\":\"Tall woman with silver bob, red raincoat and yellow boots, same appearance in every shot.\",\"check\":\"Frame continuity and available visual evidence.\"},{\"id\":\"order\",\"want\":\"Waits at rainy bus stop, bus passes without stopping, she laughs and walks away, in that order.\",\"check\":\"Ordered clips and visual evidence.\"},{\"id\":\"ending\",\"want\":\"End on her back as she walks away, with exact words \\\"walk anyway\\\" on screen.\",\"check\":\"Final rear-view clip and deterministic caption render.\"}],\"steps\":[{\"n\":1,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Production clip 1, waiting in rain, 480p 16:9.\",\"covers\":[\"identity\",\"order\"]},{\"n\":2,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Clip 2 image-to-video from clip 1 last frame: bus passes without stopping.\",\"covers\":[\"identity\",\"order\"]},{\"n\":3,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Clip 3 image-to-video from clip 2 last frame: laughs and turns for two seconds, walks away rear view for final two. No generated lettering.\",\"covers\":[\"identity\",\"order\",\"ending\"]},{\"n\":4,\"tool\":\"create_production_sound\",\"model\":\"ltx-2.5\",\"seconds\":5,\"does\":\"Temporary narration says walk anyway, used only to supply captions; use planned sound parts timed to final beat.\",\"covers\":[\"ending\"]},{\"n\":5,\"tool\":\"join_production_clips\",\"does\":\"Join clips with temporary narration and deterministic exact captions walk anyway on final walking beat.\",\"covers\":[\"file\",\"ending\"]},{\"n\":6,\"tool\":\"join_videos\",\"does\":\"Take single joined video and remove audio with silent=true, retaining exact caption overlay and duration. Deliver this one file.\",\"covers\":[\"file\",\"ending\"]}]}",
+          "output": "{\"ok\":true,\"plan\":\"eJytVsGO2zYQ_ZWBzpIQe3eD1EVPaRKgRZsANdBDHQS0NLYZU6RAUlaMIP_eN5TllTe7zh5yWEAmhzPvzbyZ2a_ZXts6W2StUTbLM-f1VltlcPKX2jMpms2LwJWzNc1eLn6hg67Z0ca7huJOB6o5VF63UTtb0nLHHm_wZx153uCXrZh0o7YcypVd2dc75VUV2S_gOipjqHeNstTruMNJ0ObAntZuneOX55q80rZyKpICgiMb43pcuxhK-pO5JUQk4xxYbAGIKagGAS0x_Bwp7FxMcZc7z0xrVjHkcp2wO18DyMrOSvoHT3ulYyAJResuUIiuHUw5oYCfeaKYblsVAoeE23UxGbfAAKObwZtR3XYXEuxemT2-enVMWN7gyNmEfK2qPSnESuFHq3xIhwTugTHQKpNL-DridpXJa2SdGSl_pw9MoOws00ZbDU_1WCRtuERNqx1Xe6NDzBb_fc20VFuucNMri8Ps_fTt4_WeuhJtsAqdlOezQ4Y8h87EMvuWn9zjjY06Hu9DLB-Uelroq2XOh4qqtmUoJ6nporgTUG-9WAJ61LZD9ORLHZQ2am0YTEKnDN4KuooncJMO7rH-O-pAQB3PWsiv1T1PJXy05ie9wV-KM0X8Xg7AvjK6HZ49DZJtjTj3KJ-rIv6CfvuhjqZplP5HUZQvDpr7BC5hqxl924hOoq6oUqnpYWgTq28f8yxEbkNSmc0WszyLzskkQQgV-VPrXd1V8uiT-ETIxtUsBiZ-KeblHU4G6cHHbfkiz2rH-Mw-nB8OYGZ56lVpeVEfqpTT7asXbVJsouIgEAEyVeJQ5Y-SUKCb_zR0rwXSfBhyRXTFZEIOaCGLEHEAdS6uzo7nIb_5uchvnkY-v0A-EXfsvA20cZ5i7-jkO59oL8mHknzEapMkBduS_na0ZcsewGsyHCGpH1PPR_WPObi9koPgOmy0q0m4myRhyU3rvMI8scoDlqgsqGOgSavk1AWWdjNHiiDctS2-Th0QfpVbkgVqYZTCo8QeMyTqBifRnRIg6-eS6QNad2daMlcfFjZMSE3Z2M6YM50_ZCAP82RYIo_Q-76ZhyExEppSlxkxoJdDabnvWZy2yQMyLy_JJHE9i8JS_vEIcIWhLU_PC01we24Ql1RXa3deJZDLb9F3LLskYhwIzAtKJFiNGlZC3Q15KOl3NlrW0PDfQNqCpz33JDdMOesijzpVoWjZFxXWG6wEbTHgwS9pniI1T3FaSiz8RY-jRuU7jWaRuuXiXCP8ht_gbAGPo0Vo3Z5tYZAS2QNyWogmC2iv4lA07LcMjP8DZyxkdw==.52b7debc9cd6a882\",\"notes\":{\"ideas-per-call\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"About two ideas hold in one call of about 15 s. More ideas in one call: the model plays the shots more than once and mixes them.\",\"evidence\":\"B1 old MCP: 4 shots in one 30 s call played 3 times. C6 and C10: 4 seasons in one 20 s call played twice. An 18 s call with 2 shots played them twice. Calls of 5 to 13 s with 1 or 2 beats held.\"},\"ltx-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 does not spell words it is asked to show in a scene.\",\"evidence\":\"0 of 4: \\\"walk anway\\\" (A2 old), \\\"13 awway\\\" (A2 v1), \\\"walk anwwy\\\" (approach W1), \\\"Avalabile 12 Dembmer\\\" (A1 old end card).\"},\"ltx-sound\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 is silent when audio is off.\",\"evidence\":\"Approach C2: -91 dB.\"},\"last-frame-continues\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Image-to-video from the last frame of a clip continues it; joined after the clip, the cut is hard to see.\",\"evidence\":\"Approach C2 (ltx-2.5): similarity across the join 0.98. C3 (minimax-h3): 0.88, a small jump. C4 (minimax-h3 with the clip as a reference, no start frame): 0.41, a visible jump.\"},\"words-only-places-merge\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Without a picture reference, two places described in one call merged into one place.\",\"evidence\":\"C7 medium-only (ltx-2.5, 2 x 10 s): cherry trees on a beach; autumn and winter never came.\"},\"person-in-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A person described in words is the same inside one call and a look-alike across calls.\",\"evidence\":\"C7 one call per season: coats and hair held, faces changed. C10: Theo the same when his two seasons shared a call; Mara a look-alike in every split.\"},\"spoken-line\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A spoken line written inside a shot description was not spoken; the same line in one long call was spoken many times.\",\"evidence\":\"B2 v1 (ltx-2.5, 13 s clip): not spoken. B2 old MCP (one 30 s call): about 10 times. B2 Replicate (ltx-2.5-fast): once.\"},\"one-narration\":{\"applies_to\":[\"create_production_sound\",\"join_production_clips\"],\"finding\":\"One narration track and one music track across the joined film kept the script once and the music even.\",\"evidence\":\"B1 v1 with sound: 8 yes, 2 partly, 0 no; the old MCP's single call read the script 3 times and had no music.\"},\"join-silent\":{\"applies_to\":[\"join_production_clips\",\"join_videos\"],\"finding\":\"Joining with the sound off removes any sound the clips have.\",\"evidence\":\"Approach C2 to C4: -91 dB after the join.\"}},\"next\":\"Read every note. Call review_plan with one review for each note id: the steps it applies to, whether a step goes against it, and the change or the reason it is fine.\"}",
+          "error": null
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"eJytVsGO2zYQ_ZWBzpIQe3eD1EVPaRKgRZsANdBDHQS0NLYZU6RAUlaMIP_eN5TllTe7zh5yWEAmhzPvzbyZ2a_ZXts6W2StUTbLM-f1VltlcPKX2jMpms2LwJWzNc1eLn6hg67Z0ca7huJOB6o5VF63UTtb0nLHHm_wZx153uCXrZh0o7YcypVd2dc75VUV2S_gOipjqHeNstTruMNJ0ObAntZuneOX55q80rZyKpICgiMb43pcuxhK-pO5JUQk4xxYbAGIKagGAS0x_Bwp7FxMcZc7z0xrVjHkcp2wO18DyMrOSvoHT3ulYyAJResuUIiuHUw5oYCfeaKYblsVAoeE23UxGbfAAKObwZtR3XYXEuxemT2-enVMWN7gyNmEfK2qPSnESuFHq3xIhwTugTHQKpNL-DridpXJa2SdGSl_pw9MoOws00ZbDU_1WCRtuERNqx1Xe6NDzBb_fc20VFuucNMri8Ps_fTt4_WeuhJtsAqdlOezQ4Y8h87EMvuWn9zjjY06Hu9DLB-Uelroq2XOh4qqtmUoJ6nporgTUG-9WAJ61LZD9ORLHZQ2am0YTEKnDN4KuooncJMO7rH-O-pAQB3PWsiv1T1PJXy05ie9wV-KM0X8Xg7AvjK6HZ49DZJtjTj3KJ-rIv6CfvuhjqZplP5HUZQvDpr7BC5hqxl924hOoq6oUqnpYWgTq28f8yxEbkNSmc0WszyLzskkQQgV-VPrXd1V8uiT-ETIxtUsBiZ-KeblHU4G6cHHbfkiz2rH-Mw-nB8OYGZ56lVpeVEfqpTT7asXbVJsouIgEAEyVeJQ5Y-SUKCb_zR0rwXSfBhyRXTFZEIOaCGLEHEAdS6uzo7nIb_5uchvnkYY-vuchvnkY-vA\",\"reviews\":[{\"note\":\"ideas-per-call\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"Three 4-second shots, only one or two actions each.\"},{\"note\":\"ltx-words\",\"steps\":[3,5],\"conflict\":false,\"change\":\"No generated lettering. Exact text is drawn by join captions.\"},{\"note\":\"ltx-sound\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"Audio off for all scene clips.\"},{\"note\":\"last-frame-continues\",\"steps\":[2,3],\"conflict\":false,\"change\":\"Continue each prior last frame.\"},{\"note\":\"words-only-places-merge\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"One setting throughout.\"},{\"note\":\"person-in-words\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"Identity anchored by last-frame image references rather than independent text-only calls.\"},{\"note\":\"spoken-line\",\"steps\":[4],\"conflict\":false,\"change\":\"Dedicated sound-only generation via production sound, not an on-scene dialogue prompt.\"},{\"note\":\"one-narration\",\"steps\":[4,5],\"conflict\":false,\"change\":\"One temporary narration for exact captions.\"},{\"note\":\"join-silent\",\"steps\":[6],\"conflict\":false,\"change\":\"Mute final file after rendering captions.\"}]}",
+          "output": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged."
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"eJytVsGO2zYQ_ZWBzpIQe3eD1EVPaRKgRZsANdBDHQS0NLYZU6RAUlaMIP_eN5TllTe7zh5yWEAmhzPvzbyZ2a_ZXts6W2StUTbLM-f1VltlcPKX2jMpms2LwJWzNc1eLn6hg67Z0ca7huJOB6o5VF63UTtb0nLHHm_wZx153uCXrZh0o7YcypVd2dc75VUV2S_gOipjqHeNstTruMNJ0ObAntZuneOX55q80rZyKpICgiMb43pcuxhK-pO5JUQk4xxYbAGIKagGAS0x_Bwp7FxMcZc7z0xrVjHkcp2wO18DyMrOSvoHT3ulYyAJResuUIiuHUw5oYCfeaKYblsVAoeE23UxGbfAAKObwZtR3XYXEuxemT2-enVMWN7gyNmEfK2qPSnESuFHq3xIhwTugTHQKpNL-DridpXJa2SdGSl_pw9MoOws00ZbDU_1WCRtuERNqx1Xe6NDzBb_fc20VFuucNMri8Ps_fTt4_WeuhJtsAqdlOezQ4Y8h87EMvuWn9zjjY06Hu9DLB-Uelroq2XOh4qqtmUoJ6nporgTUG-9WAJ61LZD9ORLHZQ2am0YTEKnDN4KuooncJMO7rH-O-pAQB3PWsiv1T1PJXy05ie9wV-KM0X8Xg7AvjK6HZ49DZJtjTj3KJ-rIv6CfvuhjqZplP5HUZQvDpr7BC5hqxl924hOoq6oUqnpYWgTq28f8yxEbkNSmc0WszyLzskkQQgV-VPrXd1V8uiT-ETIxtUsBiZ-KeblHU4G6cHHbfkiz2rH-Mw-nB8OYGZ56lVpeVEfqpTT7asXbVJsouIgEAEyVeJQ5Y-SUKCb_zR0rwXSfBhyRXTFZEIOaCGLEHEAdS6uzo7nIb_5uchvnkY-vuchvnkY-vA\",\"reviews\":[]}",
+          "output": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged."
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"eJytVsGO2zYQ_ZWBzpIQe3eD1EVPaRKgRZsANdBDHQS0NLYZU6RAUlaMIP_eN5TllTe7zh5yWEAmhzPvzbyZ2a_ZXts6W2StUTbLM-f1VltlcPKX2jMpms2LwJWzNc1eLn6hg67Z0ca7huJOB6o5VF63UTtb0nLHHm_wZx153uCXrZh0o7YcypVd2dc75VUV2S_gOipjqHeNstTruMNJ0ObAntZuneOX55q80rZyKpICgiMb43pcuxhK-pO5JUQk4xxYbAGIKagGAS0x_Bwp7FxMcZc7z0xrVjHkcp2wO18DyMrOSvoHT3ulYyAJResuUIiuHUw5oYCfeaKYblsVAoeE23UxGbfAAKObwZtR3XYXEuxemT2-enVMWN7gyNmEfK2qPSnESuFHq3xIhwTugTHQKpNL-DridpXJa2SdGSl_pw9MoOws00ZbDU_1WCRtuERNqx1Xe6NDzBb_fc20VFuucNMri8Ps_fTt4_WeuhJtsAqdlOezQ4Y8h87EMvuWn9zjjY06Hu9DLB-Uelroq2XOh4qqtmUoJ6nporgTUG-9WAJ61LZD9ORLHZQ2am0YTEKnDN4KuooncJMO7rH-O-pAQB3PWsiv1T1PJXy05ie9wV-KM0X8Xg7AvjK6HZ49DZJtjTj3KJ-rIv6CfvuhjqZplP5HUZQvDpr7BC5hqxl924hOoq6oUqnpYWgTq28f8yxEbkNSmc0WszyLzskkQQgV-VPrXd1V8uiT-ETIxtUsBiZ-KeblHU4G6cHHbfkiz2rH-Mw-nB8OYGZ56lVpeVEfqpTT7asXbVJsouIgEAEyVeJQ5Y-SUKCb_zR0rwXSfBhyRXTFZEIOaCGLEHEAdS6uzo7nIb_5uchvnkY-vA\",\"reviews\":[]}",
+          "output": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged."
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"eJytVsGO2zYQ_ZWBzpIQe3eD1EVPaRKgRZsANdBDHQS0NLYZU6RAUlaMIP_eN5TllTe7zh5yWEAmhzPvzbyZ2a_ZXts6W2StUTbLM-f1VltlcPKX2jMpms2LwJWzNc1eLn6hg67Z0ca7huJOB6o5VF63UTtb0nLHHm_wZx153uCXrZh0o7YcypVd2dc75VUV2S_gOipjqHeNstTruMNJ0ObAntZuneOX55q80rZyKpICgiMb43pcuxhK-pO5JUQk4xxYbAGIKagGAS0x_Bwp7FxMcZc7z0xrVjHkcp2wO18DyMrOSvoHT3ulYyAJResuUIiuHUw5oYCfeaKYblsVAoeE23UxGbfAAKObwZtR3XYXEuxemT2-enVMWN7gyNmEfK2qPSnESuFHq3xIhwTugTHQKpNL-DridpXJa2SdGSl_pw9MoOws00ZbDU_1WCRtuERNqx1Xe6NDzBb_fc20VFuucNMri8Ps_fTt4_WeuhJtsAqdlOezQ4Y8h87EMvuWn9zjjY06Hu9DLB-Uelroq2XOh4qqtmUoJ6nporgTUG-9WAJ61LZD9ORLHZQ2am0YTEKnDN4KuooncJMO7rH-O-pAQB3PWsiv1T1PJXy05ie9wV-KM0X8Xg7AvjK6HZ49DZJtjTj3KJ-rIv6CfvuhjqZplP5HUZQvDpr7BC5hqxl924hOoq6oUqnpYWgTq28f8yxEbkNSmc0WszyLzskkQQgV-VPrXd1V8uiT-ETIxtUsBiZ-KeblHU4G6cHHbfkiz2rH-Mw-nB8OYGZ56lVpeVEfqpTT7asXbVJsouIgEAEyVeJQ5Y-SUKCb_zR0rwXSfBhyRXTFZEIOaCGLEHEAdS6uzo7nIb_5uchvnkY-vA\",\"reviews\":[{\"note\":\"ideas-per-call\",\"conflict\":false,\"steps\":[1,2,3],\"change\":\"Short separate calls.\"}]}",
+          "output": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged."
+        },
+        {
+          "name": "submit_plan",
+          "arguments": "{\"request\":\"eJw1kU1rwzAMhv-K8DkLtIPBch1jh7HTelt2UBI1NnWkzHIawth_n-LSg8HWx_s-kn_dJfDgGpfoZyHNrnKSwhgYowU_8EKAcDg-KPXCAxyemme4hoEEzkkmyD4oDKR9CnMOwjWcPCXrscMCic724p4gTDiS1i23_OIxYZ8pNSadMUZYZUKGNWRvEQ3xSgk66Sp7JRogYeBeMAMawUYxymppyVrDO9EM5ghRxAYZDYhAcTJDBjKdDdRLLr4nn4igI8xa7enCLmkwkJYPNXxa64ohK-xW0C0KmmW-lVKhMJ1jGbFkZ1QlLdyy5FI8G4MVPd7UIi6j14K9YrzYbcWtsLxaSLiQd9hfAM2r2N-rqts6duPVGBVatydNa7Ns6_Zu2zqRrfwtXAlsZGGCc-BgSsP9k0Kk2v4Uc8beT8RZXfP1_fcPzrewRA==.7824ff3176b9c0ad\",\"sheet\":{\"subject\":{\"source\":\"your call\",\"answer\":\"User's adult woman and three ordered bus-stop beats.\"},\"seconds\":{\"source\":\"your call\",\"answer\":\"12\"},\"aspect\":{\"source\":\"your call\",\"answer\":\"16:9\"},\"sound\":{\"source\":\"your call\",\"answer\":\"Silent delivery; temporary narration for exact caption then mute.\"},\"exact_words\":{\"source\":\"your call\",\"answer\":\"walk anyway\"},\"look\":{\"source\":\"your call\",\"answer\":\"Rainy cinematic naturalism.\"}},\"checklist\":[{\"id\":\"file\",\"want\":\"One 12s 16:9 file\",\"check\":\"metadata\"},{\"id\":\"woman\",\"want\":\"Same tall woman, silver bob, red raincoat, yellow boots\",\"check\":\"visual\"},{\"id\":\"order\",\"want\":\"Wait in rain; bus passes; laughs and walks away\",\"check\":\"visual\"},{\"id\":\"end\",\"want\":\"End on back walking, exact \\\"walk anyway\\\" overlay\",\"check\":\"visual and caption renderer\"}],\"steps\":[{\"n\":1,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Clip 1 wait in rain 480p.\",\"covers\":[\"woman\",\"order\"]},{\"n\":2,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Clip 2 bus passes, last-frame reference.\",\"covers\":[\"woman\",\"order\"]},{\"n\":3,\"tool\":\"create_production_clip\",\"model\":\"ltx-2.5\",\"seconds\":4,\"does\":\"Clip 3 laugh, walk away rear view, last-frame reference.\",\"covers\":[\"woman\",\"order\",\"end\"]},{\"n\":4,\"tool\":\"create_production_sound\",\"model\":\"ltx-2.5\",\"seconds\":5,\"does\":\"Temporary walk anyway narration for captions.\",\"covers\":[\"end\"]},{\"n\":5,\"tool\":\"join_production_clips\",\"does\":\"Join with exact final caption from narration.\",\"covers\":[\"file\",\"end\"]},{\"n\":6,\"tool\":\"join_videos\",\"does\":\"Mute joined file silent=true.\",\"covers\":[\"file\"]}]}",
+          "output": "{\"ok\":true,\"plan\":\"eJytld9r2zAQx_-VQ892aNIfbCl7KmOwUfbQwh6WMhT7EmuRJSPJcUPp_76v5MRxtlI66EPA0unuPrrv6fIkNsqUYi4aLY3IhHVqrYzU2LmVGyZJ01nuubCmpOnV_CNtVcmWVs7WFCrlqWRfONUEZc2E7it28MHPWHK8wsoUTKqWa_aThVmYm0o6WQR2c4QOUmvqbC0NdSpU2PFKb9nR0i4zrByX5KQyhZWBJAh2rLXtYLbBT-gbc0PISNpa3GINICYvayQ0xIizI1_ZkPLeV46ZliyDz6I5sVtXAmRhphO6g2snVfAUU9Gy9eSDbfqjnCgQZ5aumKyN9J594rZtSIcbMODQeR9Ny3Zd-YTdSb3BVyd3ieUztqxJ5EtZbEgiV0p_OJX15YiJOzB6WohoRKwdrAsRvVF1ZpT8i9oy4crWMK2UUYhUHkRSmifQtKi42Gjlg5j_fBIqqh1NsHTSYFN8h-905nuB96bkBFvNQZYySPGc7X2TYEfnu1jwo5LZiYZjBbMT-UYptsq36LghQZLlmOAHZIk6xDjXo9pfv1ziVwIzOn0Iu1chKRC9IV5G_Ijm_LfcuI9-IXLKXMjU_LiqATbAnx8y4QM3PpXbiPk0E8Ha-KSgmQz8q3G2bIvo9avQqkHc2pYcD-jwmM8ml9jp3xxiXEzOMlFaxqe4wWmapkY9VIQuPpw1SeVIGXMOAvV1fIjXB8XsfSlmIyUyKOFDvnKxFYZn_xao8_eFOu9bIqNeP6gHHOnwHrj7f8gsNcwB9eIVVG_b1FqvsF6OWO-5bqyTmE-jPiMjnZOplVbWHdrKnwKOgS4HoN9Wmb8r50c4Yw7Taj2AfIVjP2v6xl_F0T90dBryA9UpyH5KjHmuTnnSDHoTxW0bmKIPhkWMGycIm_ApuJZfyPoQH5ixgdMWskifN-zyAjMIp2OgvI-A1VHzHKmDMi1HpijQQbT4ncZsFN5wPtwYa8T11uSIeDjhG7thk2vQxlkSd3Nr9C7HH2jBPq_ZrSPjHzhTe9c=.646f77979c76bac2\",\"notes\":{\"ideas-per-call\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"About two ideas hold in one call of about 15 s. More ideas in one call: the model plays the shots more than once and mixes them.\",\"evidence\":\"B1 old MCP: 4 shots in one 30 s call played 3 times. C6 and C10: 4 seasons in one 20 s call played twice. An 18 s call with 2 shots played them twice. Calls of 5 to 13 s with 1 or 2 beats held.\"},\"ltx-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 does not spell words it is asked to show in a scene.\",\"evidence\":\"0 of 4: \\\"walk anway\\\" (A2 old), \\\"13 awway\\\" (A2 v1), \\\"walk anwwy\\\" (approach W1), \\\"Avalabile 12 Dembmer\\\" (A1 old end card).\"},\"ltx-sound\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 is silent when audio is off.\",\"evidence\":\"Approach C2: -91 dB.\"},\"last-frame-continues\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Image-to-video from the last frame of a clip continues it; joined after the clip, the cut is hard to see.\",\"evidence\":\"Approach C2 (ltx-2.5): similarity across the join 0.98. C3 (minimax-h3): 0.88, a small jump. C4 (minimax-h3 with the clip as a reference, no start frame): 0.41, a visible jump.\"},\"words-only-places-merge\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Without a picture reference, two places described in one call merged into one place.\",\"evidence\":\"C7 medium-only (ltx-2.5, 2 x 10 s): cherry trees on a beach; autumn and winter never came.\"},\"person-in-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A person described in words is the same inside one call and a look-alike across calls.\",\"evidence\":\"C7 one call per season: coats and hair held, faces changed. C10: Theo the same when his two seasons shared a call; Mara a look-alike in every split.\"},\"spoken-line\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A spoken line written inside a shot description was not spoken; the same line in one long call was spoken many times.\",\"evidence\":\"B2 v1 (ltx-2.5, 13 s clip): not spoken. B2 old MCP (one 30 s call): about 10 times. B2 Replicate (ltx-2.5-fast): once.\"},\"one-narration\":{\"applies_to\":[\"create_production_sound\",\"join_production_clips\"],\"finding\":\"One narration track and one music track across the joined film kept the script once and the music even.\",\"evidence\":\"B1 v1 with sound: 8 yes, 2 partly, 0 no; the old MCP's single call read the script 3 times and had no music.\"},\"join-silent\":{\"applies_to\":[\"join_production_clips\",\"join_videos\"],\"finding\":\"Joining with the sound off removes any sound the clips have.\",\"evidence\":\"Approach C2 to C4: -91 dB after the join.\"}},\"next\":\"Read every note. Call review_plan with one review for each note id: the steps it applies to, whether a step goes against it, and the change or the reason it is fine.\"}",
+          "error": null
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"eJytld9r2zAQx_-VQ892aNIfbCl7KmOwUfbQwh6WMhT7EmuRJSPJcUPp_76v5MRxtlI66EPA0unuPrrv6fIkNsqUYi4aLY3IhHVqrYzU2LmVGyZJ01nuubCmpOnV_CNtVcmWVs7WFCrlqWRfONUEZc2E7it28MHPWHK8wsoUTKqWa_aThVmYm0o6WQR2c4QOUmvqbC0NdSpU2PFKb9nR0i4zrByX5KQyhZWBJAh2rLXtYLbBT-gbc0PISNpa3GINICYvayQ0xIizI1_ZkPLeV46ZliyDz6I5sVtXAmRhphO6g2snVfAUU9Gy9eSDbfqjnCgQZ5aumKyN9J594rZtSIcbMODQeR9Ny3Zd-YTdSb3BVyd3ieUztqxJ5EtZbEgiV0p_OJX15YiJOzB6WohoRKwdrAsRvVF1ZpT8i9oy4crWMK2UUYhUHkRSmifQtKi42Gjlg5j_fBIqqh1NsHTSYFN8h-905nuB96bkBFvNQZYySPGc7X2TYEfnu1jwo5LZiYZjBbMT-UYptsq36LghQZLlmOAHZIk6xDjXo9pfv1ziVwIzOn0Iu1chKRC9IV5G_Ijm_LfcuI9-IXLKXMjU_LiqATbAnx8y4QM3PpXbiPk0E8Ha-KSgmQz8q3G2bIvo9avQqkHc2pYcD-jwmM8ml9jp3xxiXEzOMlFaxqe4wWmapkY9VIQuPpw1SeVIGXMOAvV1fIjXB8XsfSlmIyUyKOFDvnKxFYZn_xao8_eFOu9bIqNeP6gHHOnwHrj7f8gsNcwB9eIVVG_b1FqvsF6OWO-5bqyTmE-jPiMjnZOplVbWHdrKnwKOgS4HoN9Wmb8r50c4Yw7Taj2AfIVjP2v6xl_F0T90dBryA9UpyH5KjHmuTnnSDHoTxW0bmKIPhkWMGycIm_ApuJZfyPoQH5ixgdMWskifN-zyAjMIp2OgvI-A1VHzHKmDMi1HpijQQbT4ncZsFN5wPtwYa8T11uSIeDjhG7thk2vQxlkSd3Nr9C7HH2jBPq_ZrSPjHzhTe9c=.646f77979c76bac2\",\"reviews\":[{\"note\":\"ideas-per-call\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"Short separate shots, at most two actions per clip.\"},{\"note\":\"ltx-words\",\"steps\":[3,5],\"conflict\":false,\"change\":\"No scene-generated lettering; exact text added by caption renderer.\"},{\"note\":\"ltx-sound\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"Scene clips audio off.\"},{\"note\":\"last-frame-continues\",\"steps\":[2,3],\"conflict\":false,\"change\":\"Use prior final frame as image reference.\"},{\"note\":\"words-only-places-merge\",\"steps\":[1,2,3],\"conflict\":false,\"change\":\"One bus-stop location throughout.\"},{\"note\":\"person-in-words\",\"steps\":[2,3],\"conflict\":false,\"change\":\"Use image references, not text-only likeness.\"},{\"note\":\"spoken-line\",\"steps\":[4],\"conflict\":false,\"change\":\"Dedicated temporary narration, not scene dialogue.\"},{\"note\":\"one-narration\",\"steps\":[4,5],\"conflict\":false,\"change\":\"One narration track for captions.\"},{\"note\":\"join-silent\",\"steps\":[6],\"conflict\":false,\"change\":\"Mute only after exact caption compositing.\"}]}",
+          "output": "{\"ok\":true,\"approved\":\"eJx9U8GKGkEQ_ZWizxNBA4G4xxByCCGHXcghLks5Uzod266hq3Uii_-e161GN7vkIEzX63rvVb322W187Nzc8TAk3UvnGhdkLwGlnlM5avJrH7lUvvFGiGk6e2fSauxo-mH-kfa-E6VV0i3l3ht1Ym3yQ_YaJ_TQS0IPflEpyQqn2Ar5La_FJou4iJ-gw22WNAd15hBo1C1HGn3uUTEf9pJoqcsGpyQdJfaxVc7EcHCQEHQErNkm9FVkIChSUMVgaxgSMt5CMBLGSgeyXnPVfeiTCC2FszUFrt41dTCyiNMJ3aN1ZJ-NihQtd0aWdThdleoCPLM6YkUHNhOrvnWX6-UBHnDp_Ykt8G7dW7U9ctjga-RD9fIZJY3V-ZLbDTG0qvzlVnNaRxEe4dFo4QoIrgPQhSvd2LoIVv7F74UwskahlY8eTN0lJB9kgkzbXtpN8Jbd_Oez8-UBFAjIyBFF9x2905mdAj5DtQnYVjJ3nNkdm3NvDezafF8Wfk2yeZHhbYLNi_huJPbednhxfwVqLFeBH4il5FB47m52f_f2iv9DLLG70p5TqAmUboTXkPzG43y9bswT3mCuyi3Xx49RI2zD-PGxcVk1GNbtkBJnecLfrdu15d5TG_xQmF4Bprvq75f6-G-DXeo1WXOPxz9ZJ1Am.67231e07b1701071\",\"next\":\"Pass `approved` as `plan_token` to every create tool the plan names. When the result is made, call final_check.\"}",
+          "error": null
+        },
+        {
+          "name": "create_production_sound",
+          "arguments": "{\"plan_token\":\"eJx9U8GKGkEQ_ZWizxNBA4G4xxByCCGHXcghLks5Uzod266hq3Uii_-e161GN7vkIEzX63rvVb322W187Nzc8TAk3UvnGhdkLwGlnlM5avJrH7lUvvFGiGk6e2fSauxo-mH-kfa-E6VV0i3l3ht1Ym3yQ_YaJ_TQS0IPflEpyQqn2Ar5La_FJou4iJ-gw22WNAd15hBo1C1HGn3uUTEf9pJoqcsGpyQdJfaxVc7EcHCQEHQErNkm9FVkIChSUMVgaxgSMt5CMBLGSgeyXnPVfeiTCC2FszUFrt41dTCyiNMJ3aN1ZJ-NihQtd0aWdThdleoCPLM6YkUHNhOrvnWX6-UBHnDp_Ykt8G7dW7U9ctjga-RD9fIZJY3V-ZLbDTG0qvzlVnNaRxEe4dFo4QoIrgPQhSvd2LoIVv7F74UwskahlY8eTN0lJB9kgkzbXtpN8Jbd_Oez8-UBFAjIyBFF9x2905mdAj5DtQnYVjJ3nNkdm3NvDezafF8Wfk2yeZHhbYLNi_huJPbednhxfwVqLFeBH4il5FB47m52f_f2iv9DLLG70p5TqAmUboTXkPzG43y9bswT3mCuyi3Xx49RI2zD-PGxcVk1GNbtkBJnecLfrdu15d5TG_xQmF4Bprvq75f6-G-DXeo1WXOPxz9ZJ1Am.67231e07b1701071\",\"production\":\"eJzFlE1r20AQhv_KoLMSaCmFuqdQ6KW3UsghhDKSRvbW6111Z2RFhPz3viPZcVpKL4X2Yqz9mH3edz4eKwsWpdpUtxz3dJPmieeqrlgHaQ3Lr95u3vn32IVcbXqOKnWlYhbSFtsfQpIDW2gpsY2FY1D_KBzSTG2wmdSKiNWUj1JaViPNvVHHcwzbHdYnMSrSRzwXjkIDH-UgCRuH0aSjNueIn5iL0hRsR8dwDFiO2XZAuAabjs033NZqc_dYhQ5UUz5wws6US4fl6oaMYyTuxmi0bK6x2OnYOahFtKsoaYtlDRGw1OSmxpGmLAcKYPZJ5HzIJbaZAcqpo1lizBOVsWmWm9nU0UpevB2kaE7V031dNcInUpU2J8d7U1cmD272beiEdJdtQ7aTMykHU2JzlFGv1PIAwm2ikAj5iHBhgalph6f7EULzaH0wWKWhieIg-5DcGG0lCT6HyK2DIaDH-9nEk32ARew9TiWZcEIeuLWvJ0vvsKs8L_-e6t-KubFFhPJBLuC8FgW-qSvItyLhuh50na7lkh_IIL81eKLpk8jwwpaTuMV9NZRgTlwQWdRNXF6GSf9U--tn7V-eMSOP253WDpQIHZL0TFyQ1QlN55oZXUccM_6u5J341jV9gHuF6ZDdqkZQpJ2n-T_J-ixcYLxMlPsXqcA5ZG50IZYXTb8K8vq80sx7NNFF3MeQgu7WVvTabbjdX_Kq6ARZoukS7q81nzBF_6C8WunXMXjvDYuqKmy5LGPk-xgwrtroPqzTpMf4A-0xh1be06gQmFOc3QgLqPzlIWp58AJFHfQhcaROIorfRwqGmcCzgK5tZJ15LvR8odpYGeXpBx9a91I=\"}",
+          "output": null,
+          "error": "{\"code\":-32602,\"message\":\"Invalid arguments for tool 'create_production_sound': An argument was unexpected at $.\",\"data\":{\"type\":\"invalid_arguments\",\"field_path\":[],\"constraint\":\"additionalProperties\",\"expected\":{\"allowed_fields\":[\"production\"]},\"next_action\":\"Refresh tools/list and remove arguments outside the listed allowed fields. Do not silently rename or discard an explicitly requested setting.\"}}"
+        },
+        {
+          "name": "final_check",
+          "arguments": "{\"approved\":\"eJx9U8GKGkEQ_ZWizxNBA4G4xxByCCGHXcghLks5Uzod266hq3Uii_-e161GN7vkIEzX63rvVb322W187Nzc8TAk3UvnGhdkLwGlnlM5avJrH7lUvvFGiGk6e2fSauxo-mH-kfa-E6VV0i3l3ht1Ym3yQ_YaJ_TQS0IPflEpyQqn2Ar5La_FJou4iJ-gw22WNAd15hBo1C1HGn3uUTEf9pJoqcsGpyQdJfaxVc7EcHCQEHQErNkm9FVkIChSUMVgaxgSMt5CMBLGSgeyXnPVfeiTCC2FszUFrt41dTCyiNMJ3aN1ZJ-NihQtd0aWdThdleoCPLM6YkUHNhOrvnWX6-UBHnDp_Ykt8G7dW7U9ctjga-RD9fIZJY3V-ZLbDTG0qvzlVnNaRxEe4dFo4QoIrgPQhSvd2LoIVv7F74UwskahlY8eTN0lJB9kgkzbXtpN8Jbd_Oez8-UBFAjIyBFF9x2905mdAj5DtQnYVjJ3nNkdm3NvDezafF8Wfk2yeZHhbYLNi_huJPbednhxfwVqLFeBH4il5FB47m52f_f2iv9DLLG70p5TqAmUboTXkPzG43y9bswT3mCuyi3Xx49RI2zD-PGxcVk1GNbtkBJnecLfrdu15d5TG_xQmF4Bprvq75f6-G-DXeo1WXOPxz9ZJ1Am.67231e07b1701071\",\"results\":[{\"id\":\"file\",\"met\":\"no\",\"evidence\":\"Generation refused: free account has 0 credits. No media created.\"},{\"id\":\"woman\",\"met\":\"no\",\"evidence\":\"No generated clips due to insufficient credits.\"},{\"id\":\"order\",\"met\":\"no\",\"evidence\":\"No generated clips due to insufficient credits.\"},{\"id\":\"end\",\"met\":\"no\",\"evidence\":\"No output generated due to insufficient credits.\"}]}",
+          "output": "{\"ok\":false,\"not_met\":[{\"id\":\"file\",\"want\":\"One 12s 16:9 file\",\"met\":\"no\",\"evidence\":\"Generation refused: free account has 0 credits. No media created.\"},{\"id\":\"woman\",\"want\":\"Same tall woman, silver bob, red raincoat, yellow boots\",\"met\":\"no\",\"evidence\":\"No generated clips due to insufficient credits.\"},{\"id\":\"order\",\"want\":\"Wait in rain; bus passes; laughs and walks away\",\"met\":\"no\",\"evidence\":\"No generated clips due to insufficient credits.\"},{\"id\":\"end\",\"want\":\"End on back walking, exact \\\"walk anyway\\\" overlay\",\"met\":\"no\",\"evidence\":\"No output generated due to insufficient credits.\"}],\"next\":\"Fix these with another step if you can; else tell the user plainly which are not met.\"}",
+          "error": null
+        },
+        {
+          "name": "start_request",
+          "arguments": "{\"original\":\"Make a 12-second 16:9 video from this description. There are no reference images.\\n\\nCharacter: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\\n\\nThree beats, in this order:\\n1. She waits at a bus stop in the rain.\\n2. The bus passes without stopping.\\n3. She laughs and walks away.\\n\\nEnd on her back as she walks away, with the words \\\"walk anyway\\\" on screen. Give me one finished video file.\\n\\nMake as much of this as you can with the tools you have, and give me the closest thing to one finished file.\"}",
+          "output": "{\"request\":\"eJxVks1O7DAMhV_F6rqMNCAhMVt0xQLd1WVHWbipp4kmjUvsTlUh3h0nZRZ3USnxz_mOnX41l5CG5tRk-lxItGkbzmEMCaMF_-KFAOF4fyfkOA1wfDw9wTUMxHDOPIH6IDCQuBxmDZwO8OYpW499iSHT2W7JEYQJR5JDl7r07DGjU8onk1aMEVaeMMEa1FtEQrxShp771m6ZBsgYkmNUQHOwUYy8WppVDvBKNIMRITLbIKMZIhCcDJiATGcD8ayV--YzEfSEKm1JV--cBzPSpeMB_lnrikEFCgr6RUCU572UqgvTua8j1uyMIiTVNy9ai2fzYEUPu1rEZfRSba8YL3Zacate_liIU3Xeo7sAGqvib1Xtvo4CXs2jQNeUpGltlu2a0m1bJ7KVv4QrgY3MieAcUjCl4fZIIVIF7i8pMC3OA5_34e2-8QLutvxCU-a4hz1eqa3mx19AybvINrQWgbJu_p9aefYPoSo6P1FSaU7vH98_yAzYJw==.5ae3e734425b717a\",\"comparison\":\"SIMPLE: every item below is true.\\n- One idea: one subject doing one thing in one place (a robot waters a sunflower).\\n- At most 15 seconds.\\n- No exact words that must appear on screen, and no spoken line that must be said word for word.\\n- At most one attached file, used as the look or the start of the video.\\n- Not a continuation or an edit of an attached video.\\n\\nHARD: any item below is true.\\n- Two or more ideas: different places, different people at different times, shots listed in order, a card or end card.\\n- Longer than 15 seconds.\\n- Exact words on screen (a title, an end card, captions) or an exact spoken line or voice-over script.\\n- Two or more attached files, or a person and a product that must both stay the same.\\n- Continue, extend or edit an attached video, keeping part of it.\\n- Music or a voice-over across several shots.\\n\",\"questions\":{\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"seconds\":\"How long should it be?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"language\":\"Which language for the voice or captions?\",\"which_face\":\"Whose face goes where (which person in the picture)?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\",\"subject\":\"What should it show?\",\"edit\":\"What should change in the picture?\",\"keep\":\"What must stay exactly as it is?\",\"motion\":\"What should move, and how (small natural motion, a slow push in, something happening)?\",\"mood\":\"What mood or genre for the music?\",\"script\":\"What should be said, word for word? Or should I write it from the gist?\",\"range\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"},\"next\":\"Read the comparison. Call classify_request with `simple` or `hard` and the reasons, each naming the item it matches.\"}",
+          "error": null
+        },
+        {
+          "name": "classify_request",
+          "arguments": "{\"request\":\"eJxVks1O7DAMhV_F6rqMNCAhMVt0xQLd1WVHWbipp4kmjUvsTlUh3h0nZRZ3USnxz_mOnX41l5CG5tRk-lxItGkbzmEMCaMF_-KFAOF4fyfkOA1wfDw9wTUMxHDOPIH6IDCQuBxmDZwO8OYpW499iSHT2W7JEYQJR5JDl7r07DGjU8onk1aMEVaeMMEa1FtEQrxShp771m6ZBsgYkmNUQHOwUYy8WppVDvBKNIMRITLbIKMZIhCcDJiATGcD8ayV--YzEfSEKm1JV--cBzPSpeMB_lnrikEFCgr6RUCU572UqgvTua8j1uyMIiTVNy9ai2fzYEUPu1rEZfRSba8YL3Zacate_liIU3Xeo7sAGqvib1Xtvo4CXs2jQNeUpGltlu2a0m1bJ7KVv4QrgY3MieAcUjCl4fZIIVIF7i8pMC3OA5_34e2-8QLutvxCU-a4hz1eqa3mx19AybvINrQWgbJu_p9aefYPoSo6P1FSaU7vH98_yAzYJw==.5ae3e734425b717a\",\"verdict\":\"hard\",\"reasons\":[\"Three ordered story beats and a consistent character.\",\"Exact words walk anyway on the ending.\",\"Previous generation refused for zero credits; closest available fallback is locally rendered self-contained HTML animation, not a Magic Hour generated video.\"]}",
+          "output": "{\"next\":\"Call submit_plan with the request token, the question sheet, the checklist and the steps.\",\"sheet\":{\"subject\":\"What should it show?\",\"seconds\":\"How long should it be?\",\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"},\"must_carry\":[{\"kind\":\"words\",\"value\":\"walk anyway\"},{\"kind\":\"seconds\",\"value\":\"12\"},{\"kind\":\"aspect\",\"value\":\"16:9\"}]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_production_clip",
+          "args": {
+            "plan_token": "eJx9U8GKGkEQ_ZWizxNBA4G4xxByCCGHXcghLks5Uzod266hq3Uii_-e161GN7vkIEzX63rvVb322W187Nzc8TAk3UvnGhdkLwGlnlM5avJrH7lUvvFGiGk6e2fSauxo-mH-kfa-E6VV0i3l3ht1Ym3yQ_YaJ_TQS0IPflEpyQqn2Ar5La_FJou4iJ-gw22WNAd15hBo1C1HGn3uUTEf9pJoqcsGpyQdJfaxVc7EcHCQEHQErNkm9FVkIChSUMVgaxgSMt5CMBLGSgeyXnPVfeiTCC2FszUFrt41dTCyiNMJ3aN1ZJ-NihQtd0aWdThdleoCPLM6YkUHNhOrvnWX6-UBHnDp_Ykt8G7dW7U9ctjga-RD9fIZJY3V-ZLbDTG0qvzlVnNaRxEe4dFo4QoIrgPQhSvd2LoIVv7F74UwskahlY8eTN0lJB9kgkzbXtpN8Jbd_Oez8-UBFAjIyBFF9x2905mdAj5DtQnYVjJ3nNkdm3NvDezafF8Wfk2yeZHhbYLNi_huJPbednhxfwVqLFeBH4il5FB47m52f_f2iv9DLLG70p5TqAmUboTXkPzG43y9bswT3mCuyi3Xx49RI2zD-PGxcVk1GNbtkBJnecLfrdu15d5TG_xQmF4Bprvq75f6-G-DXeo1WXOPxz9ZJ1Am.67231e07b1701071",
+            "clip": 1,
+            "production": "eJzFlE1r20AQhv_KoLMSaCmFuqdQ6KW3UsghhDKSRvbW6111Z2RFhPz3viPZcVpKL4X2Yqz9mH3edz4eKwsWpdpUtxz3dJPmieeqrlgHaQ3Lr95u3vn32IVcbXqOKnWlYhbSFtsfQpIDW2gpsY2FY1D_KBzSTG2wmdSKiNWUj1JaViPNvVHHcwzbHdYnMSrSRzwXjkIDH-UgCRuH0aSjNueIn5iL0hRsR8dwDFiO2XZAuAabjs033NZqc_dYhQ5UUz5wws6US4fl6oaMYyTuxmi0bK6x2OnYOahFtKsoaYtlDRGw1OSmxpGmLAcKYPZJ5HzIJbaZAcqpo1lizBOVsWmWm9nU0UpevB2kaE7V031dNcInUpU2J8d7U1cmD272beiEdJdtQ7aTMykHU2JzlFGv1PIAwm2ikAj5iHBhgalph6f7EULzaH0wWKWhieIg-5DcGG0lCT6HyK2DIaDH-9nEk32ARew9TiWZcEIeuLWvJ0vvsKs8L_-e6t-KubFFhPJBLuC8FgW-qSvItyLhuh50na7lkh_IIL81eKLpk8jwwpaTuMV9NZRgTlwQWdRNXF6GSf9U--tn7V-eMSOP253WDpQIHZL0TFyQ1QlN55oZXUccM_6u5J341jV9gHuF6ZDdqkZQpJ2n-T_J-ixcYLxMlPsXqcA5ZG50IZYXTb8K8vq80sx7NNFF3MeQgu7WVvTabbjdX_Kq6ARZoukS7q81nzBF_6C8WunXMXjvDYuqKmy5LGPk-xgwrtroPqzTpMf4A-0xh1be06gQmFOc3QgLqPzlIWp58AJFHfQhcaROIorfRwqGmcCzgK5tZJ15LvR8odpYGeXpBx9a91I="
+          },
+          "approve": false,
+          "reason": "insufficient credits: the free account's 0 credits are used",
+          "est": null
+        },
+        {
+          "name": "create_production_sound",
+          "args": {
+            "plan_token": "eJx9U8GKGkEQ_ZWizxNBA4G4xxByCCGHXcghLks5Uzod266hq3Uii_-e161GN7vkIEzX63rvVb322W187Nzc8TAk3UvnGhdkLwGlnlM5avJrH7lUvvFGiGk6e2fSauxo-mH-kfa-E6VV0i3l3ht1Ym3yQ_YaJ_TQS0IPflEpyQqn2Ar5La_FJou4iJ-gw22WNAd15hBo1C1HGn3uUTEf9pJoqcsGpyQdJfaxVc7EcHCQEHQErNkm9FVkIChSUMVgaxgSMt5CMBLGSgeyXnPVfeiTCC2FszUFrt41dTCyiNMJ3aN1ZJ-NihQtd0aWdThdleoCPLM6YkUHNhOrvnWX6-UBHnDp_Ykt8G7dW7U9ctjga-RD9fIZJY3V-ZLbDTG0qvzlVnNaRxEe4dFo4QoIrgPQhSvd2LoIVv7F74UwskahlY8eTN0lJB9kgkzbXtpN8Jbd_Oez8-UBFAjIyBFF9x2905mdAj5DtQnYVjJ3nNkdm3NvDezafF8Wfk2yeZHhbYLNi_huJPbednhxfwVqLFeBH4il5FB47m52f_f2iv9DLLG70p5TqAmUboTXkPzG43y9bswT3mCuyi3Xx49RI2zD-PGxcVk1GNbtkBJnecLfrdu15d5TG_xQmF4Bprvq75f6-G-DXeo1WXOPxz9ZJ1Am.67231e07b1701071",
+            "production": "eJzFlE1r20AQhv_KoLMSaCmFuqdQ6KW3UsghhDKSRvbW6111Z2RFhPz3viPZcVpKL4X2Yqz9mH3edz4eKwsWpdpUtxz3dJPmieeqrlgHaQ3Lr95u3vn32IVcbXqOKnWlYhbSFtsfQpIDW2gpsY2FY1D_KBzSTG2wmdSKiNWUj1JaViPNvVHHcwzbHdYnMSrSRzwXjkIDH-UgCRuH0aSjNueIn5iL0hRsR8dwDFiO2XZAuAabjs033NZqc_dYhQ5UUz5wws6US4fl6oaMYyTuxmi0bK6x2OnYOahFtKsoaYtlDRGw1OSmxpGmLAcKYPZJ5HzIJbaZAcqpo1lizBOVsWmWm9nU0UpevB2kaE7V031dNcInUpU2J8d7U1cmD272beiEdJdtQ7aTMykHU2JzlFGv1PIAwm2ikAj5iHBhgalph6f7EULzaH0wWKWhieIg-5DcGG0lCT6HyK2DIaDH-9nEk32ARew9TiWZcEIeuLWvJ0vvsKs8L_-e6t-KubFFhPJBLuC8FgW-qSvItyLhuh50na7lkh_IIL81eKLpk8jwwpaTuMV9NZRgTlwQWdRNXF6GSf9U--tn7V-eMSOP253WDpQIHZL0TFyQ1QlN55oZXUccM_6u5J341jV9gHuF6ZDdqkZQpJ2n-T_J-ixcYLxMlPsXqcA5ZG50IZYXTb8K8vq80sx7NNFF3MeQgu7WVvTabbjdX_Kq6ARZoukS7q81nzBF_6C8WunXMXjvDYuqKmy5LGPk-xgwrtroPqzTpMf4A-0xh1be06gQmFOc3QgLqPzlIWp58AJFHfQhcaROIorfRwqGmcCzgK5tZJ15LvR8odpYGeXpBx9a91I="
+          },
+          "approve": true,
+          "reason": "",
+          "est": null
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "delivered",
+      "denied": [
+        "create_production_clip: insufficient credits: the free account's 0 credits are used"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "Your account still has no generation credits, but I can provide a **self-contained animated version**: the same illustrated woman, all three beats over 12 seconds, and “walk anyway” at the end.\n\n**Save the code below as `walk-anyway.html` and open it in Chrome or Edge.** It plays immediately. Click **Download video** to render and download one silent WebM video locally—no credits needed.\n\nThis is ",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "start_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "start_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "classify_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "classify_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_video_production",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:file",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_video_production",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:file",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "submit_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "submit_plan-5",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_video_production",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:file",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "submit_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "submit_plan-7",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-8",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-9",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-10",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-11",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "submit_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "submit_plan-12",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-13",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "create_production_sound",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "create_production_sound-14",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "final_check",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:file",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "start_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "start_request-16",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "classify_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "classify_request-17",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "start_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "classify_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_video_production",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_video_production",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "submit_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_video_production",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "submit_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "failed",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged.",
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "failed",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged.",
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "failed",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged.",
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "failed",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": "This token is not one this server made. Use the token the last gate step returned, unchanged.",
+          "seconds": null
+        },
+        {
+          "tool": "submit_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "create_production_sound",
+          "state": "failed",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": null,
+          "error": "{\"code\":-32602,\"message\":\"Invalid arguments for tool 'create_production_sound': An argument was unexpected at $.\",\"data\":{\"type\":\"invalid_arguments\",\"field_path\":[],\"constraint\":\"additionalProperties\",\"expected\":{\"allowed_fields\":[\"production\"]},\"next_action\":\"Refresh tools/list and remove arguments",
+          "seconds": null
+        },
+        {
+          "tool": "final_check",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "start_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "classify_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 265
+    }
+  ],
+  "started": "2026-11-07T08:16:46.109Z",
+  "spent": 0,
+  "seconds": 265
+}

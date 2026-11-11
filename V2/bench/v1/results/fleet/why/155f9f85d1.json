@@ -1,0 +1,47 @@
+{
+ "id": "155f9f85d1",
+ "key": "check:aspect:E",
+ "symptom": "aspect 9:16",
+ "item": "E25b",
+ "n": 11,
+ "builds": {
+  "old": 5,
+  "new": 6
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'aspect 9:16' not met (measured 832x448)?",
+    "because": "The only file delivered was the output of edit_video, and that file is landscape 832x448, which is the same shape as the 16:9 source.",
+    "evidence": "grade.json (s3.new.stupid.E25a): check 'aspect 9:16' pass=false, got [\"832x448\"]. In calls.jsonl of all four chats I read (old.dumper, old.stupid, new.stupid, new.happy), wait_for_video_project returns type VIDEO_EDITOR, width 832, height 448. Note: the evidence folders I was given are E25a (one speaker, talk-one.mp4), not E25b (two speakers, talk-two.mp4). The measured value is the same, and E25b uses the same edit_video route, so I assume the same mechanism."
+   },
+   {
+    "why": "Why did edit_video return a landscape frame when the prompt asked for 9:16?",
+    "because": "edit_video has no aspect, width or height parameter. The only way the assistant could ask for 9:16 was the text prompt. The LTX 2.5 editor redraws the frames of the source at the source's own shape, so it ignores the shape request in the prompt.",
+    "evidence": "tools-new.json, edit_video: inputSchema has only name, start_seconds, end_seconds, model, resolution (480p/720p/1080p), style.prompt and assets.video_file_path. There is no aspect field. In every chat the args send style.prompt 'Reframe this video to a vertical 9:16 portrait frame…' with model ltx-2.5 and resolution 480p, and the result is still 832x448."
+   },
+   {
+    "why": "Why did the assistant use edit_video and not a real crop or reframe tool?",
+    "because": "Neither build has a tool that crops or reframes an existing video to a new aspect ratio. In the new build, the code-based tools (join_videos, get_last_frame, trim_video) do no cropping. join_videos even fits every input to the first video's size. upscale_video says it keeps the aspect ratio.",
+    "evidence": "tools-new.json: upscale_video says 'while preserving its aspect ratio'; join_videos says 'Every video is fitted to the first one's size'. No tool has crop or reframe in its description. In its first reply, the assistant in every chat says 'none of the Magic Hour tools can crop or reframe a video' (old.stupid, old.dumper, new.happy)."
+   },
+   {
+    "why": "Why was a file made at all if the assistant knew the tool could not do the job?",
+    "because": "The assistant first said 'cannot' and spent nothing. Then the simulated user pushed ('Please go ahead with the free settings anyway' / 'huh? just try it'). The assistant tried edit_video as a best effort and said honestly that the result stayed landscape. The grader then measured that file.",
+    "evidence": "calls.jsonl: old.dumper and new.happy have a 'say' of kind 'cannot', then a user message with nudge=true, then edit_video (240 credits). old.stupid is the same after 'huh? just try it'. new.stupid called edit_video right after the user's request and then reported 'I could not make it vertical'."
+   },
+   {
+    "why": "Why can no assistant behaviour get 9:16 inside this system?",
+    "because": "The free-plan editor model keeps the source frame shape, and the MCP server has no deterministic crop tool. A 9:16 output of the user's own footage cannot be made with the tools both builds give.",
+    "evidence": "Every edit_video run in both builds returns 832x448 whatever the prompt says. The assistant reports this ('the editor keeps the shape of the input, and nothing in a prompt can change that', old.stupid). The E25b answer_sheet expects a 'full-frame portrait crop', which is a deterministic operation and not a generation."
+   }
+  ],
+  "axiom": "Both builds' tool sets have no crop or reframe capability for an existing video. The only video-to-video tool (edit_video, LTX 2.5 on the free plan) has no aspect parameter, and it always outputs the source's frame shape (832x448 from the 16:9 clip). A prompt asking for 9:16 cannot change that.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-based crop_video tool that spends no credits, like join_videos and get_last_frame in the new build. It needs these inputs: video, aspect (9:16/1:1/16:9) and a list of time segments, each with a horizontal centre (or face-detection-driven centring, using detect_faces). It should run an ffmpeg crop that copies the audio unchanged. Also add one line to the edit_video description: 'Output keeps the source video's aspect ratio; it cannot crop or reframe.' This stops the assistant from spending 240 credits on a landscape re-render."
+ },
+ "error": null,
+ "seconds": 53,
+ "usd": 0.4894514
+}

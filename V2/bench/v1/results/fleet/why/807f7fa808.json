@@ -1,0 +1,47 @@
+{
+ "id": "807f7fa808",
+ "key": "must:I47a:Water reaches the seed, roots grow downward, and a shoot grows upward toward light in that order.",
+ "symptom": "Water reaches the seed, roots grow downward, and a shoot grows upward toward light in that order.",
+ "item": "I47a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'water → roots down → shoot up, in that order' not met in either chat?",
+    "because": "Neither output video shows the full ordered sequence. The water stage is missing or weak, and roots growing underground are never visible. Only a shoot coming up is clear.",
+    "evidence": "s5.old.stupid.I47a/grade.json: 'No water is shown, and no roots are visible underground. Only a shoot emerging is shown.' s5.new.dumper.I47a/grade.json: 'A water ripple appears, but no roots are visible growing into the soil. There is no cutaway view.' The fault for the new chat is rated major."
+   },
+   {
+    "why": "Why did the old chat's prompt not ask for water and roots as stages tied to the script?",
+    "because": "The stupid user gave only 'make a video of a seed sprouting'. The script, the water step and the 8 s length never came up. With no 'asks' expected, the assistant did not ask and wrote its own generic time-lapse prompt. That prompt had no water. It did ask for 'a pale root pushes down', but with no cross-section view.",
+    "evidence": "s5.old.stupid.I47a/state.json transcript: user text 'make a video of a seed sprouting'. calls.jsonl prompt: 'Macro time-lapse of a seed sprouting in rich dark soil: the seed coat cracks open, a pale root pushes down, and a green shoot rises...'. No water, no audio, end_seconds 5."
+   },
+   {
+    "why": "Why is the old chat's missing water not the whole cause, given the new chat also failed?",
+    "because": "In the new chat the assistant got the full brief and wrote a prompt that names every stage in order, inside an explicit side cross-section. The model still did not draw the roots or the cutaway. So the prompt content is not the deciding factor. The renderer is.",
+    "evidence": "s5.new.dumper.I47a/calls.jsonl create_video_from_text prompt: 'side cross-section view of soil... Water droplets soak into the soil and the seed swells. The seed coat cracks, a white root grows downward into the soil, then a green shoot pushes up...'. grade.json: 'No cross-section view... The style is a 3D claymation look, not the flat cartoon the assistant described.'"
+   },
+   {
+    "why": "Why did the model ignore the stages and the cross-section in the prompt?",
+    "because": "Both chats used ltx-2.5 at 480p, a free-plan model. In one 5–8 s text-to-video pass it renders a single plausible 'sprout emerges' shot. It drops the ordered stages, the underground cutaway and the flat style. It also morphs abruptly from seed to seedling.",
+    "evidence": "Both calls.jsonl files: model 'ltx-2.5', resolution '480p'. The old call was rejected first: 'the free plan's video models are ltx-2.5 and minimax-h3'. Old grade fault: 'seed goes from intact (0.5 s) to a full seedling with leaves (2 s)... looks like a morph'. New grade fault: the seed 'floats above the leaves', and the clip has a claymation style."
+   },
+   {
+    "why": "Why could the assistant not force the sequence some other way inside this system?",
+    "because": "The free plan offers only single-shot text-to-video models. These models do not follow the order of steps or the camera framing reliably. A storyboard of keyframes or a multi-clip build would cost extra credits and steps, and the brief expects no questions and a single 8 s output.",
+    "evidence": "I47a.json expect: asks 'never', beyond_free 'no', spec outputs 1, seconds 8. Old calls.jsonl lists the free video models as ltx-2.5 and minimax-h3 only."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) does not reliably render an ordered, multi-stage process with an underground cross-section in one short clip. Even with an explicit stage-by-stage prompt it only shows a shoot coming up. In the old chat, the stupid user also never gave the water/roots script, which made it worse.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "For ordered process explainers, the tool description (new build) should tell the assistant to make the stages a sequence of clips or keyframes: one image per stage (water soaking into the seed, root in a cross-section, shoot toward light), then image-to-video or a short multi-clip build, with the voice-over added as a separate track. It should also warn that a single ltx-2.5 prompt will likely skip stages. If the user stays on one free-plan shot: none: inherent."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.1985634
+}

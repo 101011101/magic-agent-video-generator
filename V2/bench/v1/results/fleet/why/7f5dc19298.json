@@ -1,0 +1,46 @@
+{
+ "id": "7f5dc19298",
+ "key": "must:I45c:The red scarf is dropped by the woman, picked up by the man and returned to her in that order, ending with mutual smiles.",
+ "symptom": "The red scarf is dropped by the woman, picked up by the man and returned to her in that order, ending with mutual smiles.",
+ "item": "I45c",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'scarf dropped by the woman, picked up by the man, returned, mutual smiles' not met?",
+    "because": "The grader saw no clear drop, no clear pick-up and no clear return. In shot 1 the scarf stays on her neck or turns into a red blob. In shot 2 the man puts the scarf around her neck (happy) or his own neck (dumper) instead of lifting it from the ground. The smiles are faint or missing.",
+    "evidence": "s5.new.happy.I45c/grade.json: 'scarf is already around her neck in shot 1… never clearly dropped… man seems to wrap it on her neck'. s5.new.dumper.I45c/grade.json: 'Shot 1 never clearly shows the woman dropping the scarf… In shot 2 the man puts the scarf around his own neck'."
+   },
+   {
+    "why": "Why did the clips not show the actions? Were the prompts wrong?",
+    "because": "No. The prompts asked for each action correctly and in order, one beat per 5 s clip. Clip 1: 'a red scarf slips from her shoulders onto the ground'. Clip 2: 'the man bends down and picks up the red scarf from the sidewalk'. Clip 3: 'the man hands the red scarf back… they both smile at each other'. Clips 2 and 3 start from the last frame of the clip before.",
+    "evidence": "calls.jsonl in both chats, plan_video_production output: clips[].steps[].prompt and reference.kind 'last_frame'. The assistant sent create_production_clip exactly as the plan said."
+   },
+   {
+    "why": "Why did a correct prompt still give a wrong prop action?",
+    "because": "The planner sent every clip to ltx-2.5 at 480p, the free-plan model. This model does not reliably render a small object moving from one person to another (fall, lift, hand over). It turns the scarf into a garment that it wraps on a neck, or into a blob that appears and disappears. Chaining clips by last frame keeps the faces, but it also carries the worn scarf into the next clip.",
+    "evidence": "plan output: 'model':'ltx-2.5','resolution':'480p'. happy/grade.json faults: 'scarf and hand look blobby and warped in clip 2. The scarf seems to appear and disappear between frames'. Both personas give the same failure from different wording, so the cause is the model, not the persona."
+   },
+   {
+    "why": "Why did nothing catch the failure before delivery?",
+    "because": "The plan checklist has only file/order/same-face/silent lines. It has no line for each beat's action. The join checks only length and sound. The assistant said plainly that it could not watch the video and delivered it.",
+    "evidence": "plan output 'checklist' (5 lines, no action line). join_production_clips 'checked' only lists duration and silence. state 'say' text: 'Not checked… that the three actions happen in order'."
+   },
+   {
+    "why": "Why could the grader not see shot 3 (the return and the smiles)?",
+    "because": "A harness artifact made this worse. The joined film URL returned 404, so the grader saw frames from separate clips only. It reported 'Shot 3 is not shown' and measured 5 s instead of 15 s. Shots 1 and 2 already fail the drop and pick-up, so the item fails even without shot 3.",
+    "evidence": "calls.jsonl join_production_clips files: 'download failed: download 404 http://127.0.0.1:8000/films/…mp4' in both chats. grade.json checks 'about 15 s' got '5 s'. Must-have reasons say 'Shot 3 is not shown'."
+   }
+  ],
+  "axiom": "Generator limit: the free-plan text/image-to-video model (ltx-2.5, 480p) cannot reliably render a prop handoff (scarf falls, is lifted, is handed back) or a clear mutual smile. It renders the scarf as worn clothing and morphs it, even with correct one-action-per-clip prompts. Secondary: a harness 404 on the joined film hid shot 3 from the grader.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "For beats that move a prop, make plan_video_production generate a still keyframe first (create image: scarf on the sidewalk with both people in frame; man holding the scarf out to her). Start each clip from that keyframe instead of the last frame of the clip before, and add a per-beat action line to the checklist. Also fix the harness so the joined film at 127.0.0.1:8000/films is downloadable, so the grader sees all 15 s."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.3044162
+}

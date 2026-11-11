@@ -1,0 +1,47 @@
+{
+ "id": "dd9b23c26d",
+ "key": "must:B12c:Ratios 1:1, 4:5, 9:16",
+ "symptom": "Ratios 1:1, 4:5, 9:16",
+ "item": "B12c",
+ "n": 6,
+ "builds": {
+  "old": 3,
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Ratios 1:1, 4:5, 9:16' not met?",
+    "because": "All three delivered images have the shape of the source photo (about 640x384, 5:3 landscape). None is square, 4:5 or 9:16.",
+    "evidence": "grade.json in s1.old.happy, s1.new.happy and s1.new.stupid: 'All three are landscape, about 640x384 (5:3)'. The frame s1.new.happy.B12c/assets/03-wait_for_image_project.png came from the call that asked for 9:16, and it is a 640x384 landscape picture."
+   },
+   {
+    "why": "Why did the outputs have the source shape? Did the assistant ask for the wrong ratio?",
+    "because": "No. In both builds the assistant made three separate edit_image calls with aspect_ratio set to '1:1', '4:5' and '9:16'. The prompts also said 'Reframe ... to a square / 4:5 portrait / tall 9:16 vertical'.",
+    "evidence": "calls.jsonl in s1.old.happy, s1.old.dumper and s1.new.happy: edit_image args {model:'flux-2-klein', resolution:'640px', aspect_ratio:'1:1'|'4:5'|'9:16', assets.image_file_paths:[car photo]}."
+   },
+   {
+    "why": "Why did the requested aspect_ratio have no effect?",
+    "because": "On the free plan the edit ran on flux-2-klein, and this model gave back the input image's shape. It ignored the aspect_ratio field. The API accepted the field without an error or warning. The job finished 'complete' and the result did not show the real width and height, so nothing showed the mismatch.",
+    "evidence": "calls.jsonl: the edit_image result is only {id, frame_cost:5, credits_charged:5}. The wait_for_image_project result is status 'complete' with a download URL and no dimensions. All three outputs in all 6 failing chats have the same 5:3 shape."
+   },
+   {
+    "why": "Why did the assistant pick flux-2-klein and trust aspect_ratio?",
+    "because": "The edit_image description tells a Free account to use 'flux-2-klein at 640px with image_count=1'. The aspect_ratio schema lists 4:5, 9:16 and 1:1 as valid and says it sets 'The aspect ratio of the output image(s)'. Nothing says that flux-2-klein keeps the input image's shape. The description gave the assistant no reason to doubt the field.",
+    "evidence": "tools-new.json edit_image (lines 3316 and 3360-3373): the description recommends flux-2-klein for Free, and the aspect_ratio enum is [auto,16:9,9:16,4:3,3:2,1:1,4:5,2:3] with 'The aspect ratio of the output image(s)'. The old build used the same model and arguments with the same result."
+   },
+   {
+    "why": "Why did the assistant not detect the wrong shape and fix it before it delivered?",
+    "because": "The assistant could not see the result dimensions. The tool results do not report them, and the assistant did not or could not view the files. It told the user that it 'couldn't preview' them. The server also has no exact tool that pads or crops to a ratio (blurred padding made by code, not by a model). So the only way to resize was a generation model that ignores the ratio.",
+    "evidence": "The reply in s1.new.happy says 'I couldn't preview these files myself'. In s1.old.dumper, fetch_image_download returned an empty output. tools-new.json has no reframe or pad tool. plan_request in the new build also returned only one aspect ('9:16') for a request with three ratios, and it did not warn about the ratio."
+   }
+  ],
+  "axiom": "On the free plan, the edit model flux-2-klein ignores the aspect_ratio parameter when it gets an input image and returns the input's shape (5:3). The API accepts the parameter without an error and does not report the output dimensions. This is a limit of the generation model and its API in this system.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the MCP server, add an exact 'reframe_image' step made by code (no generation call). It puts the source photo on a blurred, scaled copy of itself at the target ratio (1:1, 4:5, 9:16). Then route ratio-only edits to this step, not to edit_image. Also make wait_for_image_project return the output width and height and flag a mismatch with the requested aspect_ratio. The edit_image description must also say that flux-2-klein keeps the input image's shape."
+ },
+ "error": null,
+ "seconds": 64,
+ "usd": 0.6746344
+}

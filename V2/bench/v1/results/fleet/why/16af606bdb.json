@@ -1,0 +1,51 @@
+{
+ "id": "16af606bdb",
+ "key": "must:B11d:Warm tone and readable",
+ "symptom": "Warm tone and readable",
+ "item": "B11d",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Warm tone and readable' not met?",
+    "because": "The caption in the output image is misspelled or garbled, so the warm message breaks. The text itself is readable.",
+    "evidence": "s1.new.dumper.B11d/grade.json: exact_text 'Sip slow, stay warm' was read as 'Sip slow, stay worm.', and the grader says this 'ruins the warm tone'. s1.new.stupid.B11d/grade.json: the caption was read as 'Slow Sips, Olw Aarv Warm Hearts', and the grader says 'the garbled words break the message'."
+   },
+   {
+    "why": "Why is the caption misspelled? Did the assistant send the wrong words?",
+    "because": "No. The assistant picked a short, warm caption and sent it word for word, with an instruction to spell it exactly. The error appeared during generation.",
+    "evidence": "calls.jsonl edit_image args. Dumper: prompt 'Add exactly one short line of text: \"Sip slow, stay warm\" — spelled exactly like that…'. Stupid: '…spelled exactly: Slow Sips, Warm Hearts'. plan_request returned ready:true with these exact_words in both chats."
+   },
+   {
+    "why": "Why did generation garble the letters?",
+    "because": "Both edits ran on flux-2-klein at 640px, the cheapest model on the free tier. It draws a short caption badly: it swapped a vowel ('warm' became 'worm') and invented words ('Olw Aarv').",
+    "evidence": "calls.jsonl edit_image args in both chats: model 'flux-2-klein', resolution '640px', image_count 1, 5 credits. Same model, same kind of failure in both chats."
+   },
+   {
+    "why": "Why did the assistant choose flux-2-klein and not another free-tier model?",
+    "because": "The new build's edit_image description sends Free accounts to exactly this setting. It says nothing about how well each model draws text, so the assistant had no reason to pick a free-tier model that may draw text better (qwen-image-2.1 or qwen-edit, 10 credits).",
+    "evidence": "tools-new.json, edit_image description: 'For a Free account with no requested model, flux-2-klein at 640px with image_count=1 is an available option…'. The model list gives only credits, resolutions, tiers and input limits for each model. It has no note on text quality."
+   },
+   {
+    "why": "Why was the bad spelling delivered and not caught and redone?",
+    "because": "The assistant never saw the image. It called wait_for_image_project with include_inline_downloads:false, and fetch_image_download then returned empty output. So it delivered without checking and only asked the user to check the spelling.",
+    "evidence": "calls.jsonl: wait_for_image_project args include_inline_downloads:false. fetch_image_download output is \"\" in both chats. Final messages: 'I couldn't open a preview on my side, so please check the spelling' and 'I couldn't view the finished image here'. The stupid chat also claims the text is correct, and the grader lists this as a fault."
+   },
+   {
+    "why": "Why does flux-2-klein misspell a 4-word caption even with an exact-spelling instruction?",
+    "because": "This is a limit of the generation model. A small diffusion editor at 640px does not reliably draw exact letters. The instruction in the prompt cannot force it.",
+    "evidence": "Both chats used well-formed prompts with an explicit spelling instruction and still got wrong letters. The evidence cannot show whether a qwen model would do better, because no run used one. The model limit is the best-supported deepest cause."
+   }
+  ],
+  "axiom": "flux-2-klein at 640px, the free-tier model, draws short exact captions with wrong letters even when the prompt spells them out. This is a limit of the generation model. The new build's edit_image description sends Free accounts to this model, and the assistant had no working preview to catch the error.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "In the edit_image description of the new build, add: when exact_words must appear in the image, use a free-tier model that draws text well (qwen-image-2.1 or qwen-edit), or put the words on with code. Also make the preview step work: call wait_for_image_project with inline downloads on, or fix the empty fetch_image_download result. The assistant must then compare the drawn text with exact_words and make the image again on a mismatch before it delivers."
+ },
+ "error": null,
+ "seconds": 68,
+ "usd": 0.72815
+}

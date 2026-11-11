@@ -1,0 +1,46 @@
+{
+ "id": "e5093bc6c1",
+ "key": "must:J50c:The smaller line reads exactly 'SATURDAY 6–10 PM'.",
+ "symptom": "The smaller line reads exactly 'SATURDAY 6–10 PM'.",
+ "item": "J50c",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The smaller line reads exactly SATURDAY 6–10 PM' not met?",
+    "because": "No image exists, so the grader had no rendered text to check. The item failed for lack of an output, not because of wrong text in an output.",
+    "evidence": "s2r.old.happy.J50c/grade.json and s2r.old.dumper.J50c/grade.json: check 'something was made' pass=false, got 'no file'. The reason for this item is 'No image exists, so no text was rendered'. Neither chat has an output to grade."
+   },
+   {
+    "why": "Why was no image produced?",
+    "because": "Both generate_image calls in each chat were refused before they ran. The server said the account had 0 credits.",
+    "evidence": "s2r.old.happy.J50c/calls.jsonl line 2: approve=false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. Line 7 (flux-2-klein, 5 credits) got the same refusal. s2r.old.dumper.J50c/calls.jsonl lines 2 and 7 show the same result."
+   },
+   {
+    "why": "Why did the assistant not find a cheaper path or another way to make the poster?",
+    "because": "No cheaper path existed. The assistant had already dropped to the cheapest free model (flux-2-klein, 640px, 5 credits). Every generation costs credits, and 0 credits blocks all of them. The assistant reported this honestly and did not ask the user for anything.",
+    "evidence": "calls.jsonl line 7 in both chats: model 'flux-2-klein', resolution '640px'. state.json in the happy chat: 'I tried to make the navy version anyway, on the cheapest free model (5 credits). Magic Hour refused it too'."
+   },
+   {
+    "why": "Why did the prompts not cause the failure?",
+    "because": "The prompts the assistant sent quote both text lines exactly, so the content was correct. The failure is the zero balance alone. The 'Street Food • Music • Crafts' subline in the quoted grader reason probably comes from the stupid-persona chat, but that chat was not in the evidence I read. Every chat I did read failed on credits.",
+    "evidence": "Happy calls.jsonl line 7 prompt: 'smaller \"SATURDAY 6–10 PM\"'. Dumper line 7 prompt: 'smaller bold cream text reading exactly \"SATURDAY 6–10 PM\"'."
+   },
+   {
+    "why": "Why did the account have 0 credits when J50c expects the job to fit the free plan?",
+    "because": "The old-build fleet ran on the hosted Magic Hour account after its free-plan credit balance was used up. The harness did not refill or check the balance before these runs, and the free plan has a hard credit cap.",
+    "evidence": "J50c.json expect.beyond_free='no' (the test assumes free credits are available). chat.json url 'https://mcp.magichour.ai/' (old hosted build). All refusals say '0 remain on the account'."
+   }
+  ],
+  "axiom": "The free-plan account that the old (hosted) build used had 0 credits left. Every generation costs at least 5 credits, so the server refused every call. Nothing was rendered, and the text checklist item could not pass. This is the state of the account, not a defect in the tools or in the assistant's behaviour.",
+  "category": "free_plan_limit",
+  "builds": "old",
+  "fix": "Before each benchmark run, check that the old-build test account has at least about 20 credits (or reset it), and skip any run that starts at 0. Also make the grader mark items as 'blocked: no credits' when the 'something was made' check fails because of insufficient credits, so these are not counted as text failures."
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.1277632
+}

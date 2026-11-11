@@ -1,0 +1,52 @@
+{
+ "id": "3da483475e",
+ "key": "must:E28a:Deliverable is the kitchen-table video with audible voice-over, not audio-only",
+ "symptom": "Deliverable is the kitchen-table video with audible voice-over, not audio-only",
+ "item": "E28a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the deliverable not the kitchen-table video with an audible voice-over?",
+    "because": "Neither chat put audio on the user's clip. Old delivered only a WAV. New delivered an 11 s narration MP4 with a black screen.",
+    "evidence": "s3.old.happy.E28a/grade.json: 'Only a WAV link was delivered; the agent declined to merge it with the video.' s3.new.happy.E28a/grade.json: 'Output is a black-screen MP4; the original footage is absent.' new calls.jsonl line 6: the only finished file is narration project cmwbihk1j04vhgq01sbc9b6u1, 854x480, 11 s."
+   },
+   {
+    "why": "Why is the new build's output a black screen?",
+    "because": "In the new build, create_production_sound makes the narration as a black-screen video. It is meant only as an audio source for join_production_clips, which lays the sound over the clips. The join never ran, so the assistant could give the user only this sound-source file.",
+    "evidence": "new calls.jsonl line 2: plan sound.narration prompt 'A plain black screen for the whole clip; nothing appears and nothing moves. Sound only...'. tools-new.json create_production_sound: 'Returns narration (a video project id)... Pass both to join_production_clips as sound'."
+   },
+   {
+    "why": "Why did the join fail?",
+    "because": "Both join tools sent the user's uploaded file_path to the video-projects endpoint as if it were a project id, and Magic Hour returned 404. Neither tool turns an uploaded asset path into a media URL.",
+    "evidence": "new calls.jsonl line 3: join_videos(['api-assets/cmsla3fmt.../...video-0.mp4']) -> 'Magic Hour refused /v1/video-projects/api-assets/... (HTTP 404)'. Line 7: join_production_clips with made {1: that file_path} and sound {narration} -> same 404."
+   },
+   {
+    "why": "Why did the assistant pass a file_path, and not a URL or a project id?",
+    "because": "The harness gave the attachment only as a Magic Hour file_path. The join tool descriptions accept only 'finished video project ids or video URLs', so they have no input for an uploaded asset. Yet plan_video_production accepts a reference of kind 'file' (a file_path), so the flow looked valid until the join failed.",
+    "evidence": "new chat.json message: '[Attached: talk-one-silent.mp4 — Magic Hour file_path: api-assets/...]'. tools-new.json join_videos: '`videos`: finished video project ids or video URLs'; join_production_clips: '`made`: the video project id of every clip'; plan_video_production reference.kind 'file = a picture you made or were given (file: its file_path or URL)'."
+   },
+   {
+    "why": "Why did the old build not even try to merge?",
+    "because": "The old hosted server has no tool that adds an audio track and leaves the picture unchanged. The only tools that combine audio and video (lip sync, video editor) make a new video, so the assistant correctly refused them and handed over the WAV.",
+    "evidence": "old calls.jsonl line 6, the assistant's reply: 'Magic Hour has no tool that just adds an audio track and leaves the picture alone... Lip sync changes the mouth movements... The video editor re-renders the whole clip.' Calls made: only voices_list, ai_voice_generator_create_audio, wait_for_audio_project."
+   },
+   {
+    "why": "Why is that the end of the chain?",
+    "because": "The tool set has no step that puts sound on a video without changing its picture and that accepts a user-uploaded asset. Old lacks the tool. New has a join that could do it but resolves only project ids and URLs. This is a gap in tool behavior that no wording in the brief or by the assistant can get around.",
+    "evidence": "E28a.json must_haves: 'The deliverable is the attached kitchen-table video with an audible voice-over' and 'The original footage... remain unchanged'. tools-new.json join descriptions list no file_path input; the old reply confirms no such tool exists."
+   }
+  ],
+  "axiom": "The MCP server has no way to put sound on a user-uploaded video and keep its picture: the old build has no such tool, and the new build's join_videos / join_production_clips accept only video project ids or URLs, so the user's api-assets file_path is looked up as a video project and returns 404.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Let join_videos and join_production_clips (`made` and `videos`) accept a Magic Hour file_path (api-assets/...). Before the join, turn it into a signed download URL and do not look it up as a /v1/video-projects id. In plan_video_production, mark a beat whose reference is a user video as a pass-through clip (no create_video_from_text step) whose sound is laid on in the join. This gives an add-audio-to-video path that keeps the picture; the old build needs the same capability added."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.43205020000000005
+}

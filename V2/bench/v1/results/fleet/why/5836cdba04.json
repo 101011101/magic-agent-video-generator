@@ -1,0 +1,47 @@
+{
+ "id": "5836cdba04",
+ "key": "check:outputs:H",
+ "symptom": "2 outputs",
+ "item": "H44c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "The stupid persona only shows its needs when a question asks for them, and the harness ends the chat at the first reply classed as \"delivered\". The upfront-ask paths in both builds have one slot for the frame shape. In old there is no planning step, so the assistant guessed one 16:9 clip and never learned that two formats were needed. In new, plan_request took the aspect slot as one value and returned ready:true. Because of this, the \"and also a screen at the venue\" part was dropped, and the offer to make a second version came after the chat had already ended.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Make the plan_request aspect slot (and the question about where the video will be shown) accept a list. When the user names more than one place, it should return one output per place (for example [9:16 Stories, 16:9 venue screen]) and keep ready:false until each output has its own aspect. Add this to the tool description: \"When the user names several places, make one version per place before you reply. Do not offer the extra versions as a follow-up.\" Old build: add the same check about multiple places before the first create_video_from_text call.",
+  "whys": [
+   {
+    "why": "Why did the '2 outputs' check measure only 1?",
+    "because": "In both chats the assistant made exactly one video, then delivered it, and the chat ended.",
+    "evidence": "old calls.jsonl: one successful create_video_from_text (16:9, 5 s), then 'end delivered'. new calls.jsonl: one create_video_from_text (9:16, 10 s), then 'end delivered'. new grade.json: '2 outputs' pass:false got '1', and the judge says 'the landscape version was only offered, not made.'"
+   },
+   {
+    "why": "Why did the chats end before a second video was made?",
+    "because": "The harness classifier tags any reply with a finished file as 'delivered' and ends the chat. The closing offers and questions ('Is your screen landscape (16:9)? ... I can make a matching landscape version') never reach the user.",
+    "evidence": "new state.json: the classifier's reason is 'The closing questions about a landscape version ... are caveats and follow-up offers', kind 'delivered', ended:true. old state.json: the reply offers 'Vertical 9:16 for Instagram or TikTok' and is also classed 'delivered'."
+   },
+   {
+    "why": "Why did the old assistant not know that two formats were needed?",
+    "because": "The stupid persona's first message is only 'can you make a promo video for rooftop jazz'. The persona tells the rest only when asked. The old assistant asked nothing: it generated a 16:9 clip at once, after a retry for the model error.",
+    "evidence": "old chat.json: messages[0] is the vague line, and the bank holds 'Two separate 10-second videos: one 9:16 ... one 16:9'. old calls.jsonl: the first call has model 'default' and is rejected, the second is ltx-2.5 16:9 5 s, and the old tool list has no planning tool."
+   },
+   {
+    "why": "Why did the new assistant make only the 9:16 version even though the user said 'instagram stories and also a screen at the venue'?",
+    "because": "The assistant sent plan_request one 'aspect' parameter derived from 'instagram stories' (9:16) only. plan_request returned ready:true with no question about the second place.",
+    "evidence": "new calls.jsonl line 7: params {name:'aspect', value:'9:16', source:'derived', from:'instagram stories'}. The output shows 'ready':true and 'questions':[]. Line 8 is create_video_from_text named 'Rooftop Jazz Promo 9x16'."
+   },
+   {
+    "why": "Why could plan_request not catch that two outputs were requested?",
+    "because": "Its parameter set has one 'aspect' slot and no idea of several outputs or places. When the slot is filled, the check is satisfied. The second place is lost and turns into a follow-up offer that comes after the chat is over.",
+    "evidence": "new calls.jsonl line 2: the planner's parameter list (subject, seconds, aspect, sound, exact_words, look) has one aspect, and its question asks for a single place: 'Where will this be shown or posted ...?'. The second plan has no question about the venue screen."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2026282
+}

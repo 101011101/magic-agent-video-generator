@@ -1,0 +1,46 @@
+{
+ "id": "4ce68d7a83",
+ "key": "must:H40a:Multiple moving close-ups in a clean studio setting",
+ "symptom": "Multiple moving close-ups in a clean studio setting",
+ "item": "H40a",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Multiple moving close-ups in a clean studio setting' not met?",
+    "because": "In both chats at least one generated close-up shows the kitchen from the user's photo (wood table, plant, chair) and not a clean studio. In the happy chat, clip 1 is in a grey studio but clip 2 is in the kitchen. In the stupid chat, every clip is in the kitchen.",
+    "evidence": "s4.new.happy.H40a/grade.json: 'Clip 2 plays in the original kitchen with the wood table, plant and chair'. s4.new.stupid.H40a/grade.json: 'The setting is the user's home kitchen, not a studio'. attachments/product-bottle.jpg shows the bottle on a wooden table, with a chair, a plant and windows behind it."
+   },
+   {
+    "why": "Why does the happy chat show the kitchen when the assistant asked for a studio?",
+    "because": "The assistant's plan was correct. The setting was 'A clean, minimal photo studio with a seamless soft light-grey backdrop', and both clip prompts repeat it. But each clip is create_video_from_text on minimax-h3, and the reference is the raw user photo (reference.kind 'picture', file = the product-bottle.jpg asset). For clip 3 (6 s), the model copied the photo's whole scene and ignored the studio text.",
+    "evidence": "s4.new.happy.H40a/calls.jsonl line 2: the plan_video_production output for clips 2 and 3 has the prompt '...clean, minimal photo studio... Use @bottle as a likeness guide, not a pasted photo...' and reference file api-assets/.../image-0.jpg. grade.json shows clip 2 of the graded frames in the kitchen."
+   },
+   {
+    "why": "Why does the raw photo carry the kitchen into the clip?",
+    "because": "The server sends the user's unedited photo as the single reference for a 'product' subject. The photo has the bottle and the full kitchen background. Nothing removes or isolates the background before generation. The only guard is a sentence in the prompt ('likeness guide, not a pasted photo'), and the model does not always obey it.",
+    "evidence": "tools-new.json, plan_video_production: subjects[].picture is 'file_path of the user's picture of it'. No step cuts out the product. The plan output 'steps' for each scene has only create_video_from_text with the photo as reference. No remove_image_background step appears."
+   },
+   {
+    "why": "Why did the stupid chat end up in the kitchen?",
+    "because": "The assistant never learned that the user wanted a studio. plan_request asked only about motion, seconds, sound and aspect (where it will be posted). The stupid persona answers only what it is asked, so 'clean studio look' never came up. The assistant then chose a 'bright, calm home kitchen with a warm wooden table' to match the photo. It also sent the same raw photo as the reference.",
+    "evidence": "s4.new.stupid.H40a/calls.jsonl lines 2, 7 and 12: the plan_request questions do not cover look or setting. The user replies 'moving close-ups of the bottle, 15 sec, mellow music no talking' and then 'tiktok'. The story.setting is 'A bright, calm home kitchen with a warm wooden table...'. chat.json shows that the bank has 'Clean studio look', but the persona gives a fact only when asked."
+   },
+   {
+    "why": "Why does the model override the written setting with the reference's background?",
+    "because": "When minimax-h3 gets a full-scene photo as its image reference, it can reproduce that scene. The text prompt cannot reliably stop this. This is a behaviour of the generation model.",
+    "evidence": "In the happy chat, two clips had the same studio prompt and the same reference. One came out in a studio and one came out in the kitchen (grade.json). So the result depends on the model, not on the prompt."
+   }
+  ],
+  "axiom": "The video model (minimax-h3 with a picture reference) sometimes copies the background of the reference photo and ignores the setting in the text. The new build's production pipeline sends the user's unedited photo, with its kitchen background, as the product reference. In the stupid chat this combined with a plan_request that never asks about look or setting, so the assistant chose the kitchen itself.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "In plan_video_production/create_production_clip, if a subject has role 'product' and the setting does not match the photo, first run remove_image_background on the photo. Then use that cut-out (the product on a plain background) as the reference and not the raw photo. Also add 'look' to the questions plan_request asks when the request is an ad and the user gave no setting."
+ },
+ "error": null,
+ "seconds": 50,
+ "usd": 0.5136826
+}

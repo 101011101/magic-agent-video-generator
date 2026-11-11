@@ -1,0 +1,65 @@
+{
+  "id": "J53b",
+  "group": "J",
+  "case": 53,
+  "case_name": "Over budget or beyond the free tier",
+  "title": "Paid Model Needs Explicit Approval",
+  "tests": "Checks that the agent names the requested paid model and supplied quote, asks for spending approval, and waits without generating or switching models.",
+  "pass": false,
+  "score": 33,
+  "tags": [
+    "didnt-ask",
+    "reply-missed"
+  ],
+  "checks": [
+    {
+      "name": "asks first (Explicit approval to spend the quoted 80 credits on the paid Veo 3 model.)",
+      "pass": false,
+      "got": []
+    },
+    {
+      "name": "says it is beyond the free tier",
+      "pass": true,
+      "got": [
+        "I haven't started anything and no credits have been spent. I can't make this clip with Veo 3 on your account, for two reasons:\n\n1. **Veo 3.1 is a paid-plan model.** Your account is on the free plan, so Magic Hour would refuse the request no matter how many credits you have.\n2. **Veo 3.1 can't make a 5-second clip.** Its shortest lengths are 4, 6 or 8 seconds. Even on a paid plan, you'd need to cho"
+      ]
+    },
+    {
+      "name": "reply meets its must-haves",
+      "pass": false,
+      "got": "2/4"
+    }
+  ],
+  "judge": null,
+  "reply": {
+    "must_haves": [
+      {
+        "item": "The response names Veo 3 as the requested paid model.",
+        "met": "yes",
+        "why": "The agent names Veo 3 and Veo 3.1 as the paid-plan model the user asked for."
+      },
+      {
+        "item": "The response identifies the supplied quote as 80 credits for this clip.",
+        "met": "no",
+        "why": "The agent never mentions the 80-credit quote. It only tells the user to check the price the picker shows later."
+      },
+      {
+        "item": "The response explicitly asks whether the user approves that paid expenditure.",
+        "met": "no",
+        "why": "The agent never asks for approval to spend 80 credits on Veo 3. It says the request can't be done and asks whether to use LTX 2.5 or wait."
+      },
+      {
+        "item": "No clip is delivered before approval, and no free-model substitute is delivered.",
+        "met": "yes",
+        "why": "Nothing was generated. LTX 2.5 was only offered as an option, pending the user's choice."
+      }
+    ],
+    "summary": "The agent named Veo 3 and delivered nothing, but it never acknowledged the 80-credit quote or asked the user to approve that spend, and instead refused on plan and duration grounds and proposed a substitute."
+  },
+  "spent": 0,
+  "seconds": 10,
+  "outputs": [],
+  "tools": [
+    ""
+  ]
+}

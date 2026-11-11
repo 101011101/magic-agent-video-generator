@@ -1,0 +1,46 @@
+{
+ "id": "978fccc0eb",
+ "key": "check:aspect:I",
+ "symptom": "aspect 16:9",
+ "item": "I45c",
+ "n": 5,
+ "builds": {
+  "old": 5
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did 'aspect 16:9' fail in old-build I45c chats?",
+    "because": "The automatic check takes every file the chat produced and requires all of them to be 16:9. The failing chats had non-video files alongside the mp4.",
+    "evidence": "s5.old.dumper.I45c/grade.json: checks 'aspect 16:9' got [\"640x640\",\"640x640\",\"858x480\"] (files .png,.png,.mp4). s5.old.happy.I45c/grade.json got [\"640x384\",\"858x480\"] (files .png,.mp4). s5.old.stupid.I45c had only one mp4 at 854x480 and passed."
+   },
+   {
+    "why": "Why were there square or 5:3 PNG files?",
+    "because": "Before making the video, the assistant generated reference stills to lock the two faces (the brief asks to keep the same faces). In the dumper chat these were single-person portraits, deliberately requested at 1:1. In the happy chat it requested 16:9, but flux-2-klein at 640px returned 640x384 (5:3).",
+    "evidence": "s5.old.dumper.I45c/calls.jsonl: generate_image 'Woman reference' and 'Man reference', aspect_ratio '1:1', 640px. s5.old.happy.I45c/calls.jsonl: generate_image aspect_ratio '16:9', 640px; grade lists 640x384."
+   },
+   {
+    "why": "Why did those intermediate stills end up in the graded set?",
+    "because": "The harness saves every downloaded asset (wait_for_image_project output) into the chat's assets folder. The grader treats all of them as deliverables, and does not separate the final film from internal references.",
+    "evidence": "calls.jsonl 'files': ['assets/01-wait_for_image_project.png'] next to 'assets/02-wait_for_video_project.mp4'. grade.json 'something was made: 2 file(s)'. The brief asks for one video (I45c.json spec outputs:1, kind:video)."
+   },
+   {
+    "why": "Was the delivered film itself 16:9?",
+    "because": "Yes, close enough. The assistant passed aspect_ratio '16:9' to create_video_from_text (minimax-h3, 480p). The result was 858x480 (1.79, about 0.6% off 16:9). The assistant reported it as 16:9 widescreen. Missing evidence: no chat had only the 858x480 file, so I cannot rule out that the grader's tolerance also rejects 858x480 by itself. The 854x480 passes show the check works on the video when only the video is present.",
+    "evidence": "s5.old.happy.I45c/calls.jsonl: create_video_from_text args aspect_ratio '16:9', and wait_for_video_project returned width 858, height 480. The new build and old.stupid returned 854x480 and passed."
+   },
+   {
+    "why": "Why only the old build?",
+    "because": "Old-build assistants used a reference-image-then-video flow more often (which creates PNG side files). The new-build chats shown produced only mp4 clips at 854x480. The failure follows from which files exist, not from a wrong aspect argument.",
+    "evidence": "s5.new.happy.I45c/grade.json: files [.mp4,.mp4,.mp4], all 854x480, aspect passes."
+   }
+  ],
+  "axiom": "Grader defect: the aspect check needs every produced file to match the requested aspect. It counts intermediate reference stills (1:1 portraits, a 640x384 image) as deliverables, even though the final 15 s film was asked for and made at 16:9 (858x480).",
+  "category": "grader_artifact",
+  "builds": "old",
+  "fix": "In the grader, apply the 'aspect' check only to the final deliverable(s) of spec.kind (here, the last or delivered .mp4). Use a tolerance of about ±1% so that 858x480 counts as 16:9. Leave intermediate image references out of format checks."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.30676419999999993
+}

@@ -1,0 +1,47 @@
+{
+ "id": "ce1d14bcc7",
+ "key": "must:H40c:Sneaker consistently white leather low-top, white laces, white sole, no logo",
+ "symptom": "Sneaker consistently white leather low-top, white laces, white sole, no logo",
+ "item": "H40c",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'sneaker consistently white leather low-top, white laces, white sole, no logo' item not met?",
+    "because": "The shoe changes from shot to shot, and the model added logo-like details. In new.happy, shot 1 has a swoosh-like stitched panel and shot 2 is a different shoe with a tan sole. In old.happy, the sidewalk shoes look like mid- or high-tops. In new.stupid, the shoe is a blue-grey trail shoe with an orange sole and a red logo patch.",
+    "evidence": "grade.json of s4.new.happy.H40c (faults: 'swoosh-like stitched side shape', 'sneaker changes between shots'); s4.old.happy.H40c (sidewalk shoes 'mid- or high-tops', 'design changes'); s4.new.stupid.H40c ('blue-grey with orange sole and red logo patch')"
+   },
+   {
+    "why": "Why does the shoe change between shots in the new build?",
+    "because": "Each shot was a separate create_video_from_text call (ltx-2.5, 3 s each). The only thing the shots shared was the text 'A plain white leather low-top sneaker... with no logo'. No image tied them together.",
+    "evidence": "s4.new.happy calls.jsonl line 8: the second plan_video_production has every beat with link 'new' and reference {kind:'none'}. Clips 1, 3 and 5 each use create_video_from_text with only the text description."
+   },
+   {
+    "why": "Why did the assistant give up the shared visual reference?",
+    "because": "The first plan chained clips 2 and 3 from the last frame of the clip before. The planner then warned 'last-frame-keeps-place' because the shots change location (studio, then sidewalk, then studio). The assistant switched every beat to link 'new' to avoid this. The planner had no other way to hold the product steady, for example one product still made first that every clip starts from. So the only remaining choice was to rely on text alone.",
+    "evidence": "s4.new.happy calls.jsonl line 2: advice for clip 2 and clip 3, 'Clip 2 starts from clip 1's last frame (studio) but takes place in sidewalk'. The re-plan on line 8 changes link to 'new' for beats 2 and 3, and no reference image option appears in the plan output."
+   },
+   {
+    "why": "Why does text alone not keep the shoe the same, and why does the old build fail too?",
+    "because": "ltx-2.5 makes up a new shoe design each time it generates. It also often ignores negative words such as 'no logo' and reproduces familiar sneaker features (swoosh stitching, gum soles). The old build put all three shots in one 15 s text-to-video prompt ('no logo, no branding'), and the model still changed the shoe between the stand shot and the sidewalk shot.",
+    "evidence": "s4.old.happy calls.jsonl line 2: a single create_video_from_text call with ltx-2.5 and the full white/no-logo prompt. Its grade.json still reports that the design changes and the shoes look like high-tops."
+   },
+   {
+    "why": "Why did new.stupid show a coloured shoe with a logo?",
+    "because": "The stupid persona said only 'make a sneaker video ad' and '15 sec, instagram reel, no sound'. It never said white, leather or no logo, and the assistant did not ask about the product's look. So the prompt had no white/no-logo limits, and the model chose a generic trail shoe. This is a separate cause: the user's answers never gave the requirement that the grader checks.",
+    "evidence": "s4.new.stupid.H40c state.json transcript: no mention of white or no logo. The assistant describes 'a sleek sneaker' and does not ask about colour or branding."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5) cannot keep the same product design across separate generations, or across the cuts inside one generation, and it does not reliably follow negative words such as 'no logo'. When no image reference ties the shots together, the sneaker changes and logo-like details appear. In the stupid-persona chat, the white/no-logo requirement never reached the assistant, so the prompt could not include it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In plan_video_production, when the user gives no photo but the product must look the same in every shot, first make one product still with text-to-image (a white leather low-top with no logo, checked by eye), then start every clip from it with create_video_from_image. Offer this as the answer to the 'last-frame-keeps-place' warning instead of letting the assistant switch to link 'new' with text only."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.3729166
+}

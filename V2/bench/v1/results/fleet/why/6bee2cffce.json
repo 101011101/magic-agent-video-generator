@@ -1,0 +1,47 @@
+{
+ "id": "6bee2cffce",
+ "key": "must:H40c:Captions within central 70% width / 60% height",
+ "symptom": "Captions within central 70% width / 60% height",
+ "item": "H40c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "Neither the old nor the new Magic Hour MCP build has a tool that writes user-given text onto a video at a fixed position. The only way to get captions is to ask the generation model to draw them in the prompt, and that model cannot reliably spell text or keep it inside set margins. So the assistant either leaves the captions out (old/dumper) or never collects them and asks for \"no text\" in the prompt (new/stupid). This is made worse in the new build: plan_request marks exact_words as missing but does not ask the user for it.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a deterministic text-overlay step to the video tools (for example an overlay_text / captions parameter with text, start/end time and a safe-area box, done with ffmpeg drawtext after generation). Describe it in the create_video_* tool descriptions. In the new build, plan_request should also add an exact_words question for ad and reel requests, so that captions are asked for when the user does not give them.",
+  "whys": [
+   {
+    "why": "Why was 'Captions within central 70% width / 60% height' not met?",
+    "because": "The delivered videos have no captions at all, so there is nothing to place inside the safe area. The grader marks the placement item as failed together with the wording and legibility items.",
+    "evidence": "s4.old.dumper.H40c/grade.json: exact_text all 'missing', placement why 'No captions exist, so the constraint is not satisfied.' s4.new.stupid.H40c/grade.json: 'No captions are visible in any frame' and placement why 'No captions exist, so this can't be satisfied.'"
+   },
+   {
+    "why": "Why do the videos have no captions?",
+    "because": "In both chats the assistant told the video model to draw no text. The old prompt says 'no text, no words on screen'. The new prompt says 'No text, no logos, no words on screen.' No later call added text.",
+    "evidence": "old calls.jsonl line 4: create_video_from_image style.prompt '...no logo, no text, no words on screen.' new calls.jsonl line 8: create_video_from_text prompt ends 'No text, no logos, no words on screen.' After that, each chat has only wait_for_video_project and then delivery."
+   },
+   {
+    "why": "(old/dumper) Why did the assistant ask for no text when the user gave the exact captions and margins?",
+    "because": "The assistant found that no tool can put user text at a fixed position. The subtitle tool only writes captions from speech, and the video is silent. It judged that model-drawn text would be misspelled and placed outside the 15%/20% margins, so it delivered clean footage and told the user to add the captions in CapCut or Premiere.",
+    "evidence": "old calls.jsonl line 7 delivered text: 'None of my tools can place your own text on a video at fixed positions. The subtitle tool only writes captions from speech it hears... It could not reliably keep your 15% side and 20% top/bottom margins, so I left the footage clean.'"
+   },
+   {
+    "why": "(new/stupid) Why did the assistant never try to add captions?",
+    "because": "The stupid persona's opening message was only 'make a sneaker video ad', so the caption wording never came up. plan_request listed exact_words as 'missing', but its questions covered only seconds, aspect and sound, and once those were answered it returned ready:true. The assistant then went ahead with an invented sneaker and no text.",
+    "evidence": "new chat.json messages: 'make a sneaker video ad'. calls.jsonl line 2 plan_request output: exact_words source 'missing', questions only seconds/aspect/sound. Line 7: ready:true with exact_words still null. The user answered '15 sec, instagram reel, no sound'."
+   },
+   {
+    "why": "Why is there no reliable way to meet the caption brief even when the words are known?",
+    "because": "The tool list has no text-overlay or burn-in tool. Captions depend on the generation model drawing text, which it cannot do with exact wording or a fixed safe-area position. This is a missing capability in the MCP server for both builds, not a free-plan limit (the test sets beyond_free 'no').",
+    "evidence": "H40c.json expect.beyond_free 'no', and must_haves require exact wording and bounds 'including during transitions'. The old assistant's statement about the tool set (calls.jsonl line 7). The new build behaved the same way, adding no text step (calls.jsonl lines 8-11)."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 115,
+ "usd": 0.2431822
+}

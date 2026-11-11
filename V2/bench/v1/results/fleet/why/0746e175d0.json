@@ -1,0 +1,46 @@
+{
+ "id": "0746e175d0",
+ "key": "must:J51a:The scene has a cosy illustrated appearance.",
+ "symptom": "The scene has a cosy illustrated appearance.",
+ "item": "J51a",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The scene has a cosy illustrated appearance' not met?",
+    "because": "No video file was delivered, so the grader had nothing to judge the look against.",
+    "evidence": "s2r.old.stupid.J51a/grade.json: check 'something was made' pass=false, got 'no file'. The cosy item's reason is 'No output was produced'. The happy chat's reason is 'No output exists to show a cosy illustrated look'."
+   },
+   {
+    "why": "Why was no video delivered?",
+    "because": "Every create_video_from_text call was refused before generation and returned no job.",
+    "evidence": "s2r.old.happy.J51a/calls.jsonl lines 5 and 10, and s2r.old.stupid.J51a/calls.jsonl lines 3 and 8: approve=false, est=null, reason 'insufficient credits: this call needs about 144 (or 120) credits and 0 remain on the account'."
+   },
+   {
+    "why": "Why were the calls refused when the assistant chose valid settings?",
+    "because": "The arguments fit the free plan (ltx-2.5, 480p, 9:16, 6 s, audio off) and the prompt was correct. The happy chat's prompt asked for a 'Cosy hand-illustrated animation, soft painterly storybook style'. The only blocker was a credit balance of 0. Even the cheapest free-plan setting costs about 120 credits.",
+    "evidence": "s2r.old.happy.J51a/calls.jsonl line 10 args. The stupid chat's assistant reply on line 10: 'There's no free setting cheap enough to run on 0 credits'."
+   },
+   {
+    "why": "Why did the old-build account have 0 credits?",
+    "because": "All old-build chats in this fleet run on the same free-plan account, and earlier runs used up its credits. No step resets or refills the balance before each chat. All 3 failures are on the old build only, and none are on the new build. This points to how each build's account was funded, not to how the assistant behaved.",
+    "evidence": "Symptom counts are builds {old:3}, with failures across all three personas, including the happy persona, which gave the correct brief. Both chats show '0 remain on the account' starting from the first call."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The harness started the old-build chats with a drained credit balance. This is a harness condition, not a tool or model defect, so the cosy-look item could not be met by any assistant behaviour. Secondary: the stupid-persona assistant also planned a realistic cafe scene. That would have failed the item even with credits, but the zero balance blocked all three chats first.",
+    "evidence": "s2r.old.stupid.J51a/grade.json: cosy item reason says 'the plan was a cinematic realistic look'. The prompt in calls.jsonl line 2 has no illustrated style."
+   }
+  ],
+  "axiom": "The old-build free-plan account had 0 credits when the chats started, so every generation call was refused before it ran. With no output, nothing could show the cosy illustrated look, and the cause is the harness's credit state, not the assistant or the MCP tools.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Before each chat, reset or top up the benchmark account's credits so that both builds start with at least one free-plan video's worth (about 150 credits). Mark chats that end with 'insufficient credits / 0 remain' as harness-invalid and rerun them, instead of grading them as content failures."
+ },
+ "error": null,
+ "seconds": 23,
+ "usd": 0.0918902
+}

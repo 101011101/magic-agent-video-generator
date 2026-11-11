@@ -1,0 +1,46 @@
+{
+ "id": "d0f50f0937",
+ "key": "must:E26b:All footage comes from jet-30s.mp4, without generated replacement scenes or speed changes",
+ "symptom": "All footage comes from jet-30s.mp4, without generated replacement scenes or speed changes",
+ "item": "E26b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "axiom": "The new build has no tool that cuts a segment from the user's video and keeps the original frames. plan_request still lists 'trim_video' as a target and answers ready=true for it, but the server does not have that tool. The only tool that takes a start/end range of the user's video is edit_video, and it re-creates every frame with the LTX 2.5 generation model (free plan: 480p, 832x512). Any path through the tools therefore gives AI-made footage.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Make 'trim_video' a real tool in the new build: cut start_seconds–end_seconds from the user's file with a stream copy (ffmpeg -ss/-t -c copy), with the original sound, at 0 credits. join_videos already does this kind of plain file work. If that is not possible, remove 'trim_video' from the plan_request tool enum. Then add one line to the edit_video description: \"Re-creates every frame with AI; do not use it to trim or cut footage that must stay the same.\"",
+  "whys": [
+   {
+    "why": "Why does the output not count as footage from jet-30s.mp4?",
+    "because": "The 8 s clip was made by the AI video editor (VIDEO_EDITOR, LTX 2.5). It is not a cut of the source: it is 832x512, it has the generated look, and the visor changes between frames.",
+    "evidence": "s3.new.stupid.E26b/calls.jsonl line 10 and s3.new.dumper.E26b/calls.jsonl line 12: wait_for_video_project returns type VIDEO_EDITOR, width 832, height 512, 192 credits. grade.json reason: 're-created by an AI video editor at 832x512 … visor changes between frames'."
+   },
+   {
+    "why": "Why did the assistant send a trim job to the video editor?",
+    "because": "In both chats the assistant called edit_video with start_seconds 11, end_seconds 19, model ltx-2.5 and the prompt 'Keep the video exactly as it is. Change nothing'. It used the editor as a trimmer and trusted the prompt to keep the frames the same.",
+    "evidence": "stupid calls.jsonl line 9 and dumper calls.jsonl line 11: edit_video args. The stupid chat's final message says: 'Magic Hour has no tool that just cuts a clip. So I put that part through the video editor … It made the footage again'."
+   },
+   {
+    "why": "Why was no real trim tool used?",
+    "because": "The tool the assistant tried for the cut does not exist. plan_request answered tool 'trim_video' with ready=true, but the call to trim_video failed with 'Unknown tool'. The tool list has no trim tool: join_videos only joins whole videos, and edit_video, translate_video and upscale_video all start generation jobs.",
+    "evidence": "stupid calls.jsonl line 7: plan_request returns {\"tool\":\"trim_video\",\"ready\":true}. Line 8: trim_video gives error -32602 \"Unknown tool: 'trim_video'\". tools-new.json: the plan_request 'tool' enum lists 'trim_video', but no tool named trim_video is defined in the list."
+   },
+   {
+    "why": "Why did the assistant not stop and decline, as the brief needed source-faithful footage?",
+    "because": "The edit_video description says only that it 'Edits the appearance or content of a supplied video segment'. It does not say that every frame is re-created, so a 'change nothing' prompt looks like a workable cut. In the dumper chat the assistant first declined correctly, with no credits spent. Then the simulated user pushed ('just go ahead and try it anyway') and it fell back to edit_video. In the stupid chat it went straight to edit_video after the unknown-tool error.",
+    "evidence": "tools-new.json edit_video description (around line 1414). dumper calls.jsonl line 9: kind 'cannot', 'The video editor … re-creates the clip with AI'. Line 10: the user pushes. Line 11: edit_video call."
+   },
+   {
+    "why": "Why does edit_video, even with a 'change nothing' prompt, give footage that is not the original?",
+    "because": "The LTX 2.5 editing model always generates new frames at its own output size. On the free plan that is 480p (832x512). A prompt cannot make it copy the source exactly. This is a fixed property of the generation model and needs no further cause.",
+    "evidence": "Tool result: width 832, height 512, fps 24, credits_charged 192 (24 per second, the generation rate). The grader saw a changing visor across frames."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 129,
+ "usd": 0.37713680000000005
+}

@@ -1,0 +1,52 @@
+{
+ "id": "92a78a2fd7",
+ "key": "must:E24b:The original English speech remains audible, with no Spanish dub.",
+ "symptom": "The original English speech remains audible, with no Spanish dub.",
+ "item": "E24b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The original English speech remains audible, with no Spanish dub' marked not met?",
+    "because": "Neither chat produced an output video, so the grader had no audio to check. The item failed because nothing was delivered, not because a dub was added.",
+    "evidence": "grade.json in both chats: check 'something was made' pass=false, got 'no file'. The reason for this item: 'No output video exists; the original is untouched but no deliverable demonstrates this' (old) and 'No output video exists, so there is no audio to evaluate' (new)."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "Both assistants stopped before calling any create tool. They told the user that no tool could give 'English voice + Spanish subtitles' and offered two choices: English subtitles or stop. The dumper user turned down English subtitles. Each assistant then gave only text: an .srt file (old) or draft caption lines (new).",
+    "evidence": "calls.jsonl old: only get_workflow_guide was called, then a 'question' turn, then a 'delivered' turn with an SRT code block and called=false. calls.jsonl new: only plan_request was called, then the same question, then the user said 'I'll stop here and try another app', then a text draft with called=false."
+   },
+   {
+    "why": "Why did the assistants decide that no tool could make Spanish subtitles?",
+    "because": "The only subtitle tool, add_subtitles_to_video, has no language parameter and no way to pass caption text. It only transcribes the speech automatically, so on an English clip it can only make English captions. The only Spanish tool, translate_video, replaces the speech with a Spanish dub, which the user did not allow.",
+    "evidence": "tools-new.json add_subtitles_to_video: 'Adds automatically generated subtitles ...'. Its inputSchema has only name, start_seconds, end_seconds, assets.video_file_path and style (template or custom_config with font, colours and position). It has no language field and no text or SRT field. translate_video: 'Translates speech in a supplied video segment into a supported target language' (target_language includes Spanish)."
+   },
+   {
+    "why": "Why is there no other path, such as burning the assistant's own Spanish text onto the original footage?",
+    "because": "Neither build has a tool that puts given text over a user's video without regenerating it. edit_video is a generative prompt edit that would change the footage. The new build's code-drawn cards exist only inside plan_video_production for new films, not as an overlay on an uploaded clip. Both assistants correctly kept the user's rule to leave the video and voice unchanged.",
+    "evidence": "tools-new.json edit_video: 'Edits the appearance or content of a supplied video segment using a text prompt'. plan_video_production: cards are 'drawn by code' and captions are 'added to the finished film' of a generated production. The user's brief says: 'Leave her voice in English and keep the whole video as it is.'"
+   },
+   {
+    "why": "Why does the test still expect a subtitled video?",
+    "because": "The test treats the task as possible on the free plan with no questions (expect.asks='never', beyond_free='no', refuse=false), and every must-have is about a rendered video. But the Magic Hour subtitle product cannot translate. So the test asks for a capability the API does not have. This is the axiom: a missing feature of the subtitle API that the test did not account for.",
+    "evidence": "E24b.json: expect {asks:'never', beyond_free:'no', refuse:false}, spec.kind='video', audio='required'. must_haves include 'Visible Spanish subtitles ...' and 'The original English speech remains audible'. The answer_sheet says 'Put readable Spanish subtitles on the video.'"
+   },
+   {
+    "why": "Did anything in the new build make this worse?",
+    "because": "No, but the new build gave a misleading signal. plan_request returned ready=true with language=Spanish for add_subtitles_to_video, although that tool has no language input. The assistant noticed the gap and did not follow the false 'ready'. This did not cause the failure, but it is a defect in the new build.",
+    "evidence": "calls.jsonl new line 2: plan_request output {\"tool\":\"add_subtitles_to_video\",\"ready\":true,\"params\":[{\"name\":\"language\",\"value\":\"Spanish\",...}]}. Right after that, the assistant told the user: 'Magic Hour's subtitle tool has no language setting.'"
+   }
+  ],
+  "axiom": "Magic Hour's add_subtitles_to_video only transcribes speech automatically. It has no target-language option and no way to supply caption text. No tool in either build overlays given text on a user's video without regenerating it. So Spanish subtitles over the untouched English audio cannot be made, but test E24b expects them on the free plan with no questions. The audio item failed only as a side effect of having no deliverable.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-drawn subtitle burn-in tool to the new build. It would take the user's video plus timed caption lines (SRT or a list) and draw them with ffmpeg, keeping the original audio and frames. The assistant could then translate the English transcript itself and deliver the video. Also make plan_request return a 'language' row as unsupported for add_subtitles_to_video instead of ready=true. If no such tool is added, change E24b to expect a clear explanation of the limit (refuse/beyond-capability) and stop grading video-only must-haves."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.5117738000000001
+}

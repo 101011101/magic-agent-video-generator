@@ -1,0 +1,47 @@
+{
+ "id": "de02b0315a",
+ "key": "must:J51b:The robot, plant, background and animation match the previously delivered clip rather than a newly generated interpretation.",
+ "symptom": "The robot, plant, background and animation match the previously delivered clip rather than a newly generated interpretation.",
+ "item": "J51b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'robot, plant, background and animation match the previously delivered clip' not met?",
+    "because": "No clip was ever delivered in turn 1, so there was nothing to reuse or match. The grader failed the item for that reason alone. It did not find a newly generated replacement.",
+    "evidence": "s2r.old.stupid.J51b/grade.json: 'No clip was ever delivered, so nothing could match it.' The checks show 'something was made: false, got: no file'. The grade/ frames show no output."
+   },
+   {
+    "why": "Why was no clip delivered in turn 1?",
+    "because": "Every create_video_from_text call was refused before it ran. Nothing was generated in any of the three chats I read, on either build.",
+    "evidence": "old.stupid calls.jsonl lines 2-3, old.dumper lines 2-3 and new.stupid line 8 all have approve:false. No file was made in any of them."
+   },
+   {
+    "why": "Why were the calls refused?",
+    "because": "The account had 0 credits. The first refusal in the old build (model 'default' is not on the free plan) did not matter: the assistant retried with ltx-2.5 at 480p and the account refused that call too.",
+    "evidence": "Refusal reasons: 'insufficient credits: this call needs about 120 credits and 0 remain on the account' (old.stupid), 'about 192 credits and 0 remain' (old.dumper, new.stupid). The new build's plan_request returned ready:true. The assistant used free-plan settings."
+   },
+   {
+    "why": "Why did the test still go on to the 'resize the video you made' turn?",
+    "because": "The harness sends the scripted turn 2 no matter what turn 1 did. Turn 2 assumes a clip was delivered. The assistants told the user correctly that no video existed and that their tools cannot add navy padding. The nudged retries hit the same 0-credit wall.",
+    "evidence": "calls.jsonl user event with 'next_message': true sends the J51b turn 2 text right after a 'cannot' turn_end. The later nudge retries (old.stupid line 12, old.dumper line 11, new.stupid line 16) were all refused for insufficient credits."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The test account's credit balance was empty when these chats ran. It is the same on both builds, so it is an environment state, not something the assistant or the MCP server did. J51b expects the job to fit the free plan (beyond_free:'no'), so with credits available it should have run. I could not see the 4th failing chat (happy): its files were not in the evidence list, so I cannot confirm its cause.",
+    "evidence": "J51b.json expect.beyond_free = 'no'. All three chats I read report '0 remain on the account' from the very first billable call, on both builds."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits when these chats ran. Turn 1 could make nothing, and the harness still sent a scripted follow-up that assumes a clip exists. This is a test-environment defect, not an assistant or tool failure.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, check the account's credit balance before each chat and top it up. If turn 1 delivers no file because of insufficient credits, mark the chat invalid and rerun it. Do not grade it or send the scripted turn 2."
+ },
+ "error": null,
+ "seconds": 29,
+ "usd": 0.1380662
+}

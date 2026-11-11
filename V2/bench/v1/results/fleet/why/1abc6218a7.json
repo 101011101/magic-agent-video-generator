@@ -1,0 +1,47 @@
+{
+ "id": "1abc6218a7",
+ "key": "must:G36b:Every line comfortably readable at delivered size",
+ "symptom": "Every line comfortably readable at delivered size",
+ "item": "G36b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Every line comfortably readable at delivered size' marked not met?",
+    "because": "In both chats the address and date lines are rendered small and no larger than the other lines. The 9:16 image is only 352px wide and the 16:9 image is only 352px tall, so small lines become hard to read.",
+    "evidence": "s4.old.dumper.G36b/grade.json: 'address is fairly small in all three… 9:16 is only 352px wide… not emphasised'; ratios 640x640, 352x640, 640x352. s4.new.stupid.G36b/grade.json: 'Address and date lines are small in all; tall image small text is tiny'. Frames assets/02 and 03 (old): the address is the same size as 'Saturday & Sunday' and smaller than the headline."
+   },
+   {
+    "why": "Why are the canvases so small?",
+    "because": "The free plan caps generate_image at 640px on the long side. Both assistants sent resolution '640px', so the short side of 9:16 and 16:9 is 352px. Five lines of copy must share that area.",
+    "evidence": "calls.jsonl in both chats: generate_image args resolution '640px', model 'qwen-image-2.1'. Old reply: 'Your free plan makes images at up to 640px on the long side.' New reply: 'On the free plan the images are 640px on the long side.'"
+   },
+   {
+    "why": "Why did the address not get emphasis in the old build, even though the assistant asked for it?",
+    "because": "The old prompt asked for the address 'large bold, clearly legible' in all three variants. The model still set it at body-text size under a larger headline, so it ignored the relative-size request. The assistant could not see the outputs to catch this and claimed 'set large and bold' anyway.",
+    "evidence": "s4.old.dumper.G36b/calls.jsonl: each prompt says '\"Visit 24 Willow Lane\" (address, large bold, clearly legible)'. fetch_image_download output is empty. Reply: 'I couldn't open the finished images myself'. grade.json fault: 'The assistant claimed it was large and bold, and it is not.'"
+   },
+   {
+    "why": "Why was the address de-emphasised in the new build?",
+    "because": "The stupid persona did not pass on the 'keep the address easy to read, rearrange instead of shrinking' requirement. Its reply listed only the shapes, words and look. plan_request had no field for text priority, so the assistant chose a standard hierarchy and wrote 'then smaller \"Visit 24 Willow Lane\"' in all three prompts.",
+    "evidence": "s4.new.stupid.G36b/chat.json: the bank has the 'Text priority' entry, but calls.jsonl line 5 shows the user said only 'words: … leafy plants, clean green and cream look'. The plan_request rows are subject/aspect/exact_words/look/mood. The generate_image prompts contain 'then smaller \"Visit 24 Willow Lane\"'."
+   },
+   {
+    "why": "Why does neither build guarantee readable small lines at 640px?",
+    "because": "Text size in qwen-image-2.1 can only be suggested in words, and the model does not follow relative-size requests reliably. No tool parameter sets a minimum text height. At a 352px short side, any line drawn at body-text size ends up around 15–25px tall.",
+    "evidence": "generate_image args in both builds offer only style.prompt, aspect_ratio and resolution, with no text-size control. The old frames show the model ignoring 'address, large bold' in all three images."
+   }
+  ],
+  "axiom": "On the free plan, generate_image outputs at most 640px on the long side (352px on the short side for 9:16 and 16:9). The image model (qwen-image-2.1) does not follow prompt requests about relative text size, such as making the address large. So five lines of copy on a 352px side always include small lines, and the assistant cannot force the address to be emphasised. In the new chat the persona also dropped the address-priority instruction, which made it worse: the assistant asked for a 'smaller' address.",
+  "category": "free_plan_limit",
+  "builds": "both",
+  "fix": "In the generate_image description (and plan_request), state that free-plan output is 640px on the long side and 352px on the short side for 9:16 and 16:9. Tell the assistant: for text-heavy ads, give every line the same minimum size (for example 'each line at least 1/10 of the image height'), put the address on its own contrasting band, and never write 'smaller' for a line. Also add a text_priority row to plan_request so that a request like 'keep the address readable' is kept even when the user words it vaguely."
+ },
+ "error": null,
+ "seconds": 45,
+ "usd": 0.35017659999999995
+}

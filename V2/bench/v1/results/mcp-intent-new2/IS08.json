@@ -1,0 +1,175 @@
+{
+  "id": "IS08",
+  "item": {
+    "id": "IS08",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Face swap on a photo",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Face swap on a photo",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "web-evan.jpg",
+          "student-teacher.jpg"
+        ],
+        "text": "put the one guy's face on the other"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "which": "the teacher's face (the man in the grey shirt) onto the man with braids"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "swap_face_in_photo"
+  },
+  "session": "mcp-min2-IS08",
+  "sessionDir": "sessions/mcp-min2-IS08",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "put the one guy's face on the other",
+      "materials": [
+        "web-evan.jpg",
+        "student-teacher.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Whose face goes where (which person in the picture)?",
+          "asked": [
+            "question"
+          ],
+          "user": "The teacher’s face (the man in the grey shirt) onto the man with braids.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t complete the face swap because your Magic Hour account has **0 credits**, and this edit requires **10 credits**. No image was created.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"put the one guy's face on the other\\n[Attached: web-evan.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/f78a21d2-d96b-41ff-a242-be3ac9f080d8-image-0.jpg]\\n[Attached: student-teacher.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/74d5caf9-57b2-47f9-9ec6-246e94bf1453-image-0.jpg]\"}],\"attachments\":[{\"name\":\"web-evan.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"student-teacher.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"params\":[{\"name\":\"subject\",\"value\":\"Two men in supplied photos\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Swap one man's face onto the other man's photo\",\"source\":\"user\"},{\"name\":\"which_face\",\"source\":\"missing\"}],\"tool\":\"swap_face_in_photo\"}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":false,\"params\":[{\"name\":\"which_face\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"which_face\",\"question\":\"Whose face goes where (which person in the picture)?\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"put the one guy's face on the other\\n[Attached: web-evan.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/f78a21d2-d96b-41ff-a242-be3ac9f080d8-image-0.jpg]\\n[Attached: student-teacher.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/74d5caf9-57b2-47f9-9ec6-246e94bf1453-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Whose face goes where (which person in the picture)?\"},{\"role\":\"user\",\"text\":\"The teacher’s face (the man in the grey shirt) onto the man with braids.\"}],\"attachments\":[{\"name\":\"web-evan.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"student-teacher.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"params\":[{\"name\":\"subject\",\"value\":\"The two men in the attached photos\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Put the grey-shirted teacher's face onto the man with braids\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":\"Source: student-teacher.jpg (grey shirt). Target: web-evan.jpg (braids).\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Keep target body, clothing, braids and background\",\"source\":\"derived\"}],\"tool\":\"swap_face_in_photo\"}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":true,\"params\":[{\"name\":\"which_face\",\"value\":\"Source: student-teacher.jpg (grey shirt). Target: web-evan.jpg (braids).\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "swap_face_in_photo",
+          "args": {
+            "assets": {
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/f78a21d2-d96b-41ff-a242-be3ac9f080d8-image-0.jpg",
+              "source_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/74d5caf9-57b2-47f9-9ec6-246e94bf1453-image-0.jpg",
+              "face_swap_mode": "all-faces"
+            },
+            "name": "Teacher face onto man with braids"
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Whose face goes where (which person in the picture)?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "swap_face_in_photo: insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t complete the face swap because your Magic Hour account has **0 credits**, and this edit requires **10 credits**. No image was created.",
+        "refuse": "",
+        "tier_move": "I couldn’t complete the face swap because your Magic Hour account has **0 credits**, and this edit requires **10 credits**. No image was created.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 46
+    }
+  ],
+  "started": "2026-11-05T07:34:13.964Z",
+  "spent": 0,
+  "seconds": 47
+}

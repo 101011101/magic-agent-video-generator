@@ -1,0 +1,47 @@
+{
+ "id": "562b9ef52d",
+ "key": "check:aspect:C",
+ "symptom": "aspect 1:1",
+ "item": "C17b",
+ "n": 10,
+ "builds": {
+  "new": 3,
+  "old": 7
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'aspect 1:1' not met in C17b?",
+    "because": "The aspect check reads every file saved for the chat. Two of these files are not square (1024x1536 and 2048x1529). The real deliverable is square (640x640).",
+    "evidence": "s1.old.dumper.C17b/grade.json: aspect 1:1 failed with got [\"1024x1536\",\"2048x1529\",\"640x640\"]. In the same file, 'a video was made' lists 104 files: 2 .webp, about 100 .mp3, 1 .wav and 1 .mp4. s1.old.happy.C17b/grade.json shows the same pattern."
+   },
+   {
+    "why": "Why does the chat have non-square files when the assistant made only one video?",
+    "because": "The assistant called voices_list to pick a male voice. The harness downloaded every URL in that tool result as a chat asset: the avatar_url images and about 100 preview mp3 files.",
+    "evidence": "s1.old.dumper.C17b/calls.jsonl line 2: voices_list(limit:100) returns avatar_url values. Only 2 distinct images are used: female-portrait-turtleneck.webp and male-headshot-portrait.webp. 'files' lists assets/01-voices_list.webp, assets/03-voices_list.webp and 02..102 .mp3. These are the 2 non-square sizes."
+   },
+   {
+    "why": "Is the delivered video actually non-square?",
+    "because": "No. The talking-photo output is 640x640, and the visual judge confirmed square frames. Only the stock avatar thumbnails break the 1:1 rule.",
+    "evidence": "s1.old.dumper.C17b/calls.jsonl line 6: wait_for_video_project returns width 640, height 640, saved as assets/104-wait_for_video_project.mp4. grade.json must item 5: 'Frames are square ... 8 s', met=yes."
+   },
+   {
+    "why": "Why do most failures come from old-build chats?",
+    "because": "On the old build, the assistant needs voices_list to choose a voice before create_talking_photo, so the avatar images get saved. On the new build, create_spoken_ad_video makes the voice from the script, so voices_list is usually not called. Then only the 640x640 mp4 is saved and the check passes. The 3 new-build failures most likely come from runs that also called voices_list. I did not open those runs, so this is not confirmed.",
+    "evidence": "s1.new.happy.C17b, s1.new.dumper.C17b and s1.new.stupid.C17b grade.json all show aspect got [\"640x640\"] with 1 file. s1.new.happy.C17b/calls.jsonl calls only create_spoken_ad_video and wait_for_video_project."
+   },
+   {
+    "why": "Why does the grader count voice-catalog thumbnails as outputs?",
+    "because": "The harness saves every media URL in any tool result, including list/catalog tools. The checks then run over all saved files. They do not run only over the deliverable from the wait_for_*_project result that the assistant presented. This is a harness/grader defect, not a fault of the model or the MCP server.",
+    "evidence": "calls.jsonl 'files' for voices_list holds 102 assets. grade.json 'something was made' = '104 file(s)', and the dimension list is a union over all images and videos."
+   }
+  ],
+  "axiom": "The harness saves every URL in every tool result as an output. The aspect check then tests all saved files. So the voices_list avatar thumbnails (1024x1536 and 2048x1529) fail the 1:1 check, even though the delivered video is 640x640. This is a grader/harness defect.",
+  "category": "grader_artifact",
+  "builds": "both",
+  "fix": "Run the aspect, duration and sound checks only on deliverables. A deliverable is a file from a wait_for_video_project, wait_for_image_project or wait_for_audio_project result, or the URL that the assistant gave to the user. Do not save catalog previews and avatars from voices_list or other list tools as outputs, or tag them as reference files and leave them out of the checks."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.3357626
+}

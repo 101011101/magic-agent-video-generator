@@ -1,0 +1,47 @@
+{
+ "id": "fad3796868",
+ "key": "must:E27c:Preserves all seven seconds of original footage unchanged",
+ "symptom": "Preserves all seven seconds of original footage unchanged",
+ "item": "E27c",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Preserves all seven seconds of original footage unchanged' not met?",
+    "because": "No output video was delivered. The only file was a music WAV, so there was no seven-second clip for the grader to check.",
+    "evidence": "s3.old.happy.E27c/grade.json: the check 'a video was made' failed with got [\".wav\"] and 'about 7 s' got '15 s'. The must-have reason says 'No mixed video was delivered; only a separate 15 s WAV.'"
+   },
+   {
+    "why": "Why did the assistant deliver only a WAV and not the clip with music under it?",
+    "because": "The assistant called only generate_music and wait_for_audio_project. It never called a video tool, and it told the user to mix the track in CapCut, Premiere or DaVinci.",
+    "evidence": "s3.old.happy calls.jsonl: generate_music (duration 15, instrumental) and then wait_for_audio_project returned output.wav. s3.old.stupid has the same pattern. s3.new.happy calls generate_music with duration 30 and the delivered text says 'the music isn't mixed in yet. Put the WAV on a track under the video in any editor.'"
+   },
+   {
+    "why": "Why did the assistant not use a video tool to put the music under the existing audio?",
+    "because": "In both builds the assistant decided that no tool can lay a track under a video's existing audio or duck it under speech. It saw that the tools that touch video either re-render the picture (editor, restyle, audio-to-video) or replace the soundtrack. Both of these break 'Don't change the footage' or remove the radio calls.",
+    "evidence": "s3.old.happy first reply: 'None of my Magic Hour tools can lay a music track under a video's existing audio, set the levels or duck the music... The editor, restyle and audio-to-video tools all re-render or replace the picture.' s3.new.happy: 'The tools that touch audio either make new footage or replace the sound.' s3.old.stupid: 'none of my Magic Hour tools can lay a music track under an existing video.'"
+   },
+   {
+    "why": "Why did the new build also fail, given that it has extra tools such as join_videos and get_workflow_guide?",
+    "because": "The new build's extra tools do not mix audio either. The assistant called get_workflow_guide('media-apis'), which gave no mixing workflow. It then tried join_videos with only the source clip, and that call failed with HTTP 404. After that it fell back to generate_music. The workflow enum also has no music or audio-mix workflow.",
+    "evidence": "s3.new.happy calls.jsonl: the join_videos error says 'Magic Hour refused /v1/video-projects/api-assets/... (HTTP 404)'. tools-new.json get_workflow_guide enum: video-face-swap, image-editor, image-to-video, video-generator, lip-sync, ugc-ads, talking-photo, media-apis. None of these is an audio mix."
+   },
+   {
+    "why": "Why is there no way to mix audio in either build?",
+    "because": "The Magic Hour MCP tool set has no audio-overlay or mixing operation, in both the hosted build and the upgraded build. It cannot take an existing video, keep its picture and dialogue track as they are, and add a generated music bed at a set level or with ducking. The music generator only outputs standalone audio, with a minimum length of 15 s.",
+    "evidence": "In 3 of 3 chats on both builds, the assistant states the same tool limit on its own. The tool lists define only standalone generators and fetch/wait tools for audio. The generate_music output is a WAV of 15 s or more (old.happy 15 s at a 'minimum length'; old.stupid: 'The shortest track the tool makes is 15 seconds')."
+   }
+  ],
+  "axiom": "The MCP tool set in both builds has no operation that mixes a new audio track under a user's existing video while it keeps the picture and the original speech. The only honest result the assistant can give is a separate music file. The test expects a 7-second video, so no deliverable clip exists for the grader to check.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool that adds audio to a video, for example add_audio_to_video(video_file_path, audio_file_path, music_gain_db, duck_under_speech=true, trim_to_video=true). It must copy the video stream without changes and mix the music under the original audio, ducked and trimmed to the clip length. Describe it in the generate_music description as the next step for 'add music to my clip'."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.23372600000000002
+}

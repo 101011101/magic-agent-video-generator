@@ -1,0 +1,166 @@
+{
+  "id": "B08a",
+  "item": {
+    "id": "B08a",
+    "case": 8,
+    "case_name": "Remove something",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Remove the Background Pedestrian",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "street-person.jpg"
+        ],
+        "text": "Can you remove the person in the blue jacket on the right? Keep everything else the same."
+      }
+    ],
+    "tests": "Tests targeted background-person removal with convincing scene reconstruction and no unrelated edits.",
+    "answer_sheet": {
+      "Which person": "The background pedestrian in the blue jacket on the right.",
+      "Style and scope": "Keep the original photo looking natural; only remove that person.",
+      "Size and framing": "Keep the original wide framing; free-tier resolution is fine."
+    },
+    "must_haves": [
+      "The pedestrian in the blue jacket on the right is absent.",
+      "The area formerly occupied by the pedestrian contains plausible, continuous street background without a silhouette or obvious smearing.",
+      "The shops, street layout, and sunny lighting remain consistent with the source.",
+      "The original wide composition is preserved rather than cropping the person out."
+    ]
+  },
+  "session": "mcp-p1-dry-n-changer-B08a",
+  "sessionDir": "sessions/mcp-p1-dry-n-changer-B08a",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you remove the person in the blue jacket on the right? Keep everything else the same.",
+      "materials": [
+        "street-person.jpg"
+      ],
+      "dialog": [],
+      "agent": "I couldn’t complete the edit because your Magic Hour account has insufficient credits. No image was created or changed.\n\nOnce you add credits, I can remove the person in the blue jacket while preserving the rest of the scene.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you remove the person in the blue jacket on the right? Keep everything else the same.\\n[Attached: street-person.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/bcece009-9aa7-4cc7-8ad9-3776923fc5b2-image-0.jpg]\"}],\"attachments\":[{\"name\":\"street-person.jpg\",\"kind\":\"image\",\"role\":\"environment\"}],\"params\":[{\"name\":\"subject\",\"value\":\"The person in the blue jacket on the right\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Remove the person in the blue jacket on the right, filling the area naturally with the existing street and sidewalk background.\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Keep everything else the same.\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"Preserve the original image aspect ratio.\",\"source\":\"derived\"}],\"tool\":\"edit_image\"}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Remove the person in the blue jacket on the right, filling the area naturally with the existing street and sidewalk background.\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Keep everything else the same.\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "style": {
+              "prompt": "Remove only the person wearing the blue jacket on the right foreground, including their legs, shoes and associated shadow. Seamlessly reconstruct the sidewalk and street background behind them, matching surrounding textures, perspective and lighting. Keep everything else exactly the same: all buildings, storefronts, other people, vehicles, poles, road markings, colours, lighting, framing and original image proportions. Do not crop or recompose."
+            },
+            "resolution": "640px",
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/bcece009-9aa7-4cc7-8ad9-3776923fc5b2-image-0.jpg"
+              ]
+            },
+            "model": "flux-2-klein",
+            "image_count": 1,
+            "name": "Remove blue-jacket person"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you remove the person in the blue jacket on the right? Keep everything else the same.\\n[Attached: street-person.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/bcece009-9aa7-4cc7-8ad9-3776923fc5b2-image-0.jpg]\"}],\"attachments\":[{\"name\":\"street-person.jpg\",\"kind\":\"image\",\"role\":\"environment\"}],\"params\":[{\"name\":\"subject\",\"value\":\"The person in the blue jacket on the right\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Remove the person in the blue jacket on the right, filling the area naturally with the existing street and sidewalk background.\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Keep everything else the same.\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"Preserve the original image aspect ratio.\",\"source\":\"derived\"}],\"tool\":\"edit_image\"}",
+          "result": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Remove the person in the blue jacket on the right, filling the area naturally with the existing street and sidewalk background.\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Keep everything else the same.\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"style\":{\"prompt\":\"Remove only the person wearing the blue jacket on the right foreground, including their legs, shoes and associated shadow. Seamlessly reconstruct the sidewalk and street background behind them, matching surrounding textures, perspective and lighting. Keep everything else exactly the same: all buildings, storefronts, other people, vehicles, poles, road markings, colours, lighting, framing and original image proportions. Do not crop or recompose.\"},\"resolution\":\"640px\",\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/bcece009-9aa7-4cc7-8ad9-3776923fc5b2-image-0.jpg\"]},\"model\":\"flux-2-klein\",\"image_count\":1,\"name\":\"Remove blue-jacket person\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn’t complete the edit because your Magic Hour account has insufficient credits. No image was created or changed.\n\nOnce you add credits, I can remove the person in the blue jacket while preserving the rest of the scene."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t complete the edit because your Magic Hour account has insufficient credits. No image was created or changed.\n\nOnce you add credits, I can remove the person in the blue jacket while preserving the rest of the scene.",
+        "refuse": "",
+        "tier_move": "I couldn’t complete the edit because your Magic Hour account has insufficient credits. No image was created or changed.\n\nOnce you add credits, I can remove the person in the blue jacket while preserving the rest of the scene.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 23
+    }
+  ],
+  "started": "2026-11-09T07:07:46.099Z",
+  "persona": "changer",
+  "opening": {
+    "id": "B08a",
+    "persona": "changer",
+    "text": "Can you remove the person in the blue jacket on the right? Keep everything else the same.",
+    "as_written": true,
+    "change": null
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 23
+}

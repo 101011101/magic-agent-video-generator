@@ -1,0 +1,47 @@
+{
+ "id": "be23e00168",
+ "key": "must:D19c:Blue paper remains a single consistent object",
+ "symptom": "Blue paper remains a single consistent object",
+ "item": "D19c",
+ "n": 5,
+ "builds": {
+  "new": 3,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Blue paper remains a single consistent object' not met?",
+    "because": "In the generated clip the sheet changes its shape, size and orientation between frames. It goes from a tall flap or a raised landscape sheet to a full-size portrait or square sheet with a crease. It never becomes half its size. The grader reads this as a morph or a replacement, not one sheet being folded.",
+    "evidence": "s3.old.dumper.D19c/grade.json: 'goes from a tall flap to a square-ish sheet... At the end it is unfolded with a crease'. s3.new.happy.D19c/grade.json: 'The sheet changes shape and orientation between frame 1 and frame 2. A small tab or notch appears at the left edge'. Its faults list says 'its size does not shrink to half'."
+   },
+   {
+    "why": "Why did the sheet morph? Did the assistant ask for the wrong thing?",
+    "because": "No. Every assistant sent a clear prompt that matched the brief: one plain blue sheet, folded in half, edges aligned, crease pressed, whole sheet in frame, static camera, no cuts. Nothing in the arguments invites a second object or a cut.",
+    "evidence": "create_video_from_text style.prompt in s3.old.happy, s3.old.dumper, s3.new.happy and s3.new.dumper calls.jsonl. Example: 'The hands pick up one edge of the sheet and fold it neatly in half, aligning the edges, then press and run their fingers along the fold to flatten the crease... Single fixed static camera, no cuts.'"
+   },
+   {
+    "why": "Why was a good prompt not enough?",
+    "because": "Every chat rendered the clip with the same free-plan text-to-video model, ltx-2.5 at 480p, in one attempt (192 credits). That model has to invent a folding motion for a thin deformable object under hand contact. It cannot keep that object stable. It interpolates between plausible 'flat sheet' and 'creased sheet' states, so it does not simulate one sheet that halves in area.",
+    "evidence": "calls.jsonl in all four chats: model 'ltx-2.5', resolution '480p', status complete, 854x480. Across both builds and all personas the same failure appears, together with the linked faults 'no real fold is shown' and 'sheet stays full size'."
+   },
+   {
+    "why": "Why ltx-2.5 and not a stronger model?",
+    "because": "The free plan allows only ltx-2.5 and minimax-h3 for video. In the old build the server rejected model 'default' and told the assistant to pick one of these two. In the new build the assistant picked ltx-2.5 directly. Both builds end up with the same free-tier model, and the brief asks for no paid upgrade (beyond_free: no).",
+    "evidence": "s3.old.happy and s3.old.dumper calls.jsonl, first call: approve:false, reason 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. D19c.json expect.beyond_free 'no'."
+   },
+   {
+    "why": "Why can't the tool or the assistant correct the result afterwards?",
+    "because": "The assistant cannot watch the output, so it delivers the clip with a caveat and does not retry. Retries use the same model class, and no evidence shows that minimax-h3 holds paper topology better. The failure comes from how the free-tier generation model handles deformable objects. The cause is not the MCP tools.",
+    "evidence": "Assistant final messages in calls.jsonl: 'I can't watch videos... AI video models often get hands and paper folding wrong.' D19c.json 'tests': 'hand-object contact and a completed paper-folding action'. This is a deliberate stress test of the model."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5, 480p) cannot keep the shape of a deformable object constant while hands manipulate it. When it renders 'fold the sheet in half', it morphs between full-size flat and creased states. It does not keep one sheet that halves. This is a limit of the generation model, and the assistant's prompt or the tool descriptions cannot fix it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "None: inherent. A possible mitigation, not yet tested: the tool description could suggest that the assistant first generates a still of the sheet and then uses image-to-video, or tries minimax-h3. No evidence here shows that either option keeps the paper consistent."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.2541584
+}

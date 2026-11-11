@@ -1,0 +1,47 @@
+{
+ "id": "cff1a54216",
+ "key": "check:made:J",
+ "symptom": "something was made",
+ "item": "J52a",
+ "n": 27,
+ "builds": {
+  "old": 22,
+  "new": 5
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was no file made in the failing chats?",
+    "because": "Every generation call the assistant sent was refused before it ran. The tools returned no output and no files.",
+    "evidence": "In all four chats, calls.jsonl shows each generate/edit call with approve:false and no output. s2r.old.stupid.J52b grade.json says 'something was made' failed with got 'no file', and the judge wrote 'all edit_image calls were refused for zero credits'."
+   },
+   {
+    "why": "Why were the calls refused?",
+    "because": "The account balance was 0 credits. Each call needed more than that: about 5 credits for an edit_image, about 10 for a qwen poster, and 120–192 for an ltx-2.5 video.",
+    "evidence": "The refusal reason has the same form everywhere: 'insufficient credits: this call needs about N credits and 0 remain on the account'. old J52b shows N=5 three times. new J55b shows N=10 twice. new J51b shows N=192 twice. old J51b shows N=120 twice."
+   },
+   {
+    "why": "Why was this not caused by the assistant's choice of arguments or the tool descriptions?",
+    "because": "The assistant picked free-plan models at the lowest resolution: flux-2-klein 640px, qwen-image-2.1 640px, ltx-2.5 480p. In the new build, plan_request returned ready:true first. Even the cheapest call (5 credits) failed. The balance was the blocker, not the request. The assistant then reported it correctly and stopped.",
+    "evidence": "In new J55b and new J51b, plan_request returns ready:true and then the generation call is refused. In old J51b, the 'default' model was rejected first, and the call was then refused on credits after the assistant switched to ltx-2.5. The 'say' lines are classified 'cannot' and name the credit balance as the blocker."
+   },
+   {
+    "why": "Why did the balance stay at 0 across different items, personas and both builds?",
+    "because": "The benchmark runs all chats on one shared free-plan account, and earlier chats used up its credits. Chats that started after that point could not generate anything, whatever the build or persona. A J52a chat would need about 10 credits for the poster plus about 192 for the 8 s video, so it is very sensitive to a low balance.",
+    "evidence": "The timestamps of the zero-balance refusals overlap across builds: new J51b at about 1794364451, new J55b at about 1794364499, old J51b at about 1794364595, old J52b at about 1794364611. Both builds hit 0 in the same time window. The J52a spec asks for outputs:2 (a poster and an 8 s 9:16 video), and new J51b shows an 8 s ltx-2.5 video at 480p costs about 192 credits. I did not read the J52a chat files themselves. The old:22 vs new:5 split could come from run order relative to when the credits ran out; the evidence cannot settle that."
+   },
+   {
+    "why": "Why does this count as a failure of the build under test?",
+    "because": "The harness does not check or reset the credit balance before each chat, and it does not mark credit-refused chats as invalid. So when the account runs dry, the grader records 'no file' and fails the build.",
+    "evidence": "In grade.json, the checks array scores 'something was made' false with no exception for an empty account. The judge summary says 'The agent produced no images because the account had no credits, so every must-have fails.'"
+   }
+  ],
+  "axiom": "The test harness runs the fleet on a shared free-plan account whose credits ran out (0 remain). Every generation call after that point is refused, whatever the build, persona or arguments. This is a harness or account-state artifact, not a defect of the MCP tools or the assistant.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Check the account balance before each chat. Top up the credits or give each chat its own account with enough credits for the item (at least 202 for J52a: about 10 for the poster and about 192 for the 8 s video). Mark any chat whose calls are refused for 'insufficient credits … 0 remain' as invalid and rerun it; do not grade it as 'no file'."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.1531384
+}

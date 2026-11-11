@@ -1,0 +1,47 @@
+{
+ "id": "bb4604b39c",
+ "key": "must:J55a:The robot visibly waters the sunflower, with water reaching the plant or its soil.",
+ "symptom": "The robot visibly waters the sunflower, with water reaching the plant or its soil.",
+ "item": "J55a",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the watering item not met?",
+    "because": "No video file exists in any of the failing chats. The grader had nothing to look at, so every visual must-have failed.",
+    "evidence": "s2r.new.stupid.J55a/grade.json: the check 'something was made' fails with 'no file'. The watering reason is 'No video was made, so no watering is shown.' The summary says 'the account had no credits'."
+   },
+   {
+    "why": "Why was no video made?",
+    "because": "The server turned down every create_video_from_text call before any job started. The prompts the assistant sent were good: they described a robot tipping a watering can and water falling on the soil.",
+    "evidence": "In old.happy, old.dumper and new.stupid, calls.jsonl has only approve:false create_video_from_text calls, with est:null and no files. The prompts include 'pours sparkling water droplets onto the soil' (happy) and 'droplets ... fall onto the soil' (dumper)."
+   },
+   {
+    "why": "Why were the calls turned down?",
+    "because": "On the old build, the first try used model 'default', which the free plan does not allow. The assistant then fixed the call to ltx-2.5 at 480p. That valid retry, and the new build's only create call, were then turned down for credits.",
+    "evidence": "old.happy and old.dumper calls.jsonl line 2: 'model \"default\" is not available on the free plan'. Line 3, and new.stupid line 12: 'insufficient credits: this call needs about 144 credits and 0 remain on the account'."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The benchmark account was already empty when each chat started. These chats made no successful generation first: every call was turned down and nothing was charged. So the balance was used up outside these chats, probably by earlier chats in the same fleet run that share the account. The logs do not show the balance before the run, so the exact cause of the drain cannot be confirmed.",
+    "evidence": "In all three calls.jsonl files, the first credits error already reports '0 remain', and no call earlier in the chat succeeded. The old.dumper reply says 'Nothing was charged on these attempts.' This is the same on both builds."
+   },
+   {
+    "why": "Why does this point to the harness rather than to the tools or the assistant?",
+    "because": "Both builds fail the same way, at the same point, with the same correct call (ltx-2.5, 480p, 6 s, about 144 credits). After that, the assistant correctly reported the blocker and did not ask unneeded questions. Nothing in the tool descriptions or in the assistant's behaviour could have produced a video from a 0-credit account.",
+    "evidence": "The old and new builds give the same 'insufficient credits ... 0 remain' result. Each final reply is classified as 'cannot' and explains the credit blocker."
+   }
+  ],
+  "axiom": "The test account had 0 credits when these chats started, and a 6-second 480p video costs about 144 credits. Generation was impossible on both builds, so the grader had no output to judge. This is a credit state of the test harness, not a defect in the tools or the assistant.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, give each chat (or each build) its own account, or top up the account and check that the balance is at least the expected cost before each chat starts. Mark chats that end with an 'insufficient credits: 0 remain' result as harness-invalid so the grader does not score them. Separately, for the old build: change the model default (or the tool description) so it does not send 'default' on the free plan. That error alone did not cause the failure here."
+ },
+ "error": null,
+ "seconds": 26,
+ "usd": 0.1087464
+}

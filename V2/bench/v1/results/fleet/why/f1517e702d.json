@@ -1,0 +1,47 @@
+{
+ "id": "f1517e702d",
+ "key": "must:E24b:Visible Spanish subtitles convey greeting, today, three easy ways, less stressful mornings",
+ "symptom": "Visible Spanish subtitles convey greeting, today, three easy ways, less stressful mornings",
+ "item": "E24b",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why were the visible subtitles not Spanish?",
+    "because": "The only subtitle job that ran was add_subtitles_to_video. It transcribed her English speech and burned in English captions, so no Spanish text exists in any output.",
+    "evidence": "s3.old.stupid.E24b/grade.json: 'Subtitles are in English, not Spanish… There is no Spanish at all.' The three calls.jsonl files each show one AUTO_SUBTITLE project with args {start_seconds, end_seconds, assets.video_file_path, style.template} and no language field."
+   },
+   {
+    "why": "Why did the assistant not ask the subtitle tool for Spanish?",
+    "because": "The add_subtitles_to_video schema has no language or translate parameter. Its only inputs are name, start/end seconds, the video path and style (template or custom font/colour/position). Its description says it 'Adds automatically generated subtitles', so it can only transcribe the speech in the language spoken.",
+    "evidence": "tools-old.json lines 1366-1479: add_subtitles_to_video properties are name, start_seconds, end_seconds, assets.video_file_path, style.template|custom_config. No language field. In both builds the assistant states it: old happy 'it has no language setting'; new happy 'It has no setting to translate'."
+   },
+   {
+    "why": "Why could the assistant not reach Spanish subtitles another way, e.g. translate first or overlay its own translation?",
+    "because": "translate_video does take target_language=Spanish, but it replaces her voice with a Spanish dub. The brief forbids that. No tool in the set can draw text the assistant chooses (an SRT or captions) onto an existing video. So the requested result, Spanish captions over the original English audio, has no tool path.",
+    "evidence": "tools-old.json lines 843-968: translate_video 'Translates speech… into a supported target language' (a dub). new happy state/calls: 'None of them can draw text you choose onto an existing video.' E24b.json answer_sheet: 'Keep her English voice unchanged. Do not dub.'"
+   },
+   {
+    "why": "Why was an English-subtitled video delivered at all instead of a clean 'cannot'?",
+    "because": "In both happy chats the assistant first answered 'cannot' and spent no credits. Then the simulated user sent the harness nudge 'Please go ahead with the free settings anyway', and the assistant ran the English-only subtitle job as the closest fallback, with a disclosure. In the old stupid chat the assistant ran it at once and did not say the subtitles would be English.",
+    "evidence": "s3.old.happy calls.jsonl lines 4-7 and s3.new.happy lines 9-11: a 'cannot' reply, then the user text 'Please go ahead with the free settings anyway.' (nudge:true), then add_subtitles_to_video. s3.old.stupid calls.jsonl lines 2-6: a direct call, and the final reply never mentions the language."
+   },
+   {
+    "why": "Why is this a dead end rather than an assistant mistake?",
+    "because": "The Magic Hour auto-subtitle endpoint only transcribes in the source language. The server exposes no subtitle translation or custom-caption burn-in. The test expects asks=never and beyond_free=no for a capability that the tool set (old and new) does not have.",
+    "evidence": "E24b.json expect {asks:'never', beyond_free:'no', refuse:false} and must_have 'Visible Spanish subtitles…'. Neither build's subtitle schema has a language input. The new build's plan_request even returned ready:true with language=Spanish (s3.new.happy calls.jsonl line 2), but add_subtitles_to_video cannot use it."
+   }
+  ],
+  "axiom": "Magic Hour's auto-subtitle endpoint (add_subtitles_to_video) only transcribes speech in its spoken language. It has no target-language or translation option, and no tool can burn in captions the caller supplies. So Spanish subtitles over English audio cannot be made with this tool set, while the test assumes they can on the free plan.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add one of these to add_subtitles_to_video: a target_language parameter, if the Magic Hour API can translate captions, or a custom-captions/SRT input that burns in text the caller writes. Until then, state 'transcribes in the spoken language only; cannot translate' in the tool description. Also change E24b's expectation to a correct 'cannot' (refuse/explain) so the item can be passed."
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 0.4435548
+}

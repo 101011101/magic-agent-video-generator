@@ -1,0 +1,46 @@
+{
+ "id": "63f2c6862d",
+ "key": "must:J51a:Cosy illustrated appearance",
+ "symptom": "Cosy illustrated appearance",
+ "item": "J51a",
+ "n": 3,
+ "builds": {
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Cosy illustrated appearance' not met in the new-build chats?",
+    "because": "The delivered 9:16 clips look photoreal or semi-photoreal CG. They are warm and cosy, but they do not look like an illustration.",
+    "evidence": "s2r.new.dumper.J51a/grade.json: 'Cosy, but it looks photorealistic rather than a hand-painted illustration', and the fault 'Photoreal look instead of the requested illustrated storybook style' (major). s2r.new.happy.J51a/grade.json: 'reads closer to a photoreal or CG render than a storybook illustration'."
+   },
+   {
+    "why": "Did the assistant lose or weaken the style request before generation?",
+    "because": "No. The assistant kept the look from the brief and put it at the start of the prompt. It also repeated the look in the prompt's closing words.",
+    "evidence": "happy calls.jsonl line 12: create_video_from_text style.prompt = 'Cosy hand-illustrated animation, vertical frame: ... gentle storybook painting style.' dumper calls.jsonl line 6: 'Cosy hand-painted storybook illustration, vertical frame ...'. plan_request in the happy chat recorded look='cosy illustrated' with source user."
+   },
+   {
+    "why": "Why does a strong illustration prompt still give a photoreal clip?",
+    "because": "Both chats sent the prompt to text-to-video on ltx-2.5 at 480p, the free-plan default model. Nothing else anchors the style, such as a styled start image or a style parameter. ltx-2.5 drifts toward photoreal rendering whatever style words the prompt has.",
+    "evidence": "happy calls.jsonl lines 6 and 12 and dumper calls.jsonl line 6: model 'ltx-2.5', resolution '480p', no image input. The assistant's plan in both chats calls ltx-2.5 'the free-plan model'. tools-new.json create_spoken_ad_video says it 'Defaults to ... ltx-2.5 on free plans'."
+   },
+   {
+    "why": "Why did the assistant not use a route that controls the style better?",
+    "because": "The new build gives no guidance on how to get a non-photoreal look. plan_request takes a 'look' row and returns ready, but it does not warn that ltx-2.5 text-to-video ignores illustration styles. It also does not suggest making an illustrated still first (generate_image, then create_video_from_image) or using a styled tool. The assistant had no signal that its prompt would fail, and it did not watch the output.",
+    "evidence": "tools-new.json plan_request description: rows include 'look', but there is no guidance on style fidelity. The plan_request output in happy calls.jsonl line 2 gives no style warning. tools-new.json also lists create_animation with art_style 'Painterly Illustration', which neither chat used. Both assistants said 'I haven't watched it'."
+   },
+   {
+    "why": "What is the axiom?",
+    "because": "On the free plan, the ltx-2.5 text-to-video model does not reliably follow 'illustrated' or 'storybook painting' style prompts and renders near-photoreal frames. This is a limit of the generation model.",
+    "evidence": "In 3 of 3 failing new chats, the prompts asked for an illustration in plain words and the outputs were judged photoreal (grade.json in the happy and dumper chats). No old-build chats failed this check, so the evidence cannot show whether the old build used a different route. The old chat files were not listed, so this stays unverified."
+   }
+  ],
+  "axiom": "The free-plan model ltx-2.5 makes near-photoreal frames from text-to-video and does not follow 'illustrated' or 'storybook' style words in the prompt. The new build passes the look only as prompt text and has no way to anchor the style.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "In the new build, when plan_request gets a non-photoreal 'look' (illustrated, cartoon, painted, anime) for create_video_from_text on ltx-2.5, return a route note: first make a still in that style with generate_image, then animate it with create_video_from_image so the start frame fixes the style. Also add one line to the create_video_from_text description: ltx-2.5 text-to-video tends toward photoreal, so use an image start frame for stylised looks."
+ },
+ "error": null,
+ "seconds": 50,
+ "usd": 0.44019620000000004
+}

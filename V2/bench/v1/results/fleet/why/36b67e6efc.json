@@ -1,0 +1,47 @@
+{
+ "id": "36b67e6efc",
+ "key": "must:J52b:Neither the wooden table nor the original background remains in the first image.",
+ "symptom": "Neither the wooden table nor the original background remains in the first image.",
+ "item": "J52b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why is the item 'Neither the wooden table nor the original background remains in the first image' not met?",
+    "because": "No first image exists. The grader could not check the item because no output file was made.",
+    "evidence": "s2r.old.stupid.J52b/grade.json: check 'something was made' pass=false, got 'no file'. The reason for this item is 'No first image was created, so this can't be satisfied.' All 5 must-haves fail for the same reason."
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "The assistant called edit_image correctly, but every call was refused before it reached the generation model.",
+    "evidence": "s2r.old.dumper.J52b/calls.jsonl: two edit_image calls (white-background edit and lake scene, flux-2-klein, 640px, 1:1) with a correct prompt. Both have approve=false. s2r.new.stupid.J52b/calls.jsonl: plan_request returned ready=true, then edit_image ('Remove the wooden table and the entire room background... pure white') has approve=false."
+   },
+   {
+    "why": "Why were the calls refused?",
+    "because": "The Magic Hour account had 0 credits, and each call needs about 5 credits.",
+    "evidence": "In every refused call in all three calls.jsonl files, the reason is 'insufficient credits: this call needs about 5 credits and 0 remain on the account'. The assistant then told the user it 'cannot' do the task because of the credit balance."
+   },
+   {
+    "why": "Why did a free-plan account have 0 credits for a task that the test says fits the free plan?",
+    "because": "All chats in the fleet use one shared account (the same api-assets id appears in every chat), and earlier chats spent its credits. So the balance was already 0 when these chats started. The cause is the test run itself. Neither build nor the brief caused it.",
+    "evidence": "J52b.json: expect.beyond_free='no', and the answer sheet says 'Free-tier image resolution is fine' (about 10 credits for 2 images). All three chats upload to the same path, api-assets/cmsla3fmt01cnio0zhjlc2wsv/..., and are refused on their first paid call. This happens in the old and new builds and for every persona. The prompts were right (the old dumper and new stupid chats asked for exactly what the brief wants)."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The run started these chats on an account with no credits left. The grader then scored an infrastructure failure as an output failure. The assistant and the MCP tools behaved correctly given the balance.",
+    "evidence": "Both builds fail the same way with the same refusal text. The fail count (3 old, 1 new) follows which chats ran after the credits ran out, not which build ran. The old stupid chat also drifted from the brief (it tried hiking-trail and gym scenes), but that does not affect this item: it did send the white-background edit, and that call was refused too."
+   }
+  ],
+  "axiom": "The shared free-plan account had 0 credits when these chats ran. Every edit_image call was refused with 'insufficient credits... 0 remain', so no image existed to grade. This is a defect of the test run (a credit pool shared across the fleet and used up), not of either MCP build or the assistant.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, check that the account has enough credits for the item: top it up, reset it, or give each chat its own account. If a chat ends on an 'insufficient credits... 0 remain' refusal, mark it 'infra-blocked' and run it again. Do not grade its must-haves as failed."
+ },
+ "error": null,
+ "seconds": 24,
+ "usd": 0.1010288
+}

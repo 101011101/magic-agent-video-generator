@@ -1,0 +1,47 @@
+{
+ "id": "426d920127",
+ "key": "must:E27c:Original radio calls remain present and synced including 'Rook, you with me?'",
+ "symptom": "Original radio calls remain present and synced including 'Rook, you with me?'",
+ "item": "E27c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Original radio calls remain present and synced including Rook, you with me?' not met?",
+    "because": "No video was delivered in either chat. The only output was a separate music WAV, so there is no clip in which the radio calls could be heard in sync.",
+    "evidence": "grade.json (old and new): check 'a video was made' failed with got [\".wav\"]. 'about 7 s' failed with 15 s. The must reason is 'No combined output; the user must mix it themselves' (old) and 'No combined output exists, so nothing is mixed or synced with the clip' (new)."
+   },
+   {
+    "why": "Why did the assistant deliver only a WAV and no video?",
+    "because": "In both chats the assistant called only generate_music (15 s, instrumental) and wait_for_audio_project. Then it stopped and gave the user steps to mix the track in an editor. It made no call on radio-lines.mp4.",
+    "evidence": "calls.jsonl (old and new): two calls, generate_music {duration:15, instrumental:true} and wait_for_audio_project, which returned output.wav. The 'say' text gives CapCut/Resolve steps and 15–20 dB ducking advice."
+   },
+   {
+    "why": "Why did the assistant not put the music into the clip?",
+    "because": "It found no tool that lays a music track under a video's existing audio. Every video tool it had either regenerates the footage or replaces the soundtrack. Both would break the user's rule 'Don't change the footage' and the need to keep the radio calls.",
+    "evidence": "calls.jsonl say text, old: 'Magic Hour has no tool that adds a music track under a video's existing audio. Its video tools regenerate or edit the footage'. New: 'None of my tools can lay a music track under a video's existing audio and keep the original sound. Every tool I have either replaces the soundtrack or generates new footage'."
+   },
+   {
+    "why": "Is that claim true, or did the assistant miss a tool?",
+    "because": "For the new build it is true. edit_video regenerates the picture with a prompt. create_lip_sync_video replaces the audio and changes the lips. create_video_from_audio and create_animation make new visuals. join_videos only joins clips end to end (with a 'silent' option). The one tool that mixes music under sound, join_production_clips with `sound`, accepts only clips and sound made through plan_video_production / create_production_sound, not a user upload. I did not read the old list; the old assistant says the same, and the old build is the hosted server without the production/join tools.",
+    "evidence": "tools-new.json: the edit_video, create_lip_sync_video ('match supplied replacement audio'), join_videos ('Join videos end to end with hard cuts ... silent: remove all sound') and join_production_clips ('If the plan has sound, pass sound: the ids from create_production_sound ... mixes the music under it') descriptions. No tool takes a video plus an audio file and mixes them while keeping the video stream."
+   },
+   {
+    "why": "Why is the missing mix tool the end of the chain?",
+    "because": "The test assumes a simple overlay can be done (expect.asks=never, beyond_free=no, kind video, audio required). Neither build exposes that capability. Both assistants correctly refused to damage the footage. Given the tool set, no assistant choice could have delivered a combined clip.",
+    "evidence": "items/E27c.json: spec kind video, 7 s, audio required. answer_sheet: 'Keep the original radio-call recording in sync. Do not replace it'. The tool lists offer no audio-overlay endpoint."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server, in both builds, has no tool that mixes a new audio track under an uploaded video's existing sound and leaves the picture unchanged. Music can only be made as a separate file. Every tool that writes a video either regenerates the footage or replaces its audio. So a combined clip with the original radio calls cannot be made.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool such as mix_audio_into_video(video, audio, music_gain_db, duck_under_speech, trim_to_video). It copies the video stream unchanged, trims the music to the clip length, and mixes the music under the original audio with ducking under speech (for example ffmpeg amix with sidechaincompress). It returns a download URL and the loudness. Reuse the music-mixing code that join_production_clips already has in the new build."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.5513856
+}

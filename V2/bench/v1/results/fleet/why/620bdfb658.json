@@ -1,0 +1,47 @@
+{
+ "id": "620bdfb658",
+ "key": "must:G34a:Slides read 'Slow Sunday', 'Coffee first', 'Stay a little longer'",
+ "symptom": "Slides read 'Slow Sunday', 'Coffee first', 'Stay a little longer'",
+ "item": "G34a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why do no slides read 'Slow Sunday', 'Coffee first', 'Stay a little longer'?",
+    "because": "The assistant never put those phrases in any prompt. Old sent one 16:9 'ai-background-generator' prompt asking for 'empty space ... for title text'. New sent four prompts that each end in 'no text'.",
+    "evidence": "s4.old.stupid.G34a/calls.jsonl line 2: the generate_image prompt has no slide wording, and the grader saw only garbled text ('Thank Cafre', 'hanik'). s4.new.stupid.G34a/calls.jsonl lines 8-11: every prompt says 'photo, no text'. The new reply says 'They have no text on them'."
+   },
+   {
+    "why": "Why did the assistant not include the phrases?",
+    "because": "It never knew them. The stupid persona's only message was 'make me some café slides'. The three phrases exist only in the persona's private knowledge bank, and the persona shares bank facts only when asked in plain words.",
+    "evidence": "s4.new.stupid.G34a/chat.json: messages[0] = 'make me some café slides'. bank['Exact wording'] = 'Slide 1: Slow Sunday...'. The persona rule says: 'When a question is in plain words, answer it from your knowledge bank'."
+   },
+   {
+    "why": "Why did the assistant not ask what the slides should say?",
+    "because": "Old: the assistant generated at once, with no question at all. New: the assistant used plan_request, but plan_request returned only one question (platform/aspect). On the second call it returned ready:true while exact_words was still 'missing'. The assistant followed 'If ready is true, create with the returned values' and picked 'no text'.",
+    "evidence": "s4.old calls.jsonl: the first call is generate_image, with no turn for a question. s4.new calls.jsonl line 2: questions = [aspect only], and exact_words is missing. Line 7: ready:true, exact_words value null, source missing, questions []."
+   },
+   {
+    "why": "Why did plan_request mark the request ready with exact_words missing?",
+    "because": "Its readiness rule treats exact_words as optional for generate_image. It asks about it only when the user mentions text. It does not check whether the subject is something that by nature carries text ('slides', a carousel, a poster). Its own description says 'do not guess ... on-screen words', but it still let the assistant go ahead, and the assistant picked 'no text' as the default.",
+    "evidence": "tools-new.json plan_request description: 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words', and 'If ready is true, create with the returned values'. calls.jsonl line 7 shows ready:true with a missing exact_words."
+   },
+   {
+    "why": "Why does nothing in the old build catch this?",
+    "because": "The old build has no planning or clarification step. The model went straight from a vague request to generation, so the gap was never surfaced in either build.",
+    "evidence": "tools-old.json has no plan_request. In the s4.old calls.jsonl, generate_image is the first call."
+   }
+  ],
+  "axiom": "The on-screen wording reaches the assistant only if someone asks for it, because the vague persona leaves it out of the opening message. Neither build's tooling makes 'what text goes on the slides?' a required question for a subject that carries text. The old build has no clarification step at all. The new plan_request returns ready:true with exact_words still missing. So the assistant had a sanctioned path to deliver slides with no words.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, keep ready:false and return a plain-word question such as 'What words should be on each slide/image?' when exact_words is missing and the subject or messages contain text-bearing words like slide, carousel, poster, flyer, banner, title or quote. Give the same guidance in the generate_image description for the old/hosted build."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.2571854
+}

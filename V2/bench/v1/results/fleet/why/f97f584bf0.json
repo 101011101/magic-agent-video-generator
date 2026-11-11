@@ -1,0 +1,52 @@
+{
+ "id": "f97f584bf0",
+ "key": "check:kind:C",
+ "symptom": "a video was made",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the check 'a video was made' not met in either chat?",
+    "because": "Neither chat ever called a face-swap tool. The only files are the face crops that face detection returned, and the harness saved them as outputs: 4 PNGs in new and 8 PNGs in old, because old ran detection twice.",
+    "evidence": "In both calls.jsonl files the only tools called are detect_faces, get_face_detection_results and fetch_image_download. The files fields list assets/01..08-get_face_detection_results.png. Both grade.json files show 'a video was made' with got = only .png files and 'No video was produced'."
+   },
+   {
+    "why": "Why did the assistant stop before the swap?",
+    "because": "Detection found 4 faces where the user had described 2 people: 3 faces in frame 0 and 1 face at frame 132. A selected-face swap needs each portrait tied to a specific crop. The assistant would not guess the mapping, so it asked the user which crop was the man and which was the woman.",
+    "evidence": "In calls.jsonl, get_face_detection_results returns 0-0, 0-1, 0-2 and 132-0.png. The assistant says: 'It found 4 faces, not 2 ... I don't want to guess which one is the man and which is the woman.' Old: four question turns and no swap, even after the user said 'just do whatever you think is best'. Old calls.jsonl line 35 says 'odds ... about 1 in 6'."
+   },
+   {
+    "why": "Why couldn't the assistant work out the mapping itself?",
+    "because": "It could not see what the crops show. The detection result gives only a path and a signed URL for each crop. It gives no position, gender or image content. The assistant tried to load crop 0-0 twice with fetch_image_download, and both calls returned an empty result.",
+    "evidence": "In both calls.jsonl files, fetch_image_download has output \"\" and files []. The assistant says 'The tool can't show me the face crops' and 'None of the tools here can compare a face crop to a portrait'. In tools-new.json, get_face_detection_results is described only as 'Returns a face-detection job's status and detected faces ... choose face mappings'. It does not say that the faces come as viewable images or with positions."
+   },
+   {
+    "why": "Why does seeing the crops matter so much here?",
+    "because": "The clip really has three people: two men and one woman. Face D is a side view of the first man. If the assistant could see the crops, it would know that C is the woman and that A/D and B are two different men. It could then ask a short, answerable question or pick one man. Without the crops it is stuck at 'which of A, B, C?'. The grader says the crops are 'plainly' identifiable.",
+    "evidence": "s1.new.dumper.C15c/assets/02-get_face_detection_results.png shows a bearded man (face B). The new grade.json says the crops are 'a man (A), a bearded man (B), a woman (C) and a profile of the first man (D). The agent could have resolved this itself.' The old grade.json says the clip has 'a man on the left, a man in the middle and a woman on the right'. C15c.json expect.asks_about says '(the clip has two men: asking which one is fine)'."
+   },
+   {
+    "why": "Why couldn't the user settle it, so the chat ended with no video?",
+    "because": "The simulated user's notes say only that there is 'the male coworker' and 'the female coworker'. They give no positions, and the user cannot open links, so every question the assistant asked had no answer. In old, the user gave up after 3 rounds, and the assistant still refused to guess. In new, the classifier labelled the first question 'delivered', so the harness ended the chat after one turn.",
+    "evidence": "Old calls.jsonl lines 19, 23 and 27: 'I can't open those links ... my notes don't include positions'. Line 30 has give_up:true. New state.json shows a single assistant turn with kind 'delivered', and its why says 'does not explicitly ask the user to choose'. The message does ask: 'Please tell me which letters are the man...'."
+   },
+   {
+    "why": "Why is the crop content unavailable to the assistant? (axiom)",
+    "because": "The MCP face-detection result returns the crops only as signed URLs. It does not return inline image content, bounding boxes or left-to-right positions, and the only fetch the assistant tried returned nothing. A vision-capable assistant therefore cannot see faces that the server has already cut out. Combined with a brief that says 'the man' in a clip with two men, the assistant can neither map nor ask a question the user can answer. This is how the tool behaves in both builds.",
+    "evidence": "In both builds, get_face_detection_results returns {path,url} only. fetch_image_download returns \"\" in both builds. The harness itself downloaded the same URLs into assets/*.png, so the images exist and can be shown. In the parts of tools-new.json I read, I did not find fetch_image_download, so I could not confirm whether it is an MCP tool or a host tool."
+   }
+  ],
+  "axiom": "The face-detection tools give the assistant only crop URLs. They return no inline image and no position, and fetch_image_download returns empty content. So the assistant cannot tell which detected face is the woman and which of the two men in the clip is meant. It will not guess, and the simulated user cannot answer, so no swap is ever run. This happens in both builds.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Change get_face_detection_results to return each detected face as inline MCP image content, with its bounding box or its left-to-right position and frame number. Update the tool description to say this. The assistant can then match crops to the portraits itself, see that the clip has two men, and ask one question the user can answer ('the left man or the middle man?') or choose a man. A separate harness fix: in the new chat, the classifier labelled a clear question as 'delivered', which ended the chat after one turn. Treat a message that asks the user to choose as 'question'."
+ },
+ "error": null,
+ "seconds": 73,
+ "usd": 0.7688948
+}

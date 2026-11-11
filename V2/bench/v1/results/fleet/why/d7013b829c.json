@@ -1,0 +1,46 @@
+{
+ "id": "d7013b829c",
+ "key": "must:J50c:The cream lettering and cream crescent moon retain their previous positions, sizes and appearance.",
+ "symptom": "The cream lettering and cream crescent moon retain their previous positions, sizes and appearance.",
+ "item": "J50c",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'cream lettering and cream crescent moon keep their previous positions, sizes and appearance' not met?",
+    "because": "No image was produced in either turn. There was no first poster to keep the elements from, and there was no navy poster to inspect.",
+    "evidence": "s2r.old.happy.J50c/grade.json: checks 'something was made' pass=false, got 'no file'. The reason for the moon item: 'Nothing was made, and the earlier orange poster never existed, so there is nothing to retain.' s2r.old.dumper.J50c/grade.json gives the same verdict."
+   },
+   {
+    "why": "Why was no image produced?",
+    "because": "Every generate_image call was refused before it could run. The refusal reason was insufficient credits.",
+    "evidence": "s2r.old.happy.J50c/calls.jsonl lines 2 and 7: approve=false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account' (qwen-image-2.1), then 'needs about 5 credits and 0 remain' (flux-2-klein). s2r.old.dumper.J50c/calls.jsonl lines 2 and 7 show the same two refusals."
+   },
+   {
+    "why": "Why did the assistant's choices not cause this?",
+    "because": "The assistant sent correct arguments: burnt-orange or navy background, a cream crescent moon, and the exact text. In turn 2 it moved to the cheapest model (5 credits). With a balance of 0, any call fails, so no prompt or model choice could succeed. It then reported honestly that no earlier poster existed.",
+    "evidence": "calls.jsonl args in both chats: the prompts contain 'cream crescent moon' and the exact text 'NIGHT MARKET' / 'SATURDAY 6–10 PM'. The second call uses model flux-2-klein. The say texts state '0 credits' and 'there's no orange poster to edit'."
+   },
+   {
+    "why": "Why could the turn-2 'like before' edit not use a reference image?",
+    "because": "Turn 1 also failed on credits, so the chat had no earlier output to use as an edit reference. The refer-back test therefore had nothing to test.",
+    "evidence": "calls.jsonl line 2 in both chats (refused). The say text in turn 2: 'the orange poster was never made... there's no earlier image to recolor yet.'"
+   },
+   {
+    "why": "Why did the account have 0 credits when the chat started?",
+    "because": "The free-plan account used for the old (hosted) runs had already used all its credits before this chat began. Nothing in the chat spent credits, because the first call was already refused with a balance of 0. The same failure appears in all 3 failing chats, and all of them are old-build chats.",
+    "evidence": "In both chats the first call in calls.jsonl, made before any spend, already reports '0 remain on the account'. The symptom shows builds {old:3} across all three personas, so the cause does not depend on the persona."
+   }
+  ],
+  "axiom": "The free-plan Magic Hour account that served the old-build chats had a balance of 0 credits when the chat started. Every generation (minimum 5 credits) was refused, so no poster existed to keep or edit. This is a free-plan credit limit, not a defect in the tools or in the assistant.",
+  "category": "free_plan_limit",
+  "builds": "old",
+  "fix": "In the bench harness, check the credit balance of the old-build account before each chat. Refill or reset the account to the free-plan allowance, or skip the chat and mark it 'not run (0 credits)'. Do not grade a chat as failed on must-haves when the account had 0 credits."
+ },
+ "error": null,
+ "seconds": 24,
+ "usd": 0.09665299999999999
+}

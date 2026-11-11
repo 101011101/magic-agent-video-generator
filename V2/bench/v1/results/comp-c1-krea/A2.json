@@ -1,0 +1,127 @@
+{
+  "id": "A2",
+  "item": {
+    "id": "A2",
+    "case": "A2",
+    "case_name": "Invented character, 12 s, 16:9, text only",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Walk anyway, 12 s",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "16:9",
+      "seconds": 12,
+      "outputs": 1,
+      "audio": "optional",
+      "exact_text": [
+        "walk anyway"
+      ]
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make a 12-second 16:9 video from this description. There are no reference images.\n\nCharacter: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\n\nThree beats, in this order:\n1. She waits at a bus stop in the rain.\n2. The bus passes without stopping.\n3. She laughs and walks away.\n\nEnd on her back as she walks away, with the words \"walk anyway\" on screen. Give me one finished video file."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests hard constraints with no visual anchor: a described character kept stable, beats in order, a specified ending, on-screen words, duration and aspect.",
+    "answer_sheet": {
+      "Character": "A tall woman with a silver bob, a red raincoat and yellow boots; the same in every shot.",
+      "Beats": "She waits at a bus stop in the rain; the bus passes without stopping; she laughs and walks away.",
+      "Ending": "Her back as she walks away, with the words walk anyway on screen.",
+      "Format and duration": "One 12-second 16:9 video; free-tier resolution is fine.",
+      "Sound": "Your call.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable 16:9 video file runs for 12 seconds, plus or minus 1 second.",
+      "The woman has a silver bob, a red raincoat and yellow boots in every shot.",
+      "The three beats appear in order: she waits at a bus stop in the rain, the bus passes without stopping, she laughs and walks away.",
+      "The last frame shows her back as she walks away.",
+      "The words \"walk anyway\" are readable on screen at the end."
+    ]
+  },
+  "session": "comp-c1-krea-A2",
+  "sessionDir": "sessions/comp-c1-krea-A2",
+  "baseline": "krea",
+  "server": "Krea",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Make a 12-second 16:9 video from this description. There are no reference images.\n\nCharacter: a tall woman with a silver bob, a red raincoat and yellow boots. Keep her looking the same in every shot.\n\nThree beats, in this order:\n1. She waits at a bus stop in the rain.\n2. The bus passes without stopping.\n3. She laughs and walks away.\n\nEnd on her back as she walks away, with the words \"walk anyway\" on screen. Give me one finished video file.",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "I can make a **10-second, 16:9 video at 512p** with all three beats, ending behind her as she walks away with “walk anyway” on screen.\n\nYour connected account supports only 5-, 8-, or 10-second clips, and I don’t have a tool here to extend and export one as exactly 12 seconds.\n\n**Would a single 10-second video work?** I’ll use one continuous shot to help keep her appearance consistent.",
+          "asked": [
+            "question"
+          ],
+          "user": "Yes, go ahead.",
+          "calls_before": 2
+        }
+      ],
+      "agent": "Your **10-second, 16:9 video** is generating as one continuous shot, with all three beats and “walk anyway” requested for the ending. The finished file will appear in the result card when it’s ready.",
+      "calls": [
+        {
+          "name": "get_more_tools",
+          "arguments": "{\"context\":\"Need produce one finished 12-second 16:9 video with three narrative beats, consistent woman, end text walk anyway. Account limited LTX-2 5/8/10 sec 512p; need video editing concatenation trim text overlay and render finished file. Find editing tools.\"}",
+          "output": "Unfortunately, we have shown you the full tool list. We have noted your feedback and will work to improve the tool list in the future.",
+          "error": null
+        },
+        {
+          "name": "get_model_schema",
+          "arguments": "{\"model\":\"lightricks/ltx-video-2-19b\"}",
+          "output": "{\"model\": \"lightricks/ltx-video-2-19b\", \"category\": \"video\", \"name\": \"LTX-2 19B\", \"description\": \"Affordable audio-video model from Lightricks.\", \"endpointPath\": \"video/lightricks/ltx-video-2-19b\", \"inputSchema\": {\"type\": \"object\", \"properties\": {\"prompt\": {\"type\": \"string\", \"minLength\": 1}, \"start_image\": {\"anyOf\": [{\"type\": \"string\", \"maxLength\": 1024, \"format\": \"uri\", \"description\": \"Can be an external URL, base64 data URI, or uploaded asset URL.\"}, {\"type\": \"null\"}]}, \"aspect_ratio\": {\"default\": \"9:16\", \"type\": \"string\", \"enum\": [\"16:9\", \"9:16\"]}, \"resolution\": {\"default\": \"512p\", \"type\": \"string\", \"enum\": [\"512p\", \"768p\"]}, \"duration\": {\"default\": 5, \"anyOf\": [{\"anyOf\": [{\"type\": \"number\", \"const\": 5}, {\"type\": \"number\", \"const\": 8}]}, {\"type\": \"number\", \"const\": 10}]}, \"seed\": {\"type\": \"number\"}, \"generate_audio\": {\"default\": true, \"type\": \"boolean\"}}, \"required\": [\"prompt\"], \"additionalProperties\": false}, \"outputSchemas\": {\"200\": {\"description\": \"The resulting job data. This will be returned in a pending state until the job is completed. See [`/jobs/{id}`](#tag/default/get/jobs/{id}) for retrieving the results.\", \"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"properties\": {\"job_id\": {\"type\": \"string\", \"format\": \"uuid\", \"pattern\": \"^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$\"}, \"status\": {\"type\": \"string\", \"enum\": [\"backlogged\", \"queued\", \"scheduled\", \"processing\", \"sampling\", \"intermediate-complete\", \"completed\", \"failed\", \"cancelled\"]}, \"created_at\": {\"type\": \"string\", \"format\": \"date-time\", \"pattern\": \"^(?:(?:\\\\d\\\\d[2468][048]|\\\\d\\\\d[13579][26]|\\\\d\\\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\\\d|30)|(?:02)-(?:0[1-9]|1\\\\d|2[0-8])))T(?:(?:[01]\\\\d|2[0-3]):[0-5]\\\\d:[0-5]\\\\d(?:\\\\.\\\\d+)?(?:Z))$\"}, \"completed_at\": {\"type\": \"null\"}, \"result\": {\"type\": \"null\"}, \"error\": {\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"string\", \"description\": \"Why the job failed. `invalid_request` means the request broke a rule, such as a media limit or a file that cannot be read or downloaded. `validation_failed` means a value is outside its parameter's schema. For both codes, change the parameter named in `param` before you resubmit. Other codes are `content_policy`, `model_unavailable`, `insufficient_balance`, `timeout`, `auto_cancelled`, `provider_error`, `internal`, and `node_app_node_failed`. Treat an unknown code as `internal`.\"}, \"message\": {\"type\": \"string\"}, \"param\": {\"description\": \"The request parameter to change, present with `invalid_request` and `validation_failed`.\", \"type\": \"string\"}}, \"required\": [\"code\"], \"additionalProperties\": false}, \"progress\": {\"anyOf\": [{\"type\": \"number\", \"minimum\": 0, \"maximum\": 1}, {\"type\": \"null\"}]}}, \"required\": [\"job_id\", \"status\", \"created_at\", \"completed_at\", \"result\"], \"additionalProperties\": false}}}}, \"400\": {\"description\": \"The request body is invalid.\", \"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"properties\": {\"error\": {\"type\": \"string\"}}, \"required\": [\"error\"], \"additionalProperties\": false}}}}, \"401\": {\"description\": \"You are not authenticated.\", \"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"properties\": {\"error\": {\"type\": \"string\"}}, \"required\": [\"error\"], \"additionalProperties\": false}}}}, \"402\": {\"description\": \"You have run out of credits.\", \"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"properties\": {\"error\": {\"type\": \"string\"}}, \"required\": [\"error\"], \"additionalProperties\": false}}}}, \"429\": {\"description\": \"You have reached the maximum number of concurrent jobs.\", \"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"properties\": {\"error\": {\"type\": \"string\"}}, \"required\": [\"error\"], \"additionalProperties\": false}}}}}}",
+          "error": null
+        },
+        {
+          "name": "generate_video",
+          "arguments": "{\"model\":\"lightricks/ltx-video-2-19b\",\"input\":{\"prompt\":\"A cinematic, photorealistic 10-second single continuous shot, horizontal 16:9. One and the same tall adult woman throughout: straight chin-length silver bob haircut, bright red knee-length raincoat, yellow rubber rain boots. Rainy city street at dusk, wet reflective pavement, a clearly recognizable bus stop shelter beside the curb. Natural body motion, understated warmth and humor. 0–3 seconds: medium-wide three-quarter front view, her full outfit visible as she waits quietly at the bus stop in steady rain, looking toward an approaching bus. 3–6 seconds: a city bus drives past her on the road without stopping, continuing out of frame; she follows it with her eyes, remaining safely on the sidewalk. 6–8 seconds: she laughs warmly at the situation, smiles, then turns away from the road and starts walking down the sidewalk. 8–10 seconds: the camera gently pans to settle behind her, ending on her back as she walks away, silver bob, red raincoat and yellow boots clearly recognizable. During the final two seconds, display the exact lowercase words \\\"walk anyway\\\" in clean, legible white sans-serif text centered in the lower third, held through the ending. Maintain identical face, hair, coat and boots throughout. No cuts, no extra protagonists. Audio: steady rainfall, passing bus engine and tires on wet asphalt, her brief natural laugh, then footsteps splashing softly. No dialogue, no narration.\",\"aspect_ratio\":\"16:9\",\"resolution\":\"512p\",\"duration\":10,\"generate_audio\":true},\"sync\":false}",
+          "output": "{\"mode\": \"async\", \"completed\": false, \"timedOut\": false, \"job_id\": \"048bcf65-c736-4423-ab43-bd641b34078c\", \"job\": {\"created_at\": \"2026-11-05T04:47:36.633Z\", \"completed_at\": null, \"job_id\": \"048bcf65-c736-4423-ab43-bd641b34078c\", \"status\": \"scheduled\", \"type\": \"videoV2\", \"progress\": 0.0020833333333333333}}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "generate_video",
+          "args": {
+            "model": "lightricks/ltx-video-2-19b",
+            "input": {
+              "prompt": "A cinematic, photorealistic 10-second single continuous shot, horizontal 16:9. One and the same tall adult woman throughout: straight chin-length silver bob haircut, bright red knee-length raincoat, yellow rubber rain boots. Rainy city street at dusk, wet reflective pavement, a clearly recognizable bus stop shelter beside the curb. Natural body motion, understated warmth and humor. 0–3 seconds: medium-wide three-quarter front view, her full outfit visible as she waits quietly at the bus stop in steady rain, looking toward an approaching bus. 3–6 seconds: a city bus drives past her on the road without stopping, continuing out of frame; she follows it with her eyes, remaining safely on the sidewalk. 6–8 seconds: she laughs warmly at the situation, smiles, then turns away from the road and starts walking down the sidewalk. 8–10 seconds: the camera gently pans to settle behind her, ending on her back as she walks away, silver bob, red raincoat and yellow boots clearly recognizable. During the final two seconds, display the exact lowercase words \"walk anyway\" in clean, legible white sans-serif text centered in the lower third, held through the ending. Maintain identical face, hair, coat and boots throughout. No cuts, no extra protagonists. Audio: steady rainfall, passing bus engine and tires on wet asphalt, her brief natural laugh, then footsteps splashing softly. No dialogue, no narration.",
+              "aspect_ratio": "16:9",
+              "resolution": "512p",
+              "duration": 10,
+              "generate_audio": true
+            },
+            "sync": false
+          },
+          "approve": true,
+          "reason": ""
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "I can make a **10-second, 16:9 video at 512p** with all three beats, ending behind her as she walks away with “walk anyway” on screen.\n\nYour connected account supports only 5-, 8-, or 10-second clips, and I don’t have a tool here to extend and export one as exactly 12 seconds.\n\n**Would a single 10-second video work?** I’ll use one continuous shot to help keep her appearance consistent."
+        }
+      ],
+      "kind": "delivered",
+      "denied": [],
+      "files": [],
+      "spent": 0,
+      "seconds": 48
+    }
+  ],
+  "started": "2026-11-05T04:46:59.737Z",
+  "seconds": 48,
+  "spent": 0
+}

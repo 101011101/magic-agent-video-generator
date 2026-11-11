@@ -1,0 +1,47 @@
+{
+ "id": "ce38123079",
+ "key": "check:length:I",
+ "symptom": "about 15 s",
+ "item": "I45b",
+ "n": 21,
+ "builds": {
+  "old": 8,
+  "new": 13
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the 'about 15 s' check measure 5.2 s instead of about 15 s?",
+    "because": "The grader never got the joined 15 s film. It measured only the separate 5 s clip files from wait_for_video_project. Those are about 5.2 s long.",
+    "evidence": "s5.new.happy.I45b/grade.json: 'about 15 s' got '5.2 s'; files graded are [.png, .mp4, .mp4, .mp4] at 858x480, 858x480, 856x478 (the three per-clip assets plus the still). The judge also says 'Only two clips (about 5 s each) are visible… The final file could not be checked.' s5.new.dumper.I45b/grade.json shows the same 4 files and 5.2 s."
+   },
+   {
+    "why": "Why was the joined film missing from the graded files?",
+    "because": "The harness tried to download the join result and got HTTP 404. So no file was saved for the deliverable.",
+    "evidence": "s5.new.happy.I45b/calls.jsonl line 12: join_production_clips output download_url 'http://127.0.0.1:8000/films/5048f9b094f741a8b480fc8f64fd7b3d.mp4', seconds 15.4; files: ['download failed: download 404 http://127.0.0.1:8000/films/…mp4']. s5.new.dumper.I45a/calls.jsonl line 9 shows the same 404 for a different item, so the failure is systemic."
+   },
+   {
+    "why": "Why did the download fail when the tool itself reported a correct 15.4 s, 16:9, silent film?",
+    "because": "The new build's join step writes the film to a local film server (127.0.0.1:8000) and returns a localhost URL. The harness's downloader cannot get that file at that URL: the server did not serve it, or the file was not in the directory the server reads from. The film was made correctly, but the grader could not reach it.",
+    "evidence": "join output 'checked': [{'want':'One file, 15 s, 16:9','got':'15.4 s, 858x480','result':'yes'}, {'want':'No sound','got':'silent','result':'yes'}]. The assistant delivered that URL and said '15 seconds'. Only the harness fetch failed."
+   },
+   {
+    "why": "Why does this affect only the new build's typical failures (5.2 s), while old happy/dumper chats pass?",
+    "because": "The old build has no plan/join pipeline. The assistant makes one 15 s create_video_from_text call (minimax-h3, end_seconds 15), and the grader can download that file from videos.magichour.ai. The old failures come from a different cause: the stupid persona's vague brief has no length, so the assistant made one 5 s clip.",
+    "evidence": "s5.old.happy.I45b/calls.jsonl: create_video_from_text end_seconds 15 → grade 'about 15 s' pass '15.1 s'. s5.old.stupid.I45b/state.json: user says only 'make a little movie with the people in this pic and this pic'; the assistant made a 5 s 640x640 park-bench clip; grade got '5 s'."
+   },
+   {
+    "why": "Why is the harness fetch failure the end of the chain?",
+    "because": "It is a defect of the test harness and its environment: it cannot fetch the local film server's output. Nothing in the tool descriptions or in the assistant's behaviour caused it. The assistant followed the 'how' steps (create clips, wait, join, deliver download_url) exactly.",
+    "evidence": "s5.new.happy.I45b/calls.jsonl: the full sequence plan → create_production_clip ×3 → wait ×3 → join_production_clips matches the plan's 'how' text. The only error is the harness line 'download failed: download 404'."
+   }
+  ],
+  "axiom": "The harness cannot download the joined film from the new build's local film server (http://127.0.0.1:8000/films/…, HTTP 404). So the grader measures the 5 s per-clip assets instead of the 15.4 s film that join_production_clips actually made and checked. This is a harness defect, not a model or plan limit. A smaller, separate part of the failures, in the old build, comes from the stupid persona's brief, which gives no length, so the assistant chose one 5 s clip.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the harness collect the join output reliably. Keep the local film server running and serving the same directory join_production_clips writes to during grading. Or have join_production_clips also return the local file path, and have the harness copy that file into the chat's assets. Also make the grader fail loudly ('deliverable not downloaded') when the download fails, so it does not grade the per-clip files."
+ },
+ "error": null,
+ "seconds": 56,
+ "usd": 0.6303963999999999
+}

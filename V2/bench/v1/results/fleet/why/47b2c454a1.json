@@ -1,0 +1,46 @@
+{
+ "id": "47b2c454a1",
+ "key": "must:J51a:Steam visibly curls upward from the cup.",
+ "symptom": "Steam visibly curls upward from the cup.",
+ "item": "J51a",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "axiom": "The free-plan Magic Hour account that the old-build runs used had 0 credits. Every video job needs credits (about 120 to 144 for ltx-2.5 at 480p), so the server refused every generation. Nothing the assistant could change in its arguments would get past this. It is a resource state of the test harness or account, not a defect in tool use.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Before each old-build run, refill or reset the credits on the free-plan account, or give each build its own funded account. If the balance is under the cost of the cheapest video (about 150 credits), skip the chat or mark it invalid instead of grading it.",
+  "whys": [
+   {
+    "why": "Why was 'Steam visibly curls upward from the cup' not met?",
+    "because": "No video was produced, so the grader had no frames to check for steam.",
+    "evidence": "The grader's reason is 'No video was produced, so no steam is visible.' In s2r.old.happy.J51a/calls.jsonl the chat ends with kind 'cannot' and there is no successful call."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "Every create_video_from_text call was refused before generation (approve:false). This happened in turn 1 and again after the TikTok switch.",
+    "evidence": "happy calls.jsonl lines 5 and 10: approve:false. stupid calls.jsonl lines 3 and 8: approve:false. No job id or output in any of them."
+   },
+   {
+    "why": "Why were the calls refused?",
+    "because": "The account had 0 credits. Each job needed about 144 credits (6 s) or about 120 credits (5 s).",
+    "evidence": "The reason in each refusal is 'insufficient credits: this call needs about 144 credits and 0 remain on the account' (happy) or '...about 120 credits and 0 remain' (stupid)."
+   },
+   {
+    "why": "Was the assistant at fault, for example a wrong model or wrong settings?",
+    "because": "No. The happy assistant used the cheapest free-plan setup that was allowed (ltx-2.5, 480p, 9:16, 6 s, no audio) and followed the brief correctly. The stupid chat's first call used model 'default', which was corrected to ltx-2.5. After that it hit the same credit wall. No argument change could make a job fit in 0 credits.",
+    "evidence": "happy calls.jsonl line 10 args: model ltx-2.5, aspect_ratio 9:16, resolution 480p, end_seconds 6, audio false. stupid line 2: the 'default' model was rejected. Line 3: ltx-2.5 failed on credits."
+   },
+   {
+    "why": "Why did the account have 0 credits in all 3 old-build chats?",
+    "because": "The old builds share one free-plan account, and its balance was used up before these runs (probably by earlier fleet runs). The harness did not refill it. The new build had no failures on this item, which points to the old build's account state and not to the test itself.",
+    "evidence": "The symptom builds are {\"old\":3} only. The refusals in the happy and stupid chats show the same balance of 0 within seconds of each other (timestamps 1794364566284 to 1794364607097)."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 22,
+ "usd": 0.0798844
+}

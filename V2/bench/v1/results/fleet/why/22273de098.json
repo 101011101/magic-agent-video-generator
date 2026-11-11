@@ -1,0 +1,47 @@
+{
+ "id": "22273de098",
+ "key": "must:E27a:Music ends with the video",
+ "symptom": "Music ends with the video",
+ "item": "E27a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Music ends with the video' not met?",
+    "because": "Neither chat delivered a video. Each chat delivered one standalone 15 s WAV music file. The 10 s clip had no music laid under it, so the music cannot end with the video.",
+    "evidence": "s3.new.happy.E27a/grade.json: checks 'a video was made' fail (got [\".wav\"]) and 'about 10 s' fail (got 15 s); must 'Music ends with the video' = no, 'Track is 15 s versus a 10 s clip'. s3.old.stupid.E27a/calls.jsonl: the only create call is generate_music, and wait_for_audio_project returns one output.wav."
+   },
+   {
+    "why": "Why was the track 15 s and not 10 s?",
+    "because": "generate_music does not accept less than 15 s. Both assistants knew this and asked for duration 15.",
+    "evidence": "tools-new.json generate_music inputSchema: duration minimum 15, maximum 300 ('from 15 to 300'). calls.jsonl in both chats: generate_music args duration=15. New-build plan_request row: seconds=15, from 'clip is 10 seconds; 15 s minimum, trim to 10'."
+   },
+   {
+    "why": "Why did the assistant not trim the track to 10 s and mix it under the clip, as the new-build plan row says ('trim to 10')?",
+    "because": "No tool the assistant can call takes the user's video plus an audio track, mixes the music under the original voice and cuts the music at the end of the video. So the assistant handed the trim and the mix to the user ('Cut it at 10 seconds... in your video editor').",
+    "evidence": "tools-new.json: join_videos takes only videos (plus a 'silent' flag) and has no audio input. join_production_clips mixes music only for a plan_video_production film that was made from generated clips, with ids from create_production_sound. edit_video, create_lip_sync_video and translate_video make the video again or replace the speech. No audio-trim tool exists. The new chat's assistant said: 'none of my tools can put music under an existing video and also keep your voice'. The old chat's assistant said: 'Magic Hour has no tool that mixes a music track into an existing video'."
+   },
+   {
+    "why": "Why did the same thing happen in both builds and with both personas?",
+    "because": "The gap is in the tool set, not in the conversation. The happy user and the stupid user both gave the mood and the 10 s length, and both agreed to a separate file. Each assistant then followed the only path the tools allow: generate_music → wait_for_audio_project → a WAV link with editing instructions.",
+    "evidence": "s3.new.happy.E27a/calls.jsonl lines 6-11 and s3.old.stupid.E27a/calls.jsonl lines 4-9 show the same flow and the same 15 s request. The two runs differ only in the new build's plan_request step, and plan_request returned ready=true for generate_music with seconds=15."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The test (E27a: add music to the user's clip, keep the video and the voice, music ends with the video) needs a server-side audio mix onto a supplied video. Neither build offers that operation, and the music model's minimum length is fixed at 15 s. The assistant had no tool path that could meet the item.",
+    "evidence": "items/E27a.json must_haves[3]: 'The added music ends with the video rather than continuing over extra footage or a blank screen'; spec kind=video, seconds=10, audio=required. tools-new.json has no tool that has both a video input and an audio input."
+   }
+  ],
+  "axiom": "The MCP server has no tool that mixes a supplied audio track under a user's existing video, keeps the original voice and cuts the music at the video's end. Also, generate_music cannot make a track shorter than 15 s. The only possible output was a standalone 15 s WAV that the user must trim and mix.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool add_music_to_video(video, audio, music_volume≈0.2, fade_out_s≈1). It mixes the music under the video's own audio, cuts the music at the video's length with a fade-out and returns one MP4. The new build already does this mix inside join_production_clips, so the tool can reuse that code. Then add add_music_to_video to the plan_request tool list, so a request to add music to a clip runs generate_music(15) → add_music_to_video and returns a 10 s video."
+ },
+ "error": null,
+ "seconds": 55,
+ "usd": 0.7909920000000001
+}

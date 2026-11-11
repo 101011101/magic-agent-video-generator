@@ -1,0 +1,46 @@
+{
+ "id": "402e4c2a8b",
+ "key": "must:J50c:The final output is one 4:5 poster with a deep navy background instead of burnt orange.",
+ "symptom": "The final output is one 4:5 poster with a deep navy background instead of burnt orange.",
+ "item": "J50c",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'one 4:5 poster with deep navy background' item not met?",
+    "because": "No image was made at all. Both chats ended with a 'cannot' reply and produced no output, so the grader had nothing to check.",
+    "evidence": "s2r.old.happy.J50c/calls.jsonl and s2r.old.dumper.J50c/calls.jsonl: both end with type 'end', kind 'cannot'. Neither has an approved call or an output. The grader's reason says both generation attempts were refused for lack of credits."
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "Every generate_image call came back approve:false. In turn 1 the first poster (orange) was refused with 'needs about 10 credits and 0 remain'. In turn 2 the navy poster was refused even on the cheapest model, flux-2-klein, with 'needs about 5 credits and 0 remain'.",
+    "evidence": "happy calls.jsonl lines 2 and 7 (qwen-image-2.1 9:16, then flux-2-klein 9:16). dumper calls.jsonl lines 2 and 7 (qwen-image-2.1 1:1, then flux-2-klein 1:1). All four have approve:false and reason 'insufficient credits ... 0 remain on the account'."
+   },
+   {
+    "why": "Was the assistant's behaviour to blame (wrong tool, too-expensive settings)?",
+    "because": "No. The assistant made reasonable calls. It moved down to the cheapest free model at 640px for the second try, told the user plainly that it was blocked, and laid out the plan to reframe to 4:5. No settings choice could have worked, because the balance was 0 before the first call.",
+    "evidence": "happy/dumper calls.jsonl, 'say' entries: they explain the 0 credits, that the cheapest model costs 5, and the 1:1/16:9/9:16 → 4:5 reframe plan. The second calls switch to flux-2-klein."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of the chat?",
+    "because": "The shared free-plan account used by the old (hosted) build was already empty when these chats began. The first call of the chat was refused, so this chat did not use up the credits. Earlier chats in the same fleet run did. Nothing resets or tops up the balance between chats.",
+    "evidence": "chat.json: mode 'live', url https://mcp.magichour.ai/ (old side). In both chats the first tool call (calls.jsonl line 2) already shows '0 remain on the account'. The 3 failures are all old-build chats, across all three personas (happy, dumper, stupid), so the cause does not depend on the persona or the assistant's reasoning."
+   },
+   {
+    "why": "Why does this count as an axiom?",
+    "because": "The test harness ran graded chats on an account with no credits left. That is a harness artifact outside the MCP tools and outside the brief. The test (refer back to a previous poster and change only its colour) can only be judged if the first poster gets made.",
+    "evidence": "J50c.json: the test needs a prior poster to use as the edit reference (expect.beyond_free 'no'). With 0 credits that poster cannot exist."
+   }
+  ],
+  "axiom": "The test harness ran the old-build chats on a shared free-plan Magic Hour account whose credits were already used up (0 remaining before the first call). Every generation was refused, so no build or assistant behaviour could produce the poster.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "In the harness, give each chat a fresh or topped-up free-plan account (or reset its credits) before the chat starts. Also check the balance before the first turn: if it is below the cheapest generation cost (5 credits), mark the chat 'invalid: no credits' and do not grade it as a failure."
+ },
+ "error": null,
+ "seconds": 23,
+ "usd": 0.093189
+}

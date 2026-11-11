@@ -1,0 +1,52 @@
+{
+ "id": "b515148c57",
+ "key": "must:D23b:Legible white lettering on dark backing at bottom left, no clipping",
+ "symptom": "Legible white lettering on dark backing at bottom left, no clipping",
+ "item": "D23b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'legible white lettering on dark backing at bottom left' not met?",
+    "because": "In both clips the white text is at the bottom left, but the backing is a faint translucent gradient. It fades into the bright planks and plants. In the new clip the small second line is only moderately legible. In the old clip the backing is missing in the first frame and the caption is gone at 6.7 s.",
+    "evidence": "s3.new.happy.D23b/grade.json must[2]: 'backing is a faint translucent band that fades into the planks'; faults: 'faint translucent gradient… weakens contrast, especially for the small second line'. s3.old.dumper.D23b/grade.json must[2]: 'backing is a faint gradient… first frame has no backing'."
+   },
+   {
+    "why": "Why is the backing faint and translucent instead of a solid dark box?",
+    "because": "The video model drew the caption as part of the picture, from the prompt. Nothing composited a real overlay. The model then rendered 'dark backing' as a soft see-through gradient.",
+    "evidence": "old calls.jsonl: one create_video_from_text call (ltx-2.5), with the caption only in style.prompt. new calls.jsonl: create_production_clip with minimax-h3, and the caption only in the prompt text. The new plan's checklist says 'drawn by the video model, may be misspelled'."
+   },
+   {
+    "why": "Why did the assistant ask the model for a translucent backing at all?",
+    "because": "In both builds the assistant changed the user's 'dark backing' to 'dark semi-transparent backing box/bar'. This addition is not in the brief. It pushed the model toward a weak, see-through band.",
+    "evidence": "old calls.jsonl args.style.prompt: 'white text on a dark semi-transparent backing box'. new calls.jsonl plan_video_production beat text: 'white lettering on a dark semi-transparent backing bar… \"Community Gardener\" smaller underneath'. D23b.json brief: 'White lettering on a dark backing'."
+   },
+   {
+    "why": "Why did the caption have to be drawn by the model, with no exact overlay?",
+    "because": "Neither build has a tool that lays exact text with a styled backing over a video at a set time. The new build's planner offers only card, model, still or accept. The assistant chose 'model'. That kept the 1 s start time but left the look of the caption to the model. The planner's own data says minimax-h3 got the text right 2 of 2 times, but it says nothing about backing contrast.",
+    "evidence": "new calls.jsonl plan_video_production question words-1 options (card/model/still/accept), with answers {'words-1':'model'}. Both final replies say 'none of these tools can place exact text on a video'."
+   },
+   {
+    "why": "Why didn't the assistant catch the weak backing before it delivered?",
+    "because": "It could not look at the frames. In the new build, join returned a 404 URL and fetch_image_download rejected the last-frame path. In the old build there is no way to view frames at all. Both replies told the user to check the clip themselves.",
+    "evidence": "new calls.jsonl: fetch_image_download error 'download_url must use https://videos.magichour.ai'. join_production_clips lists the words line under 'unchecked'. The old reply says: 'I couldn't play the clip to check'."
+   },
+   {
+    "why": "Why does a model-drawn backing come out faint even when the prompt asks for dark?",
+    "because": "AXIOM: text-to-video models (ltx-2.5, minimax-h3) give no exact control over drawn graphics, such as box opacity, contrast or how long they persist. They tend to blend lower thirds softly into the scene.",
+    "evidence": "Both builds and both models show the same faint-gradient result and the same early disappearance (gone at 6.7 s and 6.9 s). The planner itself warns 'may be misspelled' and 'check the frame after'."
+   }
+  ],
+  "axiom": "The text-to-video models draw a lower third as part of the picture, and nothing gives exact control over the backing's opacity or contrast. Neither build has a real text-overlay or compositing tool, and in both builds the assistant also asked for a 'semi-transparent' backing.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a server-side caption-overlay step, for example an ffmpeg drawtext/drawbox option in join_production_clips. It should burn in exact text on a solid dark box at a set position and time range. Make it the recommended answer for exact_words over a scene. Until then, the tool descriptions should tell the assistant to copy the user's backing wording ('solid dark box') into the prompt and never add 'semi-transparent'."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.2333944
+}

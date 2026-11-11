@@ -1,0 +1,47 @@
+{
+ "id": "f85f16c964",
+ "key": "must:C15c:Faces match the portraits",
+ "symptom": "Faces match the portraits",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Faces match the portraits' not met?",
+    "because": "In both outputs the grader saw the two coworkers with their original look: a young brown-haired man and a straight-haired blonde woman, not the grey-haired man or the curly dark-haired woman from the portraits. It concluded that no swap was visible.",
+    "evidence": "s1.old.happy.C15c/grade.json and s1.new.stupid.C15c/grade.json, must item 'Faces match the portraits' = no. The reasons quote hair colour and hair texture ('short dark-brown hair, not grey', 'straight blonde hair, not curly dark hair')."
+   },
+   {
+    "why": "Did the assistant target the wrong faces or skip the swap?",
+    "because": "No. Both assistants ran detect_faces and sent swap_face_in_video in individual-faces mode with the right mapping: crop 0-0 (the left man) got portrait-man and crop 0-2 (the blonde woman) got portrait-woman. Old also mapped 132-0, the man's profile, to portrait-man. Both jobs finished. Each was 10 s, 858x480, and cost 240 credits.",
+    "evidence": "calls.jsonl, old line 11 and new line 26 (face_mappings). Crops assets/01 and assets/03 show the brown-haired smiling man and the blonde woman. assets/02 is the bearded middle man, and he was correctly left alone. wait_for_video_project shows status complete in old line 14 and new line 27."
+   },
+   {
+    "why": "If the mapping was right and the job finished, why do the people still look like the original actors?",
+    "because": "The Magic Hour video face-swap model replaces only the inner face region on the target head. Hair, head shape and clothing stay from the source video. The test's identity cues are mostly hair (grey short hair vs brown; dark curls vs long straight blonde), so these cues cannot change.",
+    "evidence": "attachments/portrait-man.jpg shows a grey-haired older man. Source crops 0-0 and 0-2 show brown hair and long straight blonde hair. Both builds, both personas and both correct mappings give the same 'still brown / still blonde' verdict. That matches a model property, not an assistant error."
+   },
+   {
+    "why": "Why didn't the inner-face change alone make the identity recognisable?",
+    "because": "The free plan renders at 480p, and the faces are small in a 3-person office wide shot. The swapped facial features of an older grey-stubbled man on a younger dark-haired head do not read as the portrait person. The grader samples frames and judges identity mostly by hair. It reads a weak inner-face swap as 'no swap'.",
+    "evidence": "Tool result width 858 x height 480 in both chats. The new grade.json fault notes the clip 'looks slightly softer and more AI-regenerated than the source', which shows the video was processed. The test changelog (C15c.json 'changed', 2026-11-01) says hair 'may' follow the portrait, but the tool cannot do that."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Neither build's assistant can make the face-swap model transfer hair or head shape, and the free plan caps resolution at 480p. This is a property of the generation model.",
+    "evidence": "Both builds call the same backend swap_face_in_video with identical correct arguments and get the same result. Missing evidence: I could not open the grade/*.jpg frames (the file names are unknown), so I cannot confirm by eye how much the inner face changed. Partial grader strictness (judging by hair) stays possible, but the generator limit is better supported."
+   }
+  ],
+  "axiom": "Magic Hour's video face-swap model replaces only the inner facial region at 480p on the free plan. It keeps the target's hair and head shape, so a portrait whose identity rests on hair (grey hair, dark curls) cannot become recognisable in the output.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "State in the swap_face_in_video tool description that only the inner face is replaced and hair, head shape and clothing stay from the video. The assistant can then tell the user this before it spends credits. Also rewrite the C15c must-have to judge facial features, not hair. The swap quality itself is inherent."
+ },
+ "error": null,
+ "seconds": 67,
+ "usd": 0.5795736
+}

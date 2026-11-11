@@ -1,0 +1,47 @@
+{
+ "id": "d00b9434fa",
+ "key": "check:kind:D",
+ "symptom": "a video was made",
+ "item": "D20b",
+ "n": 5,
+ "builds": {
+  "new": 4,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the check 'a video was made' fail?",
+    "because": "The harness collected only the five PNG stills and one WAV for these chats. No MP4 reached the graded file set.",
+    "evidence": "s3.new.dumper.D20b/grade.json: 'a video was made' got [.png x5, .wav]; the must-have notes say 'The final MP4 isn't among the files'. s3.new.dumper.D20d/grade.json shows the same pattern (5 PNG, no video)."
+   },
+   {
+    "why": "Why is there no MP4 in the new-build chats, when the assistant said it delivered a reel?",
+    "because": "The new build did make a film. join_production_clips returned download_url http://127.0.0.1:8000/films/eb48c2dd....mp4 (10.0 s, 480x854, music true, all checks 'yes'). But when the harness tried to fetch that URL it got a 404, so it saved nothing.",
+    "evidence": "s3.new.dumper.D20b/calls.jsonl line 17: output has download_url on 127.0.0.1:8000, and files = ['download failed: download 404 http://127.0.0.1:8000/films/....mp4']."
+   },
+   {
+    "why": "Why does the URL return 404?",
+    "because": "The film URL comes from the local server's own film endpoint, and that endpoint does not serve the file it just wrote. The 404 also happens to the assistant's own call to the server tool get_last_frame on the same URL, so the problem is not specific to the harness downloader.",
+    "evidence": "s3.new.dumper.D20b/calls.jsonl line 18: get_last_frame error \"Client error '404 Not Found' for url 'http://127.0.0.1:8000/films/eb48c2dd....mp4'\". In the final reply the assistant says 'the link wouldn't open from my side'."
+   },
+   {
+    "why": "Why does the local build hand out a URL it cannot serve?",
+    "because": "In the local bench setup, the join tool writes the film to a place the 127.0.0.1:8000 /films route does not read from, or the file server is not running or is a different process. The logs do not show which of these it is: the server log and the films directory are missing from the evidence. Either way, the defect is in how the local build stores and serves the film, not in the assistant's plan. The plan → card clips → sound → join flow worked correctly.",
+    "evidence": "calls.jsonl lines 13-17: plan ok, create_production_clip 'drawn', create_production_sound ok, and the join reports seconds 10 and not_met []. Only the HTTP fetch fails."
+   },
+   {
+    "why": "Why does the old-build chat fail the same check?",
+    "because": "A different cause. In the old build, the assistant decided that no hosted tool can join photos into one ordered video with captions and music. It offered a do-it-yourself package, and the user picked it. So the assistant made 5 captioned stills with edit_image and one music track with generate_music, and no video at all. This matches the old tool set, which has no compose or join tool. That is a capability gap of the hosted server, not a harness defect.",
+    "evidence": "s3.old.happy.D20b/calls.jsonl line 4: 'none of my Magic Hour tools can join several photos into one video in a set order...'. Lines 6-17: only edit_image, generate_music and waits. grade.json: 'No reel was made, only 5 separate stills'."
+   }
+  ],
+  "axiom": "In the new build (4 of 5 chats), the film URL that join_production_clips returns (http://127.0.0.1:8000/films/<id>.mp4) answers 404. Both the harness downloader and the server's own get_last_frame fail on it, so a reel that was made correctly never reaches the grader. This is a defect of how the local test setup serves films. In the old build (1 chat), the hosted tool set has no way to join stills into a video, so only stills and a WAV were made.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the local film server serve the files that join_production_clips writes. Point the /films route on 127.0.0.1:8000 at the same output directory, and keep the server running for the whole run. Also, before join_production_clips returns, make it check that download_url answers HTTP 200, and fail loudly if not. Then the harness saves the MP4 and the assistant's get_last_frame check works. For the old build, the only fix is to add a join/compose tool to the hosted server."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.5794886
+}

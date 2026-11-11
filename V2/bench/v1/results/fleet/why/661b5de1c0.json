@@ -1,0 +1,52 @@
+{
+ "id": "661b5de1c0",
+ "key": "must:J49b:Final poster remains square",
+ "symptom": "Final poster remains square",
+ "item": "J49b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the 'Final poster remains square' check fail?",
+    "because": "In both chats the first and the edited image are portrait 9:16, not 1:1.",
+    "evidence": "new grade.json: the 'aspect 1:1' check failed with got [\"352x640\",\"360x640\"], and the must-have note says 'Both images are tall 9:16 portrait'. old calls.jsonl: generate_image and edit_image were both sent with aspect_ratio \"9:16\"."
+   },
+   {
+    "why": "Why was the edit 9:16?",
+    "because": "edit_image keeps the shape of the source image, and the assistant passed aspect_ratio 9:16 on purpose to match the first poster. The real error happened at the first generation.",
+    "evidence": "old calls.jsonl line 9 and new calls.jsonl line 15: edit_image has aspect_ratio \"9:16\" and the first image's URL as the source. In new, plan_request derived aspect 9:16 'from the shape of slow sunday poster'."
+   },
+   {
+    "why": "Why was the first poster made 9:16 and not square?",
+    "because": "The simulated user never said 'square'. The opening message was only 'make a coffee cup poster'. The assistant never asked about shape, so the shape was a guess.",
+    "evidence": "old chat.json messages[0] is 'make a coffee cup poster'. 'Square, 640 by 640' appears only in the persona's bank. The persona would answer plain-word questions like 'square or tall?'. old calls.jsonl: no question was asked before generate_image(9:16)."
+   },
+   {
+    "why": "Why did the new build guess when it has a check that should stop guessing?",
+    "because": "plan_request filled in aspect 9:16 and labelled it as something the user said, so it asked no shape question. The assistant had sent aspect with source 'missing'.",
+    "evidence": "new calls.jsonl line 2: the args have {name:'aspect', source:'missing'}. The output returns {name:'aspect', value:'9:16', source:'user', from:\"the user's words\"}, and its only question is about exact_words. tools-new.json, plan_request description: 'A value the user did not give comes back missing: do not guess shape'."
+   },
+   {
+    "why": "Why did the old build guess?",
+    "because": "The old build has no planning or check step. The assistant chose a vertical layout for 'poster' on its own and only told the user afterwards ('Portrait (9:16)').",
+    "evidence": "old calls.jsonl line 2: the first call is generate_image with aspect_ratio 9:16 and a prompt that says 'vertical poster'. Line 6, the assistant's reply: 'Portrait (9:16) poster'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The 'poster' → 9:16 assumption is a default built into the tool and the assistant, not something the user said. The old host has no safeguard against it. In new, plan_request breaks its own written rule. Missing evidence: the source code of plan_request, which would show whether the word 'poster' is mapped to 9:16.",
+    "evidence": "In new, plan_request output contradicts its own description in tools-new.json. In old, there was no question at all before spending credits."
+   }
+  ],
+  "axiom": "When the user did not say a shape, the word 'poster' was quietly turned into 9:16. In new, plan_request returns aspect=9:16 labelled source 'user' / \"the user's words\" for 'make a coffee cup poster'. This breaks its own rule 'do not guess shape' and removes the shape question that would have got 'square' from the user. In old, the assistant picked 9:16 itself with no question asked.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request (new), never mark aspect as source 'user' unless the messages contain an explicit shape word (square, tall, wide, vertical, a ratio, or a platform). Otherwise return aspect as missing with the question 'Square, tall or wide?'. In the old build, add the same rule to the generate_image description: ask about shape when the user did not give one, and do not assume 9:16 for 'poster'."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.2429678
+}

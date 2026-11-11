@@ -1,0 +1,173 @@
+{
+  "id": "IS03",
+  "item": {
+    "id": "IS03",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Poster with exact words",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Poster with exact words",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "make a poster for our open mic night"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "words": "Open Mic Night · Friday 7pm · The Blue Door",
+      "where": "printed A4 flyers",
+      "look": "warm, a bit retro"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "generate_image"
+  },
+  "session": "mcp-min-IS03",
+  "sessionDir": "sessions/mcp-min-IS03",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "make a poster for our open mic night",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "Should any words appear on it? If so, which, exactly?\n\nAny look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.",
+          "asked": [
+            "question"
+          ],
+          "user": "“Open Mic Night · Friday 7pm · The Blue Door” — warm, a bit retro.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t generate the poster because your connected Magic Hour account has **0 credits**. No poster was created.\n\nThe design is ready: warm cream, burnt orange and deep blue, retro lettering, and a vintage microphone, with your exact text:\n\n**Open Mic Night · Friday 7pm · The Blue Door**\n\nAdd credits to your account, then ask me to try again.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"make a poster for our open mic night\"}],\"tool\":\"generate_image\",\"params\":[{\"name\":\"subject\",\"value\":\"poster for our open mic night\",\"source\":\"user\"},{\"name\":\"exact_words\",\"source\":\"missing\"},{\"name\":\"aspect\",\"source\":\"missing\"},{\"name\":\"look\",\"source\":\"missing\"}]}",
+          "output": "{\"tool\":\"generate_image\",\"ready\":false,\"params\":[{\"name\":\"subject\",\"value\":\"poster for our open mic night\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\",\"from\":\"the user's words\"},{\"name\":\"exact_words\",\"value\":null,\"source\":\"missing\",\"from\":\"\"},{\"name\":\"look\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"exact_words\",\"question\":\"Should any words appear on it? If so, which, exactly?\"},{\"param\":\"look\",\"question\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"make a poster for our open mic night\"},{\"role\":\"assistant\",\"text\":\"Should any words appear on it? If so, which, exactly?\\n\\nAny look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"},{\"role\":\"user\",\"text\":\"“Open Mic Night · Friday 7pm · The Blue Door” — warm, a bit retro.\"}],\"tool\":\"generate_image\",\"params\":[{\"name\":\"subject\",\"value\":\"poster for our open mic night\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":\"Open Mic Night · Friday 7pm · The Blue Door\",\"source\":\"user\"},{\"name\":\"look\",\"value\":\"warm, a bit retro\",\"source\":\"user\"},{\"name\":\"aspect\",\"source\":\"missing\"}]}",
+          "output": "{\"tool\":\"generate_image\",\"ready\":true,\"params\":[{\"name\":\"subject\",\"value\":\"poster for our open mic night\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\",\"from\":\"the user's words\"},{\"name\":\"exact_words\",\"value\":\"Open Mic Night · Friday 7pm · The Blue Door\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"look\",\"value\":\"warm, a bit retro\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "generate_image",
+          "args": {
+            "style": {
+              "prompt": "Design a polished open mic night event poster, warm and a bit retro. Portrait layout with beautiful highly legible vintage typography, warm cream paper, burnt orange and golden amber accents, deep blue details, subtle screen-print grain. Central illustration of a vintage stage microphone with a gentle warm spotlight and restrained retro decorative shapes. Strong typographic hierarchy and generous margins. Render exactly this text, no additional words: \"Open Mic Night · Friday 7pm · The Blue Door\". Set Open Mic Night as the large headline, Friday 7pm as a clear secondary line and The Blue Door as the venue line, preserving the middle-dot separators as elegant dividers. Charming intimate live-performance atmosphere."
+            },
+            "resolution": "640px",
+            "aspect_ratio": "9:16",
+            "model": "qwen-image-2.1",
+            "image_count": 1,
+            "name": "The Blue Door — Open Mic Night Poster"
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Should any words appear on it? If so, which, exactly?\n\nAny look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine."
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "generate_image: insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t generate the poster because your connected Magic Hour account has **0 credits**. No poster was created.\n\nThe design is ready: warm cream, burnt orange and deep blue, retro lettering, and a vintage microphone, with your exact text:\n\n**Open Mic Night · Friday 7pm · The Blue Door**\n\nAdd credits to your account, then ask me to try again.",
+        "refuse": "",
+        "tier_move": "I couldn’t generate the poster because your connected Magic Hour account has **0 credits**. No poster was created.\n\nThe design is ready: warm cream, burnt orange and deep blue, retro lettering, and a vintage microphone, with your exact text:\n\n**Open Mic Night · Friday 7pm · The Blue Door**\n\nAdd credits to your account, then ask me to try again.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 47
+    }
+  ],
+  "started": "2026-11-05T07:26:40.266Z",
+  "spent": 0,
+  "seconds": 47
+}

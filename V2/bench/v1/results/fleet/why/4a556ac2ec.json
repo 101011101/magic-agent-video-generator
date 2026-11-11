@@ -1,0 +1,46 @@
+{
+ "id": "4a556ac2ec",
+ "key": "must:B11a:Caption reads exactly 'A little room to breathe'",
+ "symptom": "Caption reads exactly 'A little room to breathe'",
+ "item": "B11a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Caption reads exactly A little room to breathe' not met in 2 chats?",
+    "because": "Neither output image has the right caption. In the stupid chat the caption has the wrong words and is misspelled. In the dumper chat the words are right but misspelled.",
+    "evidence": "s1.old.stupid.B11a/grade.json: read_as 'Golder Hoor at the Lake', seen 'missing'. s1.old.dumper.B11a/grade.json: read_as 'A liittle room to breahe', seen 'wrong'."
+   },
+   {
+    "why": "Why does the stupid chat have the wrong words?",
+    "because": "The stupid persona sent only 'add a caption to this pic' and did not give the words. The assistant did not ask what the caption should say. It made up 'Golden Hour at the Lake' and sent that in the prompt.",
+    "evidence": "s1.old.stupid.B11a/state.json: the user message is 'add a caption to this pic'. calls.jsonl: the edit_image prompt is 'Add the caption text \"Golden Hour at the Lake\"...'. chat.json: the bank has 'Caption wording: A little room to breathe', so one plain question ('what should it say?') would have got the right words. The grader also flagged that the assistant 'invented words the user never gave'."
+   },
+   {
+    "why": "Why are the letters wrong even when the prompt has the exact text (dumper chat, and 'Golder Hoor' in the stupid chat)?",
+    "because": "edit_image does not place text as a layer. It sends the whole photo and a text prompt to a diffusion edit model (flux-2-klein in the dumper chat, qwen-edit in the stupid chat). The model redraws the image and draws the letters itself, and it misspells them.",
+    "evidence": "dumper calls.jsonl: model flux-2-klein, 640px, and the prompt has the exact text 'A little room to breathe', but the output reads 'A liittle room to breahe'. stupid calls.jsonl: model qwen-edit, the prompt says 'Golden Hour', but the output reads 'Golder Hoor'. Both assistants told the user 'the AI draws the text itself, so check the spelling'."
+   },
+   {
+    "why": "Why did the assistant not find the misspelling and run the edit again before it delivered?",
+    "because": "The assistant never saw the result. In the dumper chat, fetch_image_download returned empty output, and the assistant said 'I couldn't preview the result here'. In the stupid chat it called wait_for_image_project with include_inline_downloads=false and never fetched the image. Both assistants delivered after one try and asked the user to check the spelling.",
+    "evidence": "dumper calls.jsonl line 4: fetch_image_download output \"\". Both wait_for_image_project calls have include_inline_downloads:false. Both replies are classified 'delivered' after one edit_image call."
+   },
+   {
+    "why": "Why can the tools not make exact text on the free plan?",
+    "because": "The old server has no deterministic text-overlay tool. Every caption goes through a generative image-edit model at 640px on the free plan. At this size these models do not spell short phrases reliably. This is a limit of the generation model.",
+    "evidence": "tools-old.json: the tool list (get_workflow_guide, edit_image, edit_video, etc.) has no text or caption overlay tool. The resolution in both calls is '640px', which the dumper assistant called 'the maximum on the free plan'."
+   }
+  ],
+  "axiom": "The diffusion image-edit models that Magic Hour exposes (flux-2-klein and qwen-edit at the free-plan size of 640px) draw caption letters as pixels and misspell short phrases ('liittle', 'breahe', 'Golder Hoor'), and the server has no exact text-overlay path. In the stupid chat this limit adds to an assistant mistake: the assistant made up the caption words instead of asking for them.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a tool that puts exact text on the image as a layer (font, colour, position), and say in the edit_image description to use it for captions. If no such tool is added, the edit_image description should tell the assistant three things: ask for the exact words when the user has not given them, fetch the result with inline download and check it, and run the edit again when the spelling is wrong."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.3361942
+}

@@ -1,0 +1,52 @@
+{
+ "id": "a3c262ac11",
+ "key": "must:D20b:Each caption appears exactly with its photo",
+ "symptom": "Each caption appears exactly with its photo",
+ "item": "D20b",
+ "n": 3,
+ "builds": {
+  "new": 1,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Each caption appears exactly with its photo' not met?",
+    "because": "In 2 old chats the captions were wrong. In the new chat there were no captions at all.",
+    "evidence": "s3.old.happy.D20b/grade.json: exact_text 'Stay a while' read_as 'Stay a shiil'. s3.old.dumper.D20b/grade.json: 'Stay a shile' and 'Something sweeet'. s3.new.stupid.D20b/grade.json: all five captions 'missing', 'user captions were never collected'."
+   },
+   {
+    "why": "Why were the old-build captions misspelled?",
+    "because": "The assistant did not put text on the images as text. It asked the AI image editor to draw each caption into the pixels. The prompt said 'exactly as written, spelled correctly', but the model still drew 'shiil', 'shile' and 'sweeet'.",
+    "evidence": "s3.old.happy.D20b/calls.jsonl and s3.old.dumper.D20b/calls.jsonl: five edit_image calls, model 'flux-2-klein', 640px, prompt 'Add the caption text \"Stay a while\" exactly as written...'. Dumper then animated these frames into the video, so the error carried into the reel (grade.json fault 1)."
+   },
+   {
+    "why": "Why did the assistant use the image model to draw the text?",
+    "because": "The old tool set has no tool that puts fixed text on an image or video. The assistant said this directly and chose AI-drawn text as the only option.",
+    "evidence": "s3.old.dumper.D20b/state.json: 'Magic Hour doesn't have a tool that puts fixed text on top of a video, so the AI model redraws the captions itself.' s3.old.happy.D20b/calls.jsonl line 4: 'none of my Magic Hour tools can ... put your exact captions on them'."
+   },
+   {
+    "why": "Why did nobody catch and fix the misspelled frame before delivery?",
+    "because": "The assistant could not see the generated images. In the happy chat, fetch_image_download returned empty output twice. So the assistant delivered without checking and asked the user to check.",
+    "evidence": "s3.old.happy.D20b/calls.jsonl lines 18-19: fetch_image_download output \"\". Delivered text: 'I couldn't preview the finished images here, so I haven't checked the captions myself.' Dumper: 'I couldn't preview the frames or the video from here'."
+   },
+   {
+    "why": "Why are the new-build captions missing?",
+    "because": "A different cause. The assistant asked 4 questions in one message. The 'stupid' persona answers only the first one, so it replied 'like 10 sec'. The assistant then went ahead with 'no on-screen text' and did not ask again. The caption words were in the persona's bank but were never asked for in plain words again.",
+    "evidence": "s3.new.stupid.D20b/chat.json persona: 'When it asks more than two things at once, answer only the first'. state.json: 4 numbered questions, then the reply 'like 10 sec', then delivery 'you didn't pick any, so it has no sound and no on-screen text'. calls.jsonl: plan_video_production prompts include 'no captions'."
+   },
+   {
+    "why": "Why can an image model not write short exact text reliably?",
+    "because": "Diffusion image models draw letters as shapes, not as typed characters. Spelling mistakes stay possible even with explicit prompts. This is an AXIOM of the generation model. The real gap is that the server has no deterministic text-overlay step to work around it.",
+    "evidence": "4 of 5 captions were correct in both old chats, and 1-2 per chat had letter-level errors ('shiil', 'shile', 'sweeet') from the same prompt pattern. That is a random rendering error, not a prompt error."
+   }
+  ],
+  "axiom": "The AI image model (flux-2-klein) draws text as pixels and sometimes misspells it, even when the prompt says to spell it exactly. Neither build has a tool that writes exact caption text onto an image or video. The assistant also could not see the outputs to catch the error. (In the new-build chat the cause is different: the assistant asked 4 questions at once, the vague user answered only the first, and the assistant did not ask again about the captions.)",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-based caption tool (for example ffmpeg drawtext or a PIL overlay in the join/compose step). It takes exact strings and time ranges and burns them onto photos or clips, so the AI model never draws caption text. The plan_video_production description should send any user-supplied exact text to this tool. Also make the image download tool return the image to the assistant, so it can check any AI-drawn text before delivery."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.5246607999999999
+}

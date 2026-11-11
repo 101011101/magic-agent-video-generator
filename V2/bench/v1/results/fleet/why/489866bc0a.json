@@ -1,0 +1,47 @@
+{
+ "id": "489866bc0a",
+ "key": "must:D22c:Robot matches first-turn drawing",
+ "symptom": "Robot matches first-turn drawing",
+ "item": "D22c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Robot matches first-turn drawing' not met in either chat?",
+    "because": "In both chats the first image showed a generic silver humanoid robot, and the video kept that robot. The grader scored the result against the brief's yellow, one-eyed robot with purple boots.",
+    "evidence": "s3.old grade.json: 'The first-turn robot is silver with two blue eyes; the user's described one-eye yellow robot doesn't exist.' s3.new grade.json: 'photoreal silver humanoid robot, not the yellow one-eyed robot'."
+   },
+   {
+    "why": "Why was the first image a silver robot and not the yellow one?",
+    "because": "The assistant never got the yellow-robot description. The only first-turn request was 'draw a pic of a robot', so the assistant made up a design.",
+    "evidence": "s3.old calls.jsonl generate_image prompt: 'A friendly humanoid robot with sleek metallic body and glowing blue eyes, standing in a futuristic city'. state.json in both chats, user msg 0: 'draw a pic of a robot'. In the new chat the follow-up answer was only 'no words. and square i guess'."
+   },
+   {
+    "why": "Why did the user say only 'draw a pic of a robot'?",
+    "because": "The harness rewrites turn 1 in the voice of the 'stupid' persona. That persona keeps the full request in its knowledge bank and shares facts only when asked. The new build's assistant asked about the platform and the text, not about the robot's look, so the yellow, one-eye and purple-boot details never came out. The old build's assistant asked nothing.",
+    "evidence": "chat.json bank: 'The request in full...: Draw a square cartoon of a little yellow robot with one big round eye and purple boots...'. messages[0].text: 'draw a pic of a robot'. Persona rules: 'answer only ... from your knowledge bank'."
+   },
+   {
+    "why": "Why did turn 2 then ask to keep a 'yellow body, single eye, purple boots' that was never drawn?",
+    "because": "The harness sends turn 2 word for word from the item. It does not adapt turn 2 to the vague turn 1 that the persona actually sent. This creates a conversation that contradicts itself: 'keep this exact robot' points to a robot that does not exist.",
+    "evidence": "chat.json messages[1] is the same as D22c.json turns[1].text. Turn 2 assumes the details of D22c turns[0], but the persona never sent those details."
+   },
+   {
+    "why": "Why did the assistant not repair the contradiction?",
+    "because": "It animated the silver image as the first frame and put 'single eye, yellow body, purple boots' in the motion prompt. It did not point out the mismatch or make a new yellow-robot image. That is a weaker, secondary host error. The item expects 'asks: never', and the user did say 'keep this exact robot', which pushes toward keeping the image. The checklist item is also judged against the brief's robot, so with this transcript the item could not pass whatever the assistant did.",
+    "evidence": "s3.old calls.jsonl create_video_from_image: image_file_path is the silver output.png. Its prompt says 'Keep the exact same robot ... same single eye, yellow body, purple boots'. D22c.json must_haves[1]: 'matches the first-turn drawing'. The grader compares against the user's described robot."
+   }
+  ],
+  "axiom": "Harness defect: the stupid persona sends a vague paraphrase of turn 1 ('draw a pic of a robot'), but turn 2 is sent word for word and refers to details turn 1 never gave. The grader then checks the result against the brief's robot, which was never drawn, so the check cannot pass.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, choose one of two changes. (1) For items whose later turns refer to earlier content (like D22c), send turn 1 word for word, or make the persona state every identity-defining detail from the bank in turn 1. (2) Make the persona rewrite later turns so they stay consistent with what it actually said. Also tell the grader to judge 'matches first-turn drawing' against the image that was actually made."
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.1986588
+}

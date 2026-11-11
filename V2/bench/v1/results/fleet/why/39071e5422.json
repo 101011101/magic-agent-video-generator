@@ -1,0 +1,52 @@
+{
+ "id": "39071e5422",
+ "key": "must:H41c:Scene 1 reads 'Less scrolling. More doing.'",
+ "symptom": "Scene 1 reads 'Less scrolling. More doing.'",
+ "item": "H41c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did scene 1 not read 'Less scrolling. More doing.' in both chats?",
+    "because": "The two chats fail in two different ways. In new.stupid there is no text at all: one live-action shot of a woman with a phone. In old.happy the line is on screen but garbled ('Les strorlinl, More d ing.').",
+    "evidence": "s4.new.stupid.H41c/grade.json: 'No text on screen', 'one continuous shot of one woman'. s4.old.happy.H41c/grade.json: read_as 'Les strorlinl, More d ing.', scene 3 'Try DayNest today.' exact."
+   },
+   {
+    "why": "Why did the new-build video have no text?",
+    "because": "The assistant never put the line in the prompt. Its create_video_from_text prompt says 'No readable text', and it never named DayNest or used the cream-and-green calendar look.",
+    "evidence": "s4.new.stupid.H41c/calls.jsonl line 8: style.prompt '...soft pastel palette, polished advertising look. No readable text.'"
+   },
+   {
+    "why": "Why did the assistant not have the line?",
+    "because": "The stupid user only said 'make an ad for my planning app'. Nobody asked them about on-screen words, so they never gave the copy. Their knowledge bank had the exact three lines, and the persona answers plain-word questions from the bank.",
+    "evidence": "s4.new.stupid.H41c/chat.json: bank 'Exact on-screen copy: Scene 1: Less scrolling. More doing. ...'. The persona rule: 'When a question is in plain words, answer it from your knowledge bank'. The only questions asked were about length, platform and sound (calls.jsonl line 5)."
+   },
+   {
+    "why": "Why was the user never asked about on-screen words?",
+    "because": "The assistant followed plan_request. The first call marked exact_words as missing but sent back only 3 questions (seconds, aspect, sound). The second call sent back ready:true with no questions, even though exact_words was still missing.",
+    "evidence": "calls.jsonl line 2 output: exact_words source 'missing', questions only for seconds/aspect/sound. Line 7 output: '\"ready\":true', exact_words value null source 'missing', 'questions':[]."
+   },
+   {
+    "why": "Why did plan_request say ready:true with exact_words missing on an ad request?",
+    "because": "In the new build, plan_request does not count exact_words as a required field for a create_video_from_text ad. It allows at most 3 questions, so exact_words lost out to length, shape and sound and was then dropped. Its own description says 'do not guess ... on-screen words', and the assistant took ready:true plus missing words to mean 'make it with no text'.",
+    "evidence": "tools-new.json plan_request description: 'Returns the checked sheet and up to 3 questions... If ready is true, create with the returned values... do not guess shape, length, sound or on-screen words.' Line 7 output shows ready:true with exact_words missing."
+   },
+   {
+    "why": "Why did the old-build chat fail even though it had the exact line?",
+    "because": "The old build has no plan_request step, and the happy user gave the full copy. The assistant put the exact line in the ltx-2.5 prompt. The text-to-video model garbled the longer lines and rendered only the short scene-3 line correctly. This is a generation-model text-rendering limit, and the assistant had warned about it.",
+    "evidence": "s4.old.happy.H41c/calls.jsonl line 2: prompt contains 'headline reads exactly: \"Less scrolling. More doing.\"'. Line 5 reply: 'AI video models often misspell words'. grade.json: scene 3 exact, scenes 1 and 2 garbled."
+   }
+  ],
+  "axiom": "The two builds fail for different reasons. New build (the 'No text on screen' chat): plan_request's readiness rule does not treat exact_words as required for an ad and allows at most 3 questions. It returned ready:true with exact_words still missing, so the vague user was never asked for the copy that was in their bank. Old build: the ltx-2.5 text-to-video model cannot reliably render longer exact text. The prompt was correct and the line still came out garbled.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request (new build), make exact_words a required field for ad, promo, title-card and poster subjects. If it is missing, return ready:false with a plain-word question such as 'Should any words show on screen? If yes, write them exactly as you want them.' Rank that question above aspect/sound when the 3-question cap applies, and never return ready:true while exact_words is missing. For the separate old-build garble, use the still-image-first route for exact text: generate each scene as an image, check its wording, then animate it. The assistant had already offered this."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.20591520000000002
+}

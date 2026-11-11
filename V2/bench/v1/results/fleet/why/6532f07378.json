@@ -1,0 +1,51 @@
+{
+ "id": "6532f07378",
+ "key": "must:A02d:One 4:5 portrait image is delivered.",
+ "symptom": "One 4:5 portrait image is delivered.",
+ "item": "A02d",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was no 4:5 portrait image delivered?",
+    "because": "Each new-build chat delivered a file with the wrong shape. Happy delivered a 384x640 image (3:5, ratio 0.6). Stupid delivered a 640x640 square.",
+    "evidence": "s1.new.happy.A02d/grade.json: check 'aspect 4:5' failed, got [\"384x640\",\"384x640\"], and the grader says 'about 3:5, taller than 4:5'. s1.new.stupid.A02d/grade.json: got [\"640x640\"], 'Image is square 1:1'."
+   },
+   {
+    "why": "Why did the first image in each chat come out 9:16 or 1:1 and not 4:5?",
+    "because": "generate_image accepts only three aspect ratios. The new build's plan_request quietly changed the requested shape to one of these three. It labelled the result as the user's own words and returned ready=true with no question. The plan_request description says 'If ready is true, create with the returned values', so the assistant did that.",
+    "evidence": "tools-new.json generate_image.aspect_ratio enum = [\"1:1\",\"16:9\",\"9:16\"]. happy calls.jsonl line 2: the assistant sent aspect '4:5' (source user), and plan_request returned aspect '9:16', source 'user', from 'the user's words'. generate_image was then called with aspect_ratio '9:16'. stupid calls.jsonl line 7: plan_request returned aspect '1:1', from 'the user's words', and generate_image was called with '1:1'."
+   },
+   {
+    "why": "Why did the happy chat's step to reframe the image to 4:5 not fix the shape?",
+    "because": "The assistant called edit_image with aspect_ratio '4:5' and model flux-2-klein on the 9:16 image. The editor kept the shape of the input image: a 9:16 image at 640px is 360x640, and the output came back as 384x640. The edit_image schema lists 4:5 as an option, but the free-plan editor model did not apply it. The tool result shows only an id and a cost, with no output size, so nothing warned the assistant.",
+    "evidence": "happy calls.jsonl line 5: edit_image args aspect_ratio '4:5', model 'flux-2-klein', resolution '640px'. Line 6: the result has status complete and no dimensions. grade.json: final file is 384x640. tools-new.json edit_image.aspect_ratio enum includes '4:5', with no per-model note."
+   },
+   {
+    "why": "Why did the assistant not catch the wrong shape before it said the image was delivered?",
+    "because": "The assistant never looked at the output size. It told the user 'I couldn't preview the image here' and said the image was 4:5. No tool result reports pixel width and height, so the assistant had nothing to check against.",
+    "evidence": "happy calls.jsonl line 9, delivered text: 'Your 4:5 social image is ready … reframed it to 4:5 with the image editor … I couldn't preview the image here'. wait_for_image_project output (line 6) has no width or height fields."
+   },
+   {
+    "why": "Why did the stupid chat ask for 1:1 in the first place?",
+    "because": "plan_request asked 'Where will this be shown or posted' and did not ask about shape. The simulated user answered 'just instagram i guess'. That fact is not in its knowledge bank, which says '4:5 portrait social image; no particular platform'. The assistant turned Instagram into 1:1. Even with a correct answer of 'tall', generate_image could only make 9:16, so the generator limit in step 2 would still apply.",
+    "evidence": "s1.new.stupid.A02d/chat.json bank 'Size or platform': '4:5 portrait social image; no particular platform'. Persona: 'Never invent a fact that is not in the bank'. calls.jsonl line 6: user said 'just instagram i guess'. Line 7: the assistant sent aspect '1:1', derived from 'instagram'."
+   },
+   {
+    "why": "Why can the system not make 4:5 directly on the free plan?",
+    "because": "This is an AXIOM. The Magic Hour text-to-image endpoint only accepts 1:1, 16:9 and 9:16. The free-plan editor model flux-2-klein keeps the input image's shape and ignores the aspect_ratio option. The new build's plan_request hides this limit: it snaps the shape to an allowed value with no warning and no fallback.",
+    "evidence": "tools-new.json generate_image aspect_ratio enum (3 values) versus the A02d.json spec aspect '4:5'. happy calls.jsonl lines 5-6 and grade.json: edit_image with 4:5 returned 384x640."
+   }
+  ],
+  "axiom": "Magic Hour's generate_image only makes 1:1, 16:9 or 9:16, and the free-plan editor (flux-2-klein) keeps the input shape and ignores aspect_ratio '4:5'. The new build's plan_request hides this. It changes 4:5 to 9:16, or Instagram to 1:1, labels the result as 'the user's words' and returns ready=true. It gives no warning and no working fallback.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Change plan_request in the new build so that a shape generate_image cannot make (for example 4:5) is never replaced by a different shape. Return a route that really makes the requested shape: generate the image at 9:16 with the subject kept away from the top and bottom edges, then cut it to 4:5 exactly in code (for example a 512x640 center crop) on the server. Report the real width and height of the output in wait_for_image_project. Map 'Instagram' to 4:5 and not to 1:1. As a second fix, document in the edit_image description that flux-2-klein ignores aspect_ratio."
+ },
+ "error": null,
+ "seconds": 77,
+ "usd": 0.7662072
+}

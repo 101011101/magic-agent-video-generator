@@ -1,0 +1,47 @@
+{
+ "id": "89eb33980f",
+ "key": "check:length:C",
+ "symptom": "about 8 s",
+ "item": "C17a",
+ "n": 5,
+ "builds": {
+  "new": 3,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the delivered clip 5 s and not about 8 s?",
+    "because": "The assistant asked the server for exactly 5 s. The server returned what was asked for.",
+    "evidence": "s1.old.stupid.C17a/calls.jsonl: create_spoken_ad_video args {end_seconds:5, model:'ltx-2.5', resolution:'480p'}. wait_for_video_project returns end_seconds:5, 640x640. grade.json: 'about 8 s' got '5 s'."
+   },
+   {
+    "why": "Why did the assistant send end_seconds=5 and not 8?",
+    "because": "The stupid user never said 8 seconds. Its first message was only 'make this pic talk in a video'. The assistant already knew about a 5 s free-plan cap and used it as the length.",
+    "evidence": "s1.old.stupid.C17a/chat.json messages[0].text = 'make this pic talk in a video'. The 8 s is only in the persona bank ('Format and duration: Square, 8 seconds.'). state.json: the assistant's first reply says 'On the free plan this is up to 5 seconds'. The user answered only with the script."
+   },
+   {
+    "why": "Why did the assistant not ask for the length, or ask for 8 s anyway?",
+    "because": "The tool description says that free plans are capped at 5 s. With the cap in place, an 8 s answer could not change the output, so the assistant chose the largest allowed value.",
+    "evidence": "tools-old.json create_spoken_ad_video.end_seconds: 'Free plans are limited to 5 seconds unless a credit pack has been purchased.' The final reply in state.json says 'The free plan allows at most 5 seconds'."
+   },
+   {
+    "why": "Does the new build behave differently?",
+    "because": "No. The new build uses the same backend tool with the same free-plan cap. Its assistant also sends end_seconds=5 and says that free spoken videos are capped at 5 s.",
+    "evidence": "s1.new.stupid.C17b/calls.jsonl: create_spoken_ad_video {end_seconds:5, model:'ltx-2.5'}. The reply says 'The free plan allows up to 5 seconds per spoken video.' The result has end_seconds:5."
+   },
+   {
+    "why": "Why does the grader still mark the item as failed?",
+    "because": "The checklist takes 8 s from spec.seconds and does not allow for the free-plan cap. The item itself marks beyond_free as 'maybe'. The grader even notes that the platform's free-plan limit caused the short clip.",
+    "evidence": "items/C17a.json spec.seconds=8, expect.beyond_free='maybe'. grade.json faults[0]: 'The platform's free-plan limit caused this, but the result still falls short of the spec.'"
+   }
+  ],
+  "axiom": "On the free plan, create_spoken_ad_video (text-to-speech talking photo) is capped at 5 s unless a credit pack is bought. The test account is on the free plan, so an 8 s spoken video cannot be made in either build. The stupid persona also never said 8 s.",
+  "category": "free_plan_limit",
+  "builds": "both",
+  "fix": "none: inherent. The free plan caps spoken video at 5 s. Optional bench change: when the free-plan cap forces a shorter clip and the assistant says so, do not fail the 'about 8 s' check, or run C17a on an account that has a credit pack."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.33565540000000005
+}

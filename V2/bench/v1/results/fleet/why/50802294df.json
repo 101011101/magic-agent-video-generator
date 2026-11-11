@@ -1,0 +1,47 @@
+{
+ "id": "50802294df",
+ "key": "must:J52b:The second image realistically shows the same bottle upright on a rock beside a mountain lake, with visible sunrise lighting.",
+ "symptom": "The second image realistically shows the same bottle upright on a rock beside a mountain lake, with visible sunrise lighting.",
+ "item": "J52b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the second-image item not met?",
+    "because": "No second image was made in any of the failing chats. The grader had nothing to check.",
+    "evidence": "s2r.old.stupid.J52b/grade.json: 'No second image exists'. In the same file, the check 'something was made' fails with got 'no file'. In s2r.old.dumper.J52b and s2r.new.stupid.J52b, calls.jsonl has no call that returned a file."
+   },
+   {
+    "why": "Why was no image made, even when the assistant sent a correct lake-at-sunrise request?",
+    "because": "The harness refused every edit_image call before it reached the generator. It gave the reason 'insufficient credits: this call needs about 5 credits and 0 remain on the account'.",
+    "evidence": "s2r.old.dumper.J52b/calls.jsonl line 3: the edit_image prompt is correct ('standing on a rock beside a calm mountain lake at sunrise, warm golden light'), but the call shows approve:false with that reason. s2r.old.stupid.J52b lines 2-4 and s2r.new.stupid.J52b line 8 show the same refusal."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of each chat?",
+    "because": "All chats use one shared Magic Hour account. The fleet runs them at almost the same time, so other chats had already used up the free-plan balance. These chats started with nothing left.",
+    "evidence": "In the old and new chats, every call uses the same asset path 'api-assets/cmsla3fmt01cnio0zhjlc2wsv/...', so the account is the same. The begin timestamps are only seconds apart (old.stupid 1794364601, old.dumper 1794364524, new.stupid 1794364447). The first paid call in each chat is refused with '0 remain', so this chat did not spend the credits."
+   },
+   {
+    "why": "Why is this not caused by the assistant or the tool descriptions?",
+    "because": "The assistant chose a request at the cheapest free-plan setting (flux-2-klein, 640px, 1 image, 1:1), and the request was valid. In old.dumper it was also correct for the brief. The failure is independent of build and persona. Some chats also had their own problems: in old.stupid the vague user led the assistant to try a 'sunny hiking trail' scene, and in new.stupid the assistant asked about one picture at a time. Even so, no call could have succeeded.",
+    "evidence": "The args in s2r.old.dumper.J52b/calls.jsonl match the J52b answer_sheet. The assistant's reply in old.stupid state.json says honestly that 0 credits remain. The failure happens in both builds."
+   },
+   {
+    "why": "Why does the harness let a chat run when the balance is 0?",
+    "because": "The harness does not check or reset the account's credit balance per chat before it runs and grades the chat. A drained account then shows up as a must-have failure, not as an invalid run.",
+    "evidence": "In grade.json the chat is graded normally (mode 'live', wants true), and the summary is 'no credits, so every must-have fails'. Nothing marks the run as invalid because of the environment."
+   }
+  ],
+  "axiom": "The test harness runs the chats in parallel on one shared free-plan account. That account had 0 credits left, so the harness refused every generation call. None of these chats could have made an image, whichever build or persona was used.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, check the account's credit balance. Top it up or reset it to a known free-plan amount, or give each concurrent chat its own account. If a chat starts at 0 credits, mark it 'invalid: environment' and do not grade its must-haves."
+ },
+ "error": null,
+ "seconds": 26,
+ "usd": 0.11026680000000001
+}

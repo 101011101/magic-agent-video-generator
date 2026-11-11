@@ -1,0 +1,42 @@
+{
+ "id": "148fbf2ae6",
+ "key": "must:E29c:Watermark reads '@flightschool' and visible throughout",
+ "symptom": "Watermark reads '@flightschool' and visible throughout",
+ "item": "E29c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why is the '@flightschool' watermark checklist item not met?",
+    "because": "The delivered video has no '@flightschool' text in any sampled frame. The only text in the frames is burned-in dialogue subtitles at bottom center.",
+    "evidence": "grade.json in both chats: must[0] met=no ('No watermark appears in any of the four frames' / 'No watermark visible in any of the four output frames'); exact_text '@flightschool' seen=missing, read_as 'only subtitles like Rook, you with me?'. I could not open the grade/*.jpg frames (the guessed file names did not exist), so this step rests on the grader's reading."
+   },
+   {
+    "why": "Why is there no watermark although the assistant asked for one?",
+    "because": "In both builds the assistant put the watermark request only into the text prompt of edit_video (model ltx-2.5, 480p). That tool generates every frame again from the prompt. It does not composite an overlay on top of the frames. The model did not draw the small, exact text, and it also changed the footage.",
+    "evidence": "calls.jsonl (old line 5, new line 6): edit_video with style.prompt 'Keep the video exactly as it is... Only add a small, subtle watermark text \"@flightschool\" in the bottom-right corner...'. wait_for_video_project returned complete at 832x512. grade.json faults: 'Footage re-generated and visibly altered', 'different cockpit angle and new sky and clouds'."
+   },
+   {
+    "why": "Why did the assistant use the generative editor for a deterministic overlay task?",
+    "because": "No Magic Hour tool places fixed, user-chosen text on a video. The subtitle tool only transcribes speech. edit_video was the only tool that could even try. The assistant said this, gave ffmpeg/CapCut as alternatives and stopped, but the simulated user then said 'go ahead anyway'.",
+    "evidence": "calls.jsonl old line 3 and new line 3 (kind 'cannot'): 'None of the Magic Hour tools can add a watermark the way you described... The AI video editor would change the whole clip'. Line 4 in both: user 'Please go ahead with the free settings anyway.' with nudge:true. In the new build the assistant also tried join_videos first and got HTTP 404 (line 5), so no deterministic path was found in that build either."
+   },
+   {
+    "why": "Why can the generative editor not render the watermark when the prompt asks for it?",
+    "because": "Video-to-video diffusion models such as ltx-2.5 (free plan, 480p) cannot reliably render small, exact, fixed, translucent text. They treat 'keep everything, only add X' as a style hint and regenerate the scene. This is a limit of the model, not of the arguments: the prompt was clear and complete in both builds.",
+    "evidence": "The prompts in both calls state the text, position, colour, opacity, shadow and persistence. Both outputs, made by the same model with nearly the same prompts, show no watermark and an altered scene (grade.json faults in both chats). The assistant predicted this failure beforehand: 'AI is also bad at writing small, exact text'."
+   }
+  ],
+  "axiom": "The Magic Hour toolset has no deterministic text-overlay tool. The only fallback, the generative video editor (ltx-2.5 at 480p on the free plan), cannot render small, exact, persistent watermark text, and it regenerates the footage instead of leaving it alone.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic overlay tool to the MCP server (for example ffmpeg drawtext/overlay, with text, position, margin, opacity, shadow and the time range as parameters, and the audio copied unchanged). Describe it in the tool list as the tool for watermarks, logos and fixed captions, so the assistant does not send overlay requests to edit_video."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.1927972
+}

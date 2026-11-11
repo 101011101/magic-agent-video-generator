@@ -1,0 +1,47 @@
+{
+ "id": "478bbcce7c",
+ "key": "must:I47c:Water rises as vapor, clouds form, rain falls, in order",
+ "symptom": "Water rises as vapor, clouds form, rain falls, in order",
+ "item": "I47c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Water rises as vapor, clouds form, rain falls, in order' not met?",
+    "because": "Neither output video shows the three stages in a clear order. Old: vapor and clouds appear, but no rain is visible and the clip ends on a mountain river. New: clouds and rain are there from 1 s, and no vapor rises from the lake.",
+    "evidence": "s5.old.stupid.I47c/grade.json says: 'Vapor over ocean and clouds appear, but no rain is visible; the end is a river in mountains.' s5.new.stupid.I47c/grade.json says: 'Clouds already exist at 1s with rain ... no visible vapor rising from the lake'. I could not open the grade/*.jpg frames (unknown file names), so the frame evidence is the grader's notes."
+   },
+   {
+    "why": "Was the stage missing because the stupid user never asked for rain, or because the assistant left it out?",
+    "because": "No. The stupid user only said 'make a video explaining the water cycle'. Both assistants still put all stages, in order, into the prompt they sent. The brief and the persona are not the cause.",
+    "evidence": "chat.json messages: 'make a video explaining the water cycle'. In old calls.jsonl, the create_video_from_text prompt says '...water vapor rises (evaporation)... forms white clouds (condensation)... rain falls on mountains (precipitation)... flows down rivers (collection)'. In new calls.jsonl, the prompt says '...wisps of water vapor rise...; the vapor gathers into white fluffy clouds...; rain falls from the clouds onto the mountain; rainwater runs down a stream...'"
+   },
+   {
+    "why": "Why did a correct, ordered prompt still give a clip with a stage missing or out of order?",
+    "because": "Each assistant put four ordered steps (evaporation, condensation, precipitation, collection) plus a spoken script into one 10-second text-to-video request with one continuous shot. That leaves about 2.5 s per step, and the model has no way to place an event at a given time.",
+    "evidence": "Both calls: end_seconds 10, one style.prompt. Old asked for 'Smooth camera pan following the water'. New asked for 'one continuous wide shot ... Slow gentle camera pan upward and back down'. Each prompt also carried a narration line."
+   },
+   {
+    "why": "Why did the model drop or blend steps in such a prompt?",
+    "because": "The free plan only allows ltx-2.5 and minimax-h3 for video. Both runs used ltx-2.5 at 480p. This text-to-video model treats a list of events as one scene description: it keeps the main look (ocean mist, clouds, river) and drops or merges events in time. It is not a timeline renderer.",
+    "evidence": "Old calls.jsonl: the first call was rejected with 'the free plan's video models are ltx-2.5 and minimax-h3'. The retry used model ltx-2.5, resolution 480p. New used ltx-2.5, 480p. Both grade.json files report blended or missing stages, for example old: 'Four stages are blended into continuous shots, so the sequence is vague.'"
+   },
+   {
+    "why": "Why did nothing in the tools steer the assistant away from one 10 s clip with four events?",
+    "because": "Neither build tells the assistant that one text-to-video clip cannot reliably show an ordered multi-step process. Neither build suggests fewer steps or one clip per step. The new build's plan_request checks parameters (seconds, aspect, sound, exact_words), not whether the content fits the clip. It returned ready:true.",
+    "evidence": "tools-new.json: the plan_request description only covers parameter rows and questions. In new calls.jsonl, plan_request returned ready:true with no warning about the content. The old build has no plan step: the assistant went straight to create_video_from_text."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5, 480p, 10 s) cannot reliably show an ordered sequence of three or more separate events in one continuous shot. It blends or drops steps, here rain or vapor. This is a limit of the generation model. No tool guidance in either build works around it.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add guidance to the create_video_from_text description (and to the plan_request result when the subject is a process with ordered steps). For an ordered process, keep only the requested steps (drop 'collection'). Give each step its own clip or shot of about 3 s, then join the clips. Do not describe all steps in one continuous-pan prompt."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.222009
+}

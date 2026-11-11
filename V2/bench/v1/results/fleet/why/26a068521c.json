@@ -1,0 +1,47 @@
+{
+ "id": "26a068521c",
+ "key": "must:I45a:Woman curly black bob and yellow raincoat; man white beard and blue coat",
+ "symptom": "Woman curly black bob and yellow raincoat; man white beard and blue coat",
+ "item": "I45a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why do the woman and the man in both videos not have the curly black bob, yellow raincoat, white beard and blue coat?",
+    "because": "The prompts the assistant sent to create_video_from_text never mention any of these traits. The model drew what the prompt asked for.",
+    "evidence": "old calls.jsonl: the prompt says 'an elderly man… a young woman' and nothing else about their looks; grader: 'long straight dark hair… clean-shaven'. new calls.jsonl: the prompt says 'elderly man in a grey coat… young woman in a mustard scarf'; grader: 'gray coat and mustard scarf… no beard'. The output matches the invented prompt."
+   },
+   {
+    "why": "Why did the prompts not contain the character traits?",
+    "because": "The assistant never got the traits. The stupid user's only content message was 'make a video about a kind gesture at a park bench'. The assistant then invented the cast and the story (sandwich/coffee, tea cups), and also the clothing in new.",
+    "evidence": "chat.json messages[0] = 'make a video about a kind gesture at a park bench'. The traits exist only in the persona bank under 'Characters'. old state: no user reply before the call."
+   },
+   {
+    "why": "Why did the assistant not get the traits from the user, when the bank has them and the persona answers plain-word questions?",
+    "because": "Neither build asked who is in the video or what happens. Old asked nothing and generated at once. New asked only about length, platform/aspect, sound and on-screen words.",
+    "evidence": "old calls.jsonl: create_video_from_text is the first call, with no question. new calls.jsonl: plan_request returned questions only for seconds, aspect, sound and exact_words, then ready:true. The user answered each plain question from the bank ('15 sec, no sound', 'no words')."
+   },
+   {
+    "why": "Why did new's plan_request not ask about the content?",
+    "because": "plan_request took the vague one-line subject as a complete value (source=user). Its gap check covers only format slots, so a subject with no characters or story events never sets ready=false.",
+    "evidence": "tools-new.json plan_request description: 'do not guess shape, length, sound or on-screen words'. It says nothing about subject detail. Its output marked subject 'a kind gesture at a park bench' as source user and returned ready:true after the format questions."
+   },
+   {
+    "why": "Why did old not ask either?",
+    "because": "Old has no planning or clarification tool. With nothing prompting a question, the assistant followed its default and filled the open subject with its own invented story.",
+    "evidence": "old calls.jsonl: the only calls are create_video_from_text (after it rejected model 'default') and wait_for_video_project. There is no planning step."
+   }
+  ],
+  "axiom": "When the user's request names only a theme ('a kind gesture at a park bench'), neither build has a step that finds missing characters or story. New's plan_request checks only format slots (length, aspect, sound, words) and marks a thin subject as given. Old has no check at all. So the assistant invents the cast instead of asking a plain question the stupid user could answer from the bank.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request (new, and the same idea added to old's tool descriptions), mark a subject as missing when it names no concrete characters or events, and return one plain-words question such as 'Who is in it, what do they look like, and what happens?'. Add a description rule: 'do not invent people, their looks or story events the user did not give'."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.1806438
+}

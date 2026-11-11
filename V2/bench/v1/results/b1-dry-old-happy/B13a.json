@@ -1,0 +1,150 @@
+{
+  "id": "B13a",
+  "item": {
+    "id": "B13a",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Restore a Faded Family Scan",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "old-photo.jpg"
+        ],
+        "text": "Can you clean up this old family scan and enlarge it to 640 pixels on the long side? Keep the sepia look and everyone's faces the same."
+      }
+    ],
+    "tests": "Restores and enlarges the supplied scan while preserving identity, historical appearance, and composition.",
+    "answer_sheet": {
+      "Source picture": "old-photo.jpg",
+      "Restoration style": "Reduce noise and fading gently; keep the original sepia look, not modern colourisation.",
+      "Size and framing": "640 pixels on the long side; preserve the original proportions and full framing.",
+      "Faces and scene": "Preserve everyone's identity, expression, clothing, and the original setting.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The result depicts the same family and setting as old-photo.jpg, not a replacement family photo.",
+      "Visible scan noise is reduced and faded forms have clearer, natural contrast.",
+      "The photograph retains its sepia appearance without colourisation.",
+      "Faces, expressions, clothing, and framing remain faithful to the source.",
+      "The delivered image has a 640-pixel long edge and preserves the source aspect ratio."
+    ]
+  },
+  "session": "mcp-b1-dry-old-happy-B13a",
+  "sessionDir": "sessions/mcp-b1-dry-old-happy-B13a",
+  "baseline": "mcp",
+  "provider": "anthropic",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you clean up this old family scan and enlarge it to 640 pixels on the long side? Keep the sepia look and everyone's faces the same.",
+      "materials": [
+        "old-photo.jpg"
+      ],
+      "dialog": [],
+      "agent": "I couldn't make the restored photo. Magic Hour rejected the job because your account doesn't have enough credits, so nothing was created and you have no file to download.\n\nHere's what I tried, so you can see what will happen when you retry:\n- **Tool:** Magic Hour's image editor with the flux-2-klein model, at 640px on the long side, 1 image. This is one of the cheapest options on the free plan (from about 5 credits).\n- **Instructions:** remove dust, scratches, blur, noise and compression artifacts. Keep the sepia tone as it is (no added color), and leave everyone's faces, poses, clothing, the house and the layout unchanged.\n\n**Before you retry:**\n- **Size:** the copy shown in our chat is 1024×1024. If your scan really is that size, setting it to 640px makes it smaller, not bigger. Let me know if you'd rather keep it larger, though that may not run on the free plan.\n- **Faces:** this tool repaints the image with AI, so it can slightly change fine details, including faces. I'd compare each face with the original before relying on the result.\n\n**To go ahead:** add credits to your Magic Hour account, or wait for your free credits to refill. Then tell me and I'll run the same job again and send you the download link.",
+      "calls": [],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/5ffb3152-1dc9-4943-81c4-60aadfc5e1a4-image-0.jpg"
+              ]
+            },
+            "style": {
+              "prompt": "Restore this old family photograph: remove dust, scratches, blur, noise and JPEG artifacts, sharpen details gently. Keep the original warm sepia tone exactly (do not colorize). Keep every person's face, expression, pose, clothing, and the house and background exactly the same; do not alter identities or composition."
+            },
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "aspect_ratio": "auto",
+            "image_count": 1,
+            "name": "Family photo restoration (sepia, 640px)"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "thought",
+          "text": "I'm checking whether the image is actually larger than 640 pixels, since it looks like 1024x1024 already, which would mean downsizing rather than enlarging. I can't confirm the original's real dimensions, so I'm weighing whether to upscale it with an edit model at 640px.\n\nI'm weighing an edit_image pass with flux-2-klein at 640px, since it can clean up the image and cap the long edge in one step, though generative edits carry some risk to faces. Upscaling 2x may be an option, but I don't think I need it. I also want to flag that the preview looks 1024x1024, so if that's right, 640 would be a reduction rather than an enlargement.\n\n"
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/5ffb3152-1dc9-4943-81c4-60aadfc5e1a4-image-0.jpg\"]},\"style\":{\"prompt\":\"Restore this old family photograph: remove dust, scratches, blur, noise and JPEG artifacts, sharpen details gently. Keep the original warm sepia tone exactly (do not colorize). Keep every person's face, expression, pose, clothing, and the house and background exactly the same; do not alter identities or composition.\"},\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"aspect_ratio\":\"auto\",\"image_count\":1,\"name\":\"Family photo restoration (sepia, 640px)\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn't make the restored photo. Magic Hour rejected the job because your account doesn't have enough credits, so nothing was created and you have no file to download.\n\nHere's what I tried, so you can see what will happen when you retry:\n- **Tool:** Magic Hour's image editor with the flux-2-klein model, at 640px on the long side, 1 image. This is one of the cheapest options on the free plan (from about 5 credits).\n- **Instructions:** remove dust, scratches, blur, noise and compression artifacts. Keep the sepia tone as it is (no added color), and leave everyone's faces, poses, clothing, the house and the layout unchanged.\n\n**Before you retry:**\n- **Size:** the copy shown in our chat is 1024×1024. If your scan really is that size, setting it to 640px makes it smaller, not bigger. Let me know if you'd rather keep it larger, though that may not run on the free plan.\n- **Faces:** this tool repaints the image with AI, so it can slightly change fine details, including faces. I'd compare each face with the original before relying on the result.\n\n**To go ahead:** add credits to your Magic Hour account, or wait for your free credits to refill. Then tell me and I'll run the same job again and send you the download link."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn't make the restored photo. Magic Hour rejected the job because your account doesn't have enough credits, so nothing was created and you have no file to download.\n\nHere's what I tried, so you can see what will happen when you retry:\n- **Tool:** Magic Hour's image editor with the flux-2-klein model, at 640px on the long side, 1 image. This is one of the cheapest options on the free plan (fr",
+        "refuse": "",
+        "tier_move": "I couldn't make the restored photo. Magic Hour rejected the job because your account doesn't have enough credits, so nothing was created and you have no file to download.\n\nHere's what I tried, so you can see what will happen when you retry:\n- **Tool:** Magic Hour's image editor with the flux-2-klein model, at 640px on the long side, 1 image. This is one of the cheapest options on the free plan (fr",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 17
+    }
+  ],
+  "started": "2026-11-11T00:48:04.375Z",
+  "persona": "happy",
+  "opening": {
+    "text": "Can you clean up this old family scan and enlarge it to 640 pixels on the long side? Keep the sepia look and everyone's faces the same.",
+    "as_written": true
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 17,
+  "usage": {
+    "responses": 2,
+    "input": 143449,
+    "output": 1124,
+    "reasoning": 0,
+    "cached": 71338
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "https://mcp.magichour.ai/",
+    "local": false,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "B13a.trace.json"
+}

@@ -1,0 +1,47 @@
+{
+ "id": "3a35f74797",
+ "key": "must:D19c:Eight-second widescreen, fixed overhead shot, no sound",
+ "symptom": "Eight-second widescreen, fixed overhead shot, no sound",
+ "item": "D19c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Eight-second widescreen, fixed overhead shot, no sound' not met?",
+    "because": "In both chats the video shows the hands from a low side angle, not from above. In the old chat the clip is also 5 s, not 8 s.",
+    "evidence": "old grade.json: '5 s clip, low-angle side view with slight camera drift, not overhead'; checks 'about 8 s' got '5 s'. new grade.json: 'Wide and likely silent, but the camera is a low side angle, not overhead'; length 8 s passes."
+   },
+   {
+    "why": "Why did the model render a side angle?",
+    "because": "Neither prompt asked for an overhead or top-down view. Both prompts said 'Close-up of a person's hands folding a sheet of ... white paper on a wooden table'. The model chose its own camera angle.",
+    "evidence": "old calls.jsonl line 4 style.prompt: 'Close-up of a person's hands carefully folding a sheet of white paper...'. new calls.jsonl line 13: 'Close-up of a person's hands folding a sheet of plain white paper ... calm and steady camera'. Neither prompt contains 'overhead', 'top-down' or 'from above'."
+   },
+   {
+    "why": "Why did the assistant leave the overhead view out of the prompt?",
+    "because": "The user never said it. The stupid persona's opening message was only 'make a video of someone folding paper'. The persona answers only the questions it gets, and no question asked about camera angle or framing.",
+    "evidence": "chat.json messages[0]: 'make a video of someone folding paper'. The persona rule says to answer plain questions from the bank. The bank has 'Show both hands and the whole sheet from above' and 'One fixed overhead shot', but the user never said either. new state.json: the user only answered length, platform, sound and text."
+   },
+   {
+    "why": "Why was there no question about camera angle?",
+    "because": "Old: the assistant asked nothing and generated at once. Its only fixes were model and aspect_ratio, after errors. New: plan_request has a fixed list of parameters (subject, motion, seconds, aspect, sound, exact_words). It asks only about those. It has no camera or framing parameter, so the assistant never asked about it.",
+    "evidence": "old calls.jsonl lines 2-4: create_video_from_text sent directly, with no user turn in between. new calls.jsonl line 2: plan_request params do not include camera or framing. The questions returned covered only seconds, aspect and sound, then exact_words (line 7)."
+   },
+   {
+    "why": "Why is the chat still marked as failing when the user never asked for an overhead shot?",
+    "because": "The grader scores every stupid-persona chat against all must_haves from the full brief. It does not check which details the user actually said. The item also sets expect.asks='never', which assumes the full brief was given. A vague opener cannot meet a camera-angle requirement unless the assistant guesses it or asks a question the item does not expect.",
+    "evidence": "D19c.json expect.asks='never'; must_haves[5] requires 'one fixed overhead shot'. new grade.json fault notes '(though the user only asked for paper)' but the item still fails. The same mismatch causes 'blue' to fail in both chats."
+   }
+  ],
+  "axiom": "The test harness gives the stupid persona a vague opener ('make a video of someone folding paper') that leaves out the overhead and fixed-camera details. The grader then scores the chat against the full brief's must_haves. Nothing the user said required an overhead shot. The text-to-video model picks its own camera angle when the prompt does not set one.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, grade stupid-persona chats only against the must_have details that the user actually said in the conversation. Mark details the user never said (here: overhead camera, blue paper) as 'not requested' and do not count them as failures. A second, MCP-side option: add a 'camera/framing' parameter with a plain-words question (e.g. 'Seen from above, from the side, or close up?') to plan_request for video tools."
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.19443180000000004
+}

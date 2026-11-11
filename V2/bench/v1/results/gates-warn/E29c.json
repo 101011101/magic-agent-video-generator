@@ -1,0 +1,152 @@
+{
+  "id": "E29c",
+  "item": {
+    "id": "E29c",
+    "case": 29,
+    "case_name": "Add a logo or text overlay",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Subtle Handle Watermark Throughout",
+    "sub": "c",
+    "spec": {
+      "exact_text": [
+        "@flightschool"
+      ],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 7,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "radio-lines.mp4"
+        ],
+        "text": "Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone."
+      }
+    ],
+    "tests": "Tests exact handle rendering as a persistent, readable, translucent watermark without changing the source footage or audio.",
+    "answer_sheet": {
+      "Watermark wording": "@flightschool, exactly, with no added words.",
+      "Position and timing": "Bottom right, inset from both edges, fixed in place throughout all 7 seconds.",
+      "Watermark styling": "Small white text, slightly translucent, with a faint shadow. Exact font and opacity are your call.",
+      "Video and audio preservation": "Keep the original aspect ratio, framing, complete footage, duration, and sound. Do not add an end card or other graphics."
+    },
+    "must_haves": [
+      "The watermark reads exactly '@flightschool' and stays visible throughout the entire clip.",
+      "The handle remains fixed at the bottom right with clear space between the text and both frame edges.",
+      "The text is small, white, visibly translucent, and readable against the changing footage, with a subtle shadow.",
+      "The original cockpit footage remains unchanged apart from the watermark, with no extra card or scene.",
+      "The output lasts 7 seconds and preserves the original synchronized audio."
+    ]
+  },
+  "session": "mcp-gw-E29c",
+  "sessionDir": "sessions/mcp-gw-E29c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone.",
+      "materials": [
+        "radio-lines.mp4"
+      ],
+      "dialog": [],
+      "agent": "The connected tools don’t support a precise watermark overlay without regenerating the footage, which could change other details. I haven’t altered your clip.\n\nThis FFmpeg command adds the watermark as requested while copying the audio unchanged:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"drawtext=text='@flightschool':fontsize=h/40:fontcolor=white@0.7:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=w-tw-w*0.04:y=h-th-h*0.04\" \\\n-c:v libx264 -crf 18 -preset medium -c:a copy \\\nradio-lines-watermarked.mp4\n```\n\nIt uses small, 70%-opaque white text, a faint shadow, and 4% padding from the bottom and right edges throughout the clip.",
+      "calls": [
+        {
+          "name": "start_request",
+          "arguments": "{\"original\":\"Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone.\\n[Attached: radio-lines.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/a9849f37-e922-44f0-b870-d8a66a39f7d2-video-0.mp4 — URL: http://127.0.0.1:8799/radio-lines.mp4]\",\"attachments\":[\"radio-lines.mp4\"]}",
+          "output": "{\"request\":\"req-e15bead440\",\"comparison\":\"SIMPLE: every item below is true.\\n- One idea: one subject doing one thing in one place (a robot waters a sunflower).\\n- At most 15 seconds.\\n- No exact words that must appear on screen, and no spoken line that must be said word for word.\\n- At most one attached file, used as the look or the start of the video.\\n- Not a continuation or an edit of an attached video.\\n\\nHARD: any item below is true.\\n- Two or more ideas: different places, different people at different times, shots listed in order, a card or end card.\\n- Longer than 15 seconds.\\n- Exact words on screen (a title, an end card, captions) or an exact spoken line or voice-over script.\\n- Two or more attached files, or a person and a product that must both stay the same.\\n- Continue, extend or edit an attached video, keeping part of it.\\n- Music or a voice-over across several shots.\\n\",\"questions\":{\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"seconds\":\"How long should it be?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"language\":\"Which language for the voice or captions?\",\"which_face\":\"Whose face goes where (which person in the picture)?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\",\"subject\":\"What should it show?\",\"edit\":\"What should change in the picture?\",\"keep\":\"What must stay exactly as it is?\",\"motion\":\"What should move, and how (small natural motion, a slow push in, something happening)?\",\"mood\":\"What mood or genre for the music?\",\"script\":\"What should be said, word for word? Or should I write it from the gist?\",\"range\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"},\"next\":\"Read the comparison. Call classify_request with `simple` or `hard` and the reasons, each naming the item it matches.\"}",
+          "error": null
+        },
+        {
+          "name": "classify_request",
+          "arguments": "{\"verdict\":\"hard\",\"request\":\"req-e15bead440\",\"reasons\":[\"Edit an attached video while preserving everything else.\",\"Exact on-screen words required: @flightschool.\"]}",
+          "output": "{\"next\":\"Call submit_plan with the request token, the question sheet, the checklist and the steps.\",\"sheet\":{\"subject\":\"What should it show?\",\"seconds\":\"How long should it be?\",\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"},\"must_carry\":[{\"kind\":\"file\",\"value\":\"radio-lines.mp4\"}]}",
+          "error": null
+        }
+      ],
+      "approvals": [],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "The connected tools don’t support a precise watermark overlay without regenerating the footage, which could change other details. I haven’t altered your clip.\n\nThis FFmpeg command adds the watermark as requested while copying the audio unchanged:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"drawtext=text='@flightschool':fontsize=h/40:fontcolor=white@0.7:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=w-t",
+        "refuse": "",
+        "tier_move": "The connected tools don’t support a precise watermark overlay without regenerating the footage, which could change other details. I haven’t altered your clip.\n\nThis FFmpeg command adds the watermark as requested while copying the audio unchanged:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"drawtext=text='@flightschool':fontsize=h/40:fontcolor=white@0.7:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=w-t",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "start_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "start_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "classify_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "classify_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "start_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "classify_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 23
+    }
+  ],
+  "started": "2026-11-07T08:38:18.957Z",
+  "spent": 0,
+  "seconds": 23
+}
