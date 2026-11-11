@@ -1,0 +1,286 @@
+{
+  "krea": {
+    "url": "https://api.krea.ai/mcp",
+    "auth": "oauth",
+    "bench": {
+      "label": "Krea",
+      "plan": "a new FREE account with 100 compute units a day",
+      "limits": "Only the video model lightricks/ltx-video-2-19b (LTX-2) runs on this account: clips of 5, 8 or 10 seconds at 512p, in 16:9 or 9:16. A 5-second clip costs about 34 units.",
+      "rules": [
+        {
+          "tool": "^generate_video$",
+          "arg": "model",
+          "allow": "^lightricks/ltx-video-2-19b$",
+          "say": "the model \"{value}\" is not available on the free plan; the free plan's video model is lightricks/ltx-video-2-19b"
+        }
+      ],
+      "balance": {
+        "tool": "get_balance",
+        "args": {}
+      },
+      "probe": "get_balance",
+      "attach": "krea-upload",
+      "attach_say": "Files the user attaches are already uploaded to their Krea account: use the asset address given with each attachment wherever a tool takes a media URL."
+    },
+    "bench_paid": {
+      "label": "Krea, paid",
+      "plan": "an account on the Basic plan (5,000 compute units a month)",
+      "limits": "Only the video model lightricks/ltx-video-2.3-22b (LTX-2.3) runs on this account: clips of 5, 10, 15 or 20 seconds, in 16:9 or 9:16. A 10-second clip costs about 265 units.",
+      "rules": [
+        {
+          "tool": "^generate_video$",
+          "arg": "model",
+          "allow": "^lightricks/ltx-video-2\\.3-22b$",
+          "say": "the model \"{value}\" does not run on this account; the video model is lightricks/ltx-video-2.3-22b"
+        }
+      ],
+      "balance": {
+        "tool": "get_balance",
+        "args": {}
+      },
+      "probe": "get_balance",
+      "attach": "krea-upload",
+      "attach_say": "Files the user attaches are already uploaded to their Krea account: use the asset address given with each attachment wherever a tool takes a media URL."
+    }
+  },
+  "huggingface": {
+    "url": "https://huggingface.co/mcp",
+    "auth": "oauth",
+    "key_env": "HF_TOKEN",
+    "scopes": "openid profile read-mcp",
+    "bench": {
+      "label": "Hugging Face",
+      "plan": "a free account with about 5 minutes of ZeroGPU time a day",
+      "limits": "For video, only the Space Lightricks/LTX-2.5 runs on this account, through dynamic_space (model LTX-2.5; it needs a start image). If that Space does not answer, Lightricks/ltx-video-distilled is the only other video Space that runs. Image, speech and other non-video Spaces run as usual.",
+      "rules": [
+        {
+          "tool": "^dynamic_space$",
+          "when": {
+            "arg": "operation",
+            "equals": "invoke"
+          },
+          "arg": "space_name",
+          "allow": "^(Lightricks/(LTX-2\\.5|ltx-video-distilled)|(?!.*(wan|video|ltx|cog|hunyuan|mochi|svd|animate)).*)$",
+          "say": "the Space \"{value}\" does not run on this account; for video use Lightricks/LTX-2.5"
+        }
+      ],
+      "probe": "hf_whoami"
+    }
+  },
+  "replicate": {
+    "url": "https://mcp.replicate.com/mcp",
+    "auth": "oauth",
+    "bench": {
+      "label": "Replicate",
+      "plan": "a new account with no billing set up: only the models in Replicate's \"Try AI models for free\" collection run",
+      "limits": "For video, only minimax/video-01 runs on this account.",
+      "rules": [
+        {
+          "tool": "^create_models_predictions$",
+          "arg": "model_owner",
+          "allow": "^minimax$",
+          "say": "the model owner \"{value}\" is not in the free collection; for video only minimax/video-01 runs"
+        },
+        {
+          "tool": "^create_models_predictions$",
+          "arg": "model_name",
+          "allow": "^video-01$",
+          "say": "the model \"{value}\" is not in the free collection; for video only minimax/video-01 runs"
+        },
+        {
+          "tool": "^create_predictions$",
+          "arg": "version",
+          "allow": "^minimax/video-01",
+          "say": "the version \"{value}\" is not in the free collection; for video only minimax/video-01 runs"
+        },
+        {
+          "tool": "^create_(models_)?predictions$",
+          "arg": "Prefer",
+          "forbid": true,
+          "say": "Prefer: {value} is not accepted here; create the prediction without it, then read it with get_predictions"
+        }
+      ],
+      "deny": "^(create_deployments|update_deployments|create_deployments_predictions|create_trainings|create_models|update_models)$",
+      "deny_say": "this needs billing, which the account does not have",
+      "probe": "get_account"
+    },
+    "bench_paid": {
+      "label": "Replicate, paid",
+      "plan": "an account with billing set up",
+      "limits": "One model that generates runs on this account: lightricks/ltx-2.5-fast, at 720p (its lowest resolution), one clip of 2 to 20 seconds per prediction. Models that generate nothing (they only read a frame from, cut, crop, resize, join or convert files you already have) also run: they are community models, run through create_predictions with the version given as owner/name:version. Create each prediction without the Prefer option, then read it with get_predictions until it finishes.",
+      "rules": [
+        {
+          "tool": "^create_(models_)?predictions$",
+          "arg": "Prefer",
+          "forbid": true,
+          "say": "Prefer: {value} is not accepted here; create the prediction without it, then read it with get_predictions"
+        },
+        {
+          "tool": "^create_models_predictions$",
+          "arg": "model_owner",
+          "allow": "^lightricks$",
+          "say": "the model owner \"{value}\" does not run here: the only model that generates on this account is lightricks/ltx-2.5-fast; a model that generates nothing runs through create_predictions with its version"
+        },
+        {
+          "tool": "^create_models_predictions$",
+          "arg": "model_name",
+          "allow": "^ltx-2\\.5-fast$",
+          "say": "the model \"{value}\" does not run here: the only model that generates on this account is lightricks/ltx-2.5-fast"
+        },
+        {
+          "tool": "^create_models_predictions$",
+          "arg": "input.resolution",
+          "allow": "^720p$",
+          "say": "resolution \"{value}\" does not run on this account; set resolution to 720p"
+        },
+        {
+          "tool": "^create_predictions$",
+          "arg": "version",
+          "allow": "^[\\w.-]+/[\\w.-]+(:[0-9a-f]{6,})?$",
+          "say": "give the version as owner/name:version, not \"{value}\""
+        },
+        {
+          "tool": "^create_predictions$",
+          "when": {
+            "arg": "version",
+            "matches": "^lightricks/ltx-2\\.5-fast(:|$)"
+          },
+          "arg": "input.resolution",
+          "allow": "^720p$",
+          "say": "resolution \"{value}\" does not run on this account; set resolution to 720p"
+        },
+        {
+          "tool": "^create_predictions$",
+          "when": {
+            "arg": "version",
+            "not_matches": "^lightricks/ltx-2\\.5-fast(:|$)"
+          },
+          "arg": "version",
+          "allow": "^(?![^:]*(wan|veo|sora|kling|kwaivgi|seedance|seedream|bytedance|hailuo|minimax|luma|pika|pixverse|runway|aleph|flux|kontext|sdxl|stable|stability|diffus|imagen|ideogram|recraft|hunyuan|tencent|mochi|genmo|cogvideo|svd|animate|ltx|lightricks|google|openai|banana|qwen|z-image|upscal|interpol|restyle|restor|enhanc|erase|inpaint|outpaint|rembg|matting|relight|lipsync|lip-sync|talking|avatar|tts|speech|voice|music|bark|kokoro|eleven|whisper|llama|gpt|claude|gemini|caption|generat|text-to|image-to-video|img2vid|i2v|t2v|vid2vid|videoedit))",
+          "say": "\"{value}\" makes or changes content with a model of its own, which does not run here: the only model that generates on this account is lightricks/ltx-2.5-fast"
+        },
+        {
+          "tool": "^create_predictions$",
+          "when": {
+            "arg": "version",
+            "not_matches": "^lightricks/ltx-2\\.5-fast(:|$)"
+          },
+          "forbid_text": "\"(prompt|negative_prompt|instruction|instructions|text_prompt)\"\\s*:",
+          "say": "a call with a prompt generates content: the only model that generates on this account is lightricks/ltx-2.5-fast"
+        }
+      ],
+      "max_creates": 40,
+      "budget": {
+        "tell": "The account has credit for {max} seconds of generated video in total.",
+        "say": "the account's credit covers {left} more seconds of generated video, and this call asks for {value}",
+        "count": [
+          {
+            "tool": "^create_models_predictions$",
+            "arg": "input.duration",
+            "default": 6
+          },
+          {
+            "tool": "^create_predictions$",
+            "when": {
+              "arg": "version",
+              "matches": "^lightricks/ltx-2\\.5-fast(:|$)"
+            },
+            "arg": "input.duration",
+            "default": 6
+          }
+        ],
+        "failed": {
+          "tool": "^get_predictions$",
+          "id_arg": "prediction_id",
+          "status": "\"status\"\\s*:\\s*\"(failed|canceled)\""
+        }
+      },
+      "deny": "^(create_deployments|update_deployments|create_deployments_predictions|create_trainings|create_models|update_models)$",
+      "deny_say": "not part of this run",
+      "probe": "get_account",
+      "attach": "public-link",
+      "attach_say": "Files the user attaches are given as public links: use the link wherever a model takes a file URL."
+    }
+  },
+  "comfy": {
+    "url": "https://cloud.comfy.org/mcp",
+    "auth": "oauth",
+    "scopes": "comfy-mcp:tools:read comfy-mcp:tools:call",
+    "bench": {
+      "label": "Comfy Cloud",
+      "plan": "a new FREE account",
+      "limits": "Only the LTX-2.5 model runs on this account: the templates video_ltx2_5_t2v (text to video), video_ltx2_5_i2v and video_ltx2_5_dfr_i2v (image to video) and video_ltx2_5_flf2v (first and last frame), through run_template, or your own workflow through submit_workflow built on LTX-2.5 with ordinary nodes (load, trim, last frame, join, text). Partner (paid API) models and other video models do not run.",
+      "rules": [
+        {
+          "tool": "^run_template$",
+          "arg": "name",
+          "allow": "^video_ltx2_5_(t2v|i2v|dfr_i2v|flf2v)$",
+          "say": "the template \"{value}\" is not available on the free plan; the LTX-2.5 templates are video_ltx2_5_t2v, video_ltx2_5_i2v, video_ltx2_5_dfr_i2v and video_ltx2_5_flf2v"
+        },
+        {
+          "tool": "^submit_workflow$",
+          "forbid_text": "wan[ _.-]?[0-9]|hunyuan|cogvideo|mochi|kling|seedance|veo[ _.-]?[0-9]|sora|runway|luma|minimax|hailuo|pika|pixverse|vidu|grok|gemini|openai|flux[ _.-]?(pro|kontext)|ideogram|recraft|stability|bytedance|api[ _]?node|partner",
+          "say": "this workflow uses a model or a partner node that is not available on the free plan; only LTX-2.5 with ordinary nodes runs"
+        }
+      ],
+      "deny": "^(partner_generate|submit_batch|run_saved_workflow|save_workflow|import_shared_workflow|create_app|share_workflow|upload_file|get_workflow_upload_url)$",
+      "deny_say": "this tool is not available here; use run_template or submit_workflow with LTX-2.5",
+      "probe": "get_server_info",
+      "attach": "comfy-upload",
+      "attach_say": "Files the user attaches are already uploaded to their Comfy Cloud inputs: use the input name given with each attachment in a LoadImage, LoadVideo or LoadAudio node."
+    }
+  },
+  "imagineart": {
+    "url": "https://mcp.imagine.art/mcp",
+    "auth": "oauth",
+    "bench": {
+      "label": "ImagineArt",
+      "plan": "a new FREE account with 100 credits a day",
+      "limits": "Only the video model minimax-h3 at 480P runs on this account, through generate_video.",
+      "rules": [
+        {
+          "tool": "^generate_video$",
+          "arg": "model",
+          "allow": "^minimax-h3$",
+          "say": "the model \"{value}\" is not available on the free plan; the free plan's video model is minimax-h3 (set model explicitly)"
+        },
+        {
+          "tool": "^generate_video$",
+          "arg": "resolution",
+          "allow": "^480p$",
+          "say": "resolution \"{value}\" is not available on the free plan; set resolution to 480P"
+        }
+      ],
+      "deny": "^(generate_ad|create_ad|fashion_video_shoot|animate_fashion_image|composite_shoot|generate_carousel|generate_fashion_photoshoot|upscale_video)$",
+      "deny_say": "this tool is not available on the free plan; use generate_video",
+      "balance": {
+        "tool": "get_balance",
+        "org": true
+      },
+      "probe": "select_organization"
+    }
+  },
+  "runway": {
+    "url": "https://mcp.runwayml.com/mcp",
+    "auth": "oauth"
+  },
+  "pika": {
+    "url": "https://mcp.pika.art/mcp",
+    "auth": "oauth"
+  },
+  "kling": {
+    "url": "https://kling.ai/mcp",
+    "auth": "oauth"
+  },
+  "fal": {
+    "url": "https://mcp.fal.ai/mcp",
+    "auth": "oauth",
+    "key_env": "FAL_KEY"
+  },
+  "pixverse": {
+    "url": null,
+    "auth": "api key",
+    "key_env": "PIXVERSE_API_KEY",
+    "note": "Official server is local only (uvx pixverse-mcp, stdio). The harness drives remote servers through the OpenAI API, so this one needs a bridge first."
+  }
+}

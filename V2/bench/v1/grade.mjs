@@ -1,5 +1,7 @@
 // Bench v1 grader: reads a results folder from run.mjs and grades each item in three layers.
-// 1. deterministic: something was made (a placeholder is not), the right kind of file, size, length, sound present;
+// 1. deterministic: something was made (a placeholder is not), the right kind of file, size, length, sound present; and the
+//    basic faults (2026-11-08): black frames, a frozen clip, sound where silence was asked, a generated clip missing from the
+//    final video, "delivered" with no file, files but a parts-only ending, speech that ends mid-sentence (a note to the judge);
 // 2. a vision judge: the user's attachments and the output (frames for a clip) against the item's must-haves, its exact
 //    text, visible faults, usable as-is, a 1-5 score; sound is transcribed and judged as text;
 // 3. the conversation: asked when it had to and not when it need not, refused when it should, said when it was beyond
@@ -9,7 +11,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { jsonCall, S } from "../../backend/lib/llm.js";
 import { duration, size, hasAudio, peakDb } from "../../backend/lib/media.js";
 import { key } from "../../backend/lib/env.js";
@@ -27,6 +29,11 @@ async function transcribe(file) {
   const r = await fetch("https://api.openai.com/v1/audio/transcriptions", { method: "POST", headers: { authorization: `Bearer ${key("OPENAI_API_KEY")}` }, body: form }); const j = await r.json(); return j.text ?? null;
 }
 const framesOf = (file, tag, n = 4) => { const d = duration(file); return Array.from({ length: n }, (_, k) => { const at = Math.max(0, Math.min(d - 0.1, (d * (k + 0.5)) / n)); const out = join(FR, `${tag}-${k}.jpg`); execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(at), "-i", file, "-frames:v", "1", "-vf", "scale=768:-2", "-q:v", "4", out]); return { file: out, at: Math.round(at * 10) / 10 }; }); };
+// the basic faults of a video: black runs (blackdetect writes to stderr), and motion as the least SSIM between neighbouring sampled frames (1.0 = nothing moved)
+const ffErr = (args) => { const r = spawnSync("ffmpeg", ["-hide_banner", "-nostats", ...args], { encoding: "utf8", maxBuffer: 1 << 26 }); return `${r.stderr || ""}${r.stdout || ""}`; };
+const blackRuns = (file) => [...ffErr(["-i", file, "-vf", "blackdetect=d=0.5:pix_th=0.10", "-an", "-f", "null", "-"]).matchAll(/black_start:([0-9.]+) black_end:([0-9.]+)/g)].map((m) => [Math.round(Number(m[1]) * 10) / 10, Math.round(Number(m[2]) * 10) / 10]);
+const ssim = (a, b) => { const m = ffErr(["-i", a, "-i", b, "-lavfi", "ssim", "-f", "null", "-"]).match(/All:([0-9.]+)/); return m ? Number(m[1]) : null; };
+const motion = (file, tag) => { const fr = framesOf(file, tag, 6), s = []; for (let i = 1; i < fr.length; i++) { const v = ssim(fr[i - 1].file, fr[i].file); if (v != null) s.push(v); } return s.length ? Math.round(Math.min(...s) * 1000) / 1000 : null; };
 
 function deliverables(rec) {
   const t = [...rec.turns].reverse().find((x) => x.ran) ; if (!t) return { turn: null, files: [] };
@@ -81,7 +88,25 @@ async function grade(rec) {
       const timed = [...media.videos, ...media.audio];
       if (it.spec.seconds && timed.length) { const d = duration(timed[0].path); add(det, `about ${it.spec.seconds} s`, Math.abs(d - it.spec.seconds) <= Math.max(1.5, it.spec.seconds * 0.2), Math.round(d * 10) / 10, "wrong-length"); }
       if (it.spec.audio === "required") { const a = [...media.videos, ...media.audio].find((f) => hasAudio(f.path)); add(det, "sound present and audible", a && (peakDb(a.path) ?? -99) > -45, a ? peakDb(a.path) : "no audio track", "no-audio"); }
+      // the basic faults of a delivered video
+      for (const [k, v] of media.videos.slice(0, 2).entries()) {
+        const d = duration(v.path), black = blackRuns(v.path).filter(([s, e]) => s < d - 1.0 && e - s >= 0.5);   // a fade to black inside the last second is not a fault
+        add(det, `no black frames (${v.produces})`, !black.length, black.length ? black.map(([s, e]) => `${s}–${e} s`) : "none", "black-frames");
+        const mv = motion(v.path, `${it.id}-mv${k}`); if (mv != null) add(det, `the clip moves (${v.produces})`, mv < 0.985, `least similarity between neighbouring frames ${mv}`, "frozen-clip");
+        if (it.spec.kind === "video" && it.spec.audio === "none") add(det, "silent as asked", !hasAudio(v.path) || (peakDb(v.path) ?? -99) <= -40, hasAudio(v.path) ? `audio track, peak ${peakDb(v.path)} dB` : "no audio track", "unwanted-audio");
+      }
+      // every generated clip present in the final video: MCP records carry each create call's seconds; a join shorter than 80% of their sum lost a clip
+      if (rec.baseline === "mcp" && media.videos.length) {
+        const clips = rec.turns.flatMap((t) => (t.ran || []).map((s, i) => ({ ...s, params: t.plan?.steps?.[i]?.params || {} }))).filter((s) => /^(create_video_from_text|create_video_from_image|create_animation|create_spoken_ad_video|create_talking_photo|edit_video)$/.test(s.tool) && s.state === "done" && s.params.seconds);
+        if (clips.length >= 2) { const sum = clips.reduce((a, s) => a + Number(s.params.seconds), 0), d = duration(media.videos[0].path); add(det, `all ${clips.length} clips present (about ${sum} s together)`, d >= 0.8 * sum, `${Math.round(d * 10) / 10} s`, "clip-missing"); }
+        const prod = rec.turns.flatMap((t) => t.ran || []).filter((s) => s.tool === "create_production_clip");
+        if (prod.length) add(det, `all ${prod.length} production clips made`, prod.every((s) => s.state === "done"), prod.map((s) => s.state).join(", "), "clip-missing");
+      }
     }
+    // what it said against what exists: "delivered" needs a file; files with a "cannot" or "other" ending are a parts-only result
+    const lastKind = rec.turns.at(-1)?.kind || null;
+    if (lastKind === "delivered") add(conv, "a file backs what it said it delivered", real.length > 0, real.length ? `${real.length} file(s)` : "said delivered, no file", "said-done-no-file");
+    if (real.length && lastKind && !["delivered", "question", "approval"].includes(lastKind)) add(conv, "finished what it started (no parts-only ending)", false, `${real.length} file(s) but the reply was "${lastKind}"`, "parts-only");
     // the judge
     if (JUDGE && real.length) {
       const pics = [], legend = [];
@@ -96,7 +121,8 @@ async function grade(rec) {
       const sound = []; for (const f of [...media.audio, ...media.videos.filter((v) => hasAudio(v.path))].slice(0, 2)) { // the transcriber invents words on silence and on music ("C'est la vie" on a silent reel, "うんうん" on a beat): a track
         // that is nearly silent is reported silent, and a transcript of fewer than four words is not counted as speech
         const pk = peakDb(f.path), tr = (pk ?? -99) < -45 ? null : await transcribe(f.path).catch(() => null), words = (tr || "").trim().split(/\s+/).filter(Boolean).length;
-        sound.push(`${f.produces}: ${Math.round(duration(f.path))} s, peak ${pk} dB, ${(pk ?? -99) < -40 ? "silent (no audible sound)" : words < 4 ? "no clear speech (music or ambience; the transcriber's stray fragments are not speech)" : `speech heard: "${tr.slice(0, 2500)}"`}`); }
+        const unfinished = words >= 4 && !/[.!?…"”')\]]\s*$/.test(tr.trim()); if (unfinished) tags.push("speech-unfinished");
+        sound.push(`${f.produces}: ${Math.round(duration(f.path))} s, peak ${pk} dB, ${(pk ?? -99) < -40 ? "silent (no audible sound)" : words < 4 ? "no clear speech (music or ambience; the transcriber's stray fragments are not speech)" : `speech heard: "${tr.slice(0, 2500)}"${unfinished ? " (the transcript ends without a full stop: the speech may be cut off before its last sentence ends)" : ""}`}`); }
       const texts = media.text.map((f) => `${f.produces}: """${readFileSync(f.path, "utf8").slice(0, 1500)}"""`);
       const dialog = rec.turns.map((t, k) => `USER (message ${k + 1}): ${t.text}${t.materials.length ? ` [attached ${t.materials.join(", ")}]` : ""}${t.dialog.map((d) => `\nAGENT asked: ${d.agent}\nUSER answered: ${d.user}`).join("")}`).join("\n");
       judge = await jsonCall({ name: "bench-v1-judge", effort: "medium", images: pics.slice(0, 12), schema: S.obj({

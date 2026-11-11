@@ -7,7 +7,8 @@ import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { key, CACHE } from "./env.js";
 
-export const MODEL = process.env.CLEANED_MODEL || "gpt-6.1-sol";
+// LLM_PROVIDER=anthropic sends every call to Claude instead (bench/mcp/claude/client.mjs; the MCP bench's second provider).
+export const MODEL = process.env.CLEANED_MODEL || (process.env.LLM_PROVIDER === "anthropic" ? "claude-opus-5-5" : "gpt-6.1-sol");
 export const usage = { calls: 0, cached: 0, input_tokens: 0, output_tokens: 0 };
 
 const toJpg = (file) => execFileSync("ffmpeg", ["-loglevel", "error", "-i", file, "-vf", "scale=1024:-2", "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "4", "-"], { maxBuffer: 1 << 26 });
@@ -19,7 +20,9 @@ export async function jsonCall({ name, schema, prompt, images = [], effort = "me
   mkdirSync(CACHE, { recursive: true });
   const file = join(CACHE, `${name}-${h.digest("hex").slice(0, 24)}.json`);
   if (existsSync(file)) { usage.cached++; return JSON.parse(readFileSync(file, "utf8")); }
-  const out = await openai({ model, name, schema, prompt, jpgs, effort, tools });
+  const out = process.env.LLM_PROVIDER === "anthropic"
+    ? await (await import("../../bench/mcp/claude/client.mjs")).claudeJson({ model, name, schema, prompt, jpgs, effort })
+    : await openai({ model, name, schema, prompt, jpgs, effort, tools });
   writeFileSync(file, JSON.stringify(out, null, 2));
   return out;
 }
