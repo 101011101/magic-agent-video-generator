@@ -1,0 +1,52 @@
+{
+ "id": "c082cfb04c",
+ "key": "check:silent:D",
+ "symptom": "silent as asked",
+ "item": "D20d",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'silent as asked' not met?",
+    "because": "The delivered MP4 has a real audio track with real sound in it, not an empty track. Measured peaks were near full scale: -1.8 dB in one chat, 0 dB in another, and -3.1 dB in the summary.",
+    "evidence": "s3.old.happy.D20d/grade.json: check 'silent as asked' pass=false, got 'audio track, peak -1.8 dB'. s3.old.dumper.D20d/grade.json: got 'audio track, peak 0 dB'."
+   },
+   {
+    "why": "Why did the clip have sound? Did the assistant ask for audio?",
+    "because": "No. The assistant asked for silence correctly. It sent audio:false to create_video_from_text with model minimax-h3, and it also wrote 'No ... music' in the prompt.",
+    "evidence": "s3.old.happy.D20d/calls.jsonl line 5 args: model 'minimax-h3', audio:false, prompt ends 'No text, no captions...'. s3.old.dumper.D20d/calls.jsonl line 16: audio:false, prompt '...no music.'"
+   },
+   {
+    "why": "Why does audio:false still give a clip with sound?",
+    "because": "The minimax-h3 generation backend ignores audio:false and adds a generated soundtrack anyway. The tool result gives no sign of this, so the assistant cannot detect it. The project comes back 'complete' with no audio field, and the assistant then tells the user the clip is 'silent'.",
+    "evidence": "s3.old.happy.D20d/calls.jsonl line 6: the wait_for_video_project output has no audio flag. Line 8: the assistant says '(480×858, silent, no text)', but grade.json measures audio."
+   },
+   {
+    "why": "Why did the assistant trust audio:false?",
+    "because": "The tool description says minimax-h3 audio is 'Toggle-able: no additional credits for audio' and that the default is false. Nothing in it warns that the model can return sound when audio is off. The assistant used the documented control correctly.",
+    "evidence": "tools-old.json, create_video_from_text / create_video_from_image audio property (around line 1843): 'minimax-h3: Toggle-able: no additional credits for audio'."
+   },
+   {
+    "why": "Why does the new build fail too, when its production pipeline checks for silence?",
+    "because": "In the new build, join_production_clips measures and removes sound ('No sound' -> 'silent'), but only when the clip goes through the production pipeline. In the 2 failing new-build D20d chats, the raw generated clip was most likely delivered without that step. The new D20d calls were not in the evidence I was given, so I cannot confirm this. It is the explanation that fits the evidence best.",
+    "evidence": "s3.new.happy.D23b/calls.jsonl line 7: join_production_clips returns checked [{want:'No sound', got:'silent', result:'yes'}] for a minimax-h3 clip. The new-build D20d calls.jsonl was not provided."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The generation model adds sound even when audio:false is sent. This is a fact about the backend and the MCP server cannot change it. A server can only remove the sound after generation.",
+    "evidence": "In 2 of 2 old-build D20d chats, audio:false went in and a track peaking at 0 to -1.8 dB came out."
+   }
+  ],
+  "axiom": "The minimax-h3 generation backend ignores audio:false and returns a clip with generated sound. Neither the tool description nor the tool result mentions this.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "When a video request has audio:false, make the server remove the audio stream after generation (ffmpeg -an remux) for every video, not only for joined productions. Then report 'silent: measured' in the wait_for_video_project result. Also add a warning to the minimax-h3 audio description: 'may still return sound; the server removes it'."
+ },
+ "error": null,
+ "seconds": 47,
+ "usd": 0.6441622
+}

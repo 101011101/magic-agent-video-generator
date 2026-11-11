@@ -1,0 +1,46 @@
+{
+ "id": "253a7e3c31",
+ "key": "must:B11b:Reads exactly 'COFFEE TO GO', all words legible",
+ "symptom": "Reads exactly 'COFFEE TO GO', all words legible",
+ "item": "B11b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Reads exactly COFFEE TO GO, all words legible' not met?",
+    "because": "In both chats the board shows a readable 'COFFEE', but the second line 'TO GO' is garbled into glyph-like shapes.",
+    "evidence": "s1.new.dumper.B11b/grade.json: read_as 'COFFEE / TC 6O!'. s1.new.happy.B11b/grade.json: 'a garbled GO that reads as CLT or CU', fault 'Chalk lettering of TO GO is garbled and not clearly legible at this size'. The frame s1.new.dumper.B11b/assets/01-wait_for_image_project.png shows the board with 'COFFEE' over 'TO 6(5)'."
+   },
+   {
+    "why": "Why did the model garble the second line?",
+    "because": "The brief asks for a small sign in a wide shot, and the edit was made at 640px. The board is about 60x90 px of a 640x384 image, so each letter is only about 8–12 px tall. At that size the diffusion editor cannot draw small chalk lettering reliably. The first, larger word survives and the smaller second line breaks down.",
+    "evidence": "grade.json checks give 'aspect 16:9' with got ['640x384'] in both chats. In the output frame the board stands near the bottom left at roughly x 215–285, y 275–365. B11b.json asks for 'a little pavement chalkboard' and to 'Keep the wide shot'."
+   },
+   {
+    "why": "Why was the edit made at 640px with qwen-edit?",
+    "because": "The account is on the free plan. The assistant picked the free-tier model qwen-edit at the 640px free-plan limit, and the request was correct for the brief. The prompt already contained the exact words 'COFFEE TO GO', so the text was not lost in the prompt.",
+    "evidence": "calls.jsonl edit_image args in both new chats: model 'qwen-edit', resolution '640px', and a prompt with 'exactly the words: COFFEE TO GO' or 'reads exactly \"COFFEE TO GO\" and nothing else'. The dumper reply says 'The picture is 640px wide, which is the limit on the free plan'. B11b.json answer_sheet says 'free-tier image size is fine'."
+   },
+   {
+    "why": "Why did the assistant not detect the garbled text and run the edit again?",
+    "because": "The assistant could not see the result. In the dumper chat, fetch_image_download returned an empty output twice. In the happy chat the assistant did not try to fetch the image. So both replies delivered the image without a check and asked the user to check the spelling.",
+    "evidence": "s1.new.dumper.B11b/calls.jsonl lines 5–6: fetch_image_download output ''. Both replies say 'I couldn't view/open the result… please check the spelling on the board'."
+   },
+   {
+    "why": "Is this specific to the new build?",
+    "because": "No. The old build sent identical settings (qwen-edit, 640px, a similar prompt) and had the same blind fetch. The model output varies between runs, so the failures happened to fall on the new runs. Nothing in the new build's descriptions changed the model, the resolution or the prompt in a way that matters.",
+    "evidence": "s1.old.happy.B11b/calls.jsonl: edit_image with model 'qwen-edit', resolution '640px'. Its fetch_image_download outputs are also ''. In tools-new.json the edit_image description only suggests the free options (flux-2-klein or 640px) and gives no guidance for small in-scene text."
+   }
+  ],
+  "axiom": "The free-plan image editor (qwen-edit at the 640px free-plan limit) cannot reliably draw multi-word text on a small object in a wide shot. The lettering is only about 10 px tall, so the second line comes out garbled in some runs. This is a limit of the generation model and the free plan.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "When exact_words appear on a small in-scene object in an edit, the server checks the result itself (OCR or a vision check against exact_words). If the text is wrong, it runs the edit again once (10 credits) or tells the assistant that the text failed. It also makes fetch_image_download return the image, so the assistant can check the result instead of delivering it without a check."
+ },
+ "error": null,
+ "seconds": 64,
+ "usd": 0.7123722
+}

@@ -1,0 +1,47 @@
+{
+ "id": "bcb94a4123",
+ "key": "must:C15c:Faces aligned, no flicker or original-face reappearance",
+ "symptom": "Faces aligned, no flicker or original-face reappearance",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Faces aligned, no flicker or original-face reappearance' not met?",
+    "because": "In s1.new.dumper.C15c no swapped video was made. In s1.old.stupid.C15c a video was made, but the grader judged that the original faces were still visible.",
+    "evidence": "new grade.json: checks 'a video was made' failed (only 4 .png files); this item has why 'No swapped video exists.' old grade.json: this item has why 'The original faces appear to remain...'; fault: 'The agent guessed the face mapping...'"
+   },
+   {
+    "why": "Why did the new chat end with no swap, and why did the old chat swap on a guess?",
+    "because": "In both chats face detection found 4 faces (A, B, C, D at frame 132) for 2 portraits. The assistant could not tell which face was the man and which was the woman. New: it stopped and asked the user to map the letters. Old: it asked twice, the stupid user said 'you pick', and it mapped A to the man and C to the woman. It left B and D as they were.",
+    "evidence": "new calls.jsonl line 8: 'I can't view the face crops from my side... Please tell me which letters are the man and which are the woman.' Old calls.jsonl lines 9, 24 ('I can't open the face pictures'), line 26: swap_face_in_video maps only 0-0 and 0-2; line 31: 'one that shows up about 5 seconds in, were left as they are.'"
+   },
+   {
+    "why": "Why could the assistant not see the face crops?",
+    "because": "fetch_image_download returned an empty result with no error each time it was called on a crop URL. This happened in both builds, so the assistant got no image to inspect. The URLs themselves work: the harness saved the crops as PNGs, and the grader could tell them apart easily (A = man, B = bearded man, C = woman, D = profile of the first man).",
+    "evidence": "new calls.jsonl lines 5-6 and old calls.jsonl lines 6, 11: fetch_image_download output \"\" with error null. Old assets/01 and 03 PNGs clearly show a man and a woman. New grade.json fault: 'The crops are plainly a man (A)... a profile of the first man (D). The agent could have resolved this itself.'"
+   },
+   {
+    "why": "Why did that blindness lead to a failed checklist item and not to a recovered run?",
+    "because": "New: the harness classifier labelled the assistant's question as 'delivered', so the chat ended before the dumper user could give the mapping from their bank. Old: the blind guess left Face D (the man's profile from about 5 s) unmapped, so his original face could come back. The grader also saw only weak changes to A and C. I could not open the output frames to check this.",
+    "evidence": "new calls.jsonl line 8: classifier why 'does not explicitly ask the user to choose', then turn_end kind 'delivered' and end. Old calls.jsonl line 26: face_mappings has only 2 entries, and line 31 says the later face was left as it is."
+   },
+   {
+    "why": "Why does fetch_image_download return nothing to the assistant?",
+    "because": "Axiom: in this host setup, the tool does not give the assistant crop images it can use (empty output, no error). I could not confirm whether the server sends an empty reply or the host drops an image block, because the raw MCP response is not logged. The same thing happens on both builds, so it is not something the upgrade introduced.",
+    "evidence": "Same empty fetch_image_download output in the old (hosted) and new (local) calls.jsonl. Both assistants state they cannot view the crops."
+   }
+  ],
+  "axiom": "In both builds, the assistant cannot see the face crops: fetch_image_download returns empty output with no error, so it cannot match faces to portraits by itself. New: it asked the user, and the harness classifier mislabelled that question as 'delivered', which ended the chat with no video. Old: it guessed with no sight of the crops and left Face D (the man's profile) unmapped, so the original face could reappear.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Make the face crops visible to the assistant. get_face_detection_results (or fetch_image_download) should return each crop as an inline MCP image content block, or with a short label such as frame, position and 'same person as face A'. The assistant can then map man and woman, including later duplicate faces like D, without asking the user. Separately, fix the harness classifier so that a reply ending in 'Please tell me which...' is labelled a question, not 'delivered'."
+ },
+ "error": null,
+ "seconds": 66,
+ "usd": 0.445521
+}

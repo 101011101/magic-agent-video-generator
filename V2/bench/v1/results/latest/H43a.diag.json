@@ -1,0 +1,51 @@
+{
+  "id": "H43a",
+  "best_tools": "no",
+  "explanation": "The plan uses a story-to-film pipeline for a single scripted talking head, relying on generated clip speech rather than a guaranteed exact voice track and a dedicated talking-photo tool. It also assumes film finishing will add accurate timed captions, and several pipeline steps omit required upstream inputs. Nothing was run, so the record establishes non-delivery, not an observed visual or speech-quality failure.",
+  "better_chain": "image (create a fictional adult woman in her 30s, selfie-framed at home, vertical 9:16) → voice (speak the supplied English script exactly in a friendly neutral female voice, paced to approximately 8 seconds) → talking-photo (animate the presenter speaking that audio) → captions (transcribe and time the spoken English) → gate (verify exact caption wording, complete speech, visible speaking, duration, and vertical format)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving"
+  ],
+  "cause": "tool-fit",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "A story stage is unnecessary for one continuous talking-camera shot with an already supplied script.",
+      "verdict": "unneeded",
+      "tool": "story"
+    },
+    {
+      "n": 2,
+      "issue": "An asset-bank stage adds unnecessary indirection; one image generation can establish the fictional presenter and home setting.",
+      "verdict": "unneeded",
+      "tool": "assets"
+    },
+    {
+      "n": 3,
+      "issue": "The screenplay tool requires both story and bank, but only assets.json is wired in. Rewriting the supplied script into a screenplay is also unnecessary.",
+      "verdict": "bad-inputs",
+      "tool": "screenplay"
+    },
+    {
+      "n": 4,
+      "issue": "The keyframes stage requires the screenplay and asset bank, but receives only screenplay.json, leaving presenter identity and setting continuity dependent on implicit state.",
+      "verdict": "bad-inputs",
+      "tool": "keyframes"
+    },
+    {
+      "n": 5,
+      "issue": "Generated clip speech is not the right route for guaranteed exact dialogue and synchronized speaking. Use talking-photo with an explicit voice track; the proposed clips call also omits its required screenplay input.",
+      "verdict": "wrong-tool",
+      "tool": "clips"
+    },
+    {
+      "n": 6,
+      "issue": "Film finishing has no documented guarantee of exact timed captions or disclosure overlays. Use the dedicated captions tool for speech captions, and text-overlay if a disclosure is desired.",
+      "verdict": "wrong-tool",
+      "tool": "film"
+    }
+  ],
+  "missing": "An explicit exact-script voice track, a talking-photo step driven by that track, and a dedicated timed-caption step with verification. All planned steps also remained unexecuted."
+}

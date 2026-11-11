@@ -1,0 +1,37 @@
+{
+ "id": "D18c",
+ "root_cause": "model-limit",
+ "contributing": [
+  "spec"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The plan is close to mine: one image-to-video of lake.jpg, 8 s, generated audio dropped, no aspect forced, and a prompt that names what moves (clouds, ripples), what stays (mountains, trees), the locked camera and the evening light. minimax-h3 still turned the 8 s into a dusk time-lapse: the clouds re-form and turn grey, and by the last frame the alpenglow on the peaks and the coloured reflections are gone. The agent missed a constraint the catalogue offers (\"a seamless loop: the same picture as start and end\"): giving lake.jpg as both the start and end picture forces the last frame back to the photo's warm light and cloud positions, which caps how far the model can drift. I would also word the motion as real time (\"not a time-lapse; the light does not change\"). One judge fault is not the agent's: the attachment the spec calls 16:9 is 640x384 (5:3). The clip kept that shape (788x480), and \"same wide framing\" argues for keeping it.",
+ "your_plan": {
+  "say": "I'll animate your lake photo for 8 silent seconds with slowly drifting clouds and gentle ripples, holding the camera, the mountains, the trees and the evening light still.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image-to-video",
+    "inputs": [
+     "lake.jpg",
+     "lake.jpg"
+    ],
+    "produces": "lake_animated.mp4",
+    "params": {
+     "prompt_or_change": "Real-time footage from a tripod, not a time-lapse: the clouds drift very slowly to the right and keep their shapes, small ripples move gently across the lake, the mountains, shoreline and pine trees stay perfectly still, and the warm early-evening light on the peaks, the clouds and their reflections stays exactly the same from the first frame to the last.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Using the photo as both start and end picture pins the final frame to the original light and cloud positions, which counters the drift into a time-lapse. No aspect is set, so the photo's own framing is kept. The model's invented sound is dropped by code."
+   }
+  ]
+ },
+ "fix": "Add a planner rule or catalogue WELL line: \"animate only part of a still and keep its light and framing → image-to-video with the same picture as start and end, motion worded as real-time\". Also fix the spec: when the brief says \"same framing\", the expected aspect is the attachment's own ratio (lake.jpg is 5:3, not 16:9).",
+ "fix_generalises": true,
+ "would_pass": "unlikely",
+ "evidence": "lake.jpg is 640x384 (5:3); the output is 788x480, 8.0 s, with no audio stream. Grader frame at 1 s: warm alpenglow on the peaks, pink clouds and coloured reflections, matching the photo. Frame at 7 s: peaks grey, clouds re-formed and grey, reflections gone. The mountains, shoreline and trees stay aligned. The judge is right about the time-lapse clouds and the fading light, and wrong that the clip should be 16:9."
+}

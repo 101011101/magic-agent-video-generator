@@ -1,0 +1,47 @@
+{
+ "id": "eb62fb8cf9",
+ "key": "must:A05d:Square head-and-shoulders portrait, natural lighting, no artifacts",
+ "symptom": "Square head-and-shoulders portrait, natural lighting, no artifacts",
+ "item": "A05d",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'square head-and-shoulders portrait' item not met?",
+    "because": "The final image in each failing chat is not square. It is 640x384 (about 5:3 landscape) when edit_image made the final image. It is 928x1152 (4:5 portrait) when generate_headshot made it.",
+    "evidence": "s1.old.happy.A05d/grade.json: aspect check got [\"640x384\"]; the must item says 'The image is 640x384, about 5:3 landscape, not square'. s1.new.stupid.A05d/grade.json and s1.old.stupid.A05d/grade.json: aspect check got [\"640x384\",\"928x1152\"]; the must item says 'portrait 4:5 (about 928x1152)'."
+   },
+   {
+    "why": "Why did edit_image return 640x384 when the assistant asked for a square?",
+    "because": "With flux-2-klein at 640px, edit_image ignores the aspect_ratio argument and keeps the landscape shape of the source photo. The value the assistant sends does not change the output: 1:1 gave 640x384, and 4:5 also gave 640x384.",
+    "evidence": "s1.old.happy.A05d/calls.jsonl: edit_image args aspect_ratio \"1:1\", resolution \"640px\" → grade got 640x384. s1.old.stupid.A05d/calls.jsonl: edit_image aspect_ratio \"4:5\" → first file still 640x384. s1.new.stupid.A05d/calls.jsonl: edit_image aspect_ratio \"1:1\" → 640x384. tools-old.json edit_image: aspect_ratio enum includes 1:1, with the description 'The aspect ratio of the output image(s)'. Nothing says flux-2-klein ignores it."
+   },
+   {
+    "why": "Why was the headshot output 4:5 even though the input came from the edit step?",
+    "because": "generate_headshot has no aspect or size parameter. It always returns its own fixed 928x1152 (4:5) portrait, whatever shape the input has. The two-step plan (edit_image to isolate her, then generate_headshot) therefore cannot give a square.",
+    "evidence": "tools-old.json generate_headshot inputSchema: only name, style.prompt and assets.image_file_path. The description says nothing about output size. In both the old and new stupid chats, the AI_HEADSHOT project output is 928x1152 (grade.json)."
+   },
+   {
+    "why": "Why did the assistant not see the wrong shape and fix it before it delivered?",
+    "because": "The tool results give no output width or height. In the happy chat the assistant also never looked at the image, so it told the user 'It is 1:1 and 640px', which was false. The new build has the same gap.",
+    "evidence": "In all three chats, the wait_for_image_project output (calls.jsonl) has status, downloads and credits but no dimensions. In the old happy reply: 'It is 1:1 and 640px'. In the new stupid reply: 'I haven't looked at the result myself'. In the old stupid reply: 'I couldn't preview either image here'."
+   },
+   {
+    "why": "Why does this happen in both builds?",
+    "because": "Both builds call the same Magic Hour backend. The model (flux-2-klein edit at 640px) and the headshot pipeline fix the output shape. Neither build's server checks the returned shape against the requested aspect, reports it, or crops to it.",
+    "evidence": "The new stupid chat uses the same tools and arguments as the old chats, and the output sizes are identical (640x384 and 928x1152). The edit_image and generate_headshot descriptions in tools-old.json have no aspect caveat, and the new build gives the same outputs."
+   }
+  ],
+  "axiom": "The backend fixes the output shape. flux-2-klein image edit at 640px keeps the source's landscape aspect and ignores aspect_ratio, and the AI headshot pipeline always returns 928x1152 (4:5). The MCP server sends aspect_ratio on as if it works and returns no output dimensions, so the assistant cannot get a square result or see that it failed.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the MCP server, read the dimensions of each finished image and return width/height in wait_for_image_project. When the result does not match the aspect_ratio that was requested, either center-crop it to that ratio on the server, or return a clear mismatch warning. Also add to the generate_headshot description that it always outputs 4:5 (928x1152), so for a square the assistant must crop afterward."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.6401264
+}

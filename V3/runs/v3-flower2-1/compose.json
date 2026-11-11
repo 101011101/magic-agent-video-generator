@@ -1,0 +1,611 @@
+{
+  "label": "v3-flower2-1",
+  "pipeline": "V3/compose case 3 (a specific thing; the reference supplied by hand, the state manager assumed perfect)",
+  "brief": "Second scene of the Petal & Stem ad, 16 seconds, widescreen: the customer in the attached frame (the woman with dark hair in a low bun and the cream jacket, holding the bouquet of yellow, magenta, cream and red flowers in pale paper) carries that same bouquet home and gives it to her partner, a man with short grey-flecked hair in a navy sweater, at their front door; he smiles and takes it; warm morning light; end on the two of them with the flowers. She, the bouquet and he must look the same throughout.",
+  "at": "2026-11-02T19:49:23.362Z",
+  "dry": false,
+  "llm_model": "gpt-6.1-sol",
+  "llm": [
+    {
+      "name": "v3-ref-seen-v1",
+      "purpose": "what the reference frame shows"
+    },
+    {
+      "name": "v3-story-c3-v1",
+      "purpose": "the story with the reference's descriptors fixed"
+    },
+    {
+      "name": "v3-seed-prompt-v1",
+      "purpose": "the edit prompt for seed"
+    },
+    {
+      "name": "v3-seed-check-v1",
+      "purpose": "seed against the reference"
+    },
+    {
+      "name": "v3-seed-prompt-v1",
+      "purpose": "the edit prompt for seed-retry"
+    },
+    {
+      "name": "v3-seed-check-v1",
+      "purpose": "seed-retry against the reference"
+    },
+    {
+      "name": "v3-prompt-i2v-v1",
+      "purpose": "the image-to-video prompt"
+    },
+    {
+      "name": "v3-review-c3-v1",
+      "purpose": "review of clip-2 with the reference"
+    },
+    {
+      "name": "v3-prompt-fix-v1",
+      "purpose": "failures folded in"
+    }
+  ],
+  "tools": [
+    {
+      "tool": "image-edit",
+      "endpoint": "/v1/ai-image-editor",
+      "model": "qwen-image-2.1",
+      "resolution": "640px",
+      "aspect_ratio": "16:9",
+      "inputs": [
+        "reference.jpg"
+      ],
+      "prompt": "Widescreen 16:9 film frame, eye level, medium shot: the same woman from the input image, same face, hair and jacket, approaches her front door along the path in warm morning light, smiling broadly. Dark brown low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket, large patch pockets. Same bouquet: white, cream daisy-like flowers, pink, magenta, red, yellow-orange blooms, green foliage; broad overlapping pale gray and beige paper, long green stems exposed. Her partner, short grey-flecked hair, navy sweater, waits in the doorway. Affectionate mood. No text, no watermark.",
+      "credits": 10,
+      "output": "seed.png"
+    },
+    {
+      "tool": "image-edit",
+      "endpoint": "/v1/ai-image-editor",
+      "model": "qwen-image-2.1",
+      "resolution": "640px",
+      "aspect_ratio": "16:9",
+      "inputs": [
+        "reference.jpg"
+      ],
+      "prompt": "First frame: the same woman from the input image, same face, hair and jacket; no aging. Broad smile, dark brown low loosely twisted bun, small gold-colored earring, light gray-green collared jacket with large patch pockets. She approaches her home's front door carrying the same white, cream, pink, magenta, red and yellow-orange bouquet, green foliage, overlapping pale gray and beige paper, exposed green stems. Her partner, a man with short grey-flecked hair in a navy sweater, waits in the doorway. Warm morning light. Widescreen 16:9 film frame, eye level, medium shot. No text, no watermark.",
+      "credits": 10,
+      "output": "seed-retry.png"
+    },
+    {
+      "tool": "image-to-video",
+      "endpoint": "/v1/image-to-video",
+      "model": "ltx-2.5",
+      "resolution": "480p",
+      "audio": false,
+      "seconds": 16,
+      "start": "seed-retry.png",
+      "prompt": "Create a 16-second continuation of the Petal & Stem advertisement matching the source image. Preserve the customer’s dark brown hair swept into a low, loosely twisted bun, small gold-colored earring and light gray-green collared jacket with large patch pockets; preserve the bouquet’s white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, broad overlapping pale gray and beige paper and long exposed green stems; preserve the partner’s short grey-flecked hair and navy sweater, the front doorway and warm morning light. Five coherent shots with natural edits, the same customer, bouquet and partner throughout, warm and quietly affectionate. 0–3 seconds: medium-wide framing continuing directly from the source image, the customer in the light gray-green collared jacket carries the bouquet toward the partner at the front doorway, morning light across the path, camera gently following forward. 3–6 seconds: medium two-shot, the smiling customer with the small gold-colored earring offers the bouquet toward the partner, the doorway behind them, camera sliding gently sideways; the customer still holds the bouquet. 6–9 seconds: medium close-up, the partner with short grey-flecked hair smiles at the customer, the sunlit doorframe beside him, camera slowly pushing closer. 9–13 seconds: close two-shot including their hands, the partner in the navy sweater takes the bouquet by its wrapped stems, pale paper illuminated at the threshold, camera easing closer; the partner now holds the bouquet and the customer’s hands are empty. 13–16 seconds: separate wide establishing shot of the front doorway, the customer and the partner standing still together with the bouquet held between them by the partner, warm light across the threshold, camera easing back into a still composition. Hold this final image for the last two seconds. Gentle warm cinematic grade, unhurried affectionate pacing. No subtitles, no text overlays, no voiceover.",
+      "credits": 384,
+      "output": "clip-2.mp4",
+      "wall_seconds": 40
+    },
+    {
+      "tool": "ffmpeg",
+      "op": "frames of clip-2",
+      "inputs": [
+        "clip-2.mp4"
+      ],
+      "output": [
+        "frames/clip-2-first.jpg",
+        "frames/clip-2-b1-1.5s.jpg",
+        "frames/clip-2-b2-4.5s.jpg",
+        "frames/clip-2-b3-7.5s.jpg",
+        "frames/clip-2-b4-11s.jpg",
+        "frames/clip-2-b5-14.5s.jpg",
+        "frames/clip-2-last.jpg"
+      ],
+      "credits": 0
+    }
+  ],
+  "steps": [
+    {
+      "name": "story",
+      "at": "2026-11-02T19:50:30.798Z",
+      "story": {
+        "carried": [
+          "The customer: dark brown hair swept into a low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket with large patch pockets.",
+          "The bouquet: white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, and green foliage; broad overlapping sheets of pale gray and beige paper, with long green stems exposed below."
+        ],
+        "aspect": "16:9",
+        "kind": "fiction",
+        "place": "The path to the couple’s home and their front doorway.",
+        "sound": "none",
+        "prose": "Warm morning light falls across the path to the customer’s home as she approaches the front door, carrying the same bouquet she received at Petal & Stem. Her dark brown hair remains swept into a low, loosely twisted bun, and she wears her small gold-colored earring and light gray-green collared jacket with large patch pockets. The colorful flowers rest in their overlapping pale gray and beige paper, their long green stems exposed below. Her partner, a man with short grey-flecked hair and a navy sweater, greets her at the doorway. She smiles and holds the bouquet out to him. He responds with a warm smile and takes it gently, supporting the wrapped stems as she releases her hold. She stays beside him at the threshold. The moment ends with the two of them together in the morning light, the unchanged bouquet held between them, conveying an affectionate, everyday welcome home.",
+        "people": [
+          "Customer: woman with dark brown hair swept into a low, loosely twisted bun; a broad smile; small gold-colored earring; light gray-green collared jacket with large patch pockets.",
+          "Her partner: man with short grey-flecked hair, wearing a navy sweater."
+        ],
+        "first_frame": "In warm morning light, the customer approaches their front door wearing her light gray-green collared jacket with large patch pockets, her dark brown hair in a low, loosely twisted bun and a small gold-colored earring visible. She carries the same white, cream, pink, magenta, red and yellow-orange bouquet with green foliage, overlapping pale gray and beige paper, and exposed green stems; her partner stands at the doorway in his navy sweater.",
+        "time": "Morning, following the flower-shop scene.",
+        "seconds": 16,
+        "exact_words": [],
+        "mood": "Warm, affectionate, quietly joyful.",
+        "progression": [
+          "carries that same bouquet home",
+          "gives it to her partner, a man with short grey-flecked hair in a navy sweater, at their front door",
+          "he smiles and takes it",
+          "end on the two of them with the flowers"
+        ],
+        "sound_why": "No sound was requested."
+      }
+    },
+    {
+      "name": "route",
+      "at": "2026-11-02T19:50:30.799Z",
+      "route": "case 3 (a specific thing)",
+      "why": "carried from the reference: The customer: dark brown hair swept into a low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket with large patch pockets.; The bouquet: white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, and green foliage; broad overlapping sheets of pale gray and beige paper, with long green stems exposed below.; first frame required: In warm morning light, the customer approaches their front door wearing her light gray-green collared jacket with large patch pockets, her dark brown hair in a low, loosely twisted bun and a small gold-colored earring visible. She carries the same white, cream, pink, magenta, red and yellow-orange bouquet with green foliage, overlapping pale gray and beige paper, and exposed green stems; her partner stands at the doorway in his navy sweater."
+    },
+    {
+      "name": "seed",
+      "at": "2026-11-02T19:51:33.097Z",
+      "still": "seed-retry.png",
+      "attempts": [
+        {
+          "attempt": 1,
+          "key": "seed",
+          "file": "seed.png",
+          "prompt": "Widescreen 16:9 film frame, eye level, medium shot: the same woman from the input image, same face, hair and jacket, approaches her front door along the path in warm morning light, smiling broadly. Dark brown low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket, large patch pockets. Same bouquet: white, cream daisy-like flowers, pink, magenta, red, yellow-orange blooms, green foliage; broad overlapping pale gray and beige paper, long green stems exposed. Her partner, short grey-flecked hair, navy sweater, waits in the doorway. Affectionate mood. No text, no watermark.",
+          "credits": 10,
+          "cost": 10,
+          "check": {
+            "evidence": "Customer’s face appears older/different; bun, earring and jacket match. Bouquet colours, layered wrapping and exposed stems match. Doorway partner appears female, not the described man; warm light and setting match.",
+            "same_person": "no",
+            "new_people_as_described": "no",
+            "same_bouquet": "yes",
+            "scene_as_described": "no"
+          },
+          "pass": false
+        },
+        {
+          "attempt": 2,
+          "key": "seed-retry",
+          "file": "seed-retry.png",
+          "prompt": "First frame: the same woman from the input image, same face, hair and jacket; no aging. Broad smile, dark brown low loosely twisted bun, small gold-colored earring, light gray-green collared jacket with large patch pockets. She approaches her home's front door carrying the same white, cream, pink, magenta, red and yellow-orange bouquet, green foliage, overlapping pale gray and beige paper, exposed green stems. Her partner, a man with short grey-flecked hair in a navy sweater, waits in the doorway. Warm morning light. Widescreen 16:9 film frame, eye level, medium shot. No text, no watermark.",
+          "credits": 10,
+          "cost": 10,
+          "check": {
+            "evidence": "Woman resembles reference florist, not customer; jacket and bun match. Bouquet colours, two-tone wrapping and exposed stems consistent. Grey-haired partner wears navy. Woman is inside doorway, partner outside—not approaching home.",
+            "same_person": "no",
+            "new_people_as_described": "yes",
+            "same_bouquet": "yes",
+            "scene_as_described": "no"
+          },
+          "pass": false
+        }
+      ]
+    },
+    {
+      "name": "prompt",
+      "at": "2026-11-02T19:51:59.535Z",
+      "chars": 1995,
+      "shots": 5,
+      "beats": [
+        {
+          "to": 3,
+          "from": 0,
+          "shows": "Continuing the start frame, the customer carries the bouquet toward the partner at the front doorway; gentle forward follow."
+        },
+        {
+          "to": 6,
+          "from": 3,
+          "shows": "The customer offers the bouquet toward the partner while still holding it; gentle lateral slide."
+        },
+        {
+          "to": 9,
+          "from": 6,
+          "shows": "The partner smiles at the customer; slow push-in."
+        },
+        {
+          "to": 13,
+          "from": 9,
+          "shows": "The partner takes the bouquet by its wrapped stems; the partner now holds the bouquet and the customer’s hands are empty; gentle push closer."
+        },
+        {
+          "to": 16,
+          "from": 13,
+          "shows": "Separate establishing shot of the customer and the partner standing still at the doorway, the partner holding the bouquet between them; ease back, then hold the final two seconds."
+        }
+      ],
+      "prompt": "Create a 16-second continuation of the Petal & Stem advertisement matching the source image. Preserve the customer’s dark brown hair swept into a low, loosely twisted bun, small gold-colored earring and light gray-green collared jacket with large patch pockets; preserve the bouquet’s white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, broad overlapping pale gray and beige paper and long exposed green stems; preserve the partner’s short grey-flecked hair and navy sweater, the front doorway and warm morning light. Five coherent shots with natural edits, the same customer, bouquet and partner throughout, warm and quietly affectionate. 0–3 seconds: medium-wide framing continuing directly from the source image, the customer in the light gray-green collared jacket carries the bouquet toward the partner at the front doorway, morning light across the path, camera gently following forward. 3–6 seconds: medium two-shot, the smiling customer with the small gold-colored earring offers the bouquet toward the partner, the doorway behind them, camera sliding gently sideways; the customer still holds the bouquet. 6–9 seconds: medium close-up, the partner with short grey-flecked hair smiles at the customer, the sunlit doorframe beside him, camera slowly pushing closer. 9–13 seconds: close two-shot including their hands, the partner in the navy sweater takes the bouquet by its wrapped stems, pale paper illuminated at the threshold, camera easing closer; the partner now holds the bouquet and the customer’s hands are empty. 13–16 seconds: separate wide establishing shot of the front doorway, the customer and the partner standing still together with the bouquet held between them by the partner, warm light across the threshold, camera easing back into a still composition. Hold this final image for the last two seconds. Gentle warm cinematic grade, unhurried affectionate pacing. No subtitles, no text overlays, no voiceover."
+    },
+    {
+      "name": "review clip-2",
+      "at": "2026-11-02T19:53:04.657Z",
+      "pass": false,
+      "failures": [
+        "the final two seconds hold one still image with no new action"
+      ],
+      "identity": [
+        {
+          "evidence": "The customer retains the reference's facial appearance, dark brown hair swept into a low twisted bun, small gold-colored earring, and light gray-green collared jacket with large patch pockets.",
+          "carried": "The customer",
+          "same_as_reference": "yes"
+        },
+        {
+          "evidence": "The bouquet retains white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, overlapping pale gray and beige wrapping, and exposed long green stems. Individual flower positions vary, but its defining appearance remains consistent.",
+          "carried": "The bouquet",
+          "same_as_reference": "yes"
+        }
+      ]
+    }
+  ],
+  "jobs": {
+    "seed": {
+      "sig": "5fce6019c197de3a",
+      "id": "cmvzobuac02c7m801g39ebj33",
+      "endpoint": "/v1/ai-image-editor",
+      "file": "seed.png",
+      "inputs": [
+        "reference.jpg"
+      ],
+      "prompt": "Widescreen 16:9 film frame, eye level, medium shot: the same woman from the input image, same face, hair and jacket, approaches her front door along the path in warm morning light, smiling broadly. Dark brown low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket, large patch pockets. Same bouquet: white, cream daisy-like flowers, pink, magenta, red, yellow-orange blooms, green foliage; broad overlapping pale gray and beige paper, long green stems exposed. Her partner, short grey-flecked hair, navy sweater, waits in the doorway. Affectionate mood. No text, no watermark.",
+      "model": "qwen-image-2.1",
+      "credits": 10,
+      "seconds": 11,
+      "at": "2026-11-02T19:50:53.316Z"
+    },
+    "seed-retry": {
+      "sig": "c64e75b5942bde17",
+      "id": "cmvzocjxu02com8016ok864cr",
+      "endpoint": "/v1/ai-image-editor",
+      "file": "seed-retry.png",
+      "inputs": [
+        "reference.jpg"
+      ],
+      "prompt": "First frame: the same woman from the input image, same face, hair and jacket; no aging. Broad smile, dark brown low loosely twisted bun, small gold-colored earring, light gray-green collared jacket with large patch pockets. She approaches her home's front door carrying the same white, cream, pink, magenta, red and yellow-orange bouquet, green foliage, overlapping pale gray and beige paper, exposed green stems. Her partner, a man with short grey-flecked hair in a navy sweater, waits in the doorway. Warm morning light. Widescreen 16:9 film frame, eye level, medium shot. No text, no watermark.",
+      "model": "qwen-image-2.1",
+      "credits": 10,
+      "seconds": 6,
+      "at": "2026-11-02T19:51:22.556Z"
+    },
+    "clip-2": {
+      "sig": "000d2fc0c6224989",
+      "id": "cmvzodisl03btly01w0fomnrh",
+      "endpoint": "/v1/image-to-video",
+      "file": "clip-2.mp4",
+      "inputs": [
+        "seed-retry.png"
+      ],
+      "prompt": "Create a 16-second continuation of the Petal & Stem advertisement matching the source image. Preserve the customer’s dark brown hair swept into a low, loosely twisted bun, small gold-colored earring and light gray-green collared jacket with large patch pockets; preserve the bouquet’s white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, broad overlapping pale gray and beige paper and long exposed green stems; preserve the partner’s short grey-flecked hair and navy sweater, the front doorway and warm morning light. Five coherent shots with natural edits, the same customer, bouquet and partner throughout, warm and quietly affectionate. 0–3 seconds: medium-wide framing continuing directly from the source image, the customer in the light gray-green collared jacket carries the bouquet toward the partner at the front doorway, morning light across the path, camera gently following forward. 3–6 seconds: medium two-shot, the smiling customer with the small gold-colored earring offers the bouquet toward the partner, the doorway behind them, camera sliding gently sideways; the customer still holds the bouquet. 6–9 seconds: medium close-up, the partner with short grey-flecked hair smiles at the customer, the sunlit doorframe beside him, camera slowly pushing closer. 9–13 seconds: close two-shot including their hands, the partner in the navy sweater takes the bouquet by its wrapped stems, pale paper illuminated at the threshold, camera easing closer; the partner now holds the bouquet and the customer’s hands are empty. 13–16 seconds: separate wide establishing shot of the front doorway, the customer and the partner standing still together with the bouquet held between them by the partner, warm light across the threshold, camera easing back into a still composition. Hold this final image for the last two seconds. Gentle warm cinematic grade, unhurried affectionate pacing. No subtitles, no text overlays, no voiceover.",
+      "model": "ltx-2.5",
+      "credits": 384,
+      "seconds": 39,
+      "at": "2026-11-02T19:52:39.605Z"
+    }
+  },
+  "calls": [
+    {
+      "key": "seed",
+      "credits": 10,
+      "seconds": 11,
+      "id": "cmvzobuac02c7m801g39ebj33",
+      "at": "2026-11-02T19:50:53.034Z"
+    },
+    {
+      "key": "seed-retry",
+      "credits": 10,
+      "seconds": 6,
+      "id": "cmvzocjxu02com8016ok864cr",
+      "at": "2026-11-02T19:51:22.313Z"
+    },
+    {
+      "key": "clip-2",
+      "credits": 384,
+      "seconds": 39,
+      "id": "cmvzodisl03btly01w0fomnrh",
+      "at": "2026-11-02T19:52:39.157Z"
+    }
+  ],
+  "pending": {},
+  "reference": {
+    "file": "reference.jpg",
+    "from": "V3/runs/refs/flower2-12s.jpg",
+    "seen": {
+      "light": "Warm, soft interior light from a glowing pendant overhead, with brighter natural light on the women and bouquet from the doorway.",
+      "people": [
+        {
+          "who": "Woman on the left, apparently a florist, facing the other woman and smiling.",
+          "look": "Dark brown hair streaked with gray in a low bun; smiling face with visible laugh lines; small earrings; pale gray-beige collared shirt with rolled sleeves and a cream apron with large front pockets."
+        },
+        {
+          "who": "Woman on the right, apparently a customer, holding the bouquet and smiling toward the woman on the left.",
+          "look": "Dark brown hair swept into a low, loosely twisted bun; side-profile face with a broad smile; small gold-colored earring; light gray-green collared jacket with large patch pockets."
+        }
+      ],
+      "place": "Entrance to a small flower shop, framed by open dark wooden, glass-paneled doors with brass-colored handles. Inside are warm beige walls, shelves, flower displays, a dark round wall clock, and wooden furniture.",
+      "objects": [
+        {
+          "what": "Bouquet between the women",
+          "look": "White and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, and green foliage; wrapped in broad overlapping sheets of pale gray and beige paper, with long green stems exposed below."
+        },
+        {
+          "what": "Flower displays on the left",
+          "look": "Clusters of red, white, yellow, and purple flowers with green leaves, standing in green containers on a counter and shelves."
+        },
+        {
+          "what": "Ceiling pendant",
+          "look": "Small rounded cream-colored glowing shade suspended from a dark ceiling fitting."
+        },
+        {
+          "what": "Wall clock",
+          "look": "Dark-framed round clock mounted on the back wall."
+        }
+      ]
+    }
+  },
+  "story": {
+    "carried": [
+      "The customer: dark brown hair swept into a low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket with large patch pockets.",
+      "The bouquet: white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, and green foliage; broad overlapping sheets of pale gray and beige paper, with long green stems exposed below."
+    ],
+    "aspect": "16:9",
+    "kind": "fiction",
+    "place": "The path to the couple’s home and their front doorway.",
+    "sound": "none",
+    "prose": "Warm morning light falls across the path to the customer’s home as she approaches the front door, carrying the same bouquet she received at Petal & Stem. Her dark brown hair remains swept into a low, loosely twisted bun, and she wears her small gold-colored earring and light gray-green collared jacket with large patch pockets. The colorful flowers rest in their overlapping pale gray and beige paper, their long green stems exposed below. Her partner, a man with short grey-flecked hair and a navy sweater, greets her at the doorway. She smiles and holds the bouquet out to him. He responds with a warm smile and takes it gently, supporting the wrapped stems as she releases her hold. She stays beside him at the threshold. The moment ends with the two of them together in the morning light, the unchanged bouquet held between them, conveying an affectionate, everyday welcome home.",
+    "people": [
+      "Customer: woman with dark brown hair swept into a low, loosely twisted bun; a broad smile; small gold-colored earring; light gray-green collared jacket with large patch pockets.",
+      "Her partner: man with short grey-flecked hair, wearing a navy sweater."
+    ],
+    "first_frame": "In warm morning light, the customer approaches their front door wearing her light gray-green collared jacket with large patch pockets, her dark brown hair in a low, loosely twisted bun and a small gold-colored earring visible. She carries the same white, cream, pink, magenta, red and yellow-orange bouquet with green foliage, overlapping pale gray and beige paper, and exposed green stems; her partner stands at the doorway in his navy sweater.",
+    "time": "Morning, following the flower-shop scene.",
+    "seconds": 16,
+    "exact_words": [],
+    "mood": "Warm, affectionate, quietly joyful.",
+    "progression": [
+      "carries that same bouquet home",
+      "gives it to her partner, a man with short grey-flecked hair in a navy sweater, at their front door",
+      "he smiles and takes it",
+      "end on the two of them with the flowers"
+    ],
+    "sound_why": "No sound was requested."
+  },
+  "seed_attempts": [
+    {
+      "attempt": 1,
+      "key": "seed",
+      "file": "seed.png",
+      "prompt": "Widescreen 16:9 film frame, eye level, medium shot: the same woman from the input image, same face, hair and jacket, approaches her front door along the path in warm morning light, smiling broadly. Dark brown low, loosely twisted bun; small gold-colored earring; light gray-green collared jacket, large patch pockets. Same bouquet: white, cream daisy-like flowers, pink, magenta, red, yellow-orange blooms, green foliage; broad overlapping pale gray and beige paper, long green stems exposed. Her partner, short grey-flecked hair, navy sweater, waits in the doorway. Affectionate mood. No text, no watermark.",
+      "credits": 10,
+      "cost": 10,
+      "check": {
+        "evidence": "Customer’s face appears older/different; bun, earring and jacket match. Bouquet colours, layered wrapping and exposed stems match. Doorway partner appears female, not the described man; warm light and setting match.",
+        "same_person": "no",
+        "new_people_as_described": "no",
+        "same_bouquet": "yes",
+        "scene_as_described": "no"
+      },
+      "pass": false
+    },
+    {
+      "attempt": 2,
+      "key": "seed-retry",
+      "file": "seed-retry.png",
+      "prompt": "First frame: the same woman from the input image, same face, hair and jacket; no aging. Broad smile, dark brown low loosely twisted bun, small gold-colored earring, light gray-green collared jacket with large patch pockets. She approaches her home's front door carrying the same white, cream, pink, magenta, red and yellow-orange bouquet, green foliage, overlapping pale gray and beige paper, exposed green stems. Her partner, a man with short grey-flecked hair in a navy sweater, waits in the doorway. Warm morning light. Widescreen 16:9 film frame, eye level, medium shot. No text, no watermark.",
+      "credits": 10,
+      "cost": 10,
+      "check": {
+        "evidence": "Woman resembles reference florist, not customer; jacket and bun match. Bouquet colours, two-tone wrapping and exposed stems consistent. Grey-haired partner wears navy. Woman is inside doorway, partner outside—not approaching home.",
+        "same_person": "no",
+        "new_people_as_described": "yes",
+        "same_bouquet": "yes",
+        "scene_as_described": "no"
+      },
+      "pass": false
+    }
+  ],
+  "seed": {
+    "file": "seed-retry.png"
+  },
+  "prompt": {
+    "shots": 5,
+    "prompt": "Create a 16-second continuation of the Petal & Stem advertisement matching the source image. Preserve the customer’s dark brown hair swept into a low, loosely twisted bun, small gold-colored earring and light gray-green collared jacket with large patch pockets; preserve the bouquet’s white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, broad overlapping pale gray and beige paper and long exposed green stems; preserve the partner’s short grey-flecked hair and navy sweater, the front doorway and warm morning light. Five coherent shots with natural edits, the same customer, bouquet and partner throughout, warm and quietly affectionate. 0–3 seconds: medium-wide framing continuing directly from the source image, the customer in the light gray-green collared jacket carries the bouquet toward the partner at the front doorway, morning light across the path, camera gently following forward. 3–6 seconds: medium two-shot, the smiling customer with the small gold-colored earring offers the bouquet toward the partner, the doorway behind them, camera sliding gently sideways; the customer still holds the bouquet. 6–9 seconds: medium close-up, the partner with short grey-flecked hair smiles at the customer, the sunlit doorframe beside him, camera slowly pushing closer. 9–13 seconds: close two-shot including their hands, the partner in the navy sweater takes the bouquet by its wrapped stems, pale paper illuminated at the threshold, camera easing closer; the partner now holds the bouquet and the customer’s hands are empty. 13–16 seconds: separate wide establishing shot of the front doorway, the customer and the partner standing still together with the bouquet held between them by the partner, warm light across the threshold, camera easing back into a still composition. Hold this final image for the last two seconds. Gentle warm cinematic grade, unhurried affectionate pacing. No subtitles, no text overlays, no voiceover.",
+    "beats": [
+      {
+        "to": 3,
+        "from": 0,
+        "shows": "Continuing the start frame, the customer carries the bouquet toward the partner at the front doorway; gentle forward follow."
+      },
+      {
+        "to": 6,
+        "from": 3,
+        "shows": "The customer offers the bouquet toward the partner while still holding it; gentle lateral slide."
+      },
+      {
+        "to": 9,
+        "from": 6,
+        "shows": "The partner smiles at the customer; slow push-in."
+      },
+      {
+        "to": 13,
+        "from": 9,
+        "shows": "The partner takes the bouquet by its wrapped stems; the partner now holds the bouquet and the customer’s hands are empty; gentle push closer."
+      },
+      {
+        "to": 16,
+        "from": 13,
+        "shows": "Separate establishing shot of the customer and the partner standing still at the doorway, the partner holding the bouquet between them; ease back, then hold the final two seconds."
+      }
+    ],
+    "lines": []
+  },
+  "prompt_attempts": [
+    {
+      "shots": 5,
+      "prompt": "Create a 16-second continuation of the Petal & Stem advertisement matching the source image. Preserve the customer’s dark brown hair swept into a low, loosely twisted bun, small gold-colored earring and light gray-green collared jacket with large patch pockets; preserve the bouquet’s white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, broad overlapping pale gray and beige paper and long exposed green stems; preserve the partner’s short grey-flecked hair and navy sweater, the front doorway and warm morning light. Five coherent shots with natural edits, the same customer, bouquet and partner throughout, warm and quietly affectionate. 0–3 seconds: medium-wide framing continuing directly from the source image, the customer in the light gray-green collared jacket carries the bouquet toward the partner at the front doorway, morning light across the path, camera gently following forward. 3–6 seconds: medium two-shot, the smiling customer with the small gold-colored earring offers the bouquet toward the partner, the doorway behind them, camera sliding gently sideways; the customer still holds the bouquet. 6–9 seconds: medium close-up, the partner with short grey-flecked hair smiles at the customer, the sunlit doorframe beside him, camera slowly pushing closer. 9–13 seconds: close two-shot including their hands, the partner in the navy sweater takes the bouquet by its wrapped stems, pale paper illuminated at the threshold, camera easing closer; the partner now holds the bouquet and the customer’s hands are empty. 13–16 seconds: separate wide establishing shot of the front doorway, the customer and the partner standing still together with the bouquet held between them by the partner, warm light across the threshold, camera easing back into a still composition. Hold this final image for the last two seconds. Gentle warm cinematic grade, unhurried affectionate pacing. No subtitles, no text overlays, no voiceover.",
+      "beats": [
+        {
+          "to": 3,
+          "from": 0,
+          "shows": "Continuing the start frame, the customer carries the bouquet toward the partner at the front doorway; gentle forward follow."
+        },
+        {
+          "to": 6,
+          "from": 3,
+          "shows": "The customer offers the bouquet toward the partner while still holding it; gentle lateral slide."
+        },
+        {
+          "to": 9,
+          "from": 6,
+          "shows": "The partner smiles at the customer; slow push-in."
+        },
+        {
+          "to": 13,
+          "from": 9,
+          "shows": "The partner takes the bouquet by its wrapped stems; the partner now holds the bouquet and the customer’s hands are empty; gentle push closer."
+        },
+        {
+          "to": 16,
+          "from": 13,
+          "shows": "Separate establishing shot of the customer and the partner standing still at the doorway, the partner holding the bouquet between them; ease back, then hold the final two seconds."
+        }
+      ],
+      "lines": [],
+      "check": {
+        "ok": true,
+        "chars": 1995,
+        "missing": []
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "key": "clip-2",
+      "file": "clip-2.mp4",
+      "prompt": "Create a 16-second continuation of the Petal & Stem advertisement matching the source image. Preserve the customer’s dark brown hair swept into a low, loosely twisted bun, small gold-colored earring and light gray-green collared jacket with large patch pockets; preserve the bouquet’s white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, broad overlapping pale gray and beige paper and long exposed green stems; preserve the partner’s short grey-flecked hair and navy sweater, the front doorway and warm morning light. Five coherent shots with natural edits, the same customer, bouquet and partner throughout, warm and quietly affectionate. 0–3 seconds: medium-wide framing continuing directly from the source image, the customer in the light gray-green collared jacket carries the bouquet toward the partner at the front doorway, morning light across the path, camera gently following forward. 3–6 seconds: medium two-shot, the smiling customer with the small gold-colored earring offers the bouquet toward the partner, the doorway behind them, camera sliding gently sideways; the customer still holds the bouquet. 6–9 seconds: medium close-up, the partner with short grey-flecked hair smiles at the customer, the sunlit doorframe beside him, camera slowly pushing closer. 9–13 seconds: close two-shot including their hands, the partner in the navy sweater takes the bouquet by its wrapped stems, pale paper illuminated at the threshold, camera easing closer; the partner now holds the bouquet and the customer’s hands are empty. 13–16 seconds: separate wide establishing shot of the front doorway, the customer and the partner standing still together with the bouquet held between them by the partner, warm light across the threshold, camera easing back into a still composition. Hold this final image for the last two seconds. Gentle warm cinematic grade, unhurried affectionate pacing. No subtitles, no text overlays, no voiceover.",
+      "chars": 1995,
+      "model": "ltx-2.5",
+      "resolution": "480p",
+      "audio": false,
+      "aspect": "16:9",
+      "seconds": 16,
+      "cost": 384,
+      "start_frame": "seed-retry.png",
+      "failures_named": null,
+      "credits": 384,
+      "cached": false,
+      "wall_seconds": 40,
+      "rendered": 16,
+      "frames": {
+        "beats": [
+          "frames/clip-2-b1-1.5s.jpg",
+          "frames/clip-2-b2-4.5s.jpg",
+          "frames/clip-2-b3-7.5s.jpg",
+          "frames/clip-2-b4-11s.jpg",
+          "frames/clip-2-b5-14.5s.jpg"
+        ],
+        "first": "frames/clip-2-first.jpg",
+        "last": "frames/clip-2-last.jpg",
+        "times": [
+          1.5,
+          4.5,
+          7.5,
+          11,
+          14.5
+        ]
+      },
+      "review": {
+        "pass": false,
+        "beats": [
+          {
+            "action_seen": "unclear",
+            "evidence": "The customer holds the bouquet facing the partner at the doorway. The framing moves closer between the first frame and 1.5 s, but forward walking toward the partner is not established by the sampled frames.",
+            "subject_present": "yes",
+            "beat": 1
+          },
+          {
+            "action_seen": "unclear",
+            "evidence": "At 4.5 s the bouquet is between them and the viewpoint has shifted laterally toward the partner's face. Their hands are cropped out, so offering it while retaining her grip is not directly verifiable.",
+            "subject_present": "yes",
+            "beat": 2
+          },
+          {
+            "action_seen": "unclear",
+            "evidence": "The partner smiles in the 4.5 s sample, but the 7.5 s sample crops out most of his face and concentrates on the bouquet. A smile during the requested 6–9 s interval cannot be confirmed.",
+            "subject_present": "yes",
+            "beat": 3
+          },
+          {
+            "action_seen": "yes",
+            "evidence": "At 11 s the partner supports the bouquet around its lower paper wrapping. Subsequent wide frames confirm that he holds it independently and the customer's hands are empty. The precise grasp-and-release transition is not fully shown in these samples.",
+            "subject_present": "yes",
+            "beat": 4
+          },
+          {
+            "action_seen": "yes",
+            "evidence": "A separate wider doorway shot shows both standing still, with the partner holding the bouquet between them and the customer's arms lowered. The framing eases farther back toward the final frame, but the required final two-second hold is not supported.",
+            "subject_present": "yes",
+            "beat": 5
+          }
+        ],
+        "identity": [
+          {
+            "evidence": "The customer retains the reference's facial appearance, dark brown hair swept into a low twisted bun, small gold-colored earring, and light gray-green collared jacket with large patch pockets.",
+            "carried": "The customer",
+            "same_as_reference": "yes"
+          },
+          {
+            "evidence": "The bouquet retains white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, overlapping pale gray and beige wrapping, and exposed long green stems. Individual flower positions vary, but its defining appearance remains consistent.",
+            "carried": "The bouquet",
+            "same_as_reference": "yes"
+          }
+        ],
+        "lines": [],
+        "exact_words": [],
+        "same_people_and_place": "yes",
+        "last_frame_holds": "no",
+        "artifacts": [],
+        "voices_consistent": "n/a",
+        "failures": [
+          "the final two seconds hold one still image with no new action"
+        ],
+        "model_pass": false
+      }
+    }
+  ],
+  "outputs": {
+    "clip": "clip-2.mp4",
+    "chosen": "clip-2",
+    "seed": "seed-retry.png",
+    "state": [
+      {
+        "clip": "clip-2.mp4",
+        "seconds": 16,
+        "people": [
+          "Customer: woman with dark brown hair swept into a low, loosely twisted bun; a broad smile; small gold-colored earring; light gray-green collared jacket with large patch pockets.",
+          "Her partner: man with short grey-flecked hair, wearing a navy sweater."
+        ],
+        "place": "The path to the couple’s home and their front doorway.",
+        "time": "Morning, following the flower-shop scene.",
+        "mood": "Warm, affectionate, quietly joyful.",
+        "words_seen": [],
+        "identity": [
+          {
+            "evidence": "The customer retains the reference's facial appearance, dark brown hair swept into a low twisted bun, small gold-colored earring, and light gray-green collared jacket with large patch pockets.",
+            "carried": "The customer",
+            "same_as_reference": "yes"
+          },
+          {
+            "evidence": "The bouquet retains white and cream daisy-like flowers, vivid pink and magenta blooms, red and yellow-orange flowers, green foliage, overlapping pale gray and beige wrapping, and exposed long green stems. Individual flower positions vary, but its defining appearance remains consistent.",
+            "carried": "The bouquet",
+            "same_as_reference": "yes"
+          }
+        ],
+        "last_frame": "frames/clip-2-last.jpg"
+      }
+    ]
+  },
+  "credits": 404,
+  "llm_usage": {
+    "calls": 9,
+    "cached": 0,
+    "input_tokens": 14962,
+    "output_tokens": 4593
+  },
+  "finished": "2026-11-02T19:53:14.774Z"
+}

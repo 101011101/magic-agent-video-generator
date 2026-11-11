@@ -1,0 +1,46 @@
+{
+ "id": "7845cfe275",
+ "key": "must:E29b:A solid black end card occupies only the final 2 seconds of the 9-second output.",
+ "symptom": "A solid black end card occupies only the final 2 seconds of the 9-second output.",
+ "item": "E29b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item about a 2 s end card at the end of a 9-second output not met?",
+    "because": "No 9-second file was ever made. Both chats ended with only a standalone 2-second card, and the user's 7-second clip was never joined to it.",
+    "evidence": "s3.new.happy.E29b/grade.json: 'No 9-second output exists; only a standalone 2-second card was made.' In both calls.jsonl files, join_production_clips returns seconds:2, clips:1. The final reply in happy/state.json says 'I couldn't attach it to your clip yet'."
+   },
+   {
+    "why": "Why was only the card produced?",
+    "because": "The assistant's production plan had a single card beat. plan_video_production has no beat type for 'the user's own uploaded clip', so the plan could cover only the card. The join of the source clip had to be a separate join_videos call.",
+    "evidence": "happy/calls.jsonl line 2: story.beats = [{seconds:2, kind:'card', background:'#000000', ...}]. The plan returns seconds:2 and the advice 'The request asks for 7 s; the beats add up to 2 s.' In tools-new.json, beats.kind is enum ['scene','card'] and nothing references a user video."
+   },
+   {
+    "why": "Why did the separate join_videos call fail?",
+    "because": "The assistant passed the uploaded clip's file_path. The server read every non-URL string as a video project id and requested /v1/video-projects/<file_path>. Magic Hour answered 404 Not Found.",
+    "evidence": "happy/calls.jsonl line 5 and stupid/calls.jsonl line 9: join_videos videos=['api-assets/cmsla3fmt01cnio0zhjlc2wsv/...-video-0.mp4', 'http://127.0.0.1:8000/films/...mp4'] -> error 'Magic Hour refused /v1/video-projects/api-assets/... (HTTP 404)'. In stupid, get_last_frame on the same path fails the same way."
+   },
+   {
+    "why": "Why could the assistant not give join_videos a usable form of the clip?",
+    "because": "The user's clip existed only as a Magic Hour upload file_path. join_videos (and get_last_frame) accept only 'finished video project ids or video URLs'. No tool in the new build turns an uploaded file_path into a URL or a project without regenerating it. The assistant correctly refused to run the clip through a generator, because that would remake the footage.",
+    "evidence": "tools-new.json join_videos description: '`videos`: finished video project ids or video URLs.' get_last_frame: 'a finished video project id or a video URL'. Other tools (edit_video, add_subtitles_to_video) explicitly accept 'file_path field from the upload urls API', but join_videos does not. Happy reply: 'I won't run your clip through a video generator to get around this'."
+   },
+   {
+    "why": "Why does join_videos not accept upload file_paths?",
+    "because": "The new build's local join_videos only resolves project ids and URLs. It has no branch that turns an 'api-assets/...' path into a signed download. This gap in the new build's tool behaviour is the end of the chain. A secondary problem: the harness also got a 404 when it downloaded the card's local download_url, so the grader saw 'no file' at all.",
+    "evidence": "The error text shows the path was put straight into /v1/video-projects/{id}. In grade.json, checks 'something was made' = false, 'no file'. calls.jsonl files[] shows 'download failed: download 404 http://127.0.0.1:8000/films/...'."
+   }
+  ],
+  "axiom": "The new build's join_videos (and get_last_frame) accept only video project ids or URLs. They do not resolve an uploaded Magic Hour file_path ('api-assets/...'), and the production planner has no beat for the user's own clip. So an uploaded source video cannot be joined to anything without regenerating it.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In join_videos (and get_last_frame), detect inputs that start with 'api-assets/' or otherwise look like a file_path. Resolve them to a signed asset download URL instead of calling /v1/video-projects/{id}. State in the description: '`videos`: video project ids, video URLs, or file_paths of uploaded videos'. Also add a 'source' beat kind (a user video file_path, kept unchanged) to plan_video_production, so a plan can include 'keep the user's clip, then a card'."
+ },
+ "error": null,
+ "seconds": 50,
+ "usd": 0.4456546
+}

@@ -1,0 +1,42 @@
+{
+ "id": "01e88af45f",
+ "key": "must:A04c:All three balloons red",
+ "symptom": "All three balloons red",
+ "item": "A04c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why were the balloons not all red in both stupid chats?",
+    "because": "Each image shows a big bunch of mixed-colour balloons. The prompts sent to generate_image asked for that.",
+    "evidence": "old calls.jsonl: generate_image prompt 'A bunch of colorful helium balloons floating against a bright blue sky'. new calls.jsonl: prompt 'A bunch of colorful balloons floating together against a clear blue sky'. new grade.json: 'multicoloured: blue, white, pink, yellow, polka dots', and about 15 balloons."
+   },
+   {
+    "why": "Why did the assistant write 'colorful' and 'a bunch' and not 'three red'?",
+    "because": "The assistant never got the words 'three' or 'red'. The only request the stupid user sent was 'make me a pic of balloons'. With no colour given, the assistant used the usual picture of balloons: a colourful bunch.",
+    "evidence": "chat.json messages[0].text = 'make me a pic of balloons'. The bank has 'Exactly three balloons, all red' and the full brief, but the opening message drops both."
+   },
+   {
+    "why": "Why did the assistant not ask about colour or count before it generated?",
+    "because": "Old build: the assistant generated at once and asked nothing. New build: plan_request marked 'look' as missing, but it returned only one question, about the platform/aspect. After the 'just square' answer it set ready:true, so the assistant never asked about colour or count. The stupid user only gives bank facts in answer to plain questions, so red/three never came out.",
+    "evidence": "new calls.jsonl: first plan_request output questions = [aspect only]. Second output ready:true, look:null. old calls.jsonl: generate_image is the first call. persona.reply: 'answer it from your knowledge bank' only when asked."
+   },
+   {
+    "why": "Why is the result then graded against 'all three red' at all?",
+    "because": "The harness grades every persona against the full must_haves from the item. The stupid persona's opening message is made from the brief but can drop key constraints. The item also says the assistant should never need to ask (expect.asks='never'), because the real brief is complete. So the test expects no clarifying question, and the stupid persona never gave the key facts. The checklist item tests information that never reached the assistant.",
+    "evidence": "A04c.json expect.asks='never'. must_haves include 'All three balloons are red.' The brief text says 'exactly three red balloons'. chat.json opener 'make me a pic of balloons'."
+   }
+  ],
+  "axiom": "Harness artifact: the stupid persona's opening message ('make me a pic of balloons') drops the colour and count constraints from the brief. The item is marked asks='never', but it is still graded on 'all three red', so the assistant is scored on facts it never received. The assistant's choice to add 'colorful' made it worse, but a prompt with no colour would also be expected to give mixed-colour balloons.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, make the stupid persona's opening message keep every must_have constraint (here 'three red balloons'). Another option: score stupid-persona chats only on must_haves that were stated in the chat. A secondary fix for the new build: when 'look'/subject details are missing, plan_request should ask about them as well as aspect."
+ },
+ "error": null,
+ "seconds": 26,
+ "usd": 0.12464700000000001
+}

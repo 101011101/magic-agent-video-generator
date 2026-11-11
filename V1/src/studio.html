@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scene studio</title>
+<style>
+/* Local tool: one screenplay scene → the storyboard instruction (editable) → panels → frame prompts. Every run is kept as a version. */
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--accent:#2d6a4f;--ok:#1f6f43;--bad:#a3281f;--warn:#946000;--gold:#b07d12;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--accent:#7cc9a3;--ok:#6fd09a;--bad:#ff8f85;--warn:#f0b45c;--gold:#e0b040;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,sans-serif}
+main{max-width:1320px;margin:0 auto;padding:16px;display:grid;gap:14px}
+h1{font-size:18px;margin:0}h2{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0}h3{font-size:14px;margin:0}
+.mini{font-size:12px;color:var(--mut)}a{color:var(--accent)}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.scenes{display:flex;flex-wrap:wrap;gap:4px}.scenes button{font:12px var(--mono);border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:4px;padding:3px 8px;cursor:pointer}.scenes button.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;min-width:0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.beat{margin:0 0 4px}.beat.d{padding-left:18px;color:var(--mut)}.beat.d b{color:var(--fg)}
+textarea{width:100%;font:12px/1.45 var(--mono);border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--bg);color:var(--fg);resize:vertical;box-sizing:border-box}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.b{font:600 13px system-ui;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:6px 12px;cursor:pointer}button.b.go{background:var(--accent);color:#fff;border-color:var(--accent)}button.b:disabled{opacity:.5;cursor:default}
+.ver{border:1px solid var(--line);border-radius:8px;padding:10px;display:grid;gap:8px}.ver.fav{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.vh{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.pn{border-top:1px solid var(--line);padding-top:8px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:10px}@media(max-width:900px){.pn{grid-template-columns:1fr}}
+.pn .act{font-size:15px;margin:0 0 4px}.kv{font-size:12px;color:var(--mut);margin:0}.kv b{color:var(--fg);font-weight:600}
+.viol{color:var(--bad);font-size:12px}.f{font-size:12px;color:var(--bad)}.pass{color:var(--ok);font-size:12px;font-weight:600}
+.frames{display:flex;flex-wrap:wrap;gap:8px}.frames figure{margin:0;width:260px}.frames img{width:100%;border-radius:6px;border:1px solid var(--line);display:block;cursor:pointer}.frames figcaption{font:11px var(--mono);color:var(--mut)}
+details summary{cursor:pointer;font-size:12px;color:var(--mut)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;place-items:center;padding:20px;z-index:9}.modal.on{display:grid}.modal img{max-width:100%;max-height:90vh;border-radius:8px}
+</style></head><body><main>
+<div class="top"><div><h1>Scene studio</h1><span class="mini">screenplay scene → storyboard instruction (editable) → panels → frame prompts. Text runs are LLM only; a frame costs 200 credits. <a href="/">← keyframes page</a></span></div><span class="mini" id="stat"></span></div>
+<div class="scenes" id="scenes"></div>
+<div class="grid">
+  <section class="card"><h2 id="heading">Scene</h2><div id="beats"></div><p class="mini" id="amb"></p></section>
+  <section class="card"><h2>Instruction sent to the storyboard model (edit, then run)</h2><textarea id="instr" rows="22"></textarea>
+    <div class="btns"><button class="b go" id="run">Run storyboard for this scene (text only)</button><button class="b" id="reset">Reset to default instruction</button><span class="mini" id="busy"></span></div></section>
+</div>
+<section class="card"><h2>Versions (every run is kept; mark the one you like best)</h2><div id="versions" style="display:grid;gap:10px"></div></section>
+</main>
+<div class="modal" id="modal"><img id="mimg" alt=""></div>
+<script>
+const $=(i)=>document.getElementById(i),esc=(s)=>String(s??"").replace(/[&<>"]/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const api=async(p,b)=>{const r=await fetch(p,b?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}:undefined);const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j};
+let ST,cur=1,SC;
+async function state(){ST=await api("/api/state");$("stat").textContent=`${ST.name} · ${ST.spent} credits spent in this run`;$("scenes").innerHTML=ST.scenes.map(s=>`<button data-k="${s.n}" class="${s.n===cur?"cur":""}">${s.n} · ${esc(s.place)}</button>`).join("")}
+function panelHtml(k,v,p){const fr=(v.frames||{})[p.n]||[];
+ return`<div class="pn"><div><p class="act">${p.n}. ${esc(p.action)}</p>
+  <p class="kv"><b>elements:</b> ${p.elements.map(esc).join(", ")||"—"}</p>
+  ${p.enters.length?`<p class="kv"><b>enters:</b> ${p.enters.map(e=>`${esc(e.id)} — ${esc(e.where)}; ${esc(e.doing)}`).join(" · ")}</p>`:""}
+  ${p.changes.length?`<p class="kv"><b>changes:</b> ${p.changes.map(c=>`${esc(c.id)}: ${esc(c.now)}`).join(" · ")}</p>`:""}
+  ${p.leaves.length?`<p class="kv"><b>leaves:</b> ${p.leaves.map(esc).join(", ")}</p>`:""}
+  <p class="kv"><b>base:</b> ${esc(p.base)} · <b>refs:</b> ${p.refs.map(r=>`${esc(r.id)} ← ${esc(r.from)}`).join(", ")||"none"}</p>
+  ${p.violations.length?p.violations.map(x=>`<p class="viol">✕ ${esc(x)}</p>`).join(""):""}
+  <details><summary>beats covered</summary>${p.beats.map(b=>b.kind==="dialogue"?`<p class="beat d"><b>${esc(b.who)}:</b> “${esc(b.text)}”</p>`:`<p class="beat">${esc(b.text)}</p>`).join("")}</details></div>
+ <div><textarea rows="8" id="fp-${v.v}-${p.n}">${esc(p.prompt)}</textarea>
+  <div class="btns"><button class="b" data-frame="${v.v}:${p.n}">Make frame from this prompt (200 credits)</button></div>
+  <div class="frames">${fr.map(f=>`<figure><img src="/files/${f.file}" alt=""><figcaption>try ${f.a}${f.edited?" (edited prompt)":""} · base ${esc(f.base)}<br>${f.faults.length?`<span class="f">✕ ${f.faults.map(esc).join("; ")}</span>`:`<span class="pass">✓ passed checks</span>`}</figcaption></figure>`).join("")}</div></div></div>`}
+function verHtml(v,fav){return`<div class="ver ${fav===v.v?"fav":""}" id="v${v.v}"><div class="vh"><h3>${v.v===0?"Current pipeline result (default instruction)":"Version "+v.v}${fav===v.v?" · ★ favourite":""}</h3>
+ <div class="btns">${v.v?`<button class="b" data-pick="${v.v}">${fav===v.v?"favourite":"mark as favourite"}</button>`:""}<span class="mini">${v.at?new Date(v.at).toLocaleTimeString():""} · ${v.panels.length} panels</span></div></div>
+ ${v.v?`<details><summary>instruction used</summary><pre style="white-space:pre-wrap;font:11px var(--mono)">${esc(v.instruction)}</pre></details>`:""}
+ ${v.panels.map(p=>panelHtml(cur,v,p)).join("")}</div>`}
+async function load(k){cur=k;SC=await api(`/api/studio/${k}`);await state();$("heading").textContent=`Scene ${k}: ${SC.heading}`;
+ $("beats").innerHTML=SC.beats.map((b,i)=>b.kind==="dialogue"?`<p class="beat d">${i+1}. <b>${esc(b.who)}:</b> “${esc(b.text)}”</p>`:`<p class="beat">${i+1}. ${esc(b.text)}</p>`).join("");$("amb").textContent=SC.ambience?"background sound: "+SC.ambience:"";
+ if(!$("instr").dataset.k||$("instr").dataset.k!=k){$("instr").value=SC.defaultInstruction;$("instr").dataset.k=k}
+ const vs=[...(SC.current?[{v:0,panels:SC.current}]:[]),...SC.versions].reverse();$("versions").innerHTML=vs.map(v=>verHtml(v,SC.favourite)).join("")||"<p class='mini'>no runs yet</p>";location.hash="s"+k}
+$("run").onclick=async()=>{$("run").disabled=true;$("busy").textContent="running the storyboard model…";try{await api(`/api/studio/${cur}/run`,{instruction:$("instr").value});await load(cur)}catch(e){$("busy").textContent="error: "+e.message}$("run").disabled=false;$("busy").textContent=""};
+$("reset").onclick=()=>{$("instr").value=SC.defaultInstruction};
+$("scenes").onclick=(e)=>{const b=e.target.closest("button[data-k]");if(b)load(+b.dataset.k)};
+$("versions").onclick=async(e)=>{const pk=e.target.closest("button[data-pick]");if(pk){await api(`/api/studio/${cur}/pick`,{v:+pk.dataset.pick});return load(cur)}
+ const fb=e.target.closest("button[data-frame]");if(fb){const[v,pn]=fb.dataset.frame.split(":").map(Number);if(v===0)return alert("Run a version first (version 0 is the pipeline's own result); frames are made from a saved version.");fb.disabled=true;fb.textContent="generating…";try{await api(`/api/studio/${cur}/frame`,{v,panel:pn,prompt:$(`fp-${v}-${pn}`).value});await load(cur)}catch(err){alert(err.message);fb.disabled=false}}
+ const im=e.target.closest(".frames img");if(im){$("mimg").src=im.src;$("modal").classList.add("on")}};
+$("modal").onclick=()=>$("modal").classList.remove("on");
+state().then(()=>load(location.hash.match(/^#s(\d+)$/)?+RegExp.$1:1));
+</script></body></html>

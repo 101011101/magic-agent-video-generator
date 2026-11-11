@@ -1,0 +1,46 @@
+{
+ "id": "0149d92a81",
+ "key": "must:E26b:Original audio in sync, no added narration, music or text",
+ "symptom": "Original audio in sync, no added narration, music or text",
+ "item": "E26b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Original audio in sync, no added narration, music or text' not met?",
+    "because": "Both output videos show on-screen text that is not original source footage. The stupid chat shows a garbled caption 'Do change anytying.' and the dumper chat shows redrawn subtitles. The grader also could not confirm that the audio is the original audio.",
+    "evidence": "s3.old.stupid.E26b/grade.json: must item 5 'no', reason 'Added or altered on-screen text appears ('Do change anytying.')'; fault 'It looks like the edit prompt leaked into the video as text'. s3.old.dumper.E26b/grade.json: 'Subtitles were added or redrawn in the frames'."
+   },
+   {
+    "why": "Why does the output contain new or changed text?",
+    "because": "The output is not a cut of the source. The LTX-2.5 video editor regenerated every frame from a text prompt. A regenerating model redraws the burned-in captions of the source as different text, and it can draw words from the prompt into the picture.",
+    "evidence": "calls.jsonl in both chats: edit_video with model 'ltx-2.5', 480p, and prompts 'Keep the video exactly as it is. Do not change anything... No captions, no text' (stupid) and 'Keep the original footage as faithful as possible...' (dumper). The result is a new 832x512 VIDEO_EDITOR project. grade.json: 'Footage is regenerated... helmet and mask change between frames'. The garbled 'Do change anytying.' matches the prompt's 'Do not change anything'."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for a plain trim?",
+    "because": "The old build has no tool that only trims. edit_video is the only tool that takes a start/end range from the user's video, and its description says that it 'Edits the appearance or content... using a text prompt'. The assistant said this itself. Then the user pushed it to go ahead ('just go ahead and try it anyway' / 'you pick the part... no captions or effects').",
+    "evidence": "tools-old.json: no trim tool; edit_video description at line 725, style.prompt is required. dumper calls.jsonl line 3: 'Magic Hour's tools don't include a plain video editor... None of them just trims the original'. stupid state.json: 'Magic Hour has no tool that only trims a video'."
+   },
+   {
+    "why": "Why could the prompt not stop the text from appearing?",
+    "because": "A text-to-video editor cannot be told reliably what to leave out. Negative words like 'no text', 'do not change anything' are tokens that the model can render. A free-plan LTX-2.5 re-render also does not guarantee the original audio or burned-in captions come through unchanged. No prompt wording can make it a lossless pass-through.",
+    "evidence": "stupid calls.jsonl: the prompt explicitly says 'No captions, no text' and the output still has a garbled caption that comes from the prompt. The assistant's own caveat: 'I couldn't confirm the original sound came through'."
+   },
+   {
+    "why": "Why does this only fail on the old build?",
+    "because": "The new build has a trim_video tool, which plan_request lists as a target tool. That tool cuts the source without regeneration, so it keeps the original frames, captions and audio. The old build forces the generative path.",
+    "evidence": "tools-new.json line 79: plan_request tool enum includes 'trim_video'. tools-old.json has no trim tool. The symptom occurs only in old-build chats (builds {old:2})."
+   }
+  ],
+  "axiom": "The old hosted server has no lossless trim tool. Its only range-cutting tool (edit_video, free-plan LTX-2.5) regenerates every frame from a text prompt. Such a model redraws source captions and can render prompt words as on-screen text. It also cannot guarantee that the original audio passes through unchanged.",
+  "category": "mcp_tool_behavior",
+  "builds": "old",
+  "fix": "Add a trim_video tool to the hosted server, as the new build has. The tool must cut the source (ffmpeg stream copy or re-encode without generation) and keep the original frames and audio. In edit_video's description, tell the assistant not to use it for plain trims: it regenerates the frames and can add or garble on-screen text."
+ },
+ "error": null,
+ "seconds": 58,
+ "usd": 0.38282379999999994
+}

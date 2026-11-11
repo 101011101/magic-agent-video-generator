@@ -1,0 +1,47 @@
+{
+ "id": "00d4dc9246",
+ "key": "must:J55a:The deliverable is one video lasting approximately 6 seconds.",
+ "symptom": "The deliverable is one video lasting approximately 6 seconds.",
+ "item": "J55a",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'one video lasting approximately 6 seconds' not met?",
+    "because": "None of the chats produced a video file, so the grader had nothing to measure.",
+    "evidence": "s2r.old.dumper.J55a/grade.json: check 'something was made' failed with 'no file'. The must-have reason is 'No video was produced; both generation calls were refused for lack of credits.' All four must-haves fail for the same reason."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "The server refused every create_video_from_text call before it started a job. The reason was insufficient credits, not a bad prompt or bad duration.",
+    "evidence": "calls.jsonl in old.happy, old.dumper and new.stupid: the final create_video_from_text call has approve:false and reason 'insufficient credits: this call needs about 144 credits and 0 remain on the account'."
+   },
+   {
+    "why": "Why did the assistant not recover, for example with a cheaper or shorter clip?",
+    "because": "A balance of 0 blocks every paid generation, so no setting could succeed. The assistant already used the cheapest free-plan setup (ltx-2.5, 480p) after the 'default' model was rejected. A shorter clip would still cost credits and would also break the 6-second must-have.",
+    "evidence": "old.happy and old.dumper calls.jsonl: the first call (model 'default') was rejected as not on the free plan. The retry used model ltx-2.5 at 480p and still got the 0-credit refusal. new.stupid: the assistant says the cost is 'about 24 credits per second'."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The benchmark ran all chats from both builds on one shared free-plan account. Earlier runs in the fleet spent its credits, and nothing refilled the account before J55a ran. The cost of about 144 credits is normal for 6 s at 480p, so the cause is the empty balance, not this request.",
+    "evidence": "The same '0 remain on the account' message appears in both builds and for all personas (happy, dumper, stupid), with timestamps close together (1794364450237–1794364596475). That points to a depleted account, not to anything in the chat. No credit-reset step is visible in the chat artifacts."
+   },
+   {
+    "why": "Why does this count as an axiom?",
+    "because": "The account balance at run time is an external state set by the test harness. No tool description and no assistant choice could create credits. The build makes no difference: the new build fails in the same way.",
+    "evidence": "new.stupid.J55a calls.jsonl (new build) shows the same refusal as the old-build chats. The grader note about '5 seconds planned' comes from the old stupid chat, which I did not read. It is a secondary issue because that job was also refused."
+   }
+  ],
+  "axiom": "The test harness ran the J55a chats on a free-plan Magic Hour account whose balance was already 0 credits. Every video job (about 144 credits for 6 s at 480p) was refused before generation, in both builds.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, make the harness reset or top up the test account's credits, or check that the balance is at least the estimated job cost. Mark chats that get an 'insufficient credits: 0 remain' refusal as harness-invalid and rerun them, so they are not graded as failures."
+ },
+ "error": null,
+ "seconds": 24,
+ "usd": 0.1053184
+}

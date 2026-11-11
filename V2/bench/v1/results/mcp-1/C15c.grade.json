@@ -1,0 +1,125 @@
+{
+  "id": "C15c",
+  "group": "C",
+  "case": 15,
+  "case_name": "Face swap on a video",
+  "title": "Two Coworkers Two Replacement Faces",
+  "tests": "Tests explicit multi-face mapping and stable identity tracking across a two-person video without changing the original scene or sound.",
+  "pass": false,
+  "score": 3,
+  "tags": [
+    "asked-unneeded",
+    "kept-asking",
+    "wrong-kind",
+    "no-audio",
+    "must-have-missed",
+    "major-fault",
+    "not-usable"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "detect_faces:done",
+        "detect_faces:done",
+        "detect_faces:done"
+      ]
+    },
+    {
+      "name": "a video was made",
+      "pass": false,
+      "got": [
+        ".png",
+        ".png",
+        ".png"
+      ]
+    },
+    {
+      "name": "sound present and audible",
+      "pass": false,
+      "got": "no audio track"
+    },
+    {
+      "name": "must-haves met",
+      "pass": false,
+      "got": "0/2"
+    },
+    {
+      "name": "asks nothing",
+      "pass": false,
+      "got": [
+        {
+          "field": "question",
+          "question": "Face detection found **three face entries**, but the preview tool failed, so I can’t safely match the two portraits without risking the wrong swap.\n\nPlease upload a screenshot of the office clip showing the people to replace. I haven’t started the swap or spent generation credits. I’ll leave any other faces untouched and preserve the original audio."
+        }
+      ]
+    },
+    {
+      "name": "stops asking within 3 rounds",
+      "pass": false,
+      "got": [
+        "I’m pausing the swap until I can view the faces reliably. You don’t need to choose the mappings yourself—just upload a screenshot of the office clip, and I’ll handle the matching."
+      ]
+    }
+  ],
+  "judge": {
+    "usable_as_is": false,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "major",
+        "what": "No edited video was delivered; the agent stopped after face detection and explicitly declined to perform either requested face swap."
+      },
+      {
+        "severity": "major",
+        "what": "The supplied output images are detection crops of the original coworkers, not faces matching the two replacement portraits."
+      }
+    ],
+    "score": 1,
+    "summary": "The agent produced only face-detection previews and clarification requests, leaving the requested two-face video edit undone.",
+    "must_haves": [
+      {
+        "item": "The output contains the full 10-second office exchange from talk-two.mp4.",
+        "met": "no",
+        "why": "No completed video was provided; the visible outputs are still face-detection crops."
+      },
+      {
+        "item": "The male coworker's face recognizably matches portrait-man.jpg and the female coworker's face recognizably matches portrait-woman.jpg.",
+        "met": "no",
+        "why": "Neither portrait identity was applied; the detection crops retain the original coworkers' faces."
+      },
+      {
+        "item": "The two replacement identities never switch between coworkers or collapse into the same face.",
+        "met": "cannot_tell",
+        "why": "There is no swapped video in which replacement identity consistency can be assessed."
+      },
+      {
+        "item": "Both faces stay aligned through head turns and speaking, without conspicuous flickering or original-face reappearance.",
+        "met": "cannot_tell",
+        "why": "Still detection crops do not demonstrate face tracking or temporal stability."
+      },
+      {
+        "item": "The original office, bodies, clothing, camera movement and shot timing remain unchanged.",
+        "met": "cannot_tell",
+        "why": "The agent said it would leave the clip unchanged, but no output video was delivered to verify preservation."
+      },
+      {
+        "item": "Both original voices remain audible and synchronized, with no added music or narration.",
+        "met": "cannot_tell",
+        "why": "No playable output or audio is supplied."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 0,
+  "seconds": 90,
+  "outputs": [
+    "sessions/mcp-m1-C15c/assets/01-detect_faces.png",
+    "sessions/mcp-m1-C15c/assets/02-detect_faces.png",
+    "sessions/mcp-m1-C15c/assets/03-detect_faces.png"
+  ],
+  "tools": [
+    "detect_faces→detect_faces→detect_faces"
+  ]
+}

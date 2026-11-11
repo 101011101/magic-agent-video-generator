@@ -1,0 +1,102 @@
+{
+ "id": "E25b",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "missing-tool",
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent planned one crop with \"anchor: active speaker; centre the man throughout his question, then centre the woman throughout her answer\". That assumes a speaker-tracking reframe the catalogue never offers: crop takes one anchor (left/right/top/bottom/center) for the whole clip. crop.js did not recognise \"active\" and silently used centre, which frames the dark-shirted bystander in the middle for all 10 s. The questioner is cut at the left edge and the woman is off frame. With the tools listed, the correct plan is to split at the turn: trim the clip at the speaker change, crop each part on its own speaker, then assemble the parts with seconds 0. Assemble keeps clip sound, and seconds 10 would cap each part at 5 s and cut the question. Two gaps made this harder. The agent cannot hear the clip, so it could not know the turn falls at about 7.9 s: there is no transcribe or timing tool. And neither left nor right puts these faces in the middle; the crop tool's undocumented \"box: x,y,w,h\" does. I measured the turn and the face positions myself.",
+ "your_plan": {
+  "say": "I'll cut the clip at the speaker change and reframe each part to vertical, with the man centred for his question and then the woman centred for her answer, keeping all 10 seconds and the original sound.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "trim",
+    "inputs": [
+     "talk-two.mp4"
+    ],
+    "produces": "question_part.mp4",
+    "params": {
+     "prompt_or_change": "The walk-in and the man's question, unchanged.",
+     "extra": "from: 0; to: 7.9",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The question runs 6.42–7.67 s and the answer starts at 8.19 s (found from the audio; the planner would need a transcribe tool with times to find this)."
+   },
+   {
+    "tool": "trim",
+    "inputs": [
+     "talk-two.mp4"
+    ],
+    "produces": "answer_part.mp4",
+    "params": {
+     "prompt_or_change": "The woman's answer, unchanged.",
+     "extra": "from: 7.9; to: 10.125",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The rest of the clip: her answer."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "question_part.mp4"
+    ],
+    "produces": "question_vertical.mp4",
+    "params": {
+     "prompt_or_change": "Vertical crop centred on the man in the light-blue shirt on the left.",
+     "extra": "box: 125,0,270,480",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "His face is at x≈180–340 of 858. anchor left (x 0–270) would cut it, and centre frames the man in the middle, which is what happened."
+   },
+   {
+    "tool": "crop",
+    "inputs": [
+     "answer_part.mp4"
+    ],
+    "produces": "answer_vertical.mp4",
+    "params": {
+     "prompt_or_change": "Vertical crop centred on the blonde woman on the right.",
+     "extra": "box: 525,0,270,480",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Her face is at x≈595–730, and this box centres it. anchor right would leave it at the frame's edge."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "question_vertical.mp4",
+     "answer_vertical.mp4"
+    ],
+    "produces": "talk-two-vertical.mp4",
+    "params": {
+     "prompt_or_change": "The two parts in order, clean cut at the speaker change, original sound.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "assemble keeps each clip's own sound, so the dialogue stays in sync. seconds 0 keeps each part at its own length (10.1 s in all)."
+   }
+  ]
+ },
+ "fix": "(1) Add a transcribe tool: clip to text with segment times (gpt-4o-transcribe, 0 Magic Hour credits), so \"when he asks / when she answers\" becomes trim points. (2) Add to the catalogue for crop: \"one static anchor per clip; to follow speakers: trim at each turn, crop each part, assemble with seconds 0\"; expose a position (\"box: x,y,w,h\" or \"anchor: 30%\"). (3) Make crop fail on an unknown anchor instead of silently centring. (4) Make assemble's seconds a total, not a per-piece cap, so seconds 10 cannot truncate a 7.9 s part.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "talk-two.mp4 is 858x480, 10.1 s. silencedetect finds speech at 6.42–7.67 s and 8.19–10.1 s, and nothing but low ambience before 6.4 s. In my frame at 7 s the light-shirted man on the left (face x≈180–340) is talking. The woman is on the right (face x≈595–730), and the dark-shirted man stands in the middle. The output is 720x1280, 10.13 s: my frames at 7 s and 9.2 s show the centre crop on the middle man, the questioner cut at the left edge and only a sliver of the woman's hair. The judge is right."
+}

@@ -1,0 +1,46 @@
+{
+ "id": "ce996ffe58",
+ "key": "must:D20d:Unused canvas filled with soft blurred background",
+ "symptom": "Unused canvas filled with soft blurred background",
+ "item": "D20d",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Unused canvas filled with soft blurred background' not met?",
+    "because": "Neither delivered video shows the photos fitted inside the frame with blurred bands. In the stupid chat every frame is a full-bleed 16:9 scene. In the dumper chat only some shots (storefront, interior) have blurred bands. The latte and barista shots fill the whole 9:16 frame with invented content.",
+    "evidence": "s3.old.stupid.D20d/grade.json: 'Frames fill the whole 16:9 canvas with no fitted photos and no blurred background'. s3.old.dumper.D20d/grade.json: 'The latte and barista frames have no blurred bands, because the AI filled the whole frame with content'. The fault list says the latte was 'outpainted to full frame'."
+   },
+   {
+    "why": "Why are the frames full-bleed scenes and not the original photos placed on a blurred background?",
+    "because": "In both chats the reel came from create_video_from_text (minimax-h3) with the photos passed as @references. That generative model draws a new scene over the whole canvas. It does not place the original pixels. In the dumper chat the five edit_image (flux-2-klein) frames were also generative edits and were not used as video input.",
+    "evidence": "stupid calls.jsonl line 2: create_video_from_text, aspect_ratio 16:9, references storefront/interior/barista/latte/pastries, and a 'cinematic promo' prompt with no blur instruction. dumper calls.jsonl line 16: create_video_from_text, 9:16, prompt 'Show each photo whole ... centered on a soft blurred background of itself'. Lines 5-9: edit_image with the prompt 'Place this entire photo, unchanged ... blurred ... background'. Grade 'aspect' check: the edit_image outputs are 640x384, 640x640 and 384x640, so they are not 9:16 either."
+   },
+   {
+    "why": "Why did the assistant use a generative text-to-video model for a job that needs deterministic layout (fit, pad, blur, concatenate)?",
+    "because": "The old toolset has no tool that joins several stills into one ordered slideshow, and no tool that fits an image on a blurred canvas. Every video tool takes one start image (or a start and an end image), or treats images as loose references that the model redraws. The assistant said this itself in the dumper chat. It went ahead only after the simulated user's nudge.",
+    "evidence": "dumper calls.jsonl line 3 (assistant): 'Magic Hour has no tool that joins several photos into one video in a set order. Every video tool here takes one starting image ... the photos would be redrawn rather than shown whole'. Line 4: user nudge 'please just go ahead and try it anyway'. tools-old.json lists only generation and upload tools (workflow guide: image-editor, image-to-video, video-generator, etc.)."
+   },
+   {
+    "why": "Why did the prompt instruction 'centered on a soft blurred background' not give consistent letterboxed frames?",
+    "because": "Prompt text is only a hint to the diffusion model. It still fills the target aspect ratio with plausible content and does not keep the source boundaries. So the blur bands appear on some shots and the model outpaints the others.",
+    "evidence": "The dumper prompt explicitly asked for blur (calls.jsonl line 16), but grade.json reports that the storefront and interior have bands and the latte and barista are full-bleed. It also notes 'ghosted copies' in place of a clean blur."
+   },
+   {
+    "why": "Why did the stupid chat not even ask for blur or 9:16?",
+    "because": "The stupid persona sent only 'make a video with this pic and this pic ...'. It gave no shape, blur or no-crop requirement, and the assistant ran without asking (expect.asks = 'never'). This made that chat worse, but the shared root is still the missing compositing ability. Even the fully specified dumper request failed the same item.",
+    "evidence": "s3.old.stupid.D20d/chat.json and state.json: the only user message is 'make a video with this pic and this pic and this pic and this pic and this pic'. D20d.json expect.asks 'never'."
+   }
+  ],
+  "axiom": "The Magic Hour generation models (minimax-h3 text-to-video, flux-2-klein image editor) redraw the whole canvas and cannot do deterministic fit-and-pad compositing. The old toolset exposes no non-generative slideshow or blurred-letterbox tool, so 'whole photo on a blurred background' cannot be guaranteed.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a deterministic slideshow tool, for example compose_photo_reel(images[], aspect_ratio, seconds_per_image, fit='contain', background='blur'). It should scale each photo to fit (contain), put it on a blurred, enlarged copy of the same photo at the target aspect ratio, and join the clips in the given order with no audio track. The video tool descriptions should send multi-photo, no-crop requests to this tool instead of create_video_from_text."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.3567094
+}

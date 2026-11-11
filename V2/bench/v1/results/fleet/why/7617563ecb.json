@@ -1,0 +1,47 @@
+{
+ "id": "7617563ecb",
+ "key": "check:length:D",
+ "symptom": "about 10 s",
+ "item": "D20a",
+ "n": 22,
+ "builds": {
+  "new": 15,
+  "old": 7
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the 'about 10 s' check report 2.3 s when the plan was 10 s?",
+    "because": "The length check measured one short generated clip, not the finished reel. 2.3 s is the length of the first 2 s clip after the model added padding.",
+    "evidence": "None of the evidence folders is D20a itself. The pattern is the same in the sibling tests. In s3.new.stupid.D20c/grade.json the length check got '2.3 s', and the judge's faults list says 'Per-clip lengths (2.3 s, 1.6 s)'. Clip 1 was planned at 2 s (calls.jsonl line 6). The joined film was measured at 10.3 s (join_production_clips output, calls.jsonl line 17)."
+   },
+   {
+    "why": "Why did the grader measure a single clip and not the joined reel?",
+    "because": "The harness saved only the per-clip MP4s from wait_for_video_project. It could not download the joined film, so the first clip was the only video the grader could measure.",
+    "evidence": "s3.new.stupid.D20c/calls.jsonl line 17: join_production_clips returned download_url http://127.0.0.1:8000/films/53eff...mp4, and its files field reads 'download failed: download 404'. grade.json checks list 5 per-clip .mp4 files. In s3.new.stupid.D20d the length check got '2 s', and the judge wrote 'The final reel isn't shown ... claimed 10 s, 480x854 output is unverified'. The film URL was again on 127.0.0.1:8000 (state.json mediaSeen)."
+   },
+   {
+    "why": "Why did the film download return 404?",
+    "because": "The new build's join_production_clips writes the stitched film to a local file server (127.0.0.1:8000/films/) and gives that URL. When the harness fetched the file, it was not there, or the harness could not reach that server. Clip URLs on videos.magichour.ai downloaded without problems.",
+    "evidence": "In both D20c and D20d, every videos.magichour.ai asset downloaded. Only the 127.0.0.1:8000/films/*.mp4 URL failed. The assistant delivered that same localhost link to the user (D20c calls.jsonl line 19)."
+   },
+   {
+    "why": "Why do 7 old-build chats also fail with a short length?",
+    "because": "This is a different cause. The old hosted build has no join tool. Its chats deliver separate stills, audio files or one short clip, so the measured length is one clip or one audio file, not a 10 s reel.",
+    "evidence": "s3.old.happy.D20b/grade.json: 5 PNG files and 1 WAV file, 'No finished reel', length check got '15 s' (the audio). s3.old.stupid.D19c: a single 5 s clip measured against an 8 s target."
+   },
+   {
+    "why": "Why is this the end of the chain for the new build?",
+    "because": "The local film server and the harness downloader do not work together: the stitched output is served from a localhost path that the artifact collector cannot fetch. This is a defect of the test setup, not of the model or of the assistant's choices. The plan (10 s) and the measured join (10.3 s) were both close to the target.",
+    "evidence": "D20c join output: 'seconds':10.3, and checked reports '10.3 s, 480x858'. Only the harness download failed ('download 404')."
+   }
+  ],
+  "axiom": "Harness defect: the new build delivers the stitched reel as a localhost URL (127.0.0.1:8000/films/...). The artifact collector gets a 404 for it, so the grader's length check falls back to the first per-clip file (about 2.3 s). The old-build failures are a separate cause: the old build has no stitching tool, so no single reel exists.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the new build's film server serve /films/ from a persistent directory at a host address that the harness can reach (or upload the joined MP4 to the same storage as the clips). Change the harness so that it fails loudly on a missing final file, and measure the length on the delivered film, not on the first downloaded clip."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.40139480000000005
+}

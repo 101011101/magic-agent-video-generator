@@ -1,0 +1,47 @@
+{
+ "id": "60d3739ffc",
+ "key": "must:J49c:The ending is a simple cut, with no added fade or replacement shot.",
+ "symptom": "The ending is a simple cut, with no added fade or replacement shot.",
+ "item": "J49c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The ending is a simple cut' not met?",
+    "because": "Neither chat produced a 5 s file. The only output in each chat is the original 8 s generation, so no cut exists to judge.",
+    "evidence": "grade.json in both chats: check 'about 5 s' fails with got '8 s'. Old reason: 'No cut was made. The clip runs the full 8 s'. New reason: 'No cut was made at 5 s. The footage runs on to 8 s.' calls.jsonl in both chats lists only one file: assets/01-wait_for_video_project.mp4 (end_seconds 8)."
+   },
+   {
+    "why": "Why was no 5 s file produced after the user asked to 'just cut off the end'?",
+    "because": "In both chats the assistant said no tool could trim, offered a manual trim or a new 120-credit generation, and the user chose to trim it themselves. The chat then ended with no further tool call.",
+    "evidence": "old calls.jsonl line 11: 'I can't do this exact cut with Magic Hour. None of its tools just trims a video'. User reply: 'I'll trim this one myself'. new calls.jsonl line 13: 'None of my Magic Hour tools just cuts the end off a video'. User reply: 'I'll trim it myself'."
+   },
+   {
+    "why": "Why did the assistant say it could not trim?",
+    "because": "Old build: the tool list has no trim or cut tool. The only video editor redraws every frame, and the other video tools add subtitles, swap faces or are paid-only. New build: the assistant did try to trim, but the server rejected the call.",
+    "evidence": "old line 11 lists the tools it found ('edit video' redraws frames; others add subtitles, change speech, swap faces, or need a paid plan for upscaling). new line 10: trim_video {video, start_seconds:0, end_seconds:5} returned error -32602 \"Unknown tool: 'trim_video'\"."
+   },
+   {
+    "why": "Why did the new build's trim_video call fail?",
+    "because": "The new build names trim_video in plan_request, but no trim_video tool is registered. plan_request's 'tool' enum includes 'trim_video', and its row names include 'range'. plan_request also returned ready:true for trim_video. Only the tool call itself was missing on the server.",
+    "evidence": "tools-new.json lines 66-80: the plan_request 'tool' enum ends with \"trim_video\". plan_request description lists the row name 'range'. new calls.jsonl line 9: plan_request returned {\"tool\":\"trim_video\",\"ready\":true}. Line 10: the server returned Unknown tool."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The server exposes no lossless trim operation in either build. The old build never had one. The new build declares one but does not ship it. The assistant behaved correctly: it did not regenerate or retime the clip, and it did not spend credits. The brief and the answer sheet are clear: 'Keep the first five seconds… remove only the final three seconds.' So this failure is a missing server capability, not an assistant, brief or grader fault.",
+    "evidence": "J49c.json answer_sheet: 'Which section to retain: Keep the first five seconds…'. tests: 'trims the existing clip… without regeneration'. Both grade.json files score the footage as unaltered (speed item met: yes)."
+   }
+  ],
+  "axiom": "Neither build exposes a working trim tool. The old build has no trim tool at all. The new build lists 'trim_video' in the plan_request tool enum, but the server does not register it, and a call returns 'Unknown tool'. So the assistant cannot cut the 8 s clip to 5 s.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the new build, register and ship the trim_video tool that plan_request already names. The tool takes a finished video id or URL plus start_seconds and end_seconds. It does a stream-copy cut, for example ffmpeg -ss 0 -t 5 -c copy, and returns the new file, with no regeneration and no credits. Port the same tool to the hosted (old) server."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.19754080000000002
+}

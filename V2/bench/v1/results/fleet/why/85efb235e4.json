@@ -1,0 +1,46 @@
+{
+ "id": "85efb235e4",
+ "key": "must:H40a:Opening exactly 'Your everyday bottle', ending 'Shop now'",
+ "symptom": "Opening exactly 'Your everyday bottle', ending 'Shop now'",
+ "item": "H40a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Opening exactly \"Your everyday bottle\", ending \"Shop now\"' not met?",
+    "because": "In both chats the opening title in the start frame is misspelled. 'Shop now' is correct in the end frames. The stray 'Shop now.' on the bottle body only appears in the happy chat's first, discarded square clip.",
+    "evidence": "s4.old.happy.H40a/grade.json exact_text: 'Your evoybay bottle (vertical frames); Your everyddy botlle (square stills)'. 'Shop now' is 'exact'. s4.old.dumper.H40a/grade.json: 'Opening reads \"Your eversydny botlle\". Ending is correct.'"
+   },
+   {
+    "why": "Why is the title misspelled in the video?",
+    "because": "The assistant had the AI image editor draw the text into the start still. The video model then animated from that still, so the misspelling carried into the clip. Neither chat adds the text with a fixed text overlay.",
+    "evidence": "happy calls.jsonl: edit_image with flux-2-klein, then qwen-edit, prompt 'Add the headline text \"Your everyday bottle\"...'. That output becomes image_file_path in create_video_from_image (ltx-2.5). dumper calls.jsonl: edit_image flux-2-klein with 'add ... text that reads exactly: \"Your everyday bottle\"', then the same image-to-video step."
+   },
+   {
+    "why": "Why did the image models get the words wrong when the prompt gave the exact string?",
+    "because": "Diffusion image editors such as flux-2-klein and qwen-edit at 640px do not render text reliably. Three separate generations gave three different misspellings of the same 3-word line, while the short 'Shop now' came out right.",
+    "evidence": "Three different readings for the same prompt string: 'evoybay', 'everyddy botlle' and 'eversydny botlle' (both grade.json files). The prompts in calls.jsonl contain the correct spelling."
+   },
+   {
+    "why": "Why was the bad frame not caught and made again before the 360-credit video?",
+    "because": "The assistant never saw the frames. fetch_image_download returned no content, and wait_for_image_project with include_inline_downloads=true returned no preview. The assistant went ahead blind and told the user to check the spelling.",
+    "evidence": "dumper calls.jsonl lines 7-9: fetch_image_download output \"\" (twice); the wait_for_image_project inline call has no image data. Reply in state.json: 'I couldn't preview the frames or the video here... AI tools sometimes misspell on-screen text.' The happy chat's fetch_image_download outputs are also \"\", and the reply says 'AI-drawn text can come out misspelled or warped, so check both lines.'"
+   },
+   {
+    "why": "Why could the assistant not preview the images?",
+    "because": "In this old-build run the inline image content from fetch_image_download did not reach the assistant. The tool description says it returns inline MCP image content 'for compatible clients', and this host/harness got none. The logs cannot show if the server sent nothing or the harness dropped it. Either way, the check loop the tools suggest did not work. Without it, the text accuracy rests on the image model alone.",
+    "evidence": "tools-old.json fetch_image_download: 'Fetch a completed project's image as inline MCP image content for compatible clients.' Both calls.jsonl files: output \"\" with files []."
+   }
+  ],
+  "axiom": "The free-plan image editors (flux-2-klein, qwen-edit at 640px) cannot reliably spell multi-word on-screen text. That is a limit of the generation model. The assistant also had no working image preview to catch and redo the bad frame. The logs cannot show if the server or the harness lost the preview.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Make fetch_image_download (and the inline previews of wait_for_image_project) deliver viewable image content to the assistant. The assistant can then check the spelling of drawn text and redo the frame before it spends credits on the video. Also add a line to the edit_image description: AI-drawn text often comes out misspelled, so check it before use, or put exact text in with a fixed text-overlay or subtitle step instead of the image model."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.5960122
+}

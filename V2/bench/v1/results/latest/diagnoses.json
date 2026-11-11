@@ -1,0 +1,1789 @@
+[
+  {
+    "id": "C15a",
+    "best_tools": "yes",
+    "explanation": "The trim and face-swap steps correctly target the requested five-second segment using the supplied portrait and original audio. The plan then unnecessarily appends the untouched remainder, producing a 10.1-second delivery and explaining the later return to the original face; the grader's uncertainty about synchronization and flicker does not establish additional failures.",
+    "better_chain": "trim (extract 0–5 seconds of talk-one.mp4, retaining original audio) → face-swap-video (use portrait-woman.jpg, preserve original audio, framing, clothing, background and motion; deliver this five-second clip)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correctly isolates the first five seconds while retaining the source frames and audio.",
+        "verdict": "ok",
+        "tool": "trim"
+      },
+      {
+        "n": 2,
+        "issue": "Uses the appropriate face-swap tool with the trimmed video and supplied identity portrait, explicitly preserving original audio and non-face content.",
+        "verdict": "ok",
+        "tool": "face-swap-video"
+      },
+      {
+        "n": 3,
+        "issue": "Extracting the remainder is unnecessary because the required delivery is only the first five seconds.",
+        "verdict": "unneeded",
+        "tool": "trim"
+      },
+      {
+        "n": 4,
+        "issue": "Appending the untouched remainder extends the output to 10.1 seconds and introduces footage containing the original face. The swapped opening should have been delivered directly.",
+        "verdict": "unneeded",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "Deliver only the five-second face-swapped opening, without appending the rest of the source video."
+  },
+  {
+    "id": "C15c",
+    "best_tools": "yes",
+    "explanation": "The agent correctly identified that face-swap-video cannot independently map two faces, and no documented tool chain can guarantee this edit while preserving the original footage and audio. The conversational failure was repeatedly requesting single-person alternatives, including after the user explicitly rejected changing the composition; it should have explained the limitation once without further blocking questions.",
+    "better_chain": "Conversation (explain once that the available tools cannot perform independently tracked two-person face replacement while preserving the original video and voices; do not run an all-faces swap or request rejected alternatives)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [],
+    "cause": "conversation",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correctly identifies the tool limitation. Asking about separate single-person source clips is a reasonable initial clarification, although those would not deliver the requested original exchange.",
+        "verdict": "ok",
+        "tool": "conversation"
+      },
+      {
+        "n": 2,
+        "issue": "Repeats the limitation and adds another blocking question about cropped outputs rather than concluding clearly after the user delegates the decision.",
+        "verdict": "unneeded",
+        "tool": "conversation"
+      },
+      {
+        "n": 3,
+        "issue": "Again requests single-person clips after the user explicitly requires the original two-person composition and framing.",
+        "verdict": "unneeded",
+        "tool": "conversation"
+      },
+      {
+        "n": 4,
+        "issue": "Accurately states the capability limitation rather than attempting a swap that would collapse both identities into one.",
+        "verdict": "ok",
+        "tool": "conversation"
+      }
+    ],
+    "missing": "The catalogue lacks independently targeted, temporally tracked multi-face replacement with preservation of the original footage and synchronized audio. This is a capability gap, not an omitted executable step using the listed tools."
+  },
+  {
+    "id": "C17a",
+    "best_tools": "yes",
+    "explanation": "The tools correctly cover exact speech, photo-based lip animation, and square framing, but the voice step returned only five seconds and the plan never corrected the duration. Passing '8s' to talking-photo and crop does not guarantee an eight-second result; crop only reframes. The grader's additional lip-sync criticism is not established by its evidence, but the runtime failure is clear.",
+    "better_chain": "voice (speak the exact supplied script in a friendly female English synthetic voice) → talking-photo (animate the supplied portrait using that audio, without captions) → crop (square framing, preserving audio) → frame (extract the final frame) → assemble (join the talking clip and a silent final-frame hold to exactly 8 seconds, preserving speech speed and synchronization)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "grader"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correctly preserves the exact supplied script; writing it again is optional but harmless.",
+        "verdict": "ok",
+        "tool": "write"
+      },
+      {
+        "n": 2,
+        "issue": "Appropriate voice and exact-script instructions. However, eight-second pacing is not guaranteed, and the reported five-second output needed downstream duration handling.",
+        "verdict": "ok",
+        "tool": "voice"
+      },
+      {
+        "n": 3,
+        "issue": "Correct portrait and speech inputs for identity-preserving talking-head animation. The '8s' instruction does not resolve the shorter supplied audio.",
+        "verdict": "ok",
+        "tool": "talking-photo"
+      },
+      {
+        "n": 4,
+        "issue": "Correct tool for square reframing, but the duration instruction cannot extend a five-second clip. A separate duration-setting step was required.",
+        "verdict": "bad-params",
+        "tool": "crop"
+      }
+    ],
+    "missing": "A duration-setting assemble step after the five-second speech result, with a final-frame hold if needed, to deliver exactly eight seconds without cutting or changing the script."
+  },
+  {
+    "id": "C17b",
+    "best_tools": "yes",
+    "explanation": "The tool choices were appropriate, and the agent-written line made no unsupported offer claims. However, the voice step returned only 4 seconds of audio, and the plan passed it into talking-photo as though it were 8 seconds without correcting or enforcing the final duration. The grader's uncertainty about lip-sync is not evidence that synchronization actually failed.",
+    "better_chain": "write (roughly 20 words of upbeat English sale copy without specific offer claims) → voice (friendly male English delivery; inspect actual duration) → talking-photo (animate the supplied portrait using the actual voice track, no captions) → assemble (enforce one square, exactly 8-second video while preserving speech synchronization) → gate (verify duration, audible speech, identity, lip-sync, and absence of captions)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "prompt-or-params"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate tool and safe, agent-written copy. The short line does not itself ensure an 8-second delivery.",
+        "verdict": "ok",
+        "tool": "write"
+      },
+      {
+        "n": 2,
+        "issue": "The voice choice was appropriate, but exact duration was treated as a prompt-controlled guarantee. The returned audio was explicitly only 4 seconds and needed correction or downstream duration handling.",
+        "verdict": "bad-params",
+        "tool": "voice"
+      },
+      {
+        "n": 3,
+        "issue": "Correct animation tool and portrait input, but the supplied audio was 4 seconds, not the claimed 'full 8-second voice track.' Requesting 8 seconds here did not resolve that mismatch.",
+        "verdict": "bad-inputs",
+        "tool": "talking-photo"
+      }
+    ],
+    "missing": "A duration-reconciliation step after the short voice result, followed by deterministic enforcement and verification of the final square video's exact 8-second length."
+  },
+  {
+    "id": "D18a",
+    "best_tools": "yes",
+    "explanation": "The plan correctly used the supplied photo with image-to-video and specified a slow quarter turn, a fixed scene, square framing, six seconds, and no audio. Invented branding, a deforming cap loop, and background drift are failures of the generated motion despite those preservation instructions, not failures of tool choice or wiring. Silence cannot be assessed from still frames, but the tool's default audio removal covers that requirement.",
+    "better_chain": "image-to-video (animate the supplied photo for 6 seconds at 1:1, rotating only the bottle rigidly through 90 degrees about its vertical axis; preserve the closed cap loop, matte-black surface, proportions, contact point, and fixed camera/table/background; discard audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct source image, animation tool, duration, aspect, and audio handling; the prompt explicitly requests rotation and preservation of the product and stationary surroundings. The observed deformation and invented details are execution failures.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D18b",
+    "best_tools": "no",
+    "explanation": "The animation tool, source photo, duration, framing and motion prompt were appropriate; the reported sideways sway occurred despite explicit instructions against head movement, making the primary failure model quality. The verification step also used a picture-only checker on a video, so it could not assess temporal consistency or catch and trigger correction of the unwanted motion.",
+    "better_chain": "image-to-video (animate the supplied portrait for 5 seconds, square and silent, with one blink, tiny breathing and no head or camera movement) → gate (inspect the video for identity consistency, unwanted sway, a complete blink, subtle breathing, duration and silence; regenerate and recheck if it fails)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "tool-fit",
+      "state-solving"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool and source photo, with appropriate duration, square aspect, audio removal and explicit restrictions on motion and identity changes. The reported sway was contrary to the prompt rather than caused by an evident planning mistake.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 2,
+        "issue": "Check accepts a picture, not a source-photo/video comparison or temporal inspection. Its flagged result explicitly says it could not verify the requested properties, and the chain provides no recovery from that failed verification.",
+        "verdict": "wrong-tool",
+        "tool": "check"
+      }
+    ],
+    "missing": "A video-capable validation step covering blink, breathing, unwanted head/body motion, identity consistency, framing, duration and silence, with regeneration if validation fails."
+  },
+  {
+    "id": "D18c",
+    "best_tools": "yes",
+    "explanation": "Animating the supplied photo directly was appropriate, and the prompt correctly requested slow clouds, gentle ripples, fixed landforms, unchanged evening light, and no camera movement. However, preserving the non-16:9 source aspect without a final crop left the required output format uncovered. The rapid cloud evolution and fading illumination are model-output failures despite appropriate instructions; discarding generated audio correctly addresses silence.",
+    "better_chain": "image-to-video (animate lake.jpg for 8 seconds with slow cloud translation, gentle ripples, fixed landforms, constant evening illumination, a locked camera, and generated audio discarded) → crop (minimal centered crop to exact 16:9)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "model-quality"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The tool, source photograph, duration, motion instructions, and audio-discard setting were appropriate. However, 'preserve source aspect ratio' retains the photograph's non-16:9 shape, and no subsequent step corrects it.",
+        "verdict": "bad-params",
+        "tool": "image-to-video"
+      }
+    ],
+    "missing": "A final crop to guarantee the required 16:9 aspect ratio while retaining as much of the original composition as possible."
+  },
+  {
+    "id": "D19a",
+    "best_tools": "yes",
+    "explanation": "The plan correctly used text-to-video for a new, single-shot scene, with five-second duration, widescreen framing, a stationary camera, and generated audio discarded. The model failed to show the requested catch visibly and continuously; that is primarily an execution failure, not a broken tool chain. The grader's audio objection is unsupported by still frames and overlooks the audio-discard instruction.",
+    "better_chain": "text-to-video (5 seconds, 16:9, locked camera; show the red frisbee visibly approaching the golden retriever, entering its open mouth, and remaining identifiable as the dog holds it, all in one continuous realistic park shot; discard generated audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, inputs, duration, aspect, camera instructions, and audio handling. The generated action did not visibly demonstrate the catch; explicitly describing the approach and uninterrupted frisbee visibility could improve reliability.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D19c",
+    "best_tools": "yes",
+    "explanation": "The plan used the appropriate tool and specified the requested half-fold, crease pressing, full visibility, fixed overhead framing, eight-second widescreen format, and audio removal. The extra diagonal folds and envelope-like result are model execution failures, not a tool or wiring error; inability to verify silence from still frames does not establish a failure to discard audio.",
+    "better_chain": "text-to-video (8 seconds, 16:9, fixed overhead shot; start with one flat, unfolded blue sheet, visibly fold it exactly once in half, then press only that crease; keep both hands and all paper visible; discard audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate direct generation with no reference image required. The prompt and settings cover the requested action, framing, duration, aspect ratio, and silence, but the model introduced unwanted folds.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D20a",
+    "best_tools": "yes",
+    "explanation": "The plan uses the right tools and explicitly preserves all five photos in order, equal screen time, smooth cross-dissolves, a 10-second vertical format, and no added text. The reported speech is a music-generation failure despite the explicit instrumental/no-vocals instructions, not a planning error. The grader also overreaches by treating sparse frame samples as evidence that photos, durations, or transitions failed.",
+    "better_chain": "music (generate relaxed instrumental music with no speech or singing) → gate (check the audio for unwanted vocals; regenerate if needed) → assemble (all five original photos in attached order, equal screen time, short cross-dissolves, 9:16, exactly 10 seconds, verified music with an ending fade, no text)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool and appropriate instrumental/no-vocals prompt. Reported speech reflects an output failure; short music duration is handled by the stated generation-and-cut approach.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly wires all five supplied photos and the music into one vertical reel, specifying order, equal screen time, smooth transitions, exact duration, and no text.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D20c",
+    "best_tools": "no",
+    "explanation": "Assemble was appropriate for joining all five supplied photos into one eight-second vertical reel, but it only joins media: calling the montage “fun” does not add playful treatment. The plan needed an explicit humor or motion step rather than five equal-duration static slides. The grader's sparse samples do not establish that the beach-friends photo was missing; the plan correctly included it.",
+    "better_chain": "assemble (all five original photos in order, fitted with padding in a 9:16 canvas, totaling eight seconds) → text-overlay (short, timed humorous captions in the padding, such as “Main character energy” on the dog and “WAIT. WHAT?” on the shocked cat; keep all faces unobscured)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "grader"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, all five correct inputs, and appropriate duration and aspect settings for the base sequence. However, equal 1.6-second holds and ordinary cuts do not provide the explicit playful treatment the complete plan needed.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "A concrete playful-treatment step, such as timed humorous overlays on the assembled clip, positioned away from faces and pets."
+  },
+  {
+    "id": "D20d",
+    "best_tools": "yes",
+    "explanation": "The plan used the appropriate assembly tool with all five photos in the correct order and explicitly specified proportional fitting, blurred backgrounds, two seconds per photo, and no audio or text. The reported cropping and missing blurred backgrounds contradict those instructions; this is an execution failure rather than a misunderstanding or omission in the plan.",
+    "better_chain": "assemble (five originals in the requested order, two seconds each, 9:16, contain-fit foregrounds over blurred duplicates, no audio or text) → gate (verify complete photo boundaries, original proportions, blurred fill, order, duration, and silence)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, source order, duration, aspect ratio, and explicit fitting/background instructions. The rendered result did not honor the specified contain-fit and blurred-background settings.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D21a",
+    "best_tools": "yes",
+    "explanation": "The image-to-video approach, matching start/end pictures, fixed-camera instructions and audio removal were appropriate. The chain lacked exact-duration finishing, allowing a requested six-second generation to be delivered at 6.6 seconds; any correction must preserve the loop endpoint rather than simply cut it off. The grader’s inability to verify silence or looping from still frames is not evidence that those requirements failed.",
+    "better_chain": "image (make the calm 16:9 lake scene) → image-to-video (animate subtle ripples for 6 seconds, matching start/end pictures, fixed camera, discard audio) → assemble (fit the complete loop to exactly 6 seconds without losing either endpoint, silent 16:9 output) → gate (verify duration, absent audio, visible ripples and repeated end-to-start playback)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "grader"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate starting image, aspect and composition; no designed lettering was needed.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correct tool, matching endpoint inputs, six-second setting and explicit fixed-camera, subtle-motion and audio-discard instructions.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      }
+    ],
+    "missing": "Exact-duration finishing that preserves the complete loop, followed by verification of the final file’s duration, audio absence and end-to-start continuity."
+  },
+  {
+    "id": "D22a",
+    "best_tools": "yes",
+    "explanation": "The tools, order, reference wiring, square aspect and five-second setting are appropriate; the two-tail defect originates in the generated still and is then preserved by the animation model. The reported missing still is a delivery issue, not a missing image-generation step, since step 1 produced it and the agent promised both assets. The silence criticism is unsupported by sampled frames, and the tool drops generated audio by default.",
+    "better_chain": "image (create the square cat illustration) → check (inspect anatomy; repair with image-edit if needed) → image-to-video (animate the approved still for five seconds with blinking, gentle tail movement and audio dropped) → return both the standalone still and silent video",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "conversation",
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, subject and square format. The generated extra tail is a model defect, not an error in the requested illustration or tool choice.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly animates the actual generated still with the requested motion, duration, aspect and silence. It inherits the still's anatomical defect.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      }
+    ],
+    "missing": "The final delivery reportedly omitted the standalone still despite its successful creation; both asset links must be returned."
+  },
+  {
+    "id": "D22b",
+    "best_tools": "yes",
+    "explanation": "The first image prompt omitted watercolor entirely, so the animation inherited a photographic source despite using the correct picture and tool. The animation explicitly requested a sweeping beam, making its weak realization an output-quality issue rather than a missing instruction. Six seconds, landscape framing and silence were requested correctly; the grader's uncertainty from stills does not establish additional planning errors.",
+    "better_chain": "image (16:9 watercolor painting, visible washes, brushwork and paper texture; red-and-white striped lighthouse on a rocky coast at dusk; no writing) → image-to-video (use that exact picture; 6 seconds, preserve 16:9, watercolor appearance and composition; locked camera, small rolling waves and a visibly directional beam slowly sweeping across the water; silent)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "model-quality"
+    ],
+    "cause": "prompt-or-params",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The correct generation tool and 16:9 aspect were selected, but the prompt omitted the requested watercolor style and no-writing constraint. The supplied source visibly looks photographic.",
+        "verdict": "bad-params",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly animates the previously generated picture, requesting six seconds, preserved framing, silence, moving waves and a sweeping beam. It inherits the source's missing watercolor style; the poorly realized beam was nevertheless explicitly requested.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      }
+    ],
+    "missing": "Explicit watercolor styling and no-writing instructions in the initial image prompt, with watercolor preservation carried into the animation prompt."
+  },
+  {
+    "id": "D22c",
+    "best_tools": "yes",
+    "explanation": "The initial image prompt omitted 'cartoon' entirely, producing the glossy 3D source shown; preserving that source during animation then carried the wrong style forward. The animation tool, reference wiring, motion instructions, duration setting and silent-output handling were appropriate, and the double-spout defect was already present in the source image. The grader also overreaches by treating unverifiable playback, silence and identity as demonstrated failures.",
+    "better_chain": "image (explicitly request a flat 2D cartoon drawing, with the specified robot and a normal single-spout red watering can) → image-to-video (animate that exact image tipping the can and watering the seedlings, fixed camera, same drawing style, 5 seconds, silent) → trim (to exactly 5 seconds if the generated clip overruns)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "model-quality",
+      "grader"
+    ],
+    "cause": "prompt-or-params",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The correct image tool was used, but its prompt omitted the requested cartoon drawing style. Explicit flat 2D styling should lead the prompt to avoid the known drift toward rendered imagery.",
+        "verdict": "bad-params",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly animates the existing image with explicit identity, style, watering motion, silence and aspect-preservation instructions. It inherits the source's rendering style and malformed can rather than introducing those defects through faulty wiring.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      }
+    ],
+    "missing": "The requested cartoon drawing style was not included in the initial image-generation prompt."
+  },
+  {
+    "id": "D23a",
+    "best_tools": "yes",
+    "explanation": "The plan correctly specifies a two-second title card followed by four seconds of moving lake scenery, with a hard cut and all audio removed. The reported late transition is an execution failure to honor that explicit timing, not a defect in tool choice, inputs, or chain logic.",
+    "better_chain": "image (qwen lettering: true; cream title on a dark green 16:9 card) → text-to-video (four-second 16:9 misty sunrise lake with slow motion) → assemble (title 0–2 seconds, lake 2–6 seconds, hard cut, remove all audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The lettering-capable image model is appropriate for a designed title card; the exact wording, colors, placement, and aspect are specified.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Text-to-video is appropriate for an unconstrained landscape shot. The prompt specifies the requested scenery and slow motion, with a four-second duration.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      },
+      {
+        "n": 3,
+        "issue": "The correct assets are supplied in order, with explicit two-second and four-second allocations, a hard cut, silence, and the required total duration and aspect. The reported output did not follow the specified timing.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D23b",
+    "best_tools": "yes",
+    "explanation": "The plan correctly used text-to-video for a fictional garden scene and text-overlay for exact, timed lower-third text, explicitly specifying bottom-left placement and discarded audio. The reported extra logo, garbled banner, and centered caption contradict those instructions rather than reveal a missing or wrongly wired step. Silence being unverifiable from still images is not evidence that the delivered clip had audio.",
+    "better_chain": "text-to-video (generate a silent 7-second 16:9 garden scene, with no text or logos and clear lower-left space) → text-overlay (add exactly the two requested lines in white on a compact dark backing at bottom left, from second 1 to the end)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate tool for a fictional person without a supplied reference. The prompt covers the setting, expression, movement, composition, duration, aspect, silence, and exclusion of text; the reported generated lettering violates that prompt.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly takes the generated clip and specifies exact two-line wording, white lettering, dark backing, bottom-left placement, safe margins, and timing from 1 to 7 seconds. The reported centered placement is an execution failure despite explicit placement instructions.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "D23c",
+    "best_tools": "yes",
+    "explanation": "The plan correctly separates the coffee footage, black background, assembly, and exact timed URL overlay, with silence and dimensions explicitly specified. The generated background visibly violates the solid-black prompt, while the overlay violates the requested single-line fit and safe margins; these are execution failures rather than a mistaken tool chain. The reported speech at approximately -91 dB does not establish an audible silence violation.",
+    "better_chain": "text-to-video (5-second vertical coffee pour) → image (solid-black vertical background) → check (verify the background is entirely black; regenerate if necessary) → assemble (5 seconds of coffee, 3 seconds of black, hard cut, remove all audio) → text-overlay (exact white URL centered from 5–8 seconds, with an explicit font size calculated to fit within safe margins) → gate (verify complete URL, black background, timing, dimensions, and silence)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate tool for a new generic coffee-pour scene; the prompt specifies an unmarked ceramic cup, no writing, vertical framing, and five seconds. Audio is explicitly removed during assembly.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      },
+      {
+        "n": 2,
+        "issue": "The prompt unambiguously requests a uniform black background without objects or text. The white panel in the supplied result is a generation failure, not an incorrect planned input or setting.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 3,
+        "issue": "Correct order, individual durations, total duration, vertical aspect, hard cut, and explicit removal of all audio.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 4,
+        "issue": "Text-overlay is appropriate for this plain exact URL over a timed clip. The exact case-sensitive string, white color, centered placement, 5–8-second timing, single line, and safe-margin fit are specified; the clipping contradicts those instructions. An explicit fitted font size would make execution more robust.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "E24b",
+    "best_tools": "no",
+    "explanation": "The chain assumes captions exports an SRT, although the catalogue promises a captioned clip, not a timed-text file. The translation step evidently received no usable transcript, and its request for input was then burned onto the video instead of being caught and corrected.",
+    "better_chain": "captions (produce English captions; obtain genuine timed subtitle text only if export is supported, otherwise request a timed transcript) → write (translate the actual cues into natural Spanish, preserving timestamps) → text-overlay (apply validated Spanish cues to the original full clip, preserving English audio) → gate (verify translated content, synchronization, full duration, and original audio)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "prompt-or-params"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Requests an SRT export from a tool documented to produce a captioned clip. A filename and export instruction do not establish that usable timed text was produced.",
+        "verdict": "bad-params",
+        "tool": "captions"
+      },
+      {
+        "n": 2,
+        "issue": "Translation depends on an unverified text artifact from step 1. The returned request to supply English subtitles demonstrates that this step did not produce the required translated cues.",
+        "verdict": "bad-inputs",
+        "tool": "write"
+      },
+      {
+        "n": 3,
+        "issue": "Text-overlay is appropriate for subtitles over unchanged footage, but its supplied content was an unrelated request, not a validated Spanish subtitle file with corresponding timings.",
+        "verdict": "bad-inputs",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": "A supported way to obtain the actual English timed transcript, plus validation that the translation contains Spanish subtitle cues before overlaying it."
+  },
+  {
+    "id": "E24d",
+    "best_tools": "no",
+    "explanation": "The final step selected video-edit, which has no wired endpoint, so it could not produce the requested revision; generative video editing would also be unsuitable for preserving exact subtitle timing, speech, and facial appearance. Cropping the already-subtitled video additionally risks cutting off existing captions before they can be replaced.",
+    "better_chain": "captions (create the initial English subtitles, preserving original audio) → crop (reframe the original, unsubtitled 10-second source to 9:16 around her face) → text-overlay (reapply the complete verified subtitle wording with original timing, using large bold high-contrast text, wrapped within TikTok-safe margins and clear of her face)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "state-solving"
+    ],
+    "cause": "tool-fit",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate for the initial request: English subtitles throughout, with original voice preserved.",
+        "verdict": "ok",
+        "tool": "captions"
+      },
+      {
+        "n": 2,
+        "issue": "Crop is appropriate for vertical reframing, but using the already-subtitled output risks clipping burned-in subtitle lines. The clean original should be reframed before the final captions are applied.",
+        "verdict": "bad-inputs",
+        "tool": "crop"
+      },
+      {
+        "n": 3,
+        "issue": "Video-edit has no wired endpoint and cannot deliver this step. Generative editing is also the wrong mechanism for exact, synchronized caption restyling while preserving the original footage and audio.",
+        "verdict": "wrong-tool",
+        "tool": "video-edit"
+      }
+    ],
+    "missing": "A functioning timed text-overlay pass on the clean vertical source, carrying forward all verified subtitle words and timestamps and explicitly preserving the full 10-second sequence."
+  },
+  {
+    "id": "E25b",
+    "best_tools": "yes",
+    "explanation": "Crop is the right tool for lossless portrait reframing, but a single code crop does not provide speaker recognition or automatic speaker tracking just because the prompt requests it. The plan never established the speakers’ positions or the turn-change time, nor implemented separate crops for their turns; the audio concern is unverified rather than proven loss.",
+    "better_chain": "gate (inspect the source to identify both speakers, their positions, and the exact turn-change time) → trim (split into contiguous question and answer segments, retaining all footage and original audio) → crop (question segment to 9:16 with an explicit anchor on the questioner) → crop (answer segment to 9:16 with an explicit anchor on the woman) → assemble (join in original order without stretching, captions, or audio changes) → gate (verify framing, full duration, both speaking turns, and audio sync)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "prompt-or-params"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The source and target aspect are correct, but 'anchor: active speaker' delegates speaker identification and time-varying reframing to a code crop without establishing that capability. No explicit speaker positions or timed crop changes were supplied.",
+        "verdict": "bad-params",
+        "tool": "crop"
+      }
+    ],
+    "missing": "Identify the actual questioner and respondent and their turn boundary, then implement explicitly anchored crops for both turns and rejoin them while retaining the entire original audio and duration."
+  },
+  {
+    "id": "E25c",
+    "best_tools": "yes",
+    "explanation": "The plan correctly crops the original footage before captioning its existing speech, with instructions to preserve duration, audio, synchronization, and face visibility. The reported contrast problem is a caption-rendering shortfall despite the readability request; the grader also wrongly treats unverified voice identity and sync as failures, while the punctuation difference does not omit or invent spoken words.",
+    "better_chain": "crop (reframe to 9:16 with the woman centred and face fully visible, preserving all 10 seconds and original audio) → captions (English speech in synchronized short chunks below her face, requesting contrasting backing or outlines) → gate (verify caption wording, contrast, placement, duration, and audiovisual sync)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct non-generative reframing tool and source clip, with the target aspect, centring, duration, and audio preservation specified.",
+        "verdict": "ok",
+        "tool": "crop"
+      },
+      {
+        "n": 2,
+        "issue": "Correct tool for captions of existing English speech, applied after reframing. Readability, synchronization, placement below the face, and preservation of audio and duration were requested; the reported weak contrast is an output shortfall.",
+        "verdict": "ok",
+        "tool": "captions"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "E26b",
+    "best_tools": "no",
+    "explanation": "The plan relied on video-edit, which had no wired endpoint, so it produced no playable highlight. Its prompt described the intended edit reasonably well, but a source-faithful, frame-accurate cut should use source inspection followed by trim, with assemble only if multiple excerpts are needed. The plan also lacked an explicit check for intelligible action and unchopped speech at the cut boundaries.",
+    "better_chain": "gate (inspect jet-30s.mp4 for engaging action and safe audio boundaries) → trim (retain a compelling, exactly 8-second source interval with original synchronized audio) → gate (verify duration within one frame, source fidelity, action continuity, and intact speech)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "state-solving"
+    ],
+    "cause": "tool-fit",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "video-edit had no wired endpoint and could not deliver the requested file. Use inspection and lossless source trimming rather than relying on this unavailable editing operation.",
+        "verdict": "wrong-tool",
+        "tool": "video-edit"
+      }
+    ],
+    "missing": "Inspect the source to select engaging footage and safe speech boundaries, execute an exact source-preserving trim, and verify the resulting duration, continuity, and synchronized original audio."
+  },
+  {
+    "id": "E28a",
+    "best_tools": "yes",
+    "explanation": "The supplied script reaches the voice tool intact, so the reported missing opening phrase is a speech-generation failure, not an omission in the plan. Separately, assembly incorrectly requests the narration's duration rather than the source video's duration, risking a shortened video. The grader's other concerns are verification gaps, not established failures.",
+    "better_chain": "voice (speak the supplied script exactly, warmly and clearly, finishing within 10 seconds) → assemble (add the complete narration from the start while preserving the source video's full duration, framing, and sequence; no music or captions)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "state-solving"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correctly preserves the supplied narration verbatim. Preparing a text asset is acceptable, although no copywriting is needed.",
+        "verdict": "ok",
+        "tool": "write"
+      },
+      {
+        "n": 2,
+        "issue": "Uses the complete script and requests exact English speech with an appropriate delivery. The reported seven-second duration fits within the video; the missing opening is not explained by these inputs or settings.",
+        "verdict": "ok",
+        "tool": "voice"
+      },
+      {
+        "n": 3,
+        "issue": "The tool and asset wiring are correct, but setting output duration to the narration duration conflicts with preserving the complete original video. It should retain the source video's duration, regardless of when narration ends.",
+        "verdict": "bad-params",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "An explicit source-video-duration setting for assembly; the plan instead makes the shorter narration determine output duration."
+  },
+  {
+    "id": "E28b",
+    "best_tools": "no",
+    "explanation": "The plan inspected only still frames and never recovered the original dialogue, so the writer could describe movements but could not explain the schedule change or Monday’s nine o’clock start. It also used check, a verdict tool, as an observation-writing tool. The audio-replacement and timing instructions were sound; the grader’s uncertainty about residual dialogue, music, or clipping does not establish additional planning failures.",
+    "better_chain": "captions (transcribe the original conversation on a temporary analysis copy, not the delivered video) → write (use the recovered dialogue to explain the schedule change and that Mondays now start at nine, without inventing details; keep under 23 words) → voice (friendly neutral English narration, comfortably under 10 seconds) → assemble (use the untouched original video for exactly 10 seconds, discard all source audio, and add only the narration; no music or captions)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "tool-fit",
+      "prompt-or-params"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correctly extracts an unchanged opening frame for visual context, but cannot reveal the conversation’s content.",
+        "verdict": "ok",
+        "tool": "frame"
+      },
+      {
+        "n": 2,
+        "issue": "Requests descriptive observations from a tool documented to return a yes/no verdict. Its reported pass is not a substantive observation record or dialogue transcript.",
+        "verdict": "wrong-tool",
+        "tool": "check"
+      },
+      {
+        "n": 3,
+        "issue": "Correct source and timestamp for inspecting the middle of the footage.",
+        "verdict": "ok",
+        "tool": "frame"
+      },
+      {
+        "n": 4,
+        "issue": "Again uses a verdict tool to produce descriptive source material; visual inspection cannot establish the schedule discussion.",
+        "verdict": "wrong-tool",
+        "tool": "check"
+      },
+      {
+        "n": 5,
+        "issue": "Correct source and timestamp for inspecting the ending without altering the video.",
+        "verdict": "ok",
+        "tool": "frame"
+      },
+      {
+        "n": 6,
+        "issue": "Repeats the verdict-versus-description mismatch and supplies no evidence about the spoken content.",
+        "verdict": "wrong-tool",
+        "tool": "check"
+      },
+      {
+        "n": 7,
+        "issue": "Receives only visual-check outputs rather than the original dialogue. The visible-events-only instruction further prevents the required explanation, although the tone and word limit are suitable.",
+        "verdict": "bad-inputs",
+        "tool": "write"
+      },
+      {
+        "n": 8,
+        "issue": "Appropriate narration tool, voice, and duration settings; the reported seven-second output fits. The script’s factual omission originates upstream.",
+        "verdict": "ok",
+        "tool": "voice"
+      },
+      {
+        "n": 9,
+        "issue": "Correctly wires the original video and replacement narration, explicitly removes source audio, preserves all 10 seconds, and excludes music and captions.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "Recover and inspect the original spoken dialogue before writing. Ground the narration in its schedule-change information, including that Mondays now start at nine, rather than relying exclusively on visible movements."
+  },
+  {
+    "id": "E28c",
+    "best_tools": "yes",
+    "explanation": "The tool choices were appropriate, but the voice step returned eight seconds of audio, which cannot fit from 0.1 to 6.9 seconds unchanged. The plan passed that audio straight into assembly instead of correcting and checking its duration; the reported retained dialogue and captions also required verification, although neither was requested by the plan.",
+    "better_chain": "voice (generate the exact script with calm, naturally paced delivery targeting 6.8 seconds) → gate (check exact words and actual speech duration; regenerate if necessary) → assemble (keep the original seven-second video unchanged, discard its audio, and add only the verified narration starting at 0.1 seconds) → gate (verify speech starts before 0.5 seconds, “home” finishes between 6.5 and 7 seconds, and no source sound, music, or added captions remain)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The exact script, voice style, and target duration were appropriate. However, the returned eight-second duration did not satisfy the timing target and needed correction before use.",
+        "verdict": "ok",
+        "tool": "voice"
+      },
+      {
+        "n": 2,
+        "issue": "An eight-second narration was supplied for a 6.8-second speech window. Asking assembly to finish it at 6.9 seconds without truncation or conspicuous stretching does not resolve that mismatch.",
+        "verdict": "bad-inputs",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "A duration-validation and narration-regeneration step before assembly, followed by final verification of exact speech, timing, complete soundtrack replacement, and unchanged picture."
+  },
+  {
+    "id": "E29b",
+    "best_tools": "yes",
+    "explanation": "The plan explicitly preserves all seven seconds of source footage and audio, then appends exactly two silent seconds of the correctly designed end card. The reported early transition contradicts those instructions, so this is an assembly execution failure rather than a tool-selection, wiring, or timing-plan error. Incomplete audio verification alone does not establish that the audio requirement failed.",
+    "better_chain": "image (qwen with lettering: true; black end card with exact centered white text) → assemble (source unchanged at 0–7 seconds with original audio; end card at 7–9 seconds with silence)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool and model for a designed end card; the prompt specifies exact wording, centered white lettering, black background, and safe margins.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correct inputs, order, total duration, and explicit seven-second source/two-second silent-card timing. The reported output did not follow these settings.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "E29c",
+    "best_tools": "yes",
+    "explanation": "The plan used the correct tool and source clip, explicitly requesting bottom-right placement, translucent small white text, a faint shadow, padding, and preservation of duration and audio. The rendered overlay failed to honor those instructions; the plan did not request the centered, oversized boxed label. The grader’s inability to verify unchanged footage and synchronized audio is not evidence that the plan omitted their preservation.",
+    "better_chain": "text-overlay (apply '@flightschool' throughout the original 7-second clip, bottom-right with 3% margins, an explicit small font size, 70% white-text opacity, faint shadow and no backing band; preserve footage and synchronized audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, source input, and requested settings. The output failed to follow the specified alignment, size, transparency, and shadow styling.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "F30b",
+    "best_tools": "yes",
+    "explanation": "The single music step uses the right tool and a sensible 15-second default, with a prompt explicitly requesting upbeat instrumental energy and a rhythmic hook. The grader's wrong-length tag is unsupported, and its inability to hear onset or ending quality is an evaluation limitation rather than evidence of a failed plan.",
+    "better_chain": "music (generate a 15-second upbeat instrumental reel bed with an immediate rhythmic start and a clean, resolved ending)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "grader",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, no source inputs needed, and a sensible duration. The prompt specifies bright melodies, punchy percussion, a rhythmic hook, and an energetic finish; nothing reported establishes an actual audio defect.",
+        "verdict": "ok",
+        "tool": "music"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "F30c",
+    "best_tools": "yes",
+    "explanation": "The plan used the right tool and explicitly requested a single 15-second instrumental with no vocals or vocal textures. The music model nevertheless produced audible speech, a known limitation of this tool, so the primary failure was model output rather than tool choice or wiring. The grader’s additional concerns about silence and joins were unverified, not demonstrated defects.",
+    "better_chain": "music (generate one 15-second instrumental bed, explicitly excluding speech and singing) → gate (verify decoded duration, continuous music, no vocals, and smooth transitions; regenerate if it fails)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, duration setting, and instrumental prompt; the generated speech violated the prompt despite explicit exclusions.",
+        "verdict": "ok",
+        "tool": "music"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "F31a",
+    "best_tools": "yes",
+    "explanation": "The voice tool was the correct listed tool, and the plan supplied the exact script, a single calm voice, speech-only output, and a 10-second pacing target. The reported 8-second output fell short of that target despite appropriate instructions. The grader also treated delivery and silence as missed requirements merely because a transcript could not verify them, which does not establish that they failed.",
+    "better_chain": "voice (read the exact script in one calm, reassuring voice, with natural pauses targeting approximately 10 seconds, and export speech-only WAV)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool, script, output format, and delivery settings; the resulting duration was 8 seconds despite the requested 10-second pacing.",
+        "verdict": "ok",
+        "tool": "voice"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "F31b",
+    "best_tools": "yes",
+    "explanation": "The catalogue explicitly supports standalone speech and two voices selected by speaker labels, so the single voice step was appropriate despite the item's claim that this capability was unavailable. Its prompt included all four lines, their order, voice assignments, delivery, duration, and audio-only constraints. The reported omission of B's lines is an execution failure, not a missing or incorrectly wired planning step.",
+    "better_chain": "voice (read all four supplied lines in order into one standalone audio file; A lower, B higher; omit labels; friendly delivery, approximately 8 seconds, no music or effects)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool and complete prompt: the catalogue supports two-speaker synthesis from labeled lines, and no external input asset is needed. The reported output omitted B's replies despite their inclusion in the prompt.",
+        "verdict": "ok",
+        "tool": "voice"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "F32a",
+    "best_tools": "yes",
+    "explanation": "The plan preserves the exact supplied introduction and specifies a complete 20-second mix, including a music-only opening, ducked backing music, and an ending fade. The reported unrelated speech indicates an execution/output failure, not a mistake in the planned tools, inputs, or wiring. The grader also treats missing information about music, fades, and audio quality as evidence of failure, which is not justified by the report alone.",
+    "better_chain": "write (preserve the supplied introduction verbatim) → voice (render it with a warm female synthetic voice) → music (generate a 20-second gentle, upbeat electronic instrumental) → assemble (mix audio only, start narration at 2 seconds, duck music beneath it, fade from 16–20 seconds, export one WAV)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Preserves the user's exact narration; the approximately nine-second speech target fits the requested timing.",
+        "verdict": "ok",
+        "tool": "write"
+      },
+      {
+        "n": 2,
+        "issue": "Uses the exact script and specifies a warm female synthetic voice without additional lines.",
+        "verdict": "ok",
+        "tool": "voice"
+      },
+      {
+        "n": 3,
+        "issue": "Requests the correct musical style, instrumental-only content, and a full 20-second bed.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 4,
+        "issue": "Correctly wires both audio assets into a single 20-second mix and explicitly specifies opening timing, full narration playback, music ducking, and a smooth ending fade.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "F32b",
+    "best_tools": "yes",
+    "explanation": "The plan correctly uses the attached article to write a source-faithful dialogue, then renders it directly as audio with distinct male and female voices and no music; the reported 100-second duration meets the 60–120-second requirement. The grader treats an incomplete transcript and unavailable source material as evidence of failure, but those limitations do not establish that the delivered audio is incomplete, factually unsupported, or missing the requested voices.",
+    "better_chain": "write (adapt article.txt into approximately 225 words of factual, alternating, conversational dialogue) → voice (render the dialogue as audio with distinct male and female English voices, omitting speaker labels and music)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "grader",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Uses the attached article and explicitly requests source-supported facts, preserved qualifications, conversational turns, and an appropriate target word count.",
+        "verdict": "ok",
+        "tool": "write"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly renders the labeled dialogue with two assigned voices directly to a WAV file, without music or unnecessary assembly. The reported 100 seconds is within the requested range.",
+        "verdict": "ok",
+        "tool": "voice"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "G37b",
+    "best_tools": "yes",
+    "explanation": "The still-image updates use the right tools and source assets, but the reel update passes both clean and already-lettered clips to a tool that accepts one base clip, not a visual reference for reconstructing overlays. It also omits the complete replacement text and explicit overlay settings, so the intended clean-base rebuild is not reliably specified; stale lettering remains and required event details are lost.",
+    "better_chain": "image-edit (update only the poster date using qwen lettering, preserving the existing design and aspect) → image-edit (update only the story date the same way) → text-overlay (use only rooftop_reel_base.mp4; apply \"Rooftop Jazz\\n24 October 2027 / 7 PM\\nAtlas Roof / Free entry\" with the original cream band, burgundy font, size and position, from 0 to 10 seconds) → gate (verify both images and the entire reel contain the revised date, no old date, all unchanged event details, and the required aspects and duration) → deliver only the three revised assets",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "prompt-or-params"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate text-free shared illustration, with the requested palette and room for later lettering.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Uses the shared illustration and a lettering-capable model to create the story with all event details.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 3,
+        "issue": "Creates a separate poster layout with all required wording and an explicit safe area for the planned crop.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 4,
+        "issue": "The central 4:5 crop is supported by the preceding safe-area layout and retains the lettering.",
+        "verdict": "ok",
+        "tool": "crop"
+      },
+      {
+        "n": 5,
+        "issue": "Animates the text-free illustration for five seconds, keeping lettering out of generative motion.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 6,
+        "issue": "Creates a second matching five-second shot from the correct text-free source.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 7,
+        "issue": "Correctly joins the two shots into a ten-second vertical clean reel.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 8,
+        "issue": "Plain event text over moving footage is an appropriate overlay use; complete wording and full-duration timing are supplied.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 9,
+        "issue": "Edits the existing final poster rather than recreating it, requesting only the date replacement and preserving its aspect.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 10,
+        "issue": "Edits the existing story with a narrowly scoped date replacement and preservation instructions.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 11,
+        "issue": "Supplies two clips to a single-base overlay tool and assumes it can inspect one as a reference. The step should supply only the clean reel plus the complete revised text and explicit original styling, placement and 0–10-second timing.",
+        "verdict": "bad-inputs",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": "A final validation gate checking that the old date is absent throughout the reel, every required event string remains present, and only the two revised images and revised ten-second reel are delivered."
+  },
+  {
+    "id": "H40a",
+    "best_tools": "yes",
+    "explanation": "The plan correctly builds three five-second product shots, assembles a 15-second vertical ad with music only, and adds exact captions after animation. The closing image nevertheless invented text despite an explicit no-text instruction; spoken audio also survived despite the default removal of generated clip audio and the music-only assembly instruction. These are execution/model failures, not evidence of a wrong tool chain.",
+    "better_chain": "image-edit (make three text-free studio views from the supplied bottle photo) → check (verify bottle identity and reject invented text or markings) → image-to-video (animate each view for five seconds, discarding generated audio) → music (15-second mellow instrumental without vocals) → assemble (three shots in order, 15 seconds, 9:16, supplied music only) → text-overlay (opening words at 0–3 seconds) → text-overlay (closing words at 12–15 seconds) → gate (verify no speech, no stray text, correct product, duration and aspect)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct reference-based studio edit with explicit product-preservation and no-added-text instructions.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly uses the original product reference for a distinct detail view while requesting preservation of its geometry.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 3,
+        "issue": "Correct tool, reference and instructions; the generated closing image added garbled text despite the explicit prohibition.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 4,
+        "issue": "Appropriate gentle five-second animation of the hero image; generated audio is discarded by default.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 5,
+        "issue": "Appropriate five-second moving close-up with explicit product-detail preservation.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 6,
+        "issue": "Appropriate five-second closing animation; the underlying unwanted lettering originated in the preceding image output.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 7,
+        "issue": "Requests the correct duration, mellow instrumental mood and absence of vocals or speech.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 8,
+        "issue": "Correct order, total duration, vertical aspect and music-only soundtrack instruction; retained speech contradicts the planned audio handling.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 9,
+        "issue": "Text-overlay is appropriate for exact opening words over moving footage, with correct timing.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 10,
+        "issue": "Correctly overlays the exact closing words during the final three seconds without regenerating the footage.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H40b",
+    "best_tools": "yes",
+    "explanation": "The plan uses one reference candle for consistent shots, specifies gentle motion, assembles exactly 15 seconds vertically, and adds the two messages in the correct order. It explicitly excludes generated clip audio and requests instrumental piano without speech, so the reported speech is an output failure rather than a planning error. Still frames cannot verify camera movement, but that limitation does not establish a flaw in the motion prompts.",
+    "better_chain": "image (establish the candle in 9:16) → image-to-video ×3 (three gentle 5-second shots from the same reference; discard generated audio) → music (15-second instrumental soft piano) → assemble (shots in order, piano only, 15 seconds, 9:16) → text-overlay (opening message, 0–5 seconds) → text-overlay (closing message, 10–15 seconds) → gate (verify motion, consistency, text, duration, and speech-free piano; retry any failed asset)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate reference-image generation with all requested candle features, warm lighting, and vertical framing.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Uses the established candle reference for a gentle 5-second push-in and explicitly preserves its design.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 3,
+        "issue": "Uses the same reference for a gentle 5-second lateral drift, supporting product consistency.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 4,
+        "issue": "Uses the same reference for a gentle 5-second closing pullback and preserves the specified product.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 5,
+        "issue": "Correct tool and duration; explicitly requests soft solo piano with no vocals or speech. Any generated speech violates the supplied prompt.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 6,
+        "issue": "Correctly joins three 5-second shots into a 15-second 9:16 ad, using piano only and explicitly excluding generated clip audio.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 7,
+        "issue": "Plain exact text over footage is an appropriate use of text-overlay; opening timing and placement are specified.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 8,
+        "issue": "Correctly takes the already-captioned ad and adds the exact closing message during the final five seconds.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H40c",
+    "best_tools": "yes",
+    "explanation": "The plan uses appropriate tools and explicitly specifies three five-second moving shots, silence, exact caption wording, separate timing windows, and full-caption safe margins. The reported caption bundling contradicts step 8's clear timing instructions, so the main failure is tool execution rather than the plan's logic or settings.",
+    "better_chain": "image (make the unbranded white sneaker) → image-edit ×2 (derive detail and profile views from the same sneaker) → image-to-video ×3 (animate each view for 5 seconds) → text-overlay on each clip (one exact caption per clip, visible for 5 seconds, with text and backing inside the safe area) → assemble (join in order, 15 seconds, 9:16, no audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate text-free product generation with the requested sneaker materials, colors, lack of branding, and vertical aspect.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly animates the supplied hero image for five seconds with gentle motion and product-preservation instructions.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 3,
+        "issue": "Uses the original sneaker as the reference for a consistent detail composition.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 4,
+        "issue": "Correctly animates the detail image for five seconds with a restrained camera slide.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 5,
+        "issue": "Uses the original sneaker to request another product view while preserving its design.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 6,
+        "issue": "Correctly animates the closing product view for five seconds.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 7,
+        "issue": "Correct inputs and order; explicitly preserves three five-second shots, 9:16 framing, and no audio tracks.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 8,
+        "issue": "Text-overlay is appropriate for captions over footage. Exact wording, individual timing windows, contrast, wrapping, and full text-and-band safe bounds are explicitly supplied; the reported output failed to honor those instructions.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H41a",
+    "best_tools": "yes",
+    "explanation": "The plan explicitly preserves both screenshots without cropping, orders them correctly, specifies 10 seconds at 16:9, and requests instrumental-only audio. The reported cropping contradicts the assemble instructions, while the unwanted speech contradicts the music prompt; these are execution failures rather than a faulty plan. Text-overlay is appropriate for displaying the app name over the final footage, although explicit sizing could strengthen the finish.",
+    "better_chain": "music (generate a 10-second upbeat instrumental) → gate (verify no speech or vocals; regenerate if necessary) → assemble (fit complete screenshots without cropping on a 16:9 background, home 0–5s then workout 5–10s, with music) → text-overlay (large, high-contrast FitTrack from 8–10s, positioned clear of app content) → gate (verify duration, aspect, full-screen readability, order, ending name, and speech-free audio)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Correct tool and an explicit upbeat instrumental-only prompt. Reported speech is an output failure despite the instructions; the catalogue acknowledges that music can add vocals.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 2,
+        "issue": "Correct source screenshots, order, soundtrack, duration, and aspect. The instructions explicitly require fitting without cropping or stretching, so the reported severe cropping was not requested by the plan.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 3,
+        "issue": "Plain exact text over a clip is an appropriate use of text-overlay. The final two-second timing satisfies the ending-name requirement; specifying font size and clearance would improve presentation.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H41b",
+    "best_tools": "yes",
+    "explanation": "The tool sequence was appropriate, but the image prompts substituted abstract strokes for meaningful tasks and omitted lettering:true, allowing garbled interface text instead of a clear app demonstration. The models also disregarded the requests for no words and a white closing band; text-overlay itself was appropriate for the name over a clip. Silence was handled by the default audio removal, so the grader should not mark it missing merely because still frames cannot verify it.",
+    "better_chain": "image (lettering:true; blue-and-white messy list with a few short, readable tasks) → image-edit (lettering:true; organize those same tasks into a timed daily plan) → image-to-video (short, gentle transition between the screens; discard generated audio) → assemble (readable original-screen holds around the transition, totaling exactly 8 seconds at 16:9, silent) → text-overlay (ClearDay during the final two seconds, with a restrained, explicitly sized white band)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "model-quality",
+      "grader"
+    ],
+    "cause": "prompt-or-params",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The image tool was appropriate, but abstract lines weakened the service demonstration. Use lettering:true and a few meaningful task labels rather than relying on a no-text prompt to prevent invented interface words.",
+        "verdict": "bad-params",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Editing the starting screen was the right way to preserve continuity, but the prompt retained abstract task descriptions and omitted lettering:true to replace the existing gibberish with readable daily-plan labels.",
+        "verdict": "bad-params",
+        "tool": "image-edit"
+      },
+      {
+        "n": 3,
+        "issue": "Correctly uses the messy and organized screens as start and end frames, specifies an eight-second landscape transition, and requests a closing hold. Generated audio is dropped by default.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 4,
+        "issue": "Plain closing text over a clip is an appropriate use of text-overlay. The exact name, timing, position, and colors were specified; the reported dark-gray rectangle contradicts those settings rather than proving a wrong-tool choice.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H41c",
+    "best_tools": "yes",
+    "explanation": "The plan correctly specifies three ordered 3-second scenes, exact timed text overlays, 16:9 output, and audio removal both during animation and assembly. The grader penalized transition timing merely because its samples did not establish it, and reported speech at an effectively inaudible −91 dB despite explicit audio-discard instructions. The minor checkmark overlap is an execution-quality issue, not a tool-choice or wiring failure.",
+    "better_chain": "image (three text-free cream-and-green calendar designs with clear caption areas) → image-to-video (animate each for 3 seconds, discard generated audio) → assemble (hard cuts, three equal scenes, 9 seconds, 16:9, no audio tracks) → text-overlay (first exact line, 0–3 seconds) → text-overlay (second exact line, 3–6 seconds) → text-overlay (third exact line, 6–9 seconds)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "model-quality"
+    ],
+    "cause": "grader",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate text-free background generation; reserves space for the later video caption.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correct source image, simple motion, 3-second duration, landscape aspect, and explicit generated-audio discard.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 3,
+        "issue": "Correct calendar/checkmark background with matching palette and no requested lettering.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 4,
+        "issue": "Correct animation input and settings; the prompt explicitly preserves the clear caption area. Later overlap reflects imperfect execution.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 5,
+        "issue": "Suitable text-free closing visual with clear caption space.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 6,
+        "issue": "Correct source, restrained animation, 3-second duration, and audio-discard instruction.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 7,
+        "issue": "Correctly joins all three clips in order and explicitly sets equal scene durations, hard cuts, 9 seconds, 16:9, and no audio tracks.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 8,
+        "issue": "Text-overlay is appropriate for exact words over animated footage; correct first line and time interval.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 9,
+        "issue": "Correctly preserves the preceding edit and adds only the second exact line during its scene.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 10,
+        "issue": "Correctly preserves earlier overlays and adds the exact call to action during the final scene.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H42a",
+    "best_tools": "yes",
+    "explanation": "The plan correctly uses the supplied photos, gentle image-to-video prompts, instrumental music, explicit removal of generated shot audio, and timed overlays for the exact captions. The excessive latte zoom and unwanted speech contradict those instructions rather than expose a tool-selection or wiring error; the evidence does not establish which audio stage introduced the speech.",
+    "better_chain": "crop (reframe each supplied photo to 9:16 without stretching, retaining the important café details) → image-to-video (three 3-second shots with minimal camera movement and the cup kept in frame; discard generated audio) → music (soft upbeat instrumental, no vocals or speech) → assemble (storefront, latte, pastries; music only; 9 seconds, 9:16) → text-overlay (exact opening caption, 0–3 seconds) → text-overlay (exact closing caption, 6–9 seconds) → gate (verify restrained movement, photo recognisability, exact captions, and no speech; retry any failed asset)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate non-generative vertical reframing; the supplied crop retains the striped awning and visible outdoor seating and tables.",
+        "verdict": "ok",
+        "tool": "crop"
+      },
+      {
+        "n": 2,
+        "issue": "The vertical crop keeps the latte and distinctive leaf detail recognisable without stretching.",
+        "verdict": "ok",
+        "tool": "crop"
+      },
+      {
+        "n": 3,
+        "issue": "The vertical crop preserves the recognisable pastry counter without stretching.",
+        "verdict": "ok",
+        "tool": "crop"
+      },
+      {
+        "n": 4,
+        "issue": "Correct photo input, three-second duration, vertical aspect, and restrained-motion instructions.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 5,
+        "issue": "The prompt explicitly requests a subtle slow push-in and preservation of the cup and latte art; the excessive resulting zoom is an execution failure.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 6,
+        "issue": "Correct photo input and duration, with gentle movement and preservation of the pastry arrangement requested.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 7,
+        "issue": "The cue requests the correct mood and explicitly excludes vocals, speech, and lyrics; the short duration is handled by code trimming.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 8,
+        "issue": "Correctly orders all three shots, sets nine seconds and 9:16, adds music, and explicitly discards generated shot audio.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 9,
+        "issue": "Timed text-overlay is appropriate for exact opening words over footage; the caption and timing are correct.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 10,
+        "issue": "Correctly consumes the already-captioned reel and adds the exact closing words during the final shot.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  },
+  {
+    "id": "H43a",
+    "best_tools": "no",
+    "explanation": "The plan uses a story-to-film pipeline for a single scripted talking head, relying on generated clip speech rather than a guaranteed exact voice track and a dedicated talking-photo tool. It also assumes film finishing will add accurate timed captions, and several pipeline steps omit required upstream inputs. Nothing was run, so the record establishes non-delivery, not an observed visual or speech-quality failure.",
+    "better_chain": "image (create a fictional adult woman in her 30s, selfie-framed at home, vertical 9:16) → voice (speak the supplied English script exactly in a friendly neutral female voice, paced to approximately 8 seconds) → talking-photo (animate the presenter speaking that audio) → captions (transcribe and time the spoken English) → gate (verify exact caption wording, complete speech, visible speaking, duration, and vertical format)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "state-solving"
+    ],
+    "cause": "tool-fit",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "A story stage is unnecessary for one continuous talking-camera shot with an already supplied script.",
+        "verdict": "unneeded",
+        "tool": "story"
+      },
+      {
+        "n": 2,
+        "issue": "An asset-bank stage adds unnecessary indirection; one image generation can establish the fictional presenter and home setting.",
+        "verdict": "unneeded",
+        "tool": "assets"
+      },
+      {
+        "n": 3,
+        "issue": "The screenplay tool requires both story and bank, but only assets.json is wired in. Rewriting the supplied script into a screenplay is also unnecessary.",
+        "verdict": "bad-inputs",
+        "tool": "screenplay"
+      },
+      {
+        "n": 4,
+        "issue": "The keyframes stage requires the screenplay and asset bank, but receives only screenplay.json, leaving presenter identity and setting continuity dependent on implicit state.",
+        "verdict": "bad-inputs",
+        "tool": "keyframes"
+      },
+      {
+        "n": 5,
+        "issue": "Generated clip speech is not the right route for guaranteed exact dialogue and synchronized speaking. Use talking-photo with an explicit voice track; the proposed clips call also omits its required screenplay input.",
+        "verdict": "wrong-tool",
+        "tool": "clips"
+      },
+      {
+        "n": 6,
+        "issue": "Film finishing has no documented guarantee of exact timed captions or disclosure overlays. Use the dedicated captions tool for speech captions, and text-overlay if a disclosure is desired.",
+        "verdict": "wrong-tool",
+        "tool": "film"
+      }
+    ],
+    "missing": "An explicit exact-script voice track, a talking-photo step driven by that track, and a dedicated timed-caption step with verification. All planned steps also remained unexecuted."
+  },
+  {
+    "id": "H44b",
+    "best_tools": "yes",
+    "explanation": "The image tools correctly produced the countdown and readable event card, but assembly relied on prose instructions for unequal card durations and flashing effects rather than explicitly timed pieces and supported visual changes. The eight-second assembly therefore did not reliably preserve the intended five-second reveal or synchronize accents with numeral changes. Speech in the explicitly instrumental music is a generation failure, compounded by the lack of an audio validation step.",
+    "better_chain": "image (9:16 countdown 3, lettering enabled) → image-edit (countdown 2 and 1, each with visibly different neon lighting) → image-edit (matching event card with all three text lines, lettering enabled) → music (instrumental electronic buildup with one-second accents and reveal hit at 3 seconds) → gate (verify no vocals and check accent timing; regenerate if needed) → assemble (make each countdown card a separate one-second clip and the event card a five-second clip) → assemble (join those timed clips with the verified music, 8 seconds, 9:16) → gate (verify countdown timing, lighting changes, synchronized accents, five-second readable reveal and no speech)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "model-quality"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate lettering-capable image model, vertical format and clear numeral prompt.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Correct source and editing tool for a consistent countdown numeral. Keeping the lighting unchanged leaves the flashing requirement to a later step.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 3,
+        "issue": "Correctly derives the final countdown numeral from the common source without losing the visual style.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 4,
+        "issue": "Correct tool and source for a designed end card; the prompt includes every required line and safe margins.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 5,
+        "issue": "The music tool and instrumental buildup prompt are appropriate. However, generated music cannot guarantee the requested accent timestamps or absence of vocals, so its output needed validation before use.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 6,
+        "issue": "Assembly is appropriate for joining the assets, but total duration and order do not establish unequal per-card holds. The plan also asks this joining tool to create neon brightness pulses and assumes generated musical accents are synchronized without checking them.",
+        "verdict": "bad-params",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "Explicitly duration-controlled countdown and end-card clips; an implemented neon-lighting change rather than an assembly-only effects request; validation of the generated audio and final timing."
+  },
+  {
+    "id": "H44c",
+    "best_tools": "yes",
+    "explanation": "The plan correctly adds text separately after reframing, but it center-crops an ensemble spread across the widescreen image; centering the main musician does not protect the other musicians’ faces, especially during a push-in. The portrait composition needed checking and recomposing before delivery. The speech finding does not establish a planning error: generated clip audio is discarded, and assembly explicitly uses only the instrumental music, which the crop should preserve unchanged.",
+    "better_chain": "image (create the widescreen rooftop ensemble) → image-edit (create matching portrait compositions with every visible face safely inside the frame) → check (verify both compositions and allow room for motion and overlays) → image-to-video (animate each format with restrained motion, discarding generated audio) → music (generate mellow instrumental jazz without speech) → assemble (make each version exactly 10 seconds using only the same music track) → text-overlay (add all three exact lines together for 10 seconds, sized independently for each format) → gate (verify both videos’ framing, text, duration and speech-free audio)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "grader"
+    ],
+    "cause": "state-solving",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate scene-generation tool and a sensible crop-safe prompt, but the returned ensemble extends outside the central portrait-safe region; that output needed inspection before reuse.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Appropriate five-second animation of the supplied still. The push-in increases the need to verify face clearance before portrait reframing.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 3,
+        "issue": "Image-edit appropriately creates a related detail shot. Centering the saxophonist does not establish that the surrounding musicians are safe for a portrait crop.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 4,
+        "issue": "Appropriate restrained animation and duration for the second shot; generated audio is discarded by default.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 5,
+        "issue": "The prompt explicitly requests mellow instrumental jazz without vocals or speech and specifies a 10-second result.",
+        "verdict": "ok",
+        "tool": "music"
+      },
+      {
+        "n": 6,
+        "issue": "Correctly joins two five-second shots and explicitly selects only the supplied music, excluding generated clip speech.",
+        "verdict": "ok",
+        "tool": "assemble"
+      },
+      {
+        "n": 7,
+        "issue": "The widescreen master is not a safe input for a fixed center crop: peripheral musicians intersect the portrait boundaries. Cropping cannot reposition them or restore excluded faces.",
+        "verdict": "bad-inputs",
+        "tool": "crop"
+      },
+      {
+        "n": 8,
+        "issue": "Text-overlay is appropriate for exact event information over footage; all three lines are requested together throughout the video with safe margins.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 9,
+        "issue": "Correctly adds independently fitted portrait text after cropping, avoiding cropped lettering. It cannot repair the underlying face cropping.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": "Verify portrait-safe framing throughout both moving shots and recompose unsuitable source images before animation; inspect final audio for speech rather than attributing it to generated clip audio that the plan explicitly excludes."
+  },
+  {
+    "id": "J50b",
+    "best_tools": "no",
+    "explanation": "The agent correctly resolved “the ending” to seconds five through eight and preserved the opening with a trim. However, video-edit had no working endpoint, so it produced no edited ending; assembly then received only the five-second opening and delivered an incomplete video.",
+    "better_chain": "trim (preserve the original first five seconds unchanged) → frame (extract the original frame at the five-second boundary) → image-edit (add an open blank notebook on the desk while preserving the plane, camera, lighting, and animation style) → image-to-video (animate a three-second continuation in which the same plane lands and rests on the notebook; discard audio) → assemble (join the untouched five-second opening and three-second ending into one silent eight-second 16:9 video) → gate (verify duration, silent audio, continuity, no text, and the completed notebook landing)",
+    "inputs": "flawed",
+    "chain_logic": "flawed",
+    "also": [
+      "state-solving"
+    ],
+    "cause": "tool-fit",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "A newly described animated scene is a suitable use of text-to-video. The prompt specifies the glide and landing timing, eight-second duration, widescreen aspect, no text, and discarded audio.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      },
+      {
+        "n": 2,
+        "issue": "Trimming seconds zero through five preserves the requested opening without regeneration.",
+        "verdict": "ok",
+        "tool": "trim"
+      },
+      {
+        "n": 3,
+        "issue": "Trimming seconds five through eight correctly isolates the segment referred to as the ending.",
+        "verdict": "ok",
+        "tool": "trim"
+      },
+      {
+        "n": 4,
+        "issue": "Video-edit is conceptually appropriate, but its endpoint was not wired and the reported result was only a placeholder. It could not supply the revised three-second ending.",
+        "verdict": "wrong-tool",
+        "tool": "video-edit"
+      },
+      {
+        "n": 5,
+        "issue": "Assembly requires two real clips, but notebook_ending.mp4 was not produced. Proceeding with the missing second input yielded one five-second piece instead of the requested eight-second video.",
+        "verdict": "bad-inputs",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "A working generation path for the revised three-second ending, plus validation that both clips exist and the assembled output is eight seconds long before delivery."
+  },
+  {
+    "id": "J51a",
+    "best_tools": "yes",
+    "explanation": "The generation prompt explicitly requested an illustrated scene, curling steam, rain, and discarded audio; the predominantly realistic rendering is therefore a model-quality failure. Cropping the existing clip to 9:16 was appropriate and retained its duration. Separately, executing generation during the first turn violated the user's request for a plan only.",
+    "better_chain": "Present plan without executing → text-to-video (after turn 2 approval, generate the cosy illustrated coffee-and-rain scene directly at 9:16 for 6 seconds, with no text and audio discarded)",
+    "inputs": "sound",
+    "chain_logic": "flawed",
+    "also": [
+      "conversation"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "The tool, prompt, original widescreen aspect, duration, and audio-discard setting were appropriate, but generation should not have executed during the plan-only turn.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      },
+      {
+        "n": 2,
+        "issue": "Correctly reframed the available clip to vertical 9:16 without regeneration or changing its duration. Cropping cannot fix the generator's failure to deliver the requested illustrated style.",
+        "verdict": "ok",
+        "tool": "crop"
+      }
+    ],
+    "missing": "An authorization boundary: defer generation until the user approves execution."
+  },
+  {
+    "id": "J51b",
+    "best_tools": "yes",
+    "explanation": "The revision plan reuses the delivered, captioned clip and explicitly requests proportional fitting, navy padding, no cropping, and unchanged timing. The reported crop therefore contradicts the specified operation rather than revealing a wiring error in the plan. The grader also treats unavailable comparison footage as evidence of changed animation and timing, which is not established.",
+    "better_chain": "text-to-video (make the 8-second widescreen cartoon; discard audio) → text-overlay (add “Small steps” throughout) → assemble (fit the existing captioned clip unchanged within a centred 9:16 navy canvas, preserving all 8 seconds and silence) → gate (verify complete picture, navy padding, readable words, unchanged timing and silence)",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate tool for a new animated scene; specifies widescreen, eight seconds and removal of generated audio. Explicitly leading with cartoon style would strengthen the prompt.",
+        "verdict": "ok",
+        "tool": "text-to-video"
+      },
+      {
+        "n": 2,
+        "issue": "Appropriate plain text overlay on a clip, with the exact wording and full-duration timing; preserves silence.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      },
+      {
+        "n": 3,
+        "issue": "Uses the correct delivered clip and explicitly specifies full-picture proportional fitting, centred placement, navy padding, vertical aspect and original timing. The reported output failed to follow those instructions.",
+        "verdict": "ok",
+        "tool": "assemble"
+      }
+    ],
+    "missing": "A final verification step could have caught the crop and missing padding before delivery; the transformation instructions themselves cover the requirements."
+  },
+  {
+    "id": "J52a",
+    "best_tools": "yes",
+    "explanation": "The plan correctly branches from the unlettered background: Qwen adds designed poster lettering, while the background alone is animated before stationary event text is overlaid. The unwanted lettering reflects generation failing the explicit no-signage/no-new-lettering instructions, not a plan that animates the lettered poster. The grader also wrongly treats silence as missing merely because still frames cannot establish audio, despite explicit audio-discard instructions.",
+    "better_chain": "image (make a text-free illustrated 9:16 background) → check (inspect for unwanted lettering; image-edit to remove any found) → branch: image-edit with lettering:true (make the finished poster) AND image-to-video (animate the clean background for eight seconds, discarding audio) → text-overlay (add all five exact event strings throughout 0–8 seconds) → inspect both finished assets, including reel motion, readability and silence",
+    "inputs": "sound",
+    "chain_logic": "sound",
+    "also": [
+      "grader"
+    ],
+    "cause": "model-quality",
+    "steps": [
+      {
+        "n": 1,
+        "issue": "Appropriate background-generation tool and prompt, including an explicit prohibition on words and signage. The visible nonsense stall lettering violates that instruction.",
+        "verdict": "ok",
+        "tool": "image"
+      },
+      {
+        "n": 2,
+        "issue": "Qwen image-edit appropriately adds designed lettering to the shared background, with all five exact strings, vertical sizing and safe margins specified.",
+        "verdict": "ok",
+        "tool": "image-edit"
+      },
+      {
+        "n": 3,
+        "issue": "Correctly animates the unlettered background rather than the finished poster. Duration, subtle motion, no new lettering and audio removal are explicitly specified.",
+        "verdict": "ok",
+        "tool": "image-to-video"
+      },
+      {
+        "n": 4,
+        "issue": "Text-overlay is appropriate for stationary exact text over footage. All five strings, continuous eight-second timing, safe placement and no audio are specified.",
+        "verdict": "ok",
+        "tool": "text-overlay"
+      }
+    ],
+    "missing": ""
+  }
+]

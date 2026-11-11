@@ -1,0 +1,47 @@
+{
+ "id": "330618beb3",
+ "key": "must:H41b:App demo visibly changes from messy list to organized daily plan",
+ "symptom": "App demo visibly changes from messy list to organized daily plan",
+ "item": "H41b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the app demo show no change from a messy list to an organized daily plan?",
+    "because": "In both chats the assistant never asked the model for that change. Old prompt: 'a clean, minimal to-do list app; a finger taps tasks and each one gets a satisfying green checkmark'. New clip-1 prompt: 'a clean white to-do list app with round checkboxes... a thumb taps the checkboxes one by one'. The model drew what it was told: one plain list with checkmarks.",
+    "evidence": "s4.old.stupid.H41b/calls.jsonl line 3 (create_video_from_text style.prompt); s4.new.stupid.H41b/calls.jsonl line 8 (plan_video_production beats and the generated step prompt); new grade.json: 'similar plain list throughout, with a couple of small checkmarks'"
+   },
+   {
+    "why": "Why did the prompts describe ticking off tasks and not a messy list becoming a plan?",
+    "because": "The assistant never got the idea of a messy list becoming a plan. The stupid user's only opening message was 'make an ad for a to do list app'. The messy-to-organized idea exists only in the persona's knowledge bank.",
+    "evidence": "s4.old.stupid.H41b/chat.json: messages[0] = 'make an ad for a to do list app'; bank 'Service and purpose' = 'organizes a messy to-do list into a daily plan'"
+   },
+   {
+    "why": "Why did the idea not come out during the chat?",
+    "because": "The persona answers only what it is asked and never volunteers facts. Old build: the assistant asked nothing and went straight to generation. New build: plan_request returned only length, platform and sound questions. The assistant also asked for on-screen words. The user answered '8 sec, silent... ClearDay... wide'. Nobody asked what the ad should show or what the app does.",
+    "evidence": "chat.json persona.reply ('answer it from your knowledge bank' only when asked); old calls.jsonl has no question turn; new calls.jsonl line 2 questions = seconds/aspect/sound, line 6 user reply"
+   },
+   {
+    "why": "Why did the new build's plan_request not ask about content when the subject was this vague?",
+    "because": "plan_request accepted 'an ad for a to do list app' as a user-sourced subject. It treated 'look' as an allowed default ('clean bright modern product ad'). Its description says it must not guess only 'shape, length, sound or on-screen words', so it has no rule to ask about the story or what the ad shows. This also explains why blue-and-white was lost.",
+    "evidence": "tools-new.json plan_request description; new calls.jsonl line 7 output: ready:true, look source 'default', questions []"
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The benchmark grades against the full brief, but the stupid persona gives only a short, vague opener, and the persona design keeps the key concept hidden unless someone asks. Neither build has a step that asks for missing content in a generic subject. The text model also garbles UI text ('tx:xs'), which would weaken any demo shot, but that is secondary here because the change was never requested.",
+    "evidence": "items/H41b.json must_haves vs chat.json messages; new grade.json faults (garbled UI text)"
+   }
+  ],
+  "axiom": "The stupid persona's opening message drops the brief's core concept ('messy list becomes an organized day'), and the persona reveals bank facts only when asked. Neither build's planning flow asks what the ad should show when the subject is generic, so the concept never reaches the prompt.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, flag a generic subject (for example, 'an ad for a <product> app' with no story or action) as missing. Return a plain question such as 'What does the app do, and what should the ad show happening?' before ready=true. Also stop defaulting 'look' silently when the user gave no style."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.20914139999999998
+}

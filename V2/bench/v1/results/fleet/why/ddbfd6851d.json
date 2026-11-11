@@ -1,0 +1,46 @@
+{
+ "id": "ddbfd6851d",
+ "key": "must:C14b:Woman on right recognisably the person in portrait-woman.jpg",
+ "symptom": "Woman on right recognisably the person in portrait-woman.jpg",
+ "item": "C14b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why is the woman on the right not recognisably the person in portrait-woman.jpg?",
+    "because": "The delivered image still shows the original woman. She keeps her blonde bob, light brows, light skin and the same face shape. At most the brows and eyes are a little darker.",
+    "evidence": "s1.old.happy.C14b/assets/03-wait_for_image_project.jpg and s1.old.stupid.C14b/assets/03-wait_for_image_project.jpg are almost the same as the detected target face crop (assets/02-get_face_detection_results.png). grade.json in the happy chat says 'still looks like the original blonde woman. The dark curly hair, brows and face shape of the portrait are not visible'. In the stupid chat it says 'only slightly darker brows'."
+   },
+   {
+    "why": "Why did so little change? Did the assistant send the wrong face or the wrong tool?",
+    "because": "No. In both chats the assistant asked which person to change and the user chose the right woman. It then called swap_face_in_photo in individual-faces mode. It mapped detected face 0-1, which the crop shows is the blonde woman, to the uploaded portrait 512f8147…-image-0.jpg. The call completed and charged 10 credits.",
+    "evidence": "calls.jsonl in both old chats, line 8: face_swap_mode 'individual-faces', original_face '.../0-1.png', new_face '.../512f8147-...-image-0.jpg'. wait_for_image_project returned status 'complete' and type 'FACE_SWAP'. The crop in 02-get_face_detection_results.png shows the blonde woman."
+   },
+   {
+    "why": "Why does a correct face swap call give a result that does not look like the user?",
+    "because": "The Magic Hour photo face-swap engine replaces only the inner face and blends it into the target's skin tone, hair, brows and head shape. The portrait's distinguishing traits are dark curly hair, thick dark brows and an olive complexion. The engine keeps all of these from the target, so the face that results still reads as the blonde woman. The free-plan output is only 640x384 px, so the face is about 130 px wide and the small inner-face changes that do transfer are hard to see.",
+    "evidence": "Output size 640x384 in grade.json checks. The assistant itself notes in the stupid chat (calls.jsonl line 11): 'A face swap changes only the face. Her blonde bob haircut ... stay the same. If you want your dark curly hair too, I can try a head swap.'"
+   },
+   {
+    "why": "Why did the assistant not use a tool that also moves the hair, which the brief allows ('my hair can come with my face')?",
+    "because": "The user never said that hair may come along: that line sits only in the answer sheet, and the assistant did not ask about hair. Also, no tool fits the request. The old swap_face_in_photo description does not warn that the target's hair and skin are kept. swap_head_in_photo takes a whole body image and a head image and has no option to pick one of two people in a group photo. So swap_face_in_photo is the only tool that matches 'swap one face, leave everything else alone'.",
+    "evidence": "tools-old.json: swap_face_in_photo says 'Swaps faces in a supplied photo using a source face image or selected face mappings. Costs 10 credits; output size depends on subscription', with no note on hair or skin. swap_head_in_photo has only body_file_path and head_file_path, with no face_mappings. C14b.json answer_sheet 'Style' gives the hair permission. In state/calls the users only named the right woman."
+   },
+   {
+    "why": "Is this specific to the old build?",
+    "because": "No. The new build follows the same path: plan_request, then detect_faces, then swap_face_in_photo on 0-1 with the same portrait. It produces the same near-identical output, and the grader marks the same item 'no'. So the cause is the shared generation backend, not the MCP layer of either build.",
+    "evidence": "s1.new.happy.C14b/calls.jsonl line 11 makes the same swap_face_in_photo call. s1.new.happy.C14b/grade.json says 'She still looks like the original blonde woman ... Any change is subtle and not recognisable as the user.'"
+   }
+  ],
+  "axiom": "The Magic Hour photo face-swap model, at free-plan 640px output, moves only the inner facial features and blends them into the target's hair, brows, skin tone and head shape. When the source and target look very different (dark curly hair and olive skin onto a pale blonde), the result still looks like the target. No available tool can swap one selected person's whole head, hair included, in a group photo. This is a limit of the generation model.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add one sentence to the swap_face_in_photo description: \"Replaces only the inner face and keeps the target's hair, brows and skin tone. If the user must be recognisable and looks very different from the target, ask whether hair may come along, and offer swap_head_in_photo on a crop of the selected person instead.\" The engine limit itself cannot be fixed (inherent), so this guidance only routes users to an approach that can work."
+ },
+ "error": null,
+ "seconds": 57,
+ "usd": 0.9645420000000001
+}

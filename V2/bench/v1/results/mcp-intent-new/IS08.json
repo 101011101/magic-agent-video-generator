@@ -1,0 +1,178 @@
+{
+  "id": "IS08",
+  "item": {
+    "id": "IS08",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Face swap on a photo",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Face swap on a photo",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "web-evan.jpg",
+          "student-teacher.jpg"
+        ],
+        "text": "put the one guy's face on the other"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "which": "the teacher's face (the man in the grey shirt) onto the man with braids"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "swap_face_in_photo"
+  },
+  "session": "mcp-min-IS08",
+  "sessionDir": "sessions/mcp-min-IS08",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "put the one guy's face on the other",
+      "materials": [
+        "web-evan.jpg",
+        "student-teacher.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Whose face goes where (which person in the picture)?",
+          "asked": [
+            "question"
+          ],
+          "user": "The teacher’s face (the man in the grey shirt) onto the man with braids.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t complete the swap because your Magic Hour account has **0 credits**; this face swap requires **10 credits**. Once you add credits, I can put the grey-shirted teacher’s face onto the man with braids.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"put the one guy's face on the other\\n[Attached: web-evan.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/43a69c8c-2782-4b32-ac5c-3965a36feaa8-image-0.jpg]\\n[Attached: student-teacher.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/7b9cf677-138c-4c4d-a552-a81f290c9cc1-image-0.jpg]\"}],\"attachments\":[{\"name\":\"web-evan.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"student-teacher.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"tool\":\"swap_face_in_photo\",\"params\":[{\"name\":\"edit\",\"value\":\"Swap one man's face onto the other man's photo.\",\"source\":\"user\"},{\"name\":\"which_face\",\"source\":\"missing\"}]}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":false,\"params\":[{\"name\":\"which_face\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"which_face\",\"question\":\"Whose face goes where (which person in the picture)?\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"put the one guy's face on the other\\n[Attached: web-evan.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/43a69c8c-2782-4b32-ac5c-3965a36feaa8-image-0.jpg]\\n[Attached: student-teacher.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/7b9cf677-138c-4c4d-a552-a81f290c9cc1-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Whose face goes where (which person in the picture)?\"},{\"role\":\"user\",\"text\":\"The teacher’s face (the man in the grey shirt) onto the man with braids.\"}],\"tool\":\"swap_face_in_photo\",\"attachments\":[{\"name\":\"web-evan.jpg\",\"kind\":\"image\",\"role\":\"person\"},{\"name\":\"student-teacher.jpg\",\"kind\":\"image\",\"role\":\"person\"}],\"params\":[{\"name\":\"edit\",\"value\":\"Swap the grey-shirted teacher's face onto the man with braids.\",\"source\":\"user\"},{\"name\":\"which_face\",\"value\":{\"source_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/7b9cf677-138c-4c4d-a552-a81f290c9cc1-image-0.jpg\",\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/43a69c8c-2782-4b32-ac5c-3965a36feaa8-image-0.jpg\"},\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"swap_face_in_photo\",\"ready\":true,\"params\":[{\"name\":\"which_face\",\"value\":{\"source_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/7b9cf677-138c-4c4d-a552-a81f290c9cc1-image-0.jpg\",\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/43a69c8c-2782-4b32-ac5c-3965a36feaa8-image-0.jpg\"},\"source\":\"derived\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "swap_face_in_photo",
+          "args": {
+            "assets": {
+              "source_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/7b9cf677-138c-4c4d-a552-a81f290c9cc1-image-0.jpg",
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/43a69c8c-2782-4b32-ac5c-3965a36feaa8-image-0.jpg",
+              "face_swap_mode": "all-faces"
+            },
+            "name": "Teacher face on man with braids"
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Whose face goes where (which person in the picture)?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "swap_face_in_photo: insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t complete the swap because your Magic Hour account has **0 credits**; this face swap requires **10 credits**. Once you add credits, I can put the grey-shirted teacher’s face onto the man with braids.",
+        "refuse": "",
+        "tier_move": "I couldn’t complete the swap because your Magic Hour account has **0 credits**; this face swap requires **10 credits**. Once you add credits, I can put the grey-shirted teacher’s face onto the man with braids.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "student-teacher.jpg",
+              "web-evan.jpg"
+            ],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 44
+    }
+  ],
+  "started": "2026-11-05T07:28:07.867Z",
+  "spent": 0,
+  "seconds": 45
+}

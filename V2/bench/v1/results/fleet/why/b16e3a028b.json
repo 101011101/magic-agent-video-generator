@@ -1,0 +1,47 @@
+{
+ "id": "b16e3a028b",
+ "key": "check:length:G",
+ "symptom": "about 10 s",
+ "item": "G37a",
+ "n": 3,
+ "builds": {
+  "old": 1,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the grader measure 5 s instead of about 10 s?",
+    "because": "The grader measured the only .mp4 it had. That file was the raw 5 s scene clip that wait_for_video_project downloaded, not the joined reel.",
+    "evidence": "s4.new.happy.G37a/grade.json: the 'about 10 s' check got '5 s'. The file list is [.png,.png,.mp4,.wav], and the only video check is on '03-wait_for_video_project.mp4'. The judge writes: 'The reel frames only cover the first 5 s, so the text card is not visible.'"
+   },
+   {
+    "why": "Why was the joined 10 s reel not among the graded files?",
+    "because": "The harness tried to download the URL that join_production_clips returned and got HTTP 404. So no file was saved for the finished film.",
+    "evidence": "s4.new.happy.G37a/calls.jsonl line 20: join_production_clips output has download_url 'http://127.0.0.1:8000/films/2afa….mp4' and seconds 10.1. Its files entry is 'download failed: download 404 http://127.0.0.1:8000/films/…mp4'. s4.new.stupid.G37b/calls.jsonl lines 19 and 33 show the same 404 for both joined reels (9.2 s each)."
+   },
+   {
+    "why": "Why did the download of the joined reel fail?",
+    "because": "The new build joins clips locally and serves the result from a local film server (127.0.0.1:8000), not from the Magic Hour CDN. The harness fetch could not reach that file at that address when it ran: the server was gone, the path was wrong, or the fetch ran in a different place. Hosted clips from videos.magichour.ai downloaded fine in the same chats.",
+    "evidence": "In the same calls.jsonl files, every videos.magichour.ai asset was saved (assets/01…07). Only the 127.0.0.1:8000/films URLs failed. The join itself measured the film as 'One file, 10 s, 9:16 → 10.1 s, 480x854, yes'."
+   },
+   {
+    "why": "Was the reel really short, or was it only measured short?",
+    "because": "In the new build it was only measured short. The assistant planned 5 s of scene plus a 5 s drawn card, and the join reported 10.1 s. So the assistant met the brief, and the grader judged a part of the film. (In the old-build chat s4.old.stupid.G37b the reel really was 5 s. The old build has no join tool, so the assistant gave one 5 s image-to-video clip as the reel. The stupid persona never said '10 seconds'. That is a separate, real cause in the old build.)",
+    "evidence": "s4.new.happy.G37a/calls.jsonl line 13: plan_video_production beats are 5 s scene + 5 s card, plan 'seconds':10. s4.old.stupid.G37b/state.json: the reply says 'Reel (5 seconds, vertical 480p, with sound)'. The opening message 'make a matching poster story pic and reel for a jazz event' gives no length. s4.old.stupid.G37b/grade.json: 'The reel is 5 seconds, not 10.'"
+   },
+   {
+    "why": "Why did the grader not notice that the joined file was missing?",
+    "because": "The duration check takes whatever .mp4 files were saved. It does not require the URL the assistant delivered to resolve to a saved file. The check 'a file backs what it said it delivered' passed on the count of files alone (4 files), even though the delivered reel URL had failed.",
+    "evidence": "s4.new.happy.G37a/grade.json: 'a file backs what it said it delivered' pass with got '4 file(s)', while state.json's final reply delivers http://127.0.0.1:8000/films/2afa….mp4, which failed to download."
+   }
+  ],
+  "axiom": "This is a test-harness defect. The harness cannot fetch the joined film that the local new build serves at http://127.0.0.1:8000/films/… (HTTP 404). So the grader measures the 5 s raw scene clip in place of the delivered 10 s reel. The grader also does not flag a delivered URL that has no saved file. This explains 2 of the 3 chats (both new). The 1 old chat is a real 5 s output: the stupid persona never asked for 10 s, and the old build cannot join clips past the 5 s single-clip length.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the harness save the joined film. Keep the local film server up and reachable until the grade step runs, or have join_production_clips also return or copy a local file path that the harness saves into assets/. Also make the grader fail loudly ('delivered video not captured') and not fall back to the raw clip duration when a delivered video URL cannot be downloaded."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.7373678
+}

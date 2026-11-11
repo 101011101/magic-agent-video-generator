@@ -1,0 +1,47 @@
+{
+ "id": "ef5286f31f",
+ "key": "must:E29c:Small, white, translucent, readable, subtle shadow",
+ "symptom": "Small, white, translucent, readable, subtle shadow",
+ "item": "E29c",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Small, white, translucent, readable, subtle shadow' not met?",
+    "because": "No watermark text exists in any output frame, so there is no styling to judge. The grader failed this item only as a side effect of the missing watermark.",
+    "evidence": "grade.json in s3.old.stupid, s3.old.dumper and s3.new.stupid: 'No text is present to judge' / 'No watermark text present'. exact_text '@flightschool' is seen='missing' in all three. The only text the grader saw is the subtitle 'Rook, you with me?' ('Right here, Vega.' in old.dumper)."
+   },
+   {
+    "why": "Why is there no watermark in the output?",
+    "because": "The assistant made the watermark by sending a text prompt to edit_video, the AI video editor (ltx-2.5, 480p). This model regenerates every frame from the prompt. It returned a re-rendered cockpit clip and did not draw the small text.",
+    "evidence": "calls.jsonl: old.stupid edit_video prompt 'add a small, semi-transparent white text watermark reading \"@flightschool\" in the bottom-right corner'. old.dumper gives the same request plus '65% opacity, faint soft dark drop shadow'. new.stupid gives the same request with end_seconds 10. Every job finished with status complete at 832x512 and gave no error. The grader says the footage was 're-rendered and softer', with a different opening shot."
+   },
+   {
+    "why": "Why did the assistant use a generative editor instead of a real overlay?",
+    "because": "Neither build has a tool that puts fixed text or a logo layer on top of a video. edit_video is the only route, and it can only be steered by a prompt.",
+    "evidence": "In every chat the assistant tells the user this before it calls a tool. old.stupid: 'Magic Hour has no watermark tool. The only way to do it is the AI video editor'. new.stupid: 'Magic Hour has no tool that stamps a fixed watermark onto a video'. old.dumper: 'none of the Magic Hour tools I have can put a fixed text watermark on a video... Auto subtitles... can't show your own fixed text'. In new.stupid the assistant first tried join_videos, which returned a 404 error, and then fell back to edit_video. Only the first 60 lines of tools-new.json (get_workflow_guide, plan_request) were read. The 'no overlay tool' claim rests on the assistant's statements, which agree in both builds."
+   },
+   {
+    "why": "Why did the run go ahead even though the assistant knew the method was unreliable?",
+    "because": "The assistant warned that the text could fail and suggested ffmpeg drawtext or CapCut. Each simulated user then told it to try anyway ('ya go', 'ya go ahead', 'just go ahead and try it anyway'). The assistant carried out a request it had already warned about, which was a reasonable choice.",
+    "evidence": "state/calls 'say' entries: kind=question/approval/cannot with warnings, then user replies such as 'Oh, please just go ahead and try it anyway' (old.dumper, nudge:true)."
+   },
+   {
+    "why": "Why can't the AI editor draw a small, exact, translucent text overlay?",
+    "because": "A video-to-video diffusion model at 480p cannot reliably render small, exact text with set opacity and shadow, especially when it is also told to keep the frame the same. This is a limit of the generation model. The free plan's 480p cap makes small glyphs harder still.",
+    "evidence": "All three outputs are 832x512 (wait_for_video_project result) and have no glyphs at the bottom right. The assistant itself predicted 'the text may not come out exactly right'."
+   }
+  ],
+  "axiom": "Neither build has a deterministic text or logo overlay tool. The only route is the generative video editor (ltx-2.5, 480p on the free plan), and it cannot reliably render small, exact, translucent watermark text. It drew no text at all. The failed styling item follows from the missing watermark.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic overlay tool to the MCP server, for example add_text_overlay or add_watermark, built on an ffmpeg drawtext/overlay pass. It should take the text, corner, margin, font size, color@opacity and shadow, and copy the audio and source frames unchanged. Until that exists, the edit_video description should say that it cannot add watermarks or small text, so the assistant offers the ffmpeg command instead of spending credits."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.2375748
+}

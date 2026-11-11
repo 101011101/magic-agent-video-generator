@@ -1,0 +1,196 @@
+{
+  "id": "IS10",
+  "item": {
+    "id": "IS10",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Two pictures, one reference slot: car on the bridge",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Two pictures, one reference slot: car on the bridge",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "video",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "rt3-bugatti.jpg",
+          "rt3-goldengate.jpg"
+        ],
+        "text": "a video of this car driving across this bridge"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "where": "YouTube",
+      "length": "10 seconds",
+      "sound": "silent"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "create_video_from_image"
+  },
+  "session": "mcp-mim-IS10",
+  "sessionDir": "sessions/mcp-mim-IS10",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "a video of this car driving across this bridge",
+      "materials": [
+        "rt3-bugatti.jpg",
+        "rt3-goldengate.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "How long should it be?\n\nWhere will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\n\nShould it have sound: music, a voice, or silent?",
+          "asked": [
+            "question"
+          ],
+          "user": "10 seconds, for YouTube, and silent.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "The video couldn’t be generated because your Magic Hour account has **0 credits**. This 10-second video requires about **240 credits**.\n\nOnce you add credits, I can retry with both reference photos, YouTube widescreen format, and no sound.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"a video of this car driving across this bridge\\n[Attached: rt3-bugatti.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a62c87d-ce7c-4c41-a4f0-6a4a12e55837-image-0.jpg]\\n[Attached: rt3-goldengate.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/00fab7eb-9caf-4a22-987c-6f17a2a53f13-image-0.jpg]\"}],\"attachments\":[{\"name\":\"rt3-bugatti.jpg\",\"kind\":\"image\",\"role\":\"product\"},{\"name\":\"rt3-goldengate.jpg\",\"kind\":\"image\",\"role\":\"environment\"}],\"tool\":\"create_video_from_text\",\"params\":[{\"name\":\"subject\",\"value\":\"The light blue Bugatti in rt3-bugatti.jpg on the Golden Gate Bridge in rt3-goldengate.jpg\",\"source\":\"derived\"},{\"name\":\"motion\",\"value\":\"Car driving across the bridge\",\"source\":\"user\"},{\"name\":\"seconds\",\"source\":\"missing\"},{\"name\":\"aspect\",\"source\":\"missing\"},{\"name\":\"sound\",\"source\":\"missing\"}]}",
+          "output": "{\"tool\":\"create_video_from_text\",\"ready\":false,\"params\":[{\"name\":\"subject\",\"value\":\"The light blue Bugatti in rt3-bugatti.jpg on the Golden Gate Bridge in rt3-goldengate.jpg\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"seconds\",\"value\":null,\"source\":\"missing\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"},{\"name\":\"sound\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"seconds\",\"question\":\"How long should it be?\"},{\"param\":\"aspect\",\"question\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\"},{\"param\":\"sound\",\"question\":\"Should it have sound: music, a voice, or silent?\"}]}",
+          "error": null
+        },
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"video-generator\"}",
+          "output": "{\"workflow\":\"video-generator\",\"title\":\"Generate a new video from a text prompt\",\"input\":\"A description of a new scene; use image-to-video when a specific reference image matters.\",\"product_url\":\"https://magichour.ai/products/ai-video-generator\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/video-projects/text-to-video\",\"creation_tool\":\"create_video_from_text\",\"steps\":[\"Use text-to-video for a new scene without a required likeness; use an image reference and image-to-video when identity must stay consistent.\",\"Specify the subject, one action, camera move, framing and mood. Request only audio and duration supported by the selected model.\",\"Call create_video_from_text, then wait_for_video_project with the returned id and review the actual result.\"],\"example_request\":\"Create a short cinematic scene of a tiny astronaut discovering a glowing forest inside a glass bottle, with a slow orbiting camera.\",\"follow_up\":\"Edit or subtitle the accepted result instead of paying to regenerate unchanged footage.\",\"review\":\"Check prompt adherence, continuity, audio and output settings for the selected model.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"tool\":\"create_video_from_text\",\"messages\":[{\"role\":\"user\",\"text\":\"a video of this car driving across this bridge\\n[Attached: rt3-bugatti.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a62c87d-ce7c-4c41-a4f0-6a4a12e55837-image-0.jpg]\\n[Attached: rt3-goldengate.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/00fab7eb-9caf-4a22-987c-6f17a2a53f13-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"How long should it be?\\n\\nWhere will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\\n\\nShould it have sound: music, a voice, or silent?\"},{\"role\":\"user\",\"text\":\"10 seconds, for YouTube, and silent.\"}],\"attachments\":[{\"name\":\"rt3-bugatti.jpg\",\"kind\":\"image\",\"role\":\"product\"},{\"name\":\"rt3-goldengate.jpg\",\"kind\":\"image\",\"role\":\"environment\"}],\"params\":[{\"name\":\"subject\",\"value\":\"The light blue Bugatti in rt3-bugatti.jpg driving across the Golden Gate Bridge in rt3-goldengate.jpg\",\"source\":\"derived\"},{\"name\":\"seconds\",\"value\":10,\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"16:9\",\"source\":\"derived\",\"from\":\"for YouTube\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\"}]}",
+          "output": "{\"tool\":\"create_video_from_text\",\"ready\":true,\"params\":[{\"name\":\"subject\",\"value\":\"The light blue Bugatti in rt3-bugatti.jpg driving across the Golden Gate Bridge in rt3-goldengate.jpg\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"seconds\",\"value\":10,\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"16:9\",\"source\":\"user\",\"from\":\"the user's words\"},{\"name\":\"sound\",\"value\":\"silent\",\"source\":\"user\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_video_from_text",
+          "args": {
+            "style": {
+              "prompt": "Photorealistic single continuous tracking shot of the light blue Bugatti from @car driving smoothly across the Golden Gate Bridge shown in @bridge. Preserve the reference car's distinctive body shape, pale metallic blue paint, black details, wheels, and horseshoe grille. Match the bridge's red suspension towers and cables, bay setting, and clear daylight. Camera tracks alongside and slightly ahead at a front three-quarter angle, keeping the whole car visible while roadway and red bridge structures move naturally past. Car stays in its lane on the road deck, wheels rotate realistically. Natural reflections and coherent geometry. No cuts, no on-screen text. Silent."
+            },
+            "references": [
+              {
+                "file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/0a62c87d-ce7c-4c41-a4f0-6a4a12e55837-image-0.jpg",
+                "name": "car"
+              },
+              {
+                "file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/00fab7eb-9caf-4a22-987c-6f17a2a53f13-image-0.jpg",
+                "name": "bridge"
+              }
+            ],
+            "end_seconds": 10,
+            "resolution": "480p",
+            "aspect_ratio": "16:9",
+            "model": "minimax-h3",
+            "audio": false,
+            "name": "Bugatti Across the Golden Gate Bridge"
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 240 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "How long should it be?\n\nWhere will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\n\nShould it have sound: music, a voice, or silent?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "create_video_from_text: insufficient credits: this call needs about 240 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "The video couldn’t be generated because your Magic Hour account has **0 credits**. This 10-second video requires about **240 credits**.\n\nOnce you add credits, I can retry with both reference photos, YouTube widescreen format, and no sound.",
+        "refuse": "",
+        "tier_move": "The video couldn’t be generated because your Magic Hour account has **0 credits**. This 10-second video requires about **240 credits**.\n\nOnce you add credits, I can retry with both reference photos, YouTube widescreen format, and no sound.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 55
+    }
+  ],
+  "started": "2026-11-05T09:15:54.478Z",
+  "spent": 0,
+  "seconds": 55
+}

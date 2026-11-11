@@ -1,0 +1,52 @@
+{
+ "id": "F32b",
+ "root_cause": "grader",
+ "contributing": [
+  "harness"
+ ],
+ "grader_right": false,
+ "agent_vs_you": "The plan is what I would run: write, with article.txt as context, a two-speaker script in 'Name: line' form at about 2.5 words a second, then voice it with two distinct synthetic voices. No music, no assemble. The script holds every main point of the article (Miyawaki's method, 3-5 native saplings per m² in enriched soil, competition for light, about 3 years to self-sustain, cooler streets, insects and birds, schoolchildren, thin evidence, sapling die-off, not a substitute for large trees that store more carbon). It invents nothing: 'Akira Miyawaki' and 'three to five saplings' are both in the article. One host asks and reacts while the other explains. The only thing I would change is the prompt, asking for looser paraphrase and more reactions from both hosts, because Maya's lines are close to verbatim article sentences. The failure is the grader's. Its transcript stopped about 25 s in ('in enriched'), and it was never given the article, so every content check became cannot_tell. It then called the truncation a 'major fault' of the audio, but the file has continuous speech to 99.8 s. One harness quirk did not affect the grade: voice.js picks the first voice from the word 'female' in extra, so 'Alex' (meant male) got the female 'coral' voice and 'Maya' got the male 'onyx'. That is still one male and one female voice, but the reverse of the plan.",
+ "your_plan": {
+  "say": "I'll turn the article into a friendly 90-second chat between two hosts, using only its facts, and voice it with a male and a female synthetic voice, with no music.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "write",
+    "inputs": [
+     "article.txt"
+    ],
+    "produces": "podcast-script.txt",
+    "params": {
+     "prompt_or_change": "Adapt the article into a friendly, curious two-host podcast conversation. Alex (a man) opens with a hook and both hosts ask, react and explain in their own words: paraphrase, never read article sentences verbatim. Explain what tiny urban forests are (dense plantings of native trees in small urban spaces such as a lot the size of a tennis court) and cover every main point: Miyawaki's method of 3-5 native saplings per square metre in enriched soil, fast growth from competition for light, the supporters' claim of self-sustaining in about three years, the claimed benefits (cooler streets, more insects and birds, a place for schoolchildren to learn), the critics' view that the evidence is still thin because projects are young and many saplings die, and the agreement that tiny forests do not replace protecting large trees, which store far more carbon. Use only facts in the article: no numbers, studies, quotes, places or examples that are not in it. End with a short friendly sign-off.",
+     "extra": "length: about 205 words (90 seconds at this voice's pace of about 2.3 words a second); one 'Alex: line' or 'Maya: line' per line; 12-16 turns; English",
+     "aspect": "",
+     "seconds": 90,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Words that must be written from a source go through write, with the article as context. The length is stated in words so the audio lands near 90 s."
+   },
+   {
+    "tool": "voice",
+    "inputs": [
+     "podcast-script.txt"
+    ],
+    "produces": "tiny-forests-podcast.mp3",
+    "params": {
+     "prompt_or_change": "Read the conversation, one voice per speaker, without reading the names.",
+     "extra": "voice: male; tone: friendly, curious, relaxed conversation, not a newsreader",
+     "aspect": "",
+     "seconds": 90,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Two voices from 'Name: line' lines is what voice does well. With only 'male' in extra, the first speaker (Alex) gets the male voice and the second (Maya) the female one under the current voice.js."
+   }
+  ]
+ },
+ "fix": "Grader: transcribe the whole file, not just the first ~25 s, and give the judge the user's attachments (article.txt) when a must-have checks facts against them. Never raise a 'major fault' from the grader's own truncated evidence. Harness: voice.js should map speakers to voices from per-name hints in extra ('Alex: male', 'Maya: female') or from a known-name gender guess, rather than taking the first match of 'female' anywhere in extra.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "The article (126 words) and podcast_script.txt (231 words, 14 alternating Alex/Maya lines) match point for point, with no invented facts. tiny_urban_forests_podcast.mp3 is 99.8 s, mono 24 kHz, with RMS between -22 and -34 dB in every 5 s window. silencedetect shows only inter-turn pauses of 0.3-1.9 s and speech right to the end, so there is no truncation at 'in enriched' (about 22-25 s in). The voice note says 'voices coral, onyx': one female, one male. The judge's verdicts are all cannot_tell, apart from length = yes, and its single major fault is about its own partial transcript."
+}

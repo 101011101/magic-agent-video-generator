@@ -1,0 +1,41 @@
+{
+ "id": "8d0673903c",
+ "key": "must:J51a:A coffee cup sits on a windowsill with visible rain outside.",
+ "symptom": "A coffee cup sits on a windowsill with visible rain outside.",
+ "item": "J51a",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'A coffee cup sits on a windowsill with visible rain outside' not met?",
+    "because": "No video file was produced in these chats, so the grader had no scene to judge.",
+    "evidence": "s2r.old.happy.J51a/grade.json: check 'something was made' pass=false, got 'no file'. The must-have reason is 'Nothing was produced, so no scene exists.' All five must-haves fail for the same reason."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "Every create_video_from_text call was refused before generation. The assistant did not skip the call: it called the tool with correct arguments (happy: ltx-2.5, 9:16, 480p, 6 s, a windowsill and rain prompt).",
+    "evidence": "s2r.old.happy.J51a/calls.jsonl lines 5 and 10: approve=false, reason 'insufficient credits: this call needs about 144 credits and 0 remain on the account'. s2r.old.stupid.J51a/calls.jsonl lines 3 and 8: same refusal, 'needs about 120 credits and 0 remain'."
+   },
+   {
+    "why": "Why were the calls refused?",
+    "because": "The free-plan account that the old (hosted) build used had a balance of 0 credits for the whole chat. No setting on the free plan costs 0 credits, so the assistant had no way around the block. The assistant reported this honestly and stopped.",
+    "evidence": "happy and stupid calls.jsonl: the balance is 0 at both turns. The assistant's 'cannot' messages say nothing was made and offer only to add credits or wait for a refill."
+   },
+   {
+    "why": "Why did the account have 0 credits, even though the test expects the task to work on the free plan?",
+    "because": "The fleet runs many chats on the same old-side account, and earlier chats used up its credits. All 3 failures are old-build chats (happy, stupid, dumper), and none are new-build chats. So the cause is the old account's balance during the run, not the brief, the tool descriptions or the model.",
+    "evidence": "J51a.json expect.beyond_free='no': a 6 s 480p ltx-2.5 clip is meant to fit the free plan. The symptom covers builds {old:3} only. The refusal gives 0 remaining credits in back-to-back chats (timestamps 1794364552687 and 1794364589634), which matches an account that was empty before these chats started."
+   }
+  ],
+  "axiom": "The test account for the old build had 0 credits when these chats ran, because the shared account was used up during the fleet run. This is a test-harness defect, not a behaviour of the assistant, the tools or the generation model.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Before each chat, reset or top up the old-build test account to a fixed free-plan balance, or give each build its own account. Make the harness check the balance first: if it is too low for the expected job, mark the chat as 'harness: no credits' and do not grade it."
+ },
+ "error": null,
+ "seconds": 24,
+ "usd": 0.0908766
+}

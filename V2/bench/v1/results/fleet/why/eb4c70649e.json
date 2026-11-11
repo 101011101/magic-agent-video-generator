@@ -1,0 +1,47 @@
+{
+ "id": "eb4c70649e",
+ "key": "check:silent:I",
+ "symptom": "silent as asked",
+ "item": "I45b",
+ "n": 8,
+ "builds": {
+  "old": 6,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did 'silent as asked' fail with 'audio track, peak -30.5 dB'?",
+    "because": "The grader measured a raw intermediate clip (clip 2), not the delivered film. That clip had a faint audio track.",
+    "evidence": "s5.new.happy.I45b/grade.json: two 'silent as asked' checks. 02-wait_for_video_project.mp4 has a peak of -46.8 dB and passes. 03-wait_for_video_project.mp4 has a peak of -30.5 dB and fails. The 'about 15 s' check got 5.2 s, so the grader looked at single 5 s clips."
+   },
+   {
+    "why": "Why did the grader measure clips and not the delivered film?",
+    "because": "The harness could not download the joined film. The delivered film was in fact silent.",
+    "evidence": "s5.new.happy.I45b/calls.jsonl line 12: join_production_clips returned checked 'No sound' -> got 'silent', result 'yes', with a download_url of http://127.0.0.1:8000/films/...mp4. Its files field shows 'download failed: download 404'."
+   },
+   {
+    "why": "Why did a raw clip have sound when the assistant asked for silence?",
+    "because": "audio:false was sent, but the generated clip still came back with an audio track. Sometimes the track is faint (-30.5 dB). Sometimes it is loud.",
+    "evidence": "s5.new.happy calls.jsonl line 2: plan_video_production gives steps with audio:false for minimax-h3, and clip 2 still measured -30.5 dB. s5.new.stupid.I45b calls.jsonl line 10: create_video_from_image with model minimax-h3 and audio:false. In grade.json that same clip has 'audio track, peak -1.6 dB'."
+   },
+   {
+    "why": "Why does audio:false not give a silent file?",
+    "because": "Two causes are possible: the server does not pass the flag to the provider, or the minimax-h3 model ignores it. The evidence cannot decide between them because there are no request logs between the server and the provider. The model ignoring the flag is the better-supported cause, because the server only removes audio when it joins clips.",
+    "evidence": "In both new chats the assistant sent audio:false correctly. Only the join output shows 'silent'. Output from create_video_from_image and create_production_clip goes to the user without audio removed (new.stupid delivered the raw clip directly)."
+   },
+   {
+    "why": "Why do the old-build chats (6 of 8) fail too?",
+    "because": "In the old build the assistant does not pass silence through at all. In old.stupid the vague user never said 'silent'. The assistant did not ask about sound, and it turned audio on itself.",
+    "evidence": "s5.old.stupid.I45b/chat.json: the first message is only 'make a little movie with the people in this pic and this pic'. calls.jsonl line 4: create_video_from_image with ltx-2.5, audio:true, and a prompt that says 'natural ambient park sound'. grade.json: peak -1.2 dB. The new build's plan_request asked 'Should it have sound...?' and got 'no sound' (new.stupid calls.jsonl line 2 and the user turn)."
+   }
+  ],
+  "axiom": "The video model (minimax-h3 through the Magic Hour API) can return an audio track even when audio:false is sent. Only the server's join step removes it. In the -30.5 dB case, the harness then made it worse: the joined film download failed (404), so the grader measured that raw clip and not the silent film that was delivered.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "When audio is false, the MCP server must remove the audio track (ffmpeg -an) from every video it returns: create_video_from_image, create_video_from_text and create_production_clip, not only join_production_clips. The harness must also serve the joined film from 127.0.0.1:8000 so the grader measures the delivered file. In the old build, add a sound question, like the new build's plan_request."
+ },
+ "error": null,
+ "seconds": 67,
+ "usd": 0.6067228
+}

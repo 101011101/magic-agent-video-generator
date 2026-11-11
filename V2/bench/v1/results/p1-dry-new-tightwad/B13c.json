@@ -1,0 +1,189 @@
+{
+  "id": "B13c",
+  "item": {
+    "id": "B13c",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which of the two attached pictures should be upscaled?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resolve the Upscale Target",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg",
+          "lake-small.jpg"
+        ],
+        "text": "upscale it please"
+      }
+    ],
+    "tests": "Asks which attachment the user means, then upscales only the selected picture without guessing or processing both.",
+    "answer_sheet": {
+      "Which picture": "The lake one, lake-small.jpg.",
+      "Output size": "your call",
+      "Enhancement style": "your call",
+      "Framing": "Keep the whole lake picture and its original proportions.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The final deliverable is an upscaled version of lake-small.jpg, following clarification.",
+      "The lake, mountains, trees, clouds, and their arrangement remain faithful to the selected source.",
+      "The delivered image has larger pixel dimensions than lake-small.jpg, not merely a renamed copy.",
+      "The full original framing and aspect ratio are preserved.",
+      "Only one edited image is delivered; the dog photo is not included or blended into it."
+    ]
+  },
+  "session": "mcp-p1-dry-n-tightwad-B13c",
+  "sessionDir": "sessions/mcp-p1-dry-n-tightwad-B13c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Upscale it please. I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+      "materials": [
+        "blurry-dog.jpg",
+        "lake-small.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "I haven’t run anything or spent any credits.\n\nYou attached **two images**—the blurry dog and the lake. Which one would you like upscaled, or did you mean both?\n\n- **Cheapest upscale:** 2× in **Preserve** mode, starting at **25 credits per image**—**50 credits for both** at that rate.\n- **Free-plan limit:** 2×; 4× requires a paid plan.\n- **Cheaper option:** upscale only one image. There’s no shorter-duration option for photos, and no listed discount for making the input smaller.\n- **Zero-credit alternative:** resize locally with a regular image editor. This enlarges the image but won’t recover missing detail.\n\nThe dog is quite blurry, so enlarging it may still leave it blurry; Preserve mode isn’t guaranteed to restore sharp detail.\n\nTell me **dog, lake, or both**, and whether you approve the listed cost before I proceed.",
+          "asked": [
+            "question"
+          ],
+          "user": "The lake one, lake-small.jpg—ok, go ahead with that at 25 credits. Keep the whole picture and its original proportions, with no added text.",
+          "calls_before": 0
+        }
+      ],
+      "agent": "The upscale was blocked because your account has **insufficient credits**. **No image was created and no credits were spent.**\n\nI haven’t tried another option. You can resize the lake photo locally for free, keeping the full picture and original proportions, though that won’t add detail.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Upscale it please. I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/47ca5531-830e-45ec-816a-895aa3e50f57-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f957841-5cdb-44a4-9ee8-b3ce321a8046-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"I haven’t run anything or spent any credits.\\n\\nYou attached **two images**—the blurry dog and the lake. Which one would you like upscaled, or did you mean both?\\n\\n- **Cheapest upscale:** 2× in **Preserve** mode, starting at **25 credits per image**—**50 credits for both** at that rate.\\n- **Free-plan limit:** 2×; 4× requires a paid plan.\\n- **Cheaper option:** upscale only one image. There’s no shorter-duration option for photos, and no listed discount for making the input smaller.\\n- **Zero-credit alternative:** resize locally with a regular image editor. This enlarges the image but won’t recover missing detail.\\n\\nThe dog is quite blurry, so enlarging it may still leave it blurry; Preserve mode isn’t guaranteed to restore sharp detail.\\n\\nTell me **dog, lake, or both**, and whether you approve the listed cost before I proceed.\"},{\"role\":\"user\",\"text\":\"The lake one, lake-small.jpg—ok, go ahead with that at 25 credits. Keep the whole picture and its original proportions, with no added text.\"}],\"attachments\":[{\"name\":\"lake-small.jpg\",\"kind\":\"image\",\"role\":\"environment\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"lake-small.jpg, api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f957841-5cdb-44a4-9ee8-b3ce321a8046-image-0.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"2× upscale in Preserve mode; approved maximum cost 25 credits\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Keep the whole picture and its original proportions\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":\"No added text\",\"source\":\"user\"}]}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "upscale_image",
+          "args": {
+            "scale_factor": 2,
+            "style": {
+              "mode": "preserve"
+            },
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f957841-5cdb-44a4-9ee8-b3ce321a8046-image-0.jpg"
+            },
+            "name": "Lake — 2× Preserve Upscale"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "said",
+          "text": "I haven’t run anything or spent any credits.\n\nYou attached **two images**—the blurry dog and the lake. Which one would you like upscaled, or did you mean both?\n\n- **Cheapest upscale:** 2× in **Preserve** mode, starting at **25 credits per image**—**50 credits for both** at that rate.\n- **Free-plan limit:** 2×; 4× requires a paid plan.\n- **Cheaper option:** upscale only one image. There’s no shorter-duration option for photos, and no listed discount for making the input smaller.\n- **Zero-credit alternative:** resize locally with a regular image editor. This enlarges the image but won’t recover missing detail.\n\nThe dog is quite blurry, so enlarging it may still leave it blurry; Preserve mode isn’t guaranteed to restore sharp detail.\n\nTell me **dog, lake, or both**, and whether you approve the listed cost before I proceed."
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Upscale it please. I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/47ca5531-830e-45ec-816a-895aa3e50f57-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f957841-5cdb-44a4-9ee8-b3ce321a8046-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"I haven’t run anything or spent any credits.\\n\\nYou attached **two images**—the blurry dog and the lake. Which one would you like upscaled, or did you mean both?\\n\\n- **Cheapest upscale:** 2× in **Preserve** mode, starting at **25 credits per image**—**50 credits for both** at that rate.\\n- **Free-plan limit:** 2×; 4× requires a paid plan.\\n- **Cheaper option:** upscale only one image. There’s no shorter-duration option for photos, and no listed discount for making the input smaller.\\n- **Zero-credit alternative:** resize locally with a regular image editor. This enlarges the image but won’t recover missing detail.\\n\\nThe dog is quite blurry, so enlarging it may still leave it blurry; Preserve mode isn’t guaranteed to restore sharp detail.\\n\\nTell me **dog, lake, or both**, and whether you approve the listed cost before I proceed.\"},{\"role\":\"user\",\"text\":\"The lake one, lake-small.jpg—ok, go ahead with that at 25 credits. Keep the whole picture and its original proportions, with no added text.\"}],\"attachments\":[{\"name\":\"lake-small.jpg\",\"kind\":\"image\",\"role\":\"environment\"}],\"tool\":\"upscale_image\",\"params\":[{\"name\":\"subject\",\"value\":\"lake-small.jpg, api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f957841-5cdb-44a4-9ee8-b3ce321a8046-image-0.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"2× upscale in Preserve mode; approved maximum cost 25 credits\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Keep the whole picture and its original proportions\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":\"No added text\",\"source\":\"user\"}]}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "upscale_image",
+          "arguments": "{\"scale_factor\":2,\"style\":{\"mode\":\"preserve\"},\"assets\":{\"image_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/4f957841-5cdb-44a4-9ee8-b3ce321a8046-image-0.jpg\"},\"name\":\"Lake — 2× Preserve Upscale\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "The upscale was blocked because your account has **insufficient credits**. **No image was created and no credits were spent.**\n\nI haven’t tried another option. You can resize the lake photo locally for free, keeping the full picture and original proportions, though that won’t add detail."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "I haven’t run anything or spent any credits.\n\nYou attached **two images**—the blurry dog and the lake. Which one would you like upscaled, or did you mean both?\n\n- **Cheapest upscale:** 2× in **Preserve** mode, starting at **25 credits per image**—**50 credits for both** at that rate.\n- **Free-plan limit:** 2×; 4× requires a paid plan.\n- **Cheaper option:** upscale only one image. There’s no shorte"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "upscale_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "The upscale was blocked because your account has **insufficient credits**. **No image was created and no credits were spent.**\n\nI haven’t tried another option. You can resize the lake photo locally for free, keeping the full picture and original proportions, though that won’t add detail.",
+        "refuse": "",
+        "tier_move": "The upscale was blocked because your account has **insufficient credits**. **No image was created and no credits were spent.**\n\nI haven’t tried another option. You can resize the lake photo locally for free, keeping the full picture and original proportions, though that won’t add detail.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 106
+    }
+  ],
+  "started": "2026-11-09T06:30:59.245Z",
+  "persona": "tightwad",
+  "opening": {
+    "id": "B13c",
+    "persona": "tightwad",
+    "text": "Upscale it please. I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+    "withheld": [],
+    "extras": [
+      "I’m on the free plan and don’t want my credits burned, so tell me what it will cost before anything runs.",
+      "Is there a cheaper, shorter, or smaller way to do it?"
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 106
+}

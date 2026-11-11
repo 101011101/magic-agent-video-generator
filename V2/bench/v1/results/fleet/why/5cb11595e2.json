@@ -1,0 +1,52 @@
+{
+ "id": "5cb11595e2",
+ "key": "must:D23a:Silent, 16:9, about 6 s",
+ "symptom": "Silent, 16:9, about 6 s",
+ "item": "D23a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Silent, 16:9, about 6 s' not met in the two chats?",
+    "because": "The two chats fail for different reasons. In the new chat the grader judged a 4 s file. In the old chat the grader judged a 6 s file, but its size was 826x496 (about 1.67:1), not 16:9.",
+    "evidence": "s3.new.dumper.D23a/grade.json: check 'about 6 s' got '4 s', must reason 'This clip is about 4 s long'. s3.old.dumper.D23a/grade.json: 'about 6 s' got '6 s', 'aspect 16:9' got ['640x384','826x496'], must reason 'The 826x496 frame is about 1.67:1, not exact 16:9'."
+   },
+   {
+    "why": "(new) Why did the grader see a 4 s clip when the assistant delivered a 6 s film?",
+    "because": "The only file the harness kept was the 4 s lake clip 2 (01-wait_for_video_project.mp4). The joined 6.1 s film with the title card was never saved, so the grader had no file with the card in it.",
+    "evidence": "s3.new.dumper.D23a/calls.jsonl line 5: wait_for_video_project returned clip 2 with end_seconds 4, files ['assets/01-wait_for_video_project.mp4']. grade.json: 'no black frames (01-wait_for_video_project.mp4)', 'something was made: 1 file(s)', and the must reasons say 'no title card'."
+   },
+   {
+    "why": "(new) Why was the joined film not saved?",
+    "because": "join_production_clips worked and measured the film itself (6.1 s, 854x480, silent, all checks 'yes'). But when the harness tried to download the returned URL it got a 404.",
+    "evidence": "calls.jsonl line 6: output {download_url:'http://127.0.0.1:8000/films/4d36….mp4', seconds:6.1, width:854, height:480, checked:[… 'One file, 6 s, 16:9' result 'yes', 'No sound' 'silent' 'yes']}, files: ['download failed: download 404 http://127.0.0.1:8000/films/4d36004426e84bb9aaeb15f2ad5e4af6.mp4']."
+   },
+   {
+    "why": "(new) Why did the localhost film URL return 404?",
+    "because": "The new local build serves joined films from its own local HTTP server at 127.0.0.1:8000. When the harness fetched the file, that server did not serve it. The film may have been cleaned up, the path may not have been mounted, or the server may have stopped. The logs do not show which. The film had already been made and measured, so the assistant and the generation model did their part. The fault is in how the film gets from the join to the harness.",
+    "evidence": "calls.jsonl line 6: a 404 on a URL the server had just returned; line 8: the assistant gave the user the same URL and correctly said 6.1 s. None of the files I read show why the server returned 404."
+   },
+   {
+    "why": "(old) Why was the old clip 826x496 instead of 16:9?",
+    "because": "The assistant made the title card with flux-2-klein at 640px with aspect_ratio 16:9, and the image came out 640x384 (5:3). It then passed that image to create_video_from_image (ltx-2.5, 480p), which kept the input's 5:3 shape and returned 826x496. The assistant saw this and told the user it was 'a bit narrower than exact 16:9'.",
+    "evidence": "s3.old.dumper.D23a/calls.jsonl line 2: generate_image aspect_ratio '16:9', resolution '640px'; grade.json: the image is 640x384; line 7: video width 826, height 496; line 9: the assistant's caveat about 826x496."
+   },
+   {
+    "why": "(old) Why did a '16:9' request give a 5:3 image?",
+    "because": "At the free-plan 640px size, the image model snaps sizes to its own grid, so 16:9 becomes 640x384. Image-to-video then inherits that shape. This is a limit of the model and plan, not an assistant error. The new build avoids it by drawing the card in code and making the scene with text-to-video at 854x480.",
+    "evidence": "old calls.jsonl lines 2 and 7 (640x384, then 826x496); new calls.jsonl lines 5 and 6 (854x480 clip and film)."
+   }
+  ],
+  "axiom": "The grader's quoted reason (new chat) comes from a test-harness defect. The new build made and measured a correct 6.1 s, 16:9, silent film with the title card. But the harness got a 404 when it downloaded the film from http://127.0.0.1:8000/films/…, so it graded only the leftover 4 s lake clip. The old chat fails for a different reason: its free-plan 640px 16:9 image came out 640x384, and image-to-video kept that 5:3 shape (826x496). That part is a limit of the generation model at free-plan sizes.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the joined film outlive the chat so the harness can download it. Keep the new build's local film server running, with the file still present, until the harness has fetched every download_url. As an alternative, return a hosted URL or a file path for the film. If the film download fails, the harness should mark the chat as a harness error and not grade the leftover clip. For the old build's aspect miss: when an image will become a video, ask for an image size that is exactly 16:9, or crop it to 16:9 first."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2135524
+}

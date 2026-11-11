@@ -1,0 +1,41 @@
+{
+ "id": "1ffa1a1ccd",
+ "key": "must:D23b:Lower third reads exactly 'Maya Chen' above 'Community Gardener', no extra text",
+ "symptom": "Lower third reads exactly 'Maya Chen' above 'Community Gardener', no extra text",
+ "item": "D23b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Lower third reads exactly Maya Chen above Community Gardener' not met?",
+    "because": "The video model drew the second caption line wrong in both chats. 'Maya Chen' came out exact. 'Community Gardener' came out as 'The Chen' (happy) and as 'Community Gorearter' (dumper). The caption also faded out before the end, and stray watermark-like text appeared.",
+    "evidence": "s3.old.happy.D23b/grade.json exact_text: 'Community Gardener' seen 'wrong', read_as 'The Chen'. s3.old.dumper.D23b/grade.json: read_as 'Community Gorearter'. Both grade.json files say the caption is visible at 0.7s and gone at 6.7s."
+   },
+   {
+    "why": "Why did the video model draw the caption at all, when no exact text layer was added?",
+    "because": "In both chats the assistant made one create_video_from_text call (ltx-2.5, 480p). It wrote the lower third into style.prompt as text for the model to draw ('first line \"Maya Chen\"... second line \"Community Gardener\"'). It made no later call that adds a text overlay.",
+    "evidence": "s3.old.happy.D23b/calls.jsonl and s3.old.dumper.D23b/calls.jsonl: the only calls are create_video_from_text and wait_for_video_project. The prompt holds the caption words and the timing ('At 1 second... stays until the end')."
+   },
+   {
+    "why": "Why did the assistant not use a tool that puts exact text on the video?",
+    "because": "The old build has no such tool. The only text tool is auto-subtitles, which needs speech. The assistant said this in both replies and warned the user that the model may misspell the text or get the timing wrong.",
+    "evidence": "happy say text: 'These tools can't add a real text layer to a video. The only text tool is auto-subtitles, which needs speech'. dumper say text: 'none of these tools can place exact text on a video'. tools-old.json has no text-overlay or exact_words parameter. tools-new.json plan_request adds an 'exact_words' row ('one for each line of text to show, exactly as the user wrote it'), so the new build handles on-screen text in a different way."
+   },
+   {
+    "why": "Why did the text come out garbled and the timing wrong when the model drew it from the prompt?",
+    "because": "Text-to-video diffusion models such as LTX 2.5 do not render exact multi-word text reliably, and they do not follow prompt timing ('from second 1 to the end') reliably. The short word 'Maya Chen' came out right. The longer second line came out wrong in two different ways, which is random model error and not a prompt defect.",
+    "evidence": "Both prompts quote the exact words correctly and say 'No other text'. Both outputs still drew line 2 wrong (two different errors), showed the caption at 0.7s and lost it by 6.7s (grade.json in both chats)."
+   }
+  ],
+  "axiom": "The generation model (ltx-2.5 text-to-video) cannot render exact multi-word text or follow caption timing reliably. The old build gives the assistant no deterministic text-overlay step, so exact on-screen words depend on that model.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a deterministic text-overlay step to the server. Generate the clip with no text, then burn in the user's exact_words lines (position, white text on a dark box, start and end times) with ffmpeg drawtext or similar. Do not ask the video model to draw the caption. The new build's plan_request exact_words row points toward this."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.187614
+}

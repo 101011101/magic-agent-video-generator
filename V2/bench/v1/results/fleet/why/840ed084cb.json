@@ -1,0 +1,47 @@
+{
+ "id": "840ed084cb",
+ "key": "must:J55b:The headline reads exactly 'BOOK SWAP'.",
+ "symptom": "The headline reads exactly 'BOOK SWAP'.",
+ "item": "J55b",
+ "n": 4,
+ "builds": {
+  "new": 1,
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The headline reads exactly BOOK SWAP' not met?",
+    "because": "No image was made, so the grader had no headline to check. The grader failed every must-have for the same reason.",
+    "evidence": "s2r.old.stupid.J55b/grade.json: check 'something was made' pass=false, got 'no file'. Headline why: 'No poster was produced, so no headline exists.' Summary: 'generation was refused for lack of credits'."
+   },
+   {
+    "why": "Why was no image made?",
+    "because": "Every generate_image call was rejected before it ran, with approve=false. This happened in both builds and for every persona.",
+    "evidence": "calls.jsonl in s2r.old.stupid, s2r.old.dumper and s2r.new.stupid: each generate_image line has approve:false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. No call has output or files."
+   },
+   {
+    "why": "Why was the call rejected? Were the assistant's arguments at fault?",
+    "because": "No. The rejection did not depend on the arguments. In s2r.old.dumper the assistant sent correct arguments (1:1, the three exact lines, black type only, no pictures) and was still rejected twice. In the stupid chats the arguments had errors (9:16, an invented tagline, illustrations), but those calls were also blocked by credits, so the errors never reached the output.",
+    "evidence": "s2r.old.dumper.J55b/calls.jsonl lines 2 and 7: aspect_ratio '1:1', prompt with exactly 'BOOK SWAP', 'Saturday 10-2', 'Maple Hall', reason insufficient credits. s2r.old.stupid lines 2 and 7: 9:16 plus 'Bring a book, take a book!', same rejection."
+   },
+   {
+    "why": "Why did the account have 0 credits when this test is meant to fit the free plan?",
+    "because": "The test says the request should not go past the free plan, and one 640px qwen image costs about 10 credits. So a fresh free account could make it. The test account's balance was 0 before the first call of the chat, so the free credits were already used up, very likely by earlier chats in the same fleet run on the same account.",
+    "evidence": "items/J55b.json expect.beyond_free='no', spec kind image, outputs 1. calls.jsonl: '0 remain on the account' on the first call of each chat. s2r.old.dumper reply: 'Even the cheapest image model costs 5'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The harness ran the chats on a shared account and did not reset or top up its credits before each chat. That is a defect of the test harness. It does not come from the MCP builds, their tool descriptions or the assistant. It hit old and new the same way.",
+    "evidence": "Same 0-credit rejection in the old build (url https://mcp.magichour.ai/ in s2r.old.dumper/chat.json) and in the new build (s2r.new.stupid calls.jsonl lines 8 and 13)."
+   }
+  ],
+  "axiom": "The benchmark account had 0 credits when every J55b chat started. The harness did not give each chat a funded free-plan balance, so every generation was rejected and no poster was made for the grader to check.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, reset or top up the test account to a known free-plan balance (at least 10 credits), or give each chat its own account. Have the grader mark chats with 'insufficient credits … 0 remain' as infra-blocked and rerun them, not score them as fails."
+ },
+ "error": null,
+ "seconds": 26,
+ "usd": 0.133021
+}

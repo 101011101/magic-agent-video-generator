@@ -1,0 +1,67 @@
+{
+ "id": "D23c",
+ "root_cause": "wrong-tool",
+ "contributing": [
+  "harness",
+  "model-limit",
+  "grader"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent treated the URL as words laid over the clip and built the end card itself, from a flux-2-klein \"completely uniform solid black frame\" plus a code overlay. Both halves broke. Flux read \"black frame\" as a picture frame and drew a white panel inside a black border. The overlay sized the 31-character URL at 1/12 of 720 px (60 px), which is wider than the frame, and a URL has no spaces, so the 80% word-wrap could not break it and both ends were cut off. The plan has no size param, so \"fit within frame with safe margins\" did nothing. assemble also ignored \"coffee 5 s, card 3 s\" and split 8 s equally (the cut is at 4.02 s), so the card sat blank from 4 to 5 s. The catalogue's own CHOOSING rule routes \"a title or end card\" to one image node with lettering: true. qwen draws the plain black card and the exact URL together, and code reads the URL back and fixes a misspelling once. That is the tool I would use, followed by assemble with seconds 0, so the 5 s pour keeps its length and the card gets 2.5 s.",
+ "your_plan": {
+  "say": "I'll make a 5-second close-up of coffee pouring into a ceramic cup, then a plain black end card with your URL in white, centred on one line, and join them into one silent vertical clip.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "text-to-video",
+    "inputs": [],
+    "produces": "coffee_pour.mp4",
+    "params": {
+     "prompt_or_change": "Close-up of hot coffee pouring in a steady stream into a plain white ceramic cup on a wooden table, warm morning light, shallow depth of field, locked camera; no text, logos or labels anywhere.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 5,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A free scene with nothing to start from. The model's invented sound is dropped by code."
+   },
+   {
+    "tool": "image",
+    "inputs": [],
+    "produces": "url_end_card.png",
+    "params": {
+     "prompt_or_change": "A plain solid pure-black background, completely empty, with one line of clean white sans-serif text centred exactly in the middle: \"https://example.com/Go?ref=June\". Keep the capital G and J and every punctuation mark exactly; the line spans about two thirds of the width; no other text, no border, no objects, no texture.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": true,
+     "fidelity": false
+    },
+    "why": "An end card is a designed piece. qwen letters the exact URL on a true black ground, and code reads it back and fixes a misspelling once. This avoids both the AI 'black frame' and an overlay that cannot fit a 31-character unbreakable line."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "coffee_pour.mp4",
+     "url_end_card.png"
+    ],
+    "produces": "coffee_final.mp4",
+    "params": {
+     "prompt_or_change": "The pour first, then the end card, hard cut, silent.",
+     "extra": "",
+     "aspect": "9:16",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "seconds 0 keeps the pour at its own 5 s and gives the card 2.5 s (7.7 s in all). seconds 8 would make code split it 4/4 and cut the pour short."
+   }
+  ]
+ },
+ "fix": "(1) text-overlay: shrink the font until the longest unbreakable line fits 90% of the frame width, and accept \"size:\" in extra (the catalogue already says \"unless the size is set\", but the plan cannot set it). (2) assemble: honour per-piece durations given in extra (\"coffee_pour.mp4: 5 s; card: 3 s\") instead of an equal split. (3) Add a catalogue line: \"plain colour card with exact words (end card, URL card) → image with lettering: true\". (4) Grader: never report \"speech heard\" on a track whose peak is below -60 dB.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "black_end_card.png (360x640) is a white rectangle inside a black border: flux read 'frame' literally. In the grader frame at 7 s there is a white panel, a grey 55% band, and the URL cut at both edges ('ps://example.com/Go?ref=J'). Scene detection on silent_sequence.mp4 puts the cut at 4.02 s, not 5 s. coffee_final.mp4's audio peaks at -91 dB (silent), yet the judge was told speech was heard. The two major faults are real."
+}

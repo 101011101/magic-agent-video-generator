@@ -1,0 +1,47 @@
+{
+ "id": "67b10b017e",
+ "key": "must:J49c:The video remains 16:9, silent and free of text.",
+ "symptom": "The video remains 16:9, silent and free of text.",
+ "item": "J49c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the final video fail 'remains 16:9'?",
+    "because": "The delivered 5-second file is 832×512 (1.625:1), not 16:9. The original 8-second clip was 854×480 (16:9).",
+    "evidence": "Both calls.jsonl: the first wait_for_video_project (TEXT_TO_VIDEO) returns width 854, height 480. The second wait_for_video_project (VIDEO_EDITOR) returns width 832, height 512. The grader reason quotes 832×512."
+   },
+   {
+    "why": "Why did the 5-second file get a new frame size?",
+    "because": "The assistant did not cut the existing file. It sent the first 0–5 s of the original to edit_video (model ltx-2.5, 480p) with the prompt 'Keep the video exactly as it is'. The AI editor re-rendered every frame.",
+    "evidence": "s2.new.happy calls.jsonl line 15 and s2.old.dumper calls.jsonl line 12: edit_video with start_seconds 0, end_seconds 5, model ltx-2.5, resolution 480p. Both charged 120 credits. The project type is VIDEO_EDITOR."
+   },
+   {
+    "why": "Why did the assistant use the re-rendering editor and not a plain trim?",
+    "because": "Neither build exposes a tool that cuts a video without re-rendering it. In the old build the assistant first said it could not do a clean cut. It ran edit_video only after the dumper user said 'try it anyway'. In the new build, plan_request lists 'trim_video' as a valid tool and returned ready:true for it. But the call to trim_video failed with 'Unknown tool'. The assistant then offered a re-render, and the happy user chose it.",
+    "evidence": "s2.old.dumper calls.jsonl line 10 (kind 'cannot': 'None of my Magic Hour tools just trims a video') and line 11 (user nudge). s2.new.happy calls.jsonl line 9: plan_request tool=trim_video returns ready:true. Line 10: trim_video error -32602 'Unknown tool'. tools-new.json: the plan_request enum includes 'trim_video', but no trim_video tool is defined. join_videos exists, but it only joins clips and has no start/end options."
+   },
+   {
+    "why": "Why did the assistant not stop the frame-size change before it happened?",
+    "because": "edit_video has no aspect_ratio or width/height parameter. Its description does not say that the output frame size can differ from the source. The assistant had no way to keep 854×480, and it could not know about the change before the result came back. Both assistants disclosed the 832×512 size afterward.",
+    "evidence": "tools-new.json edit_video (lines 1413–1503): the parameters are name, start_seconds, end_seconds, model, resolution, style.prompt and assets. There is no aspect parameter, and the description does not mention the output size. Both final replies say the frame size changed to 832×512."
+   },
+   {
+    "why": "Why does the ltx-2.5 editor give 832×512 for an 854×480 input?",
+    "because": "At 480p, the LTX-2.5 video editor renders on its own resolution grid (dimensions in multiples of 32, here 832×512), whatever size the source is. This is a property of the generation model and backend that the MCP layer cannot control.",
+    "evidence": "Both runs give the same 832×512 from the same 854×480 input with model ltx-2.5 at 480p, in both builds (old and new calls.jsonl, VIDEO_EDITOR results)."
+   }
+  ],
+  "axiom": "The LTX-2.5 video editor (the only re-render path a free-plan account can use) outputs 480p on its own 832×512 grid, not the source's 16:9 size. Neither build offers a trim that keeps the original file without re-rendering it, so any shortening goes through this model. In the new build this is made worse by a defect: plan_request lists 'trim_video', but that tool does not exist.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a working trim_video tool that cuts with code, the way join_videos already does: inputs are a project id or URL plus start_seconds and end_seconds, it uses a stream copy or re-encode at the source size, keeps fps and audio state, spends no credits, and returns a download URL. Register it in the new build, because plan_request already routes to it. Also document in edit_video that the output frame size can differ from the source (ltx-2.5 at 480p gives 832×512)."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.4657332
+}

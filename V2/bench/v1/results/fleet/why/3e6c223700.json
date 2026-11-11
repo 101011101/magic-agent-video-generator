@@ -1,0 +1,47 @@
+{
+ "id": "3e6c223700",
+ "key": "must:A05a:Square, centred head-and-shoulders, full hair top visible",
+ "symptom": "Square, centred head-and-shoulders, full hair top visible",
+ "item": "A05a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'Square, centred head-and-shoulders, full hair top visible' item not met in both stupid chats?",
+    "because": "Both builds delivered a portrait image of 928x1152 (about 4:5), not a square one. In the new chat the framing also goes down to the waist. The hair top is visible in both.",
+    "evidence": "grade.json (old and new): the check 'aspect 1:1' fails with got [\"928x1152\"]. The must-have reasons: old says 'Image is portrait (about 4:5), not square'; new says 'portrait (about 928x1152), not square, and it is framed to the waist'."
+   },
+   {
+    "why": "Why was the output portrait and not square?",
+    "because": "In both builds the assistant called generate_headshot with only the source image. It sent no prompt, no size and no other setting, so it got the tool's default output size and framing. It made no second call to crop or edit the image to 1:1.",
+    "evidence": "calls.jsonl (old and new): one generate_headshot call with args {assets:{image_file_path:...}} and nothing else. Then wait_for_image_project returns one AI_HEADSHOT output. There is no edit_image call. In both replies the assistant says 'default professional style'."
+   },
+   {
+    "why": "Why did the assistant not ask for a square image or make sure of one?",
+    "because": "The user's only message never said 'square'. The stupid persona's opening message was just 'can you make this pic into a headshot'. The words 'square', 'LinkedIn', 'navy blazer' and 'plain light grey background' from the brief were all left out. The test also expects the assistant never to ask a question, so nothing in the chat could bring 'square' back.",
+    "evidence": "chat.json (old): messages[0].text = 'can you make this pic into a headshot'. The bank still holds the full request ('square LinkedIn headshot ... navy blazer ... plain light grey background'), but it is only used for replies. A05a.json: turns[0].text has 'square', and expect.asks = 'never'. The assistant asked nothing and delivered at once (calls.jsonl 'say' kind=delivered)."
+   },
+   {
+    "why": "Why would the default tool not give a square result anyway?",
+    "because": "generate_headshot has no aspect-ratio or resolution parameter. Its only inputs are name, style.prompt and assets.image_file_path. The prompt description says to leave it out unless you want to customize. The backend returns a fixed 928x1152 portrait, so a square result needs a separate edit or crop step, and only an explicit 'square' request would lead the assistant to add one.",
+    "evidence": "tools-new.json, generate_headshot inputSchema: the properties are name, style.prompt and assets only, with no aspect_ratio. edit_image in the same file does have aspect_ratio with a '1:1' option. Both builds give an identical 928x1152 output (grade.json)."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The test harness made the persona's opening message from the brief but dropped a must-have fact (square). Then it graded against the full brief. The assistant answered the message it actually got in a reasonable way. It had no 'square' signal and expect.asks='never' told it not to ask. This is a defect of the test harness and of how it reworded the brief for the stupid persona.",
+    "evidence": "A05a.json must_haves[3] requires 'The square image ...' and spec.aspect='1:1'. But chat.json messages[0] (the stupid user) has no 'square'. Both builds fail the same way, which shows the cause does not depend on the build. I did not open tools-old.json, so I assume from the identical calls and outputs that generate_headshot has no aspect parameter there either."
+   }
+  ],
+  "axiom": "The test harness wrote the stupid persona's opening message as 'can you make this pic into a headshot'. That message dropped the brief's 'square' and the clothing and background details. The grader still checked the output against the full brief (square, 1:1). The assistant never heard 'square'. It was not expected to ask, and the default headshot tool has no aspect setting. So a portrait 928x1152 output was the natural result.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Fix the persona message step in the harness. The opening message for the stupid persona must keep every must-have fact that a casual user can say in plain words (here 'square' and 'LinkedIn'). Another option: for each persona, grade only the must-haves that the user actually said. A second, server-side fix: in the generate_headshot description, state that the output is a fixed portrait size (about 928x1152). Then the assistant can follow it with edit_image at aspect_ratio 1:1 when the user asks for a square image."
+ },
+ "error": null,
+ "seconds": 61,
+ "usd": 0.5855151999999999
+}

@@ -1,0 +1,47 @@
+{
+ "id": "32ea2a34ce",
+ "key": "must:J49c:The final video lasts five seconds.",
+ "symptom": "The final video lasts five seconds.",
+ "item": "J49c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the final video not five seconds long?",
+    "because": "The only file delivered in both chats is the first 8-second generation. Nothing after it produced a shortened file.",
+    "evidence": "s2.new.dumper.J49c/grade.json: the check 'about 5 s' fails with got '8 s', and the fault says 'The output is the full 8 s clip… The assistant told the user to trim it themselves'. In both calls.jsonl files, the only file is assets/01-wait_for_video_project.mp4 from wait_for_video_project (end_seconds 8)."
+   },
+   {
+    "why": "Why was no shortened file made after the user asked for 5 seconds?",
+    "because": "In both builds the assistant said it could not do a clean cut. It offered a new 5-second generation (120 credits, different footage) or a trim by the user. Both users chose to trim it themselves, so the chat ended with no new file.",
+    "evidence": "s2.old.happy.J49c/calls.jsonl line 11: 'I can't do this exact cut with Magic Hour. None of its tools just trims a video…', and the user answers 'I'll trim this one myself'. s2.new.dumper.J49c/calls.jsonl line 13: 'None of my Magic Hour tools just cuts the end off a video', and the user answers 'I'll trim it myself'."
+   },
+   {
+    "why": "Why did the assistant say it could not cut the video?",
+    "because": "No tool in the list trims a finished video and leaves its frames unchanged. The video tools either generate again, redraw every frame (the video editor), or add subtitles, lip sync or face swap. The new build adds join_videos and get_last_frame, but neither can cut a clip to a time range.",
+    "evidence": "tools-new.json lists plan_request, plan_video_production, create_production_clip, join_production_clips, get_last_frame, join_videos (join only, 'with hard cuts'), and so on, but no trim tool. In the old chat, the assistant lists the tools it has and finds no trim tool (calls.jsonl line 11)."
+   },
+   {
+    "why": "Why did the new build's assistant try a trim and then give up?",
+    "because": "plan_request lists 'trim_video' in its tool enum and has a 'range' row, so it told the assistant that trim_video was ready. The server does not have that tool, so the call failed with 'Unknown tool'. The assistant then fell back to the same answer as in the old build.",
+    "evidence": "tools-new.json, plan_request inputSchema.tool.enum includes 'trim_video'. s2.new.dumper.J49c/calls.jsonl line 9: plan_request returns {tool: trim_video, ready: true}. Line 10: the trim_video call fails with error -32602 \"Unknown tool: 'trim_video'\"."
+   },
+   {
+    "why": "Why is there no trim tool at all?",
+    "because": "Neither server build has a trim or cut operation. The new build planned one (plan_request names it) but did not ship it. The old hosted server never had one. This missing feature is the axiom: the assistant behaved correctly. It refused to fake a trim with a new generation, which would have broken the 'same footage, no second charge' must-haves.",
+    "evidence": "J49c.json: tests 'trims the existing clip to its first five seconds without regeneration… or a second generation charge'. A trim tool is absent from both tool lists, and the new build has a dangling trim_video reference."
+   }
+  ],
+  "axiom": "The MCP server has no tool that cuts a finished video to a time range. The new build's plan_request even sends the assistant to a 'trim_video' tool that the server does not have. So the assistant could only re-generate (different footage, and the test forbids it) or tell the user to trim the file. It told the user to trim, which was correct.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add and register a trim_video tool (video project id or URL, start_seconds, end_seconds). It should use ffmpeg stream copy, the same backend as join_videos, and return a download URL and the new length with no credit charge. The new build already lists trim_video in plan_request's enum, so registering the tool there fixes the 'Unknown tool' error. If the tool is not shipped, remove trim_video from the enum."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.25210099999999996
+}

@@ -1,0 +1,108 @@
+{
+  "id": "E29b",
+  "item": {
+    "id": "E29b",
+    "case": 29,
+    "case_name": "Add a logo or text overlay",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Append a Clean End Card",
+    "sub": "b",
+    "spec": {
+      "exact_text": [
+        "Ready for takeoff?",
+        "@flightschool"
+      ],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 9,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "radio-lines.mp4"
+        ],
+        "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent."
+      }
+    ],
+    "tests": "Tests appending an accurately timed end card with exact text while preserving the complete source clip and its audio.",
+    "answer_sheet": {
+      "End-card wording": "Ready for takeoff? on the first line and @flightschool underneath, without quotation marks.",
+      "End-card appearance": "Solid black background, white text, both lines centered. Font choice is your call.",
+      "Timing and transition": "Preserve the complete 7-second source, then show the end card for 2 seconds, making a 9-second video. A direct cut is fine.",
+      "Framing and audio": "Match the source aspect ratio. Preserve its original sound for the first 7 seconds; the end card is silent."
+    },
+    "must_haves": [
+      "The entire original cockpit clip plays before the end card, without being replaced or shortened.",
+      "A solid black end card occupies only the final 2 seconds of the 9-second output.",
+      "The end card reads exactly 'Ready for takeoff?' with '@flightschool' on the line below.",
+      "Both lines are white, centered, fully visible, and comfortably readable.",
+      "Original cockpit audio is preserved during the source footage, followed by silence during the end card."
+    ]
+  },
+  "session": "mcp-p1-dry-o-tightwad-E29b",
+  "sessionDir": "sessions/mcp-p1-dry-o-tightwad-E29b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent. I'm on the free plan and don't want my credits burned, so please tell me what this will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+      "materials": [
+        "radio-lines.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "**The cheapest option is a standard video edit: 0 Magic Hour credits.** I haven’t run any tools or spent any credits.\n\nYour finished video should be **9 seconds**:\n- **0–7 seconds:** the full original clip, unchanged, with its original sound.\n- **7–9 seconds:** a silent black card with two centered white lines:\n  ```\n  Ready for takeoff?\n  @flightschool\n  ```\n\nThe connected Magic Hour tools don’t expose a simple, non-generative append/title operation. Using AI video editing for this would spend credits unnecessarily and could alter the original footage or text, so I don’t recommend it.\n\n**Cheaper, shorter, or smaller?**\n- **Cheaper:** use a free editor such as Shotcut or iMovie—no generation credits.\n- **Shorter:** a 1-second card would make it 8 seconds, but two seconds is easier to read. Don’t shorten the original clip.\n- **Smaller:** export at 480p or use a lower bitrate. That reduces file size, not the already-zero credit cost.\n\nI can give you exact free-editor steps or an FFmpeg command to make the requested version without AI generation.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "ok, go ahead with the cheapest option you listed",
+          "calls_before": 0,
+          "nudge": true
+        }
+      ],
+      "agent": "The cheapest option costs **0 Magic Hour credits**, but I should clarify: I can’t operate a local video editor from this chat. **Nothing has run, and no credits have been spent.**\n\nIf you have **FFmpeg** installed, download `radio-lines.mp4` into a folder and run this command there:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"trim=duration=7,setpts=PTS-STARTPTS,tpad=stop_mode=add:stop_duration=2:color=black,drawtext=text='Ready for takeoff?':fontcolor=white:fontsize=h/18:x=(w-tw)/2:y=h/2-th-8:enable='gte(t,7)',drawtext=text='@flightschool':fontcolor=white:fontsize=h/18:x=(w-tw)/2:y=h/2+8:enable='gte(t,7)'\" \\\n-af \"atrim=duration=7,asetpts=PTS-STARTPTS,apad,atrim=duration=9\" \\\n-c:v libx264 -crf 18 -pix_fmt yuv420p \\\n-c:a aac -b:a 192k -t 9 -movflags +faststart \\\nradio-lines-finished.mp4\n```\n\nThis creates **`radio-lines-finished.mp4`**: the full 7-second clip with its sound, followed by the 2-second silent black card with both white lines centered. It keeps the original video dimensions.",
+      "calls": [],
+      "approvals": [],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "The cheapest option costs **0 Magic Hour credits**, but I should clarify: I can’t operate a local video editor from this chat. **Nothing has run, and no credits have been spent.**\n\nIf you have **FFmpeg** installed, download `radio-lines.mp4` into a folder and run this command there:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"trim=duration=7,setpts=PTS-STARTPTS,tpad=stop_mode=add:stop_duration=2:col",
+        "refuse": "",
+        "tier_move": "The cheapest option costs **0 Magic Hour credits**, but I should clarify: I can’t operate a local video editor from this chat. **Nothing has run, and no credits have been spent.**\n\nIf you have **FFmpeg** installed, download `radio-lines.mp4` into a folder and run this command there:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"trim=duration=7,setpts=PTS-STARTPTS,tpad=stop_mode=add:stop_duration=2:col",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 34
+    }
+  ],
+  "started": "2026-11-09T05:30:34.848Z",
+  "persona": "tightwad",
+  "opening": {
+    "id": "E29b",
+    "persona": "tightwad",
+    "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent. I'm on the free plan and don't want my credits burned, so please tell me what this will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+    "withheld": [],
+    "extras": [
+      "I'm on the free plan and don't want my credits burned, so please tell me what this will cost before anything runs.",
+      "Is there a cheaper, shorter, or smaller way to do it?"
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 34
+}

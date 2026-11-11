@@ -1,0 +1,47 @@
+{
+ "id": "5b363b737a",
+ "key": "check:kind:E",
+ "symptom": "a video was made",
+ "item": "E29a",
+ "n": 30,
+ "builds": {
+  "old": 18,
+  "new": 12
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'a video was made' not met in E29a?",
+    "because": "The only file the assistant made was a still PNG: the fox logo with its background removed. No video project was ever created.",
+    "evidence": "s3.old.happy.E29a/calls.jsonl and s3.new.happy.E29a/calls.jsonl both have only remove_image_background followed by wait_for_image_project, with files ['assets/01-wait_for_image_project.png']. The grader measured ['.png']."
+   },
+   {
+    "why": "Why did the assistant stop after removing the background and never call a video tool?",
+    "because": "The assistant decided that no tool could put the logo on talk-one.mp4 without changing it. It gave the user the PNG plus steps for CapCut/iMovie/ffmpeg instead of running a video tool.",
+    "evidence": "Final reply in old E29a: 'Magic Hour has no tool that places an image on top of a video as an overlay… so I did not run it.' Final reply in new E29a: 'None of my Magic Hour tools can place an image on top of a video.' In both, the harness classified the turn as 'delivered' with a caveat."
+   },
+   {
+    "why": "Why did the assistant think no tool could do the overlay?",
+    "because": "The tool list really has no tool that lays an image over existing footage and keeps the frames and audio. The video tools either make new footage (text/image-to-video, talking photo), add subtitles, trim, or run the AI video editor, which redraws every frame from a prompt.",
+    "evidence": "tools-new.json, plan_request tool enum: generate_image, edit_image, create_video_from_text, create_video_from_image, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face_*, create_talking_photo, trim_video. It has no overlay or watermark tool. In both builds the assistant described the AI video editor as one that 're-creates every frame from a prompt'."
+   },
+   {
+    "why": "Why not use the AI video editor anyway, as the closest option?",
+    "because": "The brief says 'keep the video and sound otherwise unchanged'. It also needs the exact supplied fox at a fixed top-right spot from the first frame to the last. A generative re-render cannot promise either. The assistant also noted that on the free plan the editor cannot take the fox image as a reference. So it chose not to spend credits on a result that would break must-haves 1, 2 and 5.",
+    "evidence": "E29a.json must_haves: 'source framing and sequence preserved', 'supplied orange-hoodie fox… first frame through the last frame', 'original speech… synchronized'. Old E29a reply: 'On the free plan, the editor also cannot take the fox image as a reference.'"
+   },
+   {
+    "why": "Is this specific to E29a or to one build?",
+    "because": "It is the same pattern across all the 'edit the user's video and keep it unchanged' items, in both builds. When the job needs a deterministic composite (add audio, mix music, overlay a logo), the assistant makes only the side asset and refuses the merge.",
+    "evidence": "s3.old.happy.E28a/calls.jsonl: only a voice WAV, with the reply 'Magic Hour has no tool that just adds an audio track'. s3.new.dumper.E27c/calls.jsonl: only a music WAV, with the reply 'None of my tools can lay a music track under a video's existing audio'. In grade.json for E28a, 'a video was made' failed."
+   }
+  ],
+  "axiom": "The Magic Hour toolset (old and new) has no tool that composites an image over existing video. The only tool that edits existing video re-renders every frame from a prompt. So the brief (exact logo on a fixed spot, video and sound unchanged) cannot be met with these tools, and the assistant correctly refuses to make a video.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a non-generative tool to the MCP server, for example overlay_image_on_video(video, image, position, scale, margin, start/end), based on ffmpeg overlay with '-c:a copy'. It should take the transparent PNG output from remove_image_background directly. Add it to the plan_request tool enum too. Another option: mark E29a as beyond what the tools can do, so 'a video was made' is not required."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.32479300000000005
+}

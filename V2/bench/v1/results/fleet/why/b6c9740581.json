@@ -1,0 +1,47 @@
+{
+ "id": "b6c9740581",
+ "key": "check:length:F",
+ "symptom": "about 90 s",
+ "item": "F32b",
+ "n": 21,
+ "builds": {
+  "old": 14,
+  "new": 7
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the 'about 90 s' check give 15–16 s (or 4.5 s) and not ~90 s?",
+    "because": "The check measures one short file that the harness captured. It does not measure a complete joined conversation. In the new build that file is one 15 s video clip. In the old build it is a voice-list preview of about 4.5 s.",
+    "evidence": "s2.new.happy.F32b/grade.json: 'about 90 s' got '15 s', and the measured files are 4 × .mp4 clips. s2.new.dumper.F32b/grade.json: got '15 s'. s2.old.happy.F32b and s2.old.dumper.F32b grade.json: got '4.5 s', from 100+ voices_list preview .mp3 files plus 12 short .wav files. The 16 s in the summary is another value of the same kind: one clip or one segment."
+   },
+   {
+    "why": "Why is the joined file not the file that the check measures in the new build?",
+    "because": "join_production_clips/join_videos returns a URL on the local film server, http://127.0.0.1:8000/films/…mp4. The harness gets a 404 when it downloads that URL. So the only captured files are the single 15 s clips from wait_for_video_project.",
+    "evidence": "s2.new.happy.F32b/calls.jsonl line 19: join_videos output seconds 60.2, files ['download failed: download 404 http://127.0.0.1:8000/films/733d9ed1….mp4']. The same 404 occurs in s2.new.happy.F32a/calls.jsonl line 11. In s2.new.happy.F32b, the grader's own text says 'Only 60 s of the 90 s was delivered', but the measured check says 15 s."
+   },
+   {
+    "why": "Why is the new build's output made of 15 s video clips, and why is it only 60–75 s long?",
+    "because": "The new build has no tool that speaks two voices in one audio file. So plan_video_production makes the podcast as 6 talking-head video clips with max_seconds 15 (2,160 credits). The free-plan credits ran out after 4 of 6 clips (5 for the dumper user).",
+    "evidence": "s2.new.happy.F32b/calls.jsonl line 3: plan output max_seconds 15, 6 clips × 360 credits. Line 6: the assistant tells the user 'I have no text-to-speech tool with named voices… only way… a video of two hosts'. Line 18: create_production_clip clip 5 refused: 'insufficient credits'. s2.new.dumper.F32b/grade.json: 'assistant states ~75 s total'."
+   },
+   {
+    "why": "Why does the old build give no single long file at all?",
+    "because": "In the old build, each ai_voice_generator_create_audio call speaks one voice only, and no tool joins audio clips. So the assistant made 12 separate WAV files of one line each (about 2–8 s each) and told the user to join them in Audacity.",
+    "evidence": "s2.old.happy.F32b/calls.jsonl lines 3–14: 12 ai_voice_generator_create_audio calls, each with one line and voice cv-0001 or cv-0002. Line 28: 'each voice job speaks in one voice only, and none of these tools can join clips'. grade.json must[0]: 'No single file was delivered; only 12 separate clips'."
+   },
+   {
+    "why": "Why does the check then take a preview or a single clip, and not report 'no 90 s file'?",
+    "because": "The harness duration check reads one file from the captured assets, and that is the first or a single media file. It does not read the file that the assistant named as the deliverable. The old build's captured assets include about 100 voice-preview MP3s from voices_list, so the check measures a preview. In the new build the joined file is missing because of the 404, so the check measures a 15 s clip.",
+    "evidence": "s2.old.happy.F32b/grade.json 'a audio was made' lists .webp/.mp3 previews first, and 'about 90 s' = 4.5 s. The judge also says 'only two short voice samples (5 s, 2 s) are visible'. state.json mediaSeen begins with the voices_list preview URLs. s2.new.happy.F32b/grade.json: 'a file backs what it said it delivered' passes on the 4 clip files, not the 60 s join."
+   }
+  ],
+  "axiom": "The harness cannot get the local join output (127.0.0.1:8000/films/* returns 404), and its duration check measures one captured asset, not the deliverable. So the check measures a 15 s clip (new) or a voice-list preview/one-line clip (old). There are also two real shortfalls under this: (1) the old build has no tool that joins audio, and each voice call speaks one voice; (2) the free plan stops the new build's video-based podcast at 60–75 s.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, serve or read the local /films/ output, so that join_production_clips/join_videos results download and do not return 404. Make the 'about 90 s' check measure the file that the assistant gives as its download_url. Do not measure the first captured asset. Leave voices_list previews out of the measured assets."
+ },
+ "error": null,
+ "seconds": 53,
+ "usd": 0.6977998000000001
+}

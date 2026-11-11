@@ -1,0 +1,52 @@
+{
+ "id": "251e922ed5",
+ "key": "must:D20a:One playable vertical reel runs for approximately 10 seconds.",
+ "symptom": "One playable vertical reel runs for approximately 10 seconds.",
+ "item": "D20a",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "axiom": "The minimax-h3 model returns about 2.3 s of video when it is asked for 2 s (wait_for_video_project still reports end_seconds 2). The new build's production pipeline treats the planned seconds as exact. Neither the planner nor join_production_clips corrects the overshoot, so 5 short clips give 11.7 s instead of 10 s.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In join_production_clips, trim each clip to its planned `seconds` before the concat (or trim the final film to the plan total, 10 s) and fit the music to that length. Then the measured 'One file, 10 s, 9:16' check passes and is not only reported as not_met. Separately, the harness must be able to fetch the local 127.0.0.1:8000/films URL, so the grader sees the joined reel.",
+  "whys": [
+   {
+    "why": "Why was 'One playable vertical reel runs for approximately 10 seconds' not met?",
+    "because": "In both new-build chats the joined reel is 11.7 s, and the grader saw only the separate 2.3 s clips. In the old-build chat the 10 s file is landscape, so it fails for a different reason (orientation).",
+    "evidence": "s3.new.happy.D20a/grade.json and s3.new.dumper.D20a/grade.json: check 'about 10 s' got '2.3 s'; must reason 'The assistant says the reel is about 11.7 s, and the clips are 2.3 s each. The final reel was not supplied.' s3.old.stupid.D20a/grade.json: 'about 10 s' passes with 10.1 s, but aspect is 858x480 and the must reason is '16:9 landscape, not vertical'."
+   },
+   {
+    "why": "Why did the grader see no final reel, only 2.3 s clips?",
+    "because": "The harness got a 404 when it tried to download the joined film from the local URL. Only the clip mp4s and the music wav reached the grade folder.",
+    "evidence": "s3.new.happy.D20a/calls.jsonl line 15 (join_production_clips): files = 'download failed: download 404 http://127.0.0.1:8000/films/1463bcb6….mp4'. The dumper join (line 15) shows the same 404. In grade.json, 'a video was made' lists 5 .mp4 and 1 .wav."
+   },
+   {
+    "why": "Why is the joined reel 11.7 s and not 10 s?",
+    "because": "plan_video_production split the 10 s brief into 5 clips of 2 s each. Each clip came back from the model at about 2.3 s, and the join just concatenated them: 5 × 2.34 ≈ 11.7 s.",
+    "evidence": "new.happy calls.jsonl line 2: plan output has seconds 10 and 5 clips with 'seconds':2 on minimax-h3. Line 15: join output has 'seconds':11.7 and checked {'want':'One file, 10 s, 9:16','got':'11.7 s, 480x858','result':'no'}. grade.json measured each clip at 2.3 s."
+   },
+   {
+    "why": "Why did each 2 s clip come back about 2.3 s long?",
+    "because": "The minimax-h3 generator makes a little more footage than requested for very short clips. The API metadata still says end_seconds 2, so the tool layer cannot see the overshoot before the join.",
+    "evidence": "new.happy calls.jsonl lines 9–13 (wait_for_video_project): each clip reports 'end_seconds':2, 'fps':24, 480x858. The downloaded files measure 2.3 s (grade.json). The assistant tells the user: 'The clips came back a bit longer than the 2 seconds each I asked for.'"
+   },
+   {
+    "why": "Why did the new build not correct the length before delivery?",
+    "because": "join_production_clips only measures the length and reports it as not_met. It does not trim clips to their planned seconds or the film to the plan total, and the assistant has no trim tool. So the assistant delivered 11.7 s and said so.",
+    "evidence": "new.happy line 15: 'not_met':['One file, 10 s, 9:16']. new.dumper final reply: 'it's about 11.7 seconds, not 10… I can't trim it here. You can cut the last 1.7 seconds in Instagram's editor'."
+   },
+   {
+    "why": "Why does the old build not show this same cause?",
+    "because": "The old assistant made one 10 s create_video_from_text call, which came out 10.1 s. It failed only because the vague 'stupid' user gave no orientation, and the assistant picked 16:9 without asking.",
+    "evidence": "s3.old.stupid.D20a/chat.json: the user message is 'make a café video from this pic…', with no length or orientation. calls.jsonl line 2: aspect_ratio '16:9', end_seconds 10; the result is 858x480."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.466396
+}

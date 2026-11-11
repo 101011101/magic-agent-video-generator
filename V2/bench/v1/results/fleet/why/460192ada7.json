@@ -1,0 +1,47 @@
+{
+ "id": "460192ada7",
+ "key": "must:J55b:There are no pictures, illustrations or additional words.",
+ "symptom": "There are no pictures, illustrations or additional words.",
+ "item": "J55b",
+ "n": 3,
+ "builds": {
+  "new": 1,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'There are no pictures, illustrations or additional words' not met in the 3 chats?",
+    "because": "No image was produced in any of them, so the grader had no output to check against the item. It marked the item 'no' by default.",
+    "evidence": "grade.json for s2r.old.happy.J55b and s2r.old.stupid.J55b: the check 'something was made' has pass=false, got='no file'. The happy reason is 'No output exists to satisfy this; the agent only described a plan.' The summary says generation was refused for lack of credits."
+   },
+   {
+    "why": "Why was no image produced?",
+    "because": "The account refused every generate_image call. It was not the content of the request.",
+    "evidence": "calls.jsonl in all 3 chats: every generate_image call has approve=false, reason='insufficient credits: this call needs about 10 credits and 0 remain on the account'. That is 2 calls in old.happy, 2 in old.stupid and 2 in new.stupid. In old.happy the prompt was correct (1:1, plain background, black lettering, exactly the 3 lines, no pictures), and it was still refused."
+   },
+   {
+    "why": "Why did the call fail even when the assistant did everything right?",
+    "because": "The free-plan bench account had 0 credits when these chats ran. Even the cheapest free-plan image model needs 5 credits, so no request could succeed. This does not depend on the build, the persona or the prompt.",
+    "evidence": "old.happy assistant reply in calls.jsonl: 'Even the cheapest free-plan image model needs 5, so nothing on the account can run right now.' new.stupid: plan_request returned ready=true, then generate_image was refused for the same 0-credit reason. Both builds fail the same way."
+   },
+   {
+    "why": "Why did the account have 0 credits during a graded run?",
+    "because": "The fleet runs many chats on one shared free-plan account. Earlier chats used up the small free allowance, and the harness did not top up the balance or check it before these chats. Every later chat was then a guaranteed 'cannot'.",
+    "evidence": "All 3 chats are in the same s2r fleet and come back with an identical '0 remain on the account' result. chat.json shows mode='live' on a real account (url mcp.magichour.ai for old). Nothing in the chat files shows a balance check or reset before the chat. The ledger before these chats was not read, so 'used up by earlier chats' is inferred, not seen."
+   },
+   {
+    "why": "Why does this count as an axiom and not as an assistant or tool defect?",
+    "because": "The harness ran graded chats on an account that could not generate anything, and the grader scored the empty output as a content failure. Secondary issue: in old.stupid the vague first message ('make a book swap poster') led the assistant to make up a tagline and pick 9:16. That would only matter if credits had existed.",
+    "evidence": "old.stupid chat.json: the first message is 'make a book swap poster'. calls.jsonl prompt adds 'Bring a book, take a book!'. The grader cites this tagline, but the main reason is still 'No output exists'."
+   }
+  ],
+  "axiom": "The shared free-plan bench account had 0 credits, so the server refused every generate_image call in both builds. The harness still ran and graded these chats, and the grader marked every output must-have as unmet because no file existed.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Add a pre-flight credit check to the harness before each chat. Top up or reset the bench account so it holds at least the brief's estimated cost. If the balance is too low, mark the chat 'invalid: no credits' and leave it out of the must-have scoring."
+ },
+ "error": null,
+ "seconds": 29,
+ "usd": 0.1399152
+}

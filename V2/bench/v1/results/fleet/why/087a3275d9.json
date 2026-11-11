@@ -1,0 +1,47 @@
+{
+ "id": "087a3275d9",
+ "key": "must:E25a:9:16 video using actual footage",
+ "symptom": "9:16 video using actual footage",
+ "item": "E25a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was '9:16 video using actual footage' not met?",
+    "because": "In both chats the only file delivered is an 832x448 landscape clip that the AI redrew from the source. Her face changed in the redraw. It is not a portrait crop of the original frames.",
+    "evidence": "s3.new.happy.E25a/grade.json: check 'aspect 9:16' failed with got [\"832x448\"]; the must-have reason reads 'Output is landscape 832x448 and AI-redrawn; face differs from original.' In both calls.jsonl files, wait_for_video_project returned type VIDEO_EDITOR, width 832, height 448."
+   },
+   {
+    "why": "Why was the output landscape and redrawn?",
+    "because": "Both assistants called edit_video with model ltx-2.5 at 480p. They asked for the 9:16 reframe only in the text prompt. edit_video is a generative video-to-video editor: it redraws every frame and keeps the input's frame shape. A prompt cannot change the frame shape.",
+    "evidence": "calls.jsonl in both chats: edit_video args style.prompt='Reframe this video to a vertical 9:16 portrait frame...' and there is no aspect or crop parameter. The result came back 832x448. Both assistants report afterwards that 'the editor keeps the shape of the input, and nothing in a prompt can change that.'"
+   },
+   {
+    "why": "Why did the assistants use edit_video if they knew it could not reframe?",
+    "because": "Both assistants first answered 'cannot' correctly. They spent no credits and gave an ffmpeg crop command. Then the simulated user pushed them ('Please go ahead with the free settings anyway.' / 'huh? just try it'), and they ran the closest tool under protest.",
+    "evidence": "new.happy calls.jsonl line 4: say kind 'cannot', then line 5: user turn marked nudge:true. old.stupid calls.jsonl line 7: say kind 'cannot', then line 8: user 'huh? just try it' marked nudge:true. Only after these turns did each assistant call edit_video."
+   },
+   {
+    "why": "Why was there no correct tool to use?",
+    "because": "Neither build's Magic Hour tool set has a crop or reframe tool for existing video. Every video tool (edit_video, restyle, upscale, subtitles, translate, lip sync, face swap) is generative or keeps the input shape. A plain non-generative 9:16 crop with the original audio copied over cannot be done with the tools the assistant has.",
+    "evidence": "old.stupid assistant's message: 'None of them can crop or reframe a video to a new aspect ratio... edit_video only takes a text prompt. It has no aspect-ratio setting.' The new.happy assistant says the same. The edit_video args in both builds carry no aspect or crop field. The E25a item still expects asks:'never', beyond_free:'no', refuse:false, so the test assumes this task can be done."
+   },
+   {
+    "why": "Why does the toolset lack a crop?",
+    "because": "The Magic Hour API exposes only AI generation and editing endpoints. It offers no deterministic video crop or reframe operation. This is a product capability limit (axiom). Because of it, test E25a cannot pass on either build, and a fair grade would reward the 'cannot' answer.",
+    "evidence": "tools-new.json: the tools list has generation and edit tools only, and get_workflow_guide lists eight workflows with no reframe or crop. The test's answer_sheet asks for 'Crop to fill the frame without stretching', an operation no tool provides."
+   }
+  ],
+  "axiom": "The Magic Hour toolset has no deterministic crop or reframe for existing video. Its only video editor (edit_video / LTX 2.5) redraws every frame and keeps the input aspect ratio. A real 9:16 crop of the original footage cannot be done in either build. The harness nudge then pushed the assistants, after they correctly said 'cannot', into a generative run that could not meet the item.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a non-generative reframe_video tool to the MCP server. It should do a server-side ffmpeg crop/scale to a target aspect with an optional horizontal centre and copy the audio unchanged. Until that tool exists, re-label E25a as expect refuse/cannot and turn off the 'go ahead anyway' nudge for it."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.172154
+}

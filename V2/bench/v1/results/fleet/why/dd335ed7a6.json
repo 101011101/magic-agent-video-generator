@@ -1,0 +1,52 @@
+{
+ "id": "dd335ed7a6",
+ "key": "must:B12d:The delivered image is square.",
+ "symptom": "The delivered image is square.",
+ "item": "B12d",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the delivered image not square?",
+    "because": "In every failing chat the file that came back was a wide 640x256 PNG. That is about the same wide shape as the 1024x384 source photo, not 1:1.",
+    "evidence": "grade.json in s1.old.happy, s1.new.happy and s1.new.stupid: check 'aspect 1:1' pass=false, got [\"640x256\"]. In s1.old.happy state/calls the assistant says 'Your photo is 1024×384'."
+   },
+   {
+    "why": "Why was the output wide? Did the assistant ask for the wrong shape?",
+    "because": "No. Every assistant sent edit_image with aspect_ratio '1:1', model flux-2-klein, 640px, and a prompt that asked for a square with padding above and below. The server accepted the job and returned status complete with no warning.",
+    "evidence": "calls.jsonl edit_image args: s1.old.happy, s1.old.dumper, s1.new.happy and s1.new.stupid all have \"aspect_ratio\":\"1:1\",\"model\":\"flux-2-klein\". The wait_for_image_project result has status 'complete' and error null."
+   },
+   {
+    "why": "Why did a 1:1 request give a 640x256 image?",
+    "because": "The flux-2-klein edit path on Magic Hour ignores aspect_ratio when it edits a single input picture. It keeps the input's shape and only scales the long side to 640. The prompt cannot change the canvas size either: the model only redraws inside the input frame, which is why the grader saw recentred, invented clutter in place of padding.",
+    "evidence": "In 4 of 4 chats, with 4 different prompts, the 1024x384 source (ratio 2.67) became 640x256 (ratio 2.5, which is ~2.67 rounded to model grid steps). grade.json in s1.old.happy says 'The AI redrew and re-composed the scene instead of padding it… new clutter was invented on the right'."
+   },
+   {
+    "why": "Why did the assistant not know this and choose another way?",
+    "because": "The tool description presents aspect_ratio as a working control for every model. It says nothing about flux-2-klein keeping the input shape, and there is no crop or pad tool that works by code. Both builds have the same text.",
+    "evidence": "tools-old.json (around line 3088) and tools-new.json (around line 3372), edit_image.aspect_ratio: 'The aspect ratio of the output image(s). If not specified, defaults to `auto`.' The enum includes '1:1'. There is no per-model caveat. The assistants themselves say 'Magic Hour has no plain crop-and-pad tool' (s1.old.happy, s1.new.happy)."
+   },
+   {
+    "why": "Why did the reply say the image was square (and even 640×640) when it was not?",
+    "because": "The assistant could not see the output or its size. fetch_image_download returned empty content, and the wait result has no width or height fields. So the assistant repeated what it asked for instead of what it got, and it admitted 'I couldn't preview it'.",
+    "evidence": "calls.jsonl: fetch_image_download output \"\" in all four chats. wait_for_image_project output lists only id/status/downloads, with no dimensions. s1.old.happy reply: 'Here's your square version (640×640)… I couldn't preview the output from here'. s1.new.happy reply: 'On the free plan the image is 640×640 px'."
+   },
+   {
+    "why": "Why does the edit model keep the input shape regardless of the parameter?",
+    "because": "This is how the free-tier generation model (flux-2-klein image edit) behaves in the Magic Hour backend. It is outside the MCP server's control, and no free-plan edit model was shown to obey 1:1 here.",
+    "evidence": "The same 640x256 result comes from both builds (old = hosted server, new = local build), which share the same backend call. The only free-tier edit models listed are flux-2-klein, krea-2, qwen-edit and qwen-image-2.1 (tools-*.json edit_image.model). No chat tried another model, so the evidence cannot show whether those obey aspect_ratio."
+   }
+  ],
+  "axiom": "The free-tier image edit model (flux-2-klein on Magic Hour) keeps the input picture's aspect ratio and silently ignores aspect_ratio='1:1'. The MCP layer neither documents this nor gives a code-based crop/pad path, and it does not return the output size, so the assistant could not detect or fix the wide result.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the MCP server, after an edit_image or generate_image job completes, read the output's width and height. Return them in wait_for_image_project. If the shape differs from the requested aspect_ratio, pad the image by code to that ratio with the edge/background colour (or give a deterministic pad_image_to_aspect tool that needs no generation). Also add to the edit_image.aspect_ratio description: 'flux-2-klein keeps the input image's shape; to change the shape, pad with the pad tool.'"
+ },
+ "error": null,
+ "seconds": 74,
+ "usd": 0.7881264000000001
+}

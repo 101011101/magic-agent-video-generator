@@ -1,0 +1,81 @@
+{
+  "id": "G37b",
+  "best_tools": "yes",
+  "explanation": "The still-image updates use the right tools and source assets, but the reel update passes both clean and already-lettered clips to a tool that accepts one base clip, not a visual reference for reconstructing overlays. It also omits the complete replacement text and explicit overlay settings, so the intended clean-base rebuild is not reliably specified; stale lettering remains and required event details are lost.",
+  "better_chain": "image-edit (update only the poster date using qwen lettering, preserving the existing design and aspect) → image-edit (update only the story date the same way) → text-overlay (use only rooftop_reel_base.mp4; apply \"Rooftop Jazz\\n24 October 2027 / 7 PM\\nAtlas Roof / Free entry\" with the original cream band, burgundy font, size and position, from 0 to 10 seconds) → gate (verify both images and the entire reel contain the revised date, no old date, all unchanged event details, and the required aspects and duration) → deliver only the three revised assets",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate text-free shared illustration, with the requested palette and room for later lettering.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Uses the shared illustration and a lettering-capable model to create the story with all event details.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 3,
+      "issue": "Creates a separate poster layout with all required wording and an explicit safe area for the planned crop.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 4,
+      "issue": "The central 4:5 crop is supported by the preceding safe-area layout and retains the lettering.",
+      "verdict": "ok",
+      "tool": "crop"
+    },
+    {
+      "n": 5,
+      "issue": "Animates the text-free illustration for five seconds, keeping lettering out of generative motion.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 6,
+      "issue": "Creates a second matching five-second shot from the correct text-free source.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 7,
+      "issue": "Correctly joins the two shots into a ten-second vertical clean reel.",
+      "verdict": "ok",
+      "tool": "assemble"
+    },
+    {
+      "n": 8,
+      "issue": "Plain event text over moving footage is an appropriate overlay use; complete wording and full-duration timing are supplied.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 9,
+      "issue": "Edits the existing final poster rather than recreating it, requesting only the date replacement and preserving its aspect.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 10,
+      "issue": "Edits the existing story with a narrowly scoped date replacement and preservation instructions.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 11,
+      "issue": "Supplies two clips to a single-base overlay tool and assumes it can inspect one as a reference. The step should supply only the clean reel plus the complete revised text and explicit original styling, placement and 0–10-second timing.",
+      "verdict": "bad-inputs",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "A final validation gate checking that the old date is absent throughout the reel, every required event string remains present, and only the two revised images and revised ten-second reel are delivered."
+}

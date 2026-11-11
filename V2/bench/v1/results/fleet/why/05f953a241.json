@@ -1,0 +1,47 @@
+{
+ "id": "05f953a241",
+ "key": "must:E29b:Solid black end card occupies final 2 seconds of 9-second output",
+ "symptom": "Solid black end card occupies final 2 seconds of 9-second output",
+ "item": "E29b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was there no 9-second output whose final 2 seconds are a black end card?",
+    "because": "Neither chat joined the user's 7-second clip to the card. Old delivered only two still card images (16:9 and 9:16). New delivered only a standalone 2-second card video.",
+    "evidence": "s3.old.dumper.E29b/calls.jsonl: only detect_faces, generate_image x2 and fetch_image_download calls; the final message asks the user to choose a shape before a 2-second video is made. s3.new.dumper.E29b/grade.json: 'Only a standalone 2-second card was made; no 9-second output exists.'"
+   },
+   {
+    "why": "Why did the old build not join the clip and the card?",
+    "because": "The old (hosted) tool set has no tool that concatenates videos or appends frames. The assistant said so, offered to make only a separate card, and then stalled waiting for the aspect ratio, which it also could not read.",
+    "evidence": "s3.old.dumper.E29b/calls.jsonl line 4: 'None of the Magic Hour tools can put two clips together or add frames after the end of a video.' Line 16: 'None of the Magic Hour tools I have report a video's width and height.' No join tool was called."
+   },
+   {
+    "why": "Why did the new build, which has a join tool, still fail to join?",
+    "because": "The assistant used plan_video_production for the card only. That planner has no beat kind for the user's own footage (beat kind is only scene or card). The assistant then called join_videos with the uploaded clip's file_path and the card URL, and join_videos refused the file_path with HTTP 404.",
+    "evidence": "s3.new.dumper.E29b/calls.jsonl line 5: join_videos videos=['api-assets/cmsla3fmt.../...-video-0.mp4', 'http://127.0.0.1:8000/films/dd78....mp4'] -> error 'Magic Hour refused /v1/video-projects/api-assets/... (HTTP 404) not_found'. tools-new.json plan_video_production: beat kind enum ['scene','card']."
+   },
+   {
+    "why": "Why did join_videos refuse the uploaded clip?",
+    "because": "join_videos accepts only 'finished video project ids or video URLs'. It treats any other string as a video-project id and looks it up at /v1/video-projects/<string>. An uploaded asset file_path (api-assets/...) is neither, so the lookup returned 404. The description does not say that uploaded file_paths are unsupported, and it does not say how to convert one into a URL.",
+    "evidence": "tools-new.json join_videos description: '`videos`: finished video project ids or video URLs.' The error path in calls.jsonl shows that the file_path was put into /v1/video-projects/."
+   },
+   {
+    "why": "Why is that the end of the chain?",
+    "because": "In both builds no tool accepts the user's uploaded video as a join input. Old has no join tool at all. In new, join_videos and the production planner accept only generated projects or URLs. This is a capability gap in the server's tool design, so the assistant had no working path to make the 9-second file. The harness also could not download the card film (404 from localhost), so the grader found 'no file', but this is secondary: even with the file there would be no 9-second output.",
+    "evidence": "tools-new.json join_videos and plan_video_production schemas. s3.new.dumper.E29b/calls.jsonl line 4: files: 'download failed: download 404 http://127.0.0.1:8000/films/...mp4'. grade.json check 'something was made': 'no file'."
+   }
+  ],
+  "axiom": "No tool in either build can take the user's uploaded video as input for concatenation. Old has no join or append tool at all. In new, join_videos accepts only video-project ids or URLs, and it sends an api-assets file_path to /v1/video-projects/, which returns 404. So appending an end card to the user's own clip cannot be done with these tools.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the new build, make join_videos accept a Magic Hour uploaded asset file_path (api-assets/...): resolve it to a signed download URL before the join. Do not treat it as a video-project id. State this in the description ('videos: video project ids, video URLs, or file_paths of uploaded videos'). Optionally add a 'source' beat kind to plan_video_production that takes a user file_path, so a card can be appended to the user's footage in one plan. Also report the joined file's size and aspect, so the card can match the source."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.28988179999999997
+}

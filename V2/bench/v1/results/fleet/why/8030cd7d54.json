@@ -1,0 +1,47 @@
+{
+ "id": "8030cd7d54",
+ "key": "must:B12a:The sneaker has natural proportions, without stretching or squeezing.",
+ "symptom": "The sneaker has natural proportions, without stretching or squeezing.",
+ "item": "B12a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The sneaker has natural proportions, without stretching or squeezing' not met?",
+    "because": "The sneaker in the delivered image is a redrawn copy. It is moved, it has a different size and outline, and the heel collar is changed. It is not the original pixels.",
+    "evidence": "s1.new.stupid.B12a/grade.json: 'The shoe is shifted and looks slightly different in shape and size, and the heel collar is changed.' s1.old.dumper.B12a/grade.json: 'The shoe is smaller and its shape is altered, with a different heel and collar.' The output images (assets/01-wait_for_image_project.png in both chats) show a redrawn shoe at a different scale and position."
+   },
+   {
+    "why": "Why was the sneaker redrawn and not kept?",
+    "because": "Both assistants used edit_image (model flux-2-klein, 640px). This model makes a new picture from the source and the prompt, so every pixel is generated again, the shoe included. The prompts said 'Keep the whole white sneaker ... same size, same proportions, not moved, not altered', but a prompt cannot guarantee that.",
+    "evidence": "calls.jsonl in both chats: edit_image args model='flux-2-klein', aspect_ratio='1:1', a prompt asking to outpaint above and below with the sneaker unchanged. The new-build assistant said itself: 'The AI redraws the whole image, so small details ... may come out a little different.'"
+   },
+   {
+    "why": "Why did the edit not just add space above and below the untouched photo?",
+    "because": "flux-2-klein did not follow aspect_ratio='1:1'. It returned a 640x384 image, the same wide shape as the source. So it extended nothing. It made a new version of the wide scene, with the shoe at a new scale and position. In both builds the arguments were the same and the result had the same defect.",
+    "evidence": "grade.json in both chats: the 'aspect 1:1' check got ['640x384']. The must-have 'The delivered image is square' is 'no' with 'Output is about 640×384, still wide'. The wait_for_image_project result shows status complete with no warning."
+   },
+   {
+    "why": "Why did the assistant use a model that redraws, when the user asked to change nothing?",
+    "because": "Neither build has a tool that changes the image shape without AI: no crop, pad or canvas-extend tool for images. The edit_image description points free accounts to 'flux-2-klein at 640px with image_count=1'. It does not warn that this model redraws the whole image or that it can ignore aspect_ratio. In the new build, plan_request returned ready=true for edit_image with aspect 1:1 and gave no warning.",
+    "evidence": "tools-new.json edit_image description: 'For a Free account with no requested model, flux-2-klein at 640px with image_count=1 is an available option...'. aspect_ratio: 'The aspect ratio of the output image(s). If not specified, defaults to `auto`.' The tool list I read has no image crop or pad tool. s1.new.stupid.B12a calls.jsonl: plan_request output ready=true with no warning."
+   },
+   {
+    "why": "Why does flux-2-klein change the subject and ignore the requested shape?",
+    "because": "Inside this system this is a fixed property of the free-plan image editing model. It regenerates the whole frame and keeps the input shape. It does not do pixel-exact outpainting. Prompt text cannot change this.",
+    "evidence": "In both builds the same args (flux-2-klein, 1:1, prompts that ask to keep the shoe and not stretch it) gave the same result: 640x384 and a redrawn shoe. Missing evidence: a run that asks a different free model (qwen-edit, krea-2) for 1:1. Without it, I cannot rule out that some other free model honors the shape."
+   }
+  ],
+  "axiom": "On the free plan, the only way to reshape an image is a generative editor (flux-2-klein). It redraws the whole image, the subject included, and it ignored aspect_ratio=1:1 (it returned 640x384). Neither build has a tool that pads or crops an image without AI, so the sneaker could not be kept pixel-exact.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add an image tool that changes the shape without AI, for example pad_image_to_aspect or crop_image. It should pad the source to 1:1 with a blurred or edge-extended border, or crop it, without regenerating it. Make plan_request route 'make square / resize for platform, change nothing else' requests to this tool and not to edit_image. Also make edit_image check the output size against the requested aspect_ratio and return a warning when they differ."
+ },
+ "error": null,
+ "seconds": 54,
+ "usd": 0.6256520000000001
+}

@@ -1,0 +1,46 @@
+{
+ "id": "973e3cd9bc",
+ "key": "must:I46b:Building recognizable as Biltmore House",
+ "symptom": "Building recognizable as Biltmore House",
+ "item": "I46b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Building recognizable as Biltmore House' not met in both old chats?",
+    "because": "Both videos show a generic stone manor. It has a modest gabled slate roof and does not have Biltmore's spiral stair tower, wide limestone facade, château roofline or scale.",
+    "evidence": "s5.old.happy.I46b/grade.json: 'Generic manor house with a modest gabled facade; it lacks Biltmore's grand scale, spiral stair tower and château roofline.' s5.old.dumper.I46b/grade.json: 'Generic stone manor with a gabled slate roof; no spiral stair tower, no Biltmore roofline or scale.' I could not list the grade/*.jpg frame names, so I used the grader's frame descriptions."
+   },
+   {
+    "why": "Did the assistant leave the landmark out or describe it badly?",
+    "because": "No. Both prompts named Biltmore House in Asheville and listed its main features: Richard Morris Hunt's French Renaissance château, pale/grey Indiana limestone, steep slate roofs, tall chimneys, the spiral staircase tower, the esplanade and the Blue Ridge Mountains. The dumper prompt also said 'no exaggerated towers, realistic scale'. The prompts follow the must_have.",
+    "evidence": "calls.jsonl line 2 in both chats: create_video_from_text style.prompt holds all of these features. I46b.json must_haves[0] asks for a 'pale stone French Renaissance-style facade, steep slate roof and distinctive roofline'."
+   },
+   {
+    "why": "Why did a correct, detailed prompt still give a generic house?",
+    "because": "The only input was text, sent to the free-plan model ltx-2.5 at 480p. The call had no reference image to fix the real facade. ltx-2.5 does not hold a reliable picture of this landmark, so it rendered a generic 'stone manor at dusk with carriages'. The same run also dropped all four text overlays, which shows weak prompt adherence.",
+    "evidence": "calls.jsonl line 2 (both chats): model 'ltx-2.5', resolution '480p', and no assets or reference image. wait_for_video_project shows a 854x480 output. grade.json in both chats: all exact_text items are 'missing', but carriages and period clothing appear, so the model kept the general mood and lost the specific details."
+   },
+   {
+    "why": "Why ltx-2.5 at 480p and not a stronger model or an image-anchored pipeline?",
+    "because": "On the free plan, the tool schemas make ltx-2.5 and 480p the default. Stronger models such as kling-3.0 and veo3.1 are the paid defaults. The user attached no photo of Biltmore, so the assistant had no real reference image to animate.",
+    "evidence": "tools-old.json: the video create tools say 'Defaults to kling-3.0 on paid plans and ltx-2.5 on free plans' and '480p on free plans'. edit_video says 'Defaults to LTX 2.5 for free tier'. chat.json/state.json transcript: the user's message has no attachment (I46b.json turns[0].materials = [])."
+   },
+   {
+    "why": "Is this a gap in the assistant's behaviour or in the tool descriptions?",
+    "because": "Mostly neither. The assistant did what it could inside one text-to-video call and warned the user: 'the house is the model's rendering, not a copy of the real building'. No tool description promises that a model will draw named landmarks accurately. The root is the generation model's limited knowledge of one specific real building at free-plan quality.",
+    "evidence": "s5.old.happy.I46b calls.jsonl say text: 'Accuracy: the house is the model's rendering... Details may differ from the real Biltmore.' The dumper chat gives the same warning. Only old-build failures are reported (builds {\"old\":2})."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) cannot reliably draw a specific real landmark (Biltmore's facade, spiral stair tower and roofline) from a text description alone. Even an accurate, detailed prompt comes out as a generic stone manor.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "No full fix: this is a limit of the model. A partial fix: for named real landmarks, the tool guidance could tell the assistant to work image-first. First make (or get from the user) a still of the facade and check it with fetch_image_download. Then animate that still with image-to-video instead of using text-to-video alone. If the still does not match the real house, the assistant tells the user before it spends video credits."
+ },
+ "error": null,
+ "seconds": 52,
+ "usd": 0.3643424
+}

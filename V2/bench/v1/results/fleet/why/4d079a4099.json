@@ -1,0 +1,52 @@
+{
+ "id": "4d079a4099",
+ "key": "must:A01d:Brand name unobscured and readable",
+ "symptom": "Brand name unobscured and readable",
+ "item": "A01d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Brand name unobscured and readable' not met?",
+    "because": "Neither image has the word VELORA on it. The old image has garbled text on the label. The new image has a blank label.",
+    "evidence": "s1.old grade.json: 'No readable brand name; text is gibberish', exact_text read_as 'PSINIEYE / HANDL (garbled)'. s1.new grade.json: 'No brand name present', read_as 'no text; label is blank'."
+   },
+   {
+    "why": "Why does the image have no VELORA?",
+    "because": "No generate_image prompt asked for VELORA. Old prompt: 'minimalist label' with no brand. New prompt: 'blank label with no text'.",
+    "evidence": "s1.old calls.jsonl line 3 and s1.new calls.jsonl line 8 show the style.prompt values. Neither one has VELORA, amber or cream in it."
+   },
+   {
+    "why": "Why did the assistant leave VELORA out of the prompt?",
+    "because": "The assistant never got the word. The simulated stupid user's only message was 'make a product pic of a hand soap bottle'. It dropped the brand, the amber glass and the cream label from the brief.",
+    "evidence": "s1.old chat.json messages[0].text = 'make a product pic of a hand soap bottle'. VELORA is only in the persona bank, under 'Exact brand wording: VELORA, all uppercase'. The new chat started with the same message (plan_request messages in s1.new calls.jsonl line 2)."
+   },
+   {
+    "why": "Why did the assistant not get VELORA out of the user's bank?",
+    "because": "The stupid persona answers only the questions it is asked. Old: the assistant asked nothing. New: plan_request marked exact_words as 'missing' but sent back only the aspect question, and on the second call it returned ready:true with exact_words still missing. The user replied 'whatever, you pick', so label text never came up.",
+    "evidence": "s1.new calls.jsonl line 2: questions only for 'aspect'. Line 7: exact_words source 'missing', ready:true, questions []. s1.old calls.jsonl: generate_image is called right away with no question. Both final replies offer to add a brand name only after delivery."
+   },
+   {
+    "why": "Why is this an artifact and not an assistant defect?",
+    "because": "The item says expect.asks='never', so the test assumes the opening message has the full brief. The stupid persona's rewritten opening drops the item's core requirement, the exact text. With no question, it was impossible to pass. This is a harness design defect: the persona rewrite may remove a must-have exact-text requirement.",
+    "evidence": "A01d.json: expect.asks='never', spec.exact_text=['VELORA'], turns[0].text has VELORA. The persona message in chat.json does not."
+   },
+   {
+    "why": "Why did the old image show gibberish and not a blank label?",
+    "because": "The old prompt asked for a 'minimalist label' and did not say 'no text'. flux-2-klein filled the label with made-up glyphs, which free-plan text-to-image models do when given no text. This is a secondary cause and does not change the result.",
+    "evidence": "s1.old calls.jsonl line 3: the prompt has no text instruction. grade.json: 'PSINIEYE', 'HANDL', 'tiny nonsense lines'."
+   }
+  ],
+  "axiom": "The test harness's stupid persona rewrote the opening message to 'make a product pic of a hand soap bottle'. That removed VELORA, the item's main must-have, but the item says no question is expected (asks='never'). The assistant only got the brand name if it asked about label text, and neither build asked. No prompt could pass the brand checks.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Harness: make the vague persona keep spec.exact_text strings, such as VELORA, in its first message, or set expect.asks so a question about label text is expected for exact-text items. Optional new-build change: when exact_words is 'missing' for a product or label image, plan_request should ask 'Any brand name or words on it?' and not return ready:true."
+ },
+ "error": null,
+ "seconds": 40,
+ "usd": 0.19447579999999998
+}

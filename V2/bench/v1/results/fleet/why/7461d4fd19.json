@@ -1,0 +1,47 @@
+{
+ "id": "7461d4fd19",
+ "key": "check:aspect:A",
+ "symptom": "aspect 4:5",
+ "item": "A02d",
+ "n": 39,
+ "builds": {
+  "old": 19,
+  "new": 20
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the check 'aspect 4:5' fail in 39 A02d chats?",
+    "because": "The automatic check reads the size of every saved output file in the chat. It fails if any one file is not 4:5. In most failing chats the final delivered image is 512x640, which is 4:5. The other file is a 640x640, 352x640 or 384x640 source image, and that file makes the check fail.",
+    "evidence": "s1.old.happy.A02d/grade.json: the check got [\"640x640\",\"512x640\"] and failed, but the judge's must-have 'One 4:5 portrait image is delivered' was met: 'Final image is 512x640, which is 4:5.' s1.old.dumper.A02d and s1.new.dumper.A02d/grade.json: the check got [\"352x640\",\"512x640\"] and failed, but the judge said 'yes… the first file is an intermediate photo / only a source.'"
+   },
+   {
+    "why": "Why are there two image files in the chat, one of them not 4:5?",
+    "because": "The assistant cannot make 4:5 in one step. It first calls generate_image with 1:1 or 9:16. Then it calls edit_image with aspect_ratio 4:5 to reframe the image. wait_for_image_project runs on both projects, and the harness saves each result as an output file (assets/01-…png and assets/02-…png).",
+    "evidence": "s1.old.happy.A02d/calls.jsonl: generate_image aspect_ratio '1:1', then edit_image aspect_ratio '4:5'. The files are assets/01-wait_for_image_project.png and assets/02-wait_for_image_project.png. s1.new.happy.A02d/calls.jsonl shows the same pattern: 9:16, then edit 4:5."
+   },
+   {
+    "why": "Why does the assistant not ask generate_image for 4:5 directly?",
+    "because": "In both builds, the free-plan image generator does not offer 4:5. The assistants say this in their replies. In the new build, plan_request even changed the user's 'aspect 4:5' to '9:16'. I did not find the aspect_ratio enum of generate_image in the tool lists, because the files are long and I did not reach that tool. So this point rests on the replies and on the plan_request output.",
+    "evidence": "s1.old.happy.A02d reply: 'The image generator on your free plan can't make 4:5 images.' s1.new.happy.A02d reply: 'The image generator can't make 4:5 directly.' In the new build's plan_request output, aspect is '9:16' with from: 'the user's words', but the input was '4:5'."
+   },
+   {
+    "why": "Why does the source file count against the result when only the edited file was delivered?",
+    "because": "The harness check does not tell the delivered file apart from the intermediate source files. It needs every file to have the spec aspect. The LLM judge reads the same files and correctly grades only the final image. The two graders give opposite answers on the same chat.",
+    "evidence": "A02d.json spec: aspect '4:5', outputs 1. The grade.json checks list all files under one 'aspect 4:5' check, and must[0] is 'met: yes' in the old.happy, old.dumper and new.dumper chats."
+   },
+   {
+    "why": "Are some failures real, and not only grader artifacts?",
+    "because": "Yes, a smaller number are real. (a) The stupid user persona never gives 4:5 ('make a pic of a fitness coach'). The assistant then picks 1:1 by default and makes one 640x640 file. That matches the measured ['640x640']. (b) In s1.new.happy.A02d, edit_image with flux-2-klein ignored aspect_ratio 4:5 and returned 384x640 again. The judge marked that chat as not met.",
+    "evidence": "s1.old.stupid.A02d/state.json: the user says 'make a pic of a fitness coach'. calls.jsonl: generate_image aspect_ratio '1:1', and that is the only file. s1.new.happy.A02d/grade.json: got [\"384x640\",\"384x640\"], and the judge said 'about 3:5… taller than 4:5'."
+   }
+  ],
+  "axiom": "The harness's aspect check needs every saved output file to match the spec aspect. It does not tell the delivered file apart from the intermediate source image. That source image must exist, because the free-plan generate_image cannot make 4:5 and the assistant has to generate first and then reframe with edit_image. Smaller causes of real failures: the stupid persona never states 4:5, and edit_image with flux-2-klein sometimes ignores aspect_ratio.",
+  "category": "grader_artifact",
+  "builds": "both",
+  "fix": "Change the harness aspect check to measure only the final delivered file. That is the file whose URL appears in the assistant's last 'delivered' reply, or the last image project in the chat. Do not require all files under assets/ to match. As a second step, add 4:5 to generate_image on the free plan (or make edit_image apply aspect_ratio reliably for flux-2-klein), so that no intermediate file is needed."
+ },
+ "error": null,
+ "seconds": 54,
+ "usd": 0.355232
+}

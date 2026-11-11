@@ -1,0 +1,47 @@
+{
+ "id": "b0df366c51",
+ "key": "must:G33b:Uses a frame from the clip, retaining identity and source appearance",
+ "symptom": "Uses a frame from the clip, retaining identity and source appearance",
+ "item": "G33b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'uses a frame from the clip, retaining identity and source appearance' not met?",
+    "because": "In both chats the delivered thumbnail is a new AI image, not the source frame. The kitchen is invented, the clothes and hair changed, and the face was redrawn into a lookalike.",
+    "evidence": "new grade.json: 'Background is a newly generated kitchen and the woman was regenerated… similar but different person'. old grade.json: 'Regenerated image with a new blue top and a different kitchen… not the source frame'. Faults in both mark this as major."
+   },
+   {
+    "why": "Why was the woman regenerated in a new scene?",
+    "because": "The assistant sent edit_image a prompt that asked for a new scene: 'bright sunny morning kitchen background', the person placed on the right, and new text. The only input image was a small face crop. The model had to invent everything outside the face and redrew the face at 640px.",
+    "evidence": "old calls.jsonl line 8: edit_image flux-2-klein, prompt '...bright sunny morning kitchen background softly blurred...', image_file_paths=[.../abff59d4.../0-0.png]. new calls.jsonl line 13: edit_image qwen-edit with the same kind of prompt and the face-crop path. new grade.json checks show the source file at 150x213, and the faults say 'The face crop used as the source was tiny and blurry.'"
+   },
+   {
+    "why": "Why was the reference a 150x213 face crop and not a full frame from talk-one.mp4?",
+    "because": "Neither assistant could get a full still frame from the uploaded video. So both used detect_faces as a workaround, because its result is a face crop PNG.",
+    "evidence": "old calls.jsonl lines 2-7: detect_faces on the video, then fetch of 0-0.png. Old reply: 'My tools can't pull a full still frame out of a video. Instead I ran face detection…'. new calls.jsonl lines 3-9: the same detect_faces workaround. New reply: 'My tools couldn't pull a full frame straight from your video.'"
+   },
+   {
+    "why": "Why could the new build not get a frame, when it has get_last_frame?",
+    "because": "get_last_frame accepts only 'a finished video project id or a video URL'. The server read the uploaded asset path as a project id and returned 404. The plain storage URL had no signature and returned 403. join_videos failed the same way. Also, this tool gives only the last frame, so the assistant cannot choose a clear frame.",
+    "evidence": "tools-new.json line 709: get_last_frame description. new calls.jsonl line 2: get_last_frame(api-assets/... .mp4) gave 'HTTP 404 /v1/video-projects/api-assets/...'. Line 8: get_last_frame(https://videos.magichour.ai/api-assets/...mp4) gave '403 Forbidden'. Line 6: join_videos gave the same 404."
+   },
+   {
+    "why": "Why is there no deeper cause?",
+    "because": "No tool in either build can take a frame from a video the user uploaded. The old build has no frame tool at all. The new build's frame tool works only on project ids or signed URLs, and it cannot sign the user's own asset path. This is a capability gap in the MCP server. It is not an assistant mistake, because both assistants tried the available routes and told the user about the limit.",
+    "evidence": "old reply states the limit. new calls.jsonl shows three failed routes (get_last_frame twice, join_videos) before the detect_faces fallback. tools-new.json: get_last_frame takes a project id or URL and has no timestamp parameter."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server cannot take a frame from a video the user uploaded. The old build has no tool for it. The new build's get_last_frame rejects uploaded asset paths (404 as a project id, 403 as an unsigned URL). It also gives only the last frame. So the only reference available was a tiny detect_faces crop, and edit_image had to regenerate the person and the scene.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a get_frame(video, at_seconds) tool, or extend get_last_frame. It must accept an uploaded api-assets file_path, sign the file on the server, and return the full-resolution frame as a file_path. State in the description that it works on user uploads. The assistant can then use a real frame with only a text overlay or a light edit, and not regenerate the scene from a face crop."
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.2891094
+}

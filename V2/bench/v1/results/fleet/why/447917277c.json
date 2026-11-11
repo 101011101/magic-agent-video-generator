@@ -1,0 +1,42 @@
+{
+ "id": "447917277c",
+ "key": "must:E27c:Music perceptibly below voice during every spoken line",
+ "symptom": "Music perceptibly below voice during every spoken line",
+ "item": "E27c",
+ "n": 3,
+ "builds": {
+  "new": 1,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Music perceptibly below voice during every spoken line' not met?",
+    "because": "No video with mixed audio was delivered in any of the 3 chats. The only output was a separate 15 s music WAV with no voice in it, so the grader had no voice-versus-music level to judge.",
+    "evidence": "s3.old.happy.E27c/grade.json: checks 'a video was made' fail, got [\".wav\"]; must item: 'No mix was made, so no ducking or level balance exists.' All three calls.jsonl files show only generate_music followed by wait_for_audio_project, each giving assets/01-wait_for_audio_project.wav."
+   },
+   {
+    "why": "Why did the assistant deliver only a standalone music track?",
+    "because": "In all 3 chats the assistant decided that no tool could put a music track under the clip's existing audio while keeping the footage and the radio calls. It made the music bed and told the user to mix it by hand in an editor (-15 to -20 dB, ducking under 'Rook, you with me?').",
+    "evidence": "old.happy say text: 'No mixing tool: None of my Magic Hour tools can lay a music track under a video's existing audio, set the levels or duck the music.' new.dumper: 'Every tool I have either replaces the soundtrack or generates new footage.' old.stupid: 'none of my Magic Hour tools can lay a music track under an existing video.'"
+   },
+   {
+    "why": "Why did the assistant conclude that no tool could mix?",
+    "because": "Neither build's tool list has a tool that takes an existing video and an audio track and mixes them at set levels, with or without ducking. The create and edit tools are image and video generation, subtitles, trimming, face swap, talking photo and music generation. The other tools the assistant names (editor, restyle, audio-to-video) re-render the picture or replace the soundtrack.",
+    "evidence": "tools-new.json plan_request 'tool' enum: generate_image, edit_image, create_video_from_text, create_video_from_image, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face_in_photo, swap_head_in_photo, create_talking_photo, trim_video. No mix or add-audio tool is in the list. The old build behaved the same way (2 old chats reached the same conclusion)."
+   },
+   {
+    "why": "Why does the test still expect a ducked mix?",
+    "because": "E27c is written as a normal free-plan task that should be done without questions ('asks: never', 'beyond_free: no', 'refuse: false', audio 'required', kind 'video'). It assumes the server can add music under existing speech. Neither build has that capability, so every honest run fails this must-have, whatever the persona.",
+    "evidence": "items/E27c.json expect {asks:'never', beyond_free:'no', refuse:false}, spec {kind:'video', audio:'required', seconds:7}. must_haves[3] requires the music to sit below the voice during every spoken line. The failure appears for happy, stupid and dumper alike, on both builds."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server has no tool, in either build, that mixes an added audio track under a video's existing audio at a set level. No tool can make the required ducked mix. The test assumes this capability exists.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool to the new build, for example add_music_to_video(video, audio, music_gain_db, duck_under_speech=true). The tool keeps the original video stream and audio, trims the music to the clip length and mixes it with sidechain ducking (for example ffmpeg sidechaincompress/amix). If the server will not support mixing, change E27c so that refusing with a separate track counts as correct."
+ },
+ "error": null,
+ "seconds": 27,
+ "usd": 0.16679300000000002
+}

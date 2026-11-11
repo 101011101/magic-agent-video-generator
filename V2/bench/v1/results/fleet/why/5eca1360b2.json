@@ -1,0 +1,47 @@
+{
+ "id": "5eca1360b2",
+ "key": "must:G34c:Same sage-green-and-cream linocut treatment",
+ "symptom": "Same sage-green-and-cream linocut treatment",
+ "item": "G34c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why do the four slides lack the sage-green-and-cream linocut treatment?",
+    "because": "The assistant never put linocut, sage-green or cream into any generate_image prompt. The model drew what it was told to draw: a plain photo (new) or a flat modern deck (old).",
+    "evidence": "new calls.jsonl lines 8-11: every prompt says 'Clean, bright Instagram slide ... white pot on a soft light neutral background, natural daylight, minimal modern style'. old calls.jsonl lines 2-5: 'cream background, green accents, flat modern design'. Neither build's prompts contain 'linocut'. grade.json (new): 'All four are photoreal photos ... no linocut treatment'."
+   },
+   {
+    "why": "Why did the prompts leave out the linocut style?",
+    "because": "The assistant never learned about it. The stupid persona's only opening message was 'make some plant slides'. The style sits only in the persona's knowledge bank, and the persona gives it out only when someone asks in plain words.",
+    "evidence": "chat.json (old): messages = ['make some plant slides']. The bank holds 'Shared style': 'Sage-green-and-cream linocut illustration...'. The persona rule says: 'answer it from your knowledge bank' only when a question is in plain words."
+   },
+   {
+    "why": "Why did nobody ask the user about the style?",
+    "because": "Old build: the assistant asked nothing at all. It made up a topic deck (title, parts, photosynthesis, needs) at 16:9 and delivered it in one turn. New build: the assistant asked only the questions it chose plus the one plan_request returned (where it is posted, how many and which plants, what text). None of them was about the look.",
+    "evidence": "old state.json: the transcript has one user message and then a delivered reply. old calls.jsonl has generate_image right away. new calls.jsonl line 2: plan_request returns questions=[aspect only]. Line 5: the assistant asks 3 questions, and none is about style."
+   },
+   {
+    "why": "Why did the new build's plan_request not ask for the look, even though it was missing?",
+    "because": "plan_request treats 'look' as a parameter that does not block. It returned ready:true while look was still 'missing', so the description told the assistant to create at once. The description lists only shape, length, sound and on-screen words as things the assistant must not guess. Look is not on that list.",
+    "evidence": "new calls.jsonl line 7: the output is {ready:true, params:[... {name:'look', value:null, source:'missing'}], questions:[]}. tools-new.json, plan_request description: 'If ready is true, create with the returned values... do not guess shape, length, sound or on-screen words.'"
+   },
+   {
+    "why": "Why is a missing look a blocking gap in this test, when the assistant can usually pick the look itself?",
+    "because": "Under the vague persona, G34c's must-haves depend on a very specific style that only the bank holds. The answer sheet makes only font, border motif and pot design 'your call'. The style itself is fixed. So with no style question, nothing the assistant guesses can pass. Planner design (both builds): the old build has no step that checks for a missing look, and the new build treats look as optional.",
+    "evidence": "items/G34c.json: must_haves[2] 'same sage-green-and-cream linocut treatment'. answer_sheet: 'Precise font, border motif and pot design': 'your call', but 'Shared style' is fixed."
+   }
+  ],
+  "axiom": "Both builds let the assistant pick the visual look without asking. Old: there is no planning step, and the assistant created at once. New: plan_request returns ready:true while 'look' is missing. A vague user who never says the required style unprompted therefore never gets asked for it.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request: when 'look' is missing and the request has more than one output or names a design (slides, carousel, series), return ready:false with one plain-words question: 'What style should it look like (photo, drawing, print, cartoon, something else)?'. Return at most 2 questions per round, so a confused user still answers it. Add the same rule about asking for the look to the old build's generate_image description."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.32103479999999995
+}

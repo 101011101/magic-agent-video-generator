@@ -1,0 +1,64 @@
+{
+  "id": "G37a",
+  "best_tools": "yes",
+  "explanation": "The tool choices and asset wiring mostly make sense, including adding stationary reel text after animation. However, the plan relied on the image model's aspect setting without enforcing an exact 9:16 story crop, and it never explicitly removed the video model's generated audio before adding music. Those omissions allowed the wrong story proportions and unrelated speech to survive into delivery; the catalogue's warning about lettering was not the cause here.",
+  "better_chain": "image (shared midnight-blue-and-gold lantern artwork) → crop (enforce exact 9:16) → text-overlay (exact event details with safe margins, delivering the story) → crop (central 4:5 version, delivering the poster) → image-to-video (two gentle five-second shots from the text-free artwork, requesting no speech) → music (10-second instrumental bed) → assemble (two shots, exactly 10 seconds at 9:16, discard source audio and use only the music) → text-overlay (stationary event details throughout all 10 seconds) → gate (verify all three formats, readable complete text, motion, duration and absence of unrelated speech)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "model-quality",
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate shared artwork and requested aspect setting. The generated image nevertheless has approximately 3:5 proportions, requiring a subsequent exact-format correction.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate for exact, readable event information, with sensible crop-safe placement. Text-overlay does not guarantee conversion of its incorrectly proportioned input to 9:16.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly produces the exact 4:5 poster from the completed story layout while preserving all event details.",
+      "verdict": "ok",
+      "tool": "crop"
+    },
+    {
+      "n": 4,
+      "issue": "Correct text-free source and suitable gentle motion for a five-second reel shot. Its generated audio must be discarded downstream.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 5,
+      "issue": "Correct source, duration and complementary motion. As with the first shot, native generated audio must not pass through unchecked.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 6,
+      "issue": "Suitable optional instrumental accompaniment, explicitly without vocals and matching the reel duration.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 7,
+      "issue": "Correct order, duration and aspect, but adding music does not establish that source audio is removed. The assembly should explicitly discard both shots' generated sound and retain only the instrumental track.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    },
+    {
+      "n": 8,
+      "issue": "Correctly adds exact stationary details after animation, with contrast backing and a full ten-second reading window.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "An exact 9:16 crop before finishing the story; explicit removal of generated clip audio during assembly; final validation of dimensions and the reel's audio."
+}

@@ -1,0 +1,220 @@
+{
+  "id": "C14b",
+  "item": {
+    "id": "C14b",
+    "case": 14,
+    "case_name": "Face swap on a photo",
+    "group": "C",
+    "group_name": "Faces and characters",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which person in two-friends.jpg should receive the user's face: the bearded man on the left or the blonde woman on the right?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Which Friend Gets My Face",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "two-friends.jpg"
+        ],
+        "text": "Can you put my face from the park selfie onto someone in this beach photo? Just swap one face and leave everything else alone."
+      }
+    ],
+    "tests": "Tests clarification of an ambiguous target face and preservation of the unselected person.",
+    "answer_sheet": {
+      "Which person to replace": "The blonde woman on the right. Leave the bearded man on the left alone.",
+      "Source face": "Use my face from portrait-woman.jpg.",
+      "Style": "Keep it looking like the original beach photo; I want to be recognisable, so my hair can come with my face.",
+      "Size and platform": "Keep the original wide 16:9 framing; free-tier size is fine.",
+      "Other edits or text": "No text or other edits."
+    },
+    "must_haves": [
+      "Only the woman on the right receives the face from portrait-woman.jpg.",
+      "The bearded man on the left still looks like the same person (small drift from a redrawn photo is acceptable).",
+      "The woman on the right is recognisably the person in portrait-woman.jpg (her hair may come with the face), blended to the beach lighting and head angle.",
+      "The bodies, clothing, beach background and wide framing look the same at a glance.",
+      "No text is added."
+    ],
+    "changed": [
+      "2026-11-01: recognisable over untouched (user decision): the hair, and on video the clothes, may come with the new person; everything else stays"
+    ]
+  },
+  "session": "mcp-p1-dry-o-tightwad-C14b",
+  "sessionDir": "sessions/mcp-p1-dry-o-tightwad-C14b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you put my face from this park selfie onto someone in this beach photo? Just swap one face and leave everything else alone. I'm on the free plan and don't want my credits burned, so please tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+      "materials": [
+        "portrait-woman.jpg",
+        "two-friends.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Yes—the dedicated **photo face swap costs 10 credits for one run**. Swapping only one face or using a smaller image does **not** reduce that fixed price; “shorter” only applies to video.\n\nThere is a **5-credit image-editing option** on the free plan (Flux 2 Klein at 640px), but it may change other details and is less reliable for a face-only swap. Given your “leave everything else alone” requirement, I recommend the dedicated 10-credit face swap with a selected-face mapping.\n\n**I haven’t started anything or spent any credits.** Which person should receive your face—the **man on the left** or the **woman on the right**—and do you approve the **10-credit** run?",
+          "asked": [
+            "approval"
+          ],
+          "user": "The blonde woman on the right—use my face from portrait-woman.jpg and leave the bearded man on the left alone. For the 10-credit face swap, ok, go ahead with that.",
+          "calls_before": 0
+        }
+      ],
+      "agent": "The 10-credit face swap was blocked because your account has insufficient credits. **No image was generated and no generation credits were spent.** Face detection was free.\n\nI haven’t switched to the cheaper editor or retried. To use the selected-face swap on only the blonde woman, you’ll need a balance of at least **10 credits**.",
+      "calls": [
+        {
+          "name": "detect_faces",
+          "arguments": "{\"assets\":{\"target_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/a9d46ea4-2e5f-44cf-91d4-77dd85046067-image-0.jpg\"}}",
+          "output": "{\"id\": \"4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9\", \"credits_charged\": 0}",
+          "error": null
+        },
+        {
+          "name": "get_face_detection_results",
+          "arguments": "{\"id\":\"4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9\"}",
+          "output": "{\"id\": \"4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9\", \"credits_charged\": 0, \"status\": \"complete\", \"faces\": [{\"path\": \"api-assets/cmsla3fmt01cnio0zhjlc2wsv/4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9/0-0.png\", \"url\": \"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9/0-0.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261109%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261109T051601Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=4abdba3e73da7c5d38f6a74dd8ab1a3e84dafe13e6a6c06ae2a19cf72b63f5eda2640a90e283a552510329434badb14e6c27eaccd55dbafd95a5bf86a8e3271c1608f35ac2ab328be4be817b77498d8915977f0f85d1f1e52a4bc87f228ee5a3139bc07817621e9522a34b69d0c75717387eb45c49bfe4b5d710275c586e950c01abf6254a85837819fc3750da8a02d01960b1cf1a9f3fb255af3fb7981f39d53f21f7e0a30c350a53ef86fde21403f3bbb2d5fc1d89efc64e7242d8b6e9432b4adf80ccadf77a6129da384b62c73d4ffb6d9e2af5b2b51447341d9a7384b1a4530d08eebc1dc6bbbb03449443f00f88a21c444befbdcffae102decd10480fb0\"}, {\"path\": \"api-assets/cmsla3fmt01cnio0zhjlc2wsv/4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9/0-1.png\", \"url\": \"https://videos.magichour.ai/api-assets/cmsla3fmt01cnio0zhjlc2wsv/4a9f1fdc-0de7-4075-b6a9-3da0d596bcf9/0-1.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=web-service%40magic-hour-385504.iam.gserviceaccount.com%2F20261109%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20261109T051601Z&X-Goog-Expires=36000&X-Goog-SignedHeaders=host&X-Goog-Signature=c8afbdf76ee4cee1aaf5c0aeee1b070e96336c418acc71257bfd1230614204ef29e4b8484c226584c613173172a8b218a1c95d21adda20feca08e62562fae426561576474a0b440991330e41e989e6418ceca484ef973e6567fb1aee57fb92a1c173352edc512a3b87a613d2ec58d991ce679d83d19ea81e6d2df672f57665562849292b893f92b78cb38af9c2d4e4d04a68995bd10787f67c99de5bd5eb4f5a2a1c7d04f7eb5ee3f25376c1bb8dda72d03595953f19da3907939ab8e132e238f213f3d6dee28df0dbc6e3e67a5d5fb0f357acbea7412b5c413a9a8c9e73a0cd2e53241cb8eff7a2dd89f52db0f05a08d52dc3c4948de0296a540c9316fb4e6a\"}], \"error\": null}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "detect_faces",
+          "args": {
+            "assets": {
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/a9d46ea4-2e5f-44cf-91d4-77dd85046067-image-0.jpg"
+            }
+          },
+          "approve": true,
+          "reason": "",
+          "est": 0
+        },
+        {
+          "name": "swap_face_in_photo",
+          "args": {
+            "name": "Beach photo — right woman face swap",
+            "assets": {
+              "face_swap_mode": "individual-faces",
+              "face_mappings": [
+                {
+                  "original_face": "0-1.png",
+                  "new_face": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/28cdf2b7-488d-45a0-9ecc-dbdb5b479ae4-image-0.jpg"
+                }
+              ],
+              "target_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/a9d46ea4-2e5f-44cf-91d4-77dd85046067-image-0.jpg"
+            }
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "approval",
+          "question": "Yes—the dedicated **photo face swap costs 10 credits for one run**. Swapping only one face or using a smaller image does **not** reduce that fixed price; “shorter” only applies to video.\n\nThere is a **5-credit image-editing option** on the free plan (Flux 2 Klein at 640px), but it may change other details and is less reliable for a face-only swap. Given your “leave everything else alone” requireme"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "swap_face_in_photo: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "The 10-credit face swap was blocked because your account has insufficient credits. **No image was generated and no generation credits were spent.** Face detection was free.\n\nI haven’t switched to the cheaper editor or retried. To use the selected-face swap on only the blonde woman, you’ll need a balance of at least **10 credits**.",
+        "refuse": "",
+        "tier_move": "The 10-credit face swap was blocked because your account has insufficient credits. **No image was generated and no generation credits were spent.** Face detection was free.\n\nI haven’t switched to the cheaper editor or retried. To use the selected-face swap on only the blonde woman, you’ll need a balance of at least **10 credits**.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "detect_faces",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "two-friends.jpg"
+            ],
+            "produces": "01-detect_faces.png",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "detect_faces",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "two-friends.jpg"
+            ],
+            "produces": "02-detect_faces.png",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "detect_faces",
+          "state": "done",
+          "output": "assets/01-detect_faces.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "detect_faces",
+          "state": "done",
+          "output": "assets/02-detect_faces.png",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 83
+    }
+  ],
+  "started": "2026-11-09T05:15:13.305Z",
+  "persona": "tightwad",
+  "opening": {
+    "id": "C14b",
+    "persona": "tightwad",
+    "text": "Can you put my face from this park selfie onto someone in this beach photo? Just swap one face and leave everything else alone. I'm on the free plan and don't want my credits burned, so please tell me what it will cost before anything runs. Is there a cheaper, shorter, or smaller way to do it?",
+    "withheld": [],
+    "extras": [
+      "I'm on the free plan and don't want my credits burned, so please tell me what it will cost before anything runs.",
+      "Is there a cheaper, shorter, or smaller way to do it?"
+    ],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 83
+}

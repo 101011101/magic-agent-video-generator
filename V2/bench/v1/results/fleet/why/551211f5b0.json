@@ -1,0 +1,47 @@
+{
+ "id": "551211f5b0",
+ "key": "must:A04d:Open laptop in middle",
+ "symptom": "Open laptop in middle",
+ "item": "A04d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Open laptop in middle' not met?",
+    "because": "Neither image shows an open laptop centred on a top-down desk. The old image has a laptop left of centre in an angled photo view. The new image is an empty desk with no laptop.",
+    "evidence": "s1.old.stupid.A04d/grade.json: 'Laptop is open and roughly central-left, but view is not top-down; partly ok.' s1.new.stupid.A04d/grade.json: 'No laptop present.' with the summary 'empty wooden desk ... not top-down'."
+   },
+   {
+    "why": "Why did the images not have that layout?",
+    "because": "The prompts sent to generate_image did not mention a top-down view, a centred laptop, a yellow cup or a blue notebook. Old made up its own contents. New described only a desk.",
+    "evidence": "old calls.jsonl generate_image prompt: 'A clean wooden desk in a bright room, with a laptop, a desk lamp, a mug and a small plant, natural window light, photorealistic' (no aspect_ratio, so the output was 640x640). new calls.jsonl prompt: 'A wooden desk in a bright room, natural daylight. No text...'"
+   },
+   {
+    "why": "Why did the prompts leave out the layout?",
+    "because": "The assistant never learned it. The simulated user's only opening message was 'make a pic of a desk'. The user knows the details but gives them only when asked.",
+    "evidence": "chat.json: messages[0] = 'make a pic of a desk'. The bank holds Viewpoint, Object positions and Spacing. The persona rule: 'answer it from your knowledge bank' only when a question asks."
+   },
+   {
+    "why": "Why did the assistant not ask what should be on the desk or from which view?",
+    "because": "Old: the assistant generated right away with no questions. New: plan_request asked only about aspect and exact_words. It returned ready:true while 'look' was still missing and the subject was only 'a desk'. The assistant then followed 'If ready is true, create'.",
+    "evidence": "old calls.jsonl: generate_image was the first call, with no question turn. new calls.jsonl: the first plan_request returned questions only for aspect and exact_words. The second returned ready:true with look=null. tools-new.json plan_request description: 'do not guess shape, length, sound or on-screen words'. It says nothing about a subject that is too thin, like what is in the scene or the viewpoint."
+   },
+   {
+    "why": "Why does plan_request not treat a bare subject as missing information?",
+    "because": "Its design checks only that the subject field has a value, not whether the value is detailed enough. It focuses its questions on format (shape, length, sound, words). In the old build there is no planning tool at all, so it was left to the host model, which chose to guess.",
+    "evidence": "new plan_request output: subject 'a desk' source user is accepted as filled. Its questions cover only aspect and exact_words. The item expects asks:'never' (A04d.json) because the full brief is detailed. The stupid persona strips that detail, so a question about content was needed."
+   }
+  ],
+  "axiom": "With a vague user who gives scene details only when asked, neither build makes the assistant ask about scene content (objects, positions, viewpoint). The new plan_request checks only format fields and reports ready:true for the bare subject 'a desk'. The old build has no such check, and the host guessed.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, for image and video tools, return ready:false when the subject is only a bare noun (few words, no objects, layout or viewpoint) and 'look' is missing. In that case, return a plain question like 'What should be in the picture, where should things go, and from what angle?'. Add a matching line to the generate_image description: 'Do not invent scene contents; ask if the user gave only a one-word subject.'"
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.15864279999999997
+}

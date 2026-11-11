@@ -1,0 +1,47 @@
+{
+ "id": "d91805d4fa",
+ "key": "must:B13b:Contours and facial features clearer than source",
+ "symptom": "Contours and facial features clearer than source",
+ "item": "B13b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Contours and facial features clearer than source' not met in both chats?",
+    "because": "The delivered image is still about as blurry as the source. It is only bigger and a little smoother, with a smeared, painterly texture.",
+    "evidence": "grade.json (new): 'Still very blurry, only slightly smoother. Little real improvement.' grade.json (old): 'Still soft and blurry at 2x; only marginally cleaner, with a smeared painterly look.' The new output s1.new.stupid.B13b/assets/01-wait_for_image_project.png (480x480) shows the dog's eyes, nose and fur edges still blurred, like the 240x240 source attachments/blurry-dog.jpg."
+   },
+   {
+    "why": "Why is the output still blurry?",
+    "because": "Both assistants only ran the image upscaler. They made one call each: upscale_image with scale_factor 2 and mode 'balanced'. The upscaler enlarges the pixels, so a heavily defocused 240px photo stays defocused at 480px. Neither assistant used a tool that redraws the image to remove the blur, and neither tried a second pass.",
+    "evidence": "old calls.jsonl: upscale_image {scale_factor:2, style:{mode:'balanced'}} → IMAGE_UPSCALER, 50 credits, then delivered. new calls.jsonl: plan_request → upscale_image with the same arguments → delivered. The grader also notes 480x480, which is 2x of 240."
+   },
+   {
+    "why": "Why did the assistants pick upscale_image as the full fix for a blurry photo?",
+    "because": "The brief asks to make the photo 'clearer and bigger', and 'upscale' is the obvious name match. No tool description says that upscaling does not remove blur, or that deblurring needs edit_image. The description says only 'Upscales a supplied image 2x or 4x'. The mode text gives only cost multipliers and says nothing about how much each mode restores detail.",
+    "evidence": "tools-new.json and tools-old.json, upscale_image: 'Upscales a supplied image 2x or 4x. Cost depends on scale and mode...'. The mode field only says 'preserve uses the fast pro pipeline (1×)... balanced and creative use the creative pipeline (2×)'. The edit_image description names flux-2-klein at 640px as a free option, but nothing links it to sharpening or restoring a photo."
+   },
+   {
+    "why": "Why did the new build's planner not correct the choice?",
+    "because": "plan_request only checks parameter rows. It accepted upscale_image with ready:true and returned no questions and no advice on the tool choice. The stupid user's vague 'can you fix this pic of my dog' gave the planner nothing to push back on.",
+    "evidence": "new calls.jsonl line 2: plan_request(tool:'upscale_image', edit:'sharpen and upscale the blurry photo') → {\"ready\":true,\"params\":[],\"questions\":[]}. chat.json (new): the user's only message is 'can you fix this pic of my dog'."
+   },
+   {
+    "why": "Why did nobody notice the result before delivery?",
+    "because": "Neither assistant opened the output file to check it. Both claimed improvements that are not visible in the image. Nothing in the tool descriptions asks the assistant to compare the output with the source.",
+    "evidence": "new state/calls: the reply says 'makes the blurry parts clearer and adds detail to the fur and face'. The grader's fault: 'The reply claims added fur and face detail that is not visible.' The old reply says 'sharpens blurry detail like the fur, eyes and grass'. Neither calls.jsonl shows a read of the output file."
+   }
+  ],
+  "axiom": "The upscale_image description (the same in the old and new builds) presents the tool only as '2x or 4x' enlargement. It does not say that the upscaler cannot remove strong defocus blur, and it does not point to edit_image for deblurring or restoring a photo. So for 'make it clearer and bigger', the assistant picks the upscaler as the whole solution, and that tool cannot make the features clearer. It is unproven that edit_image would have done better here: no chat tried it. The upscaler's weak deblurring of a 240px source is the model limit underneath.",
+  "category": "mcp_tool_description",
+  "builds": "both",
+  "fix": "Add one sentence to the upscale_image description: \"Enlarges the image and keeps its blur; it does not fix a blurry or out-of-focus photo. For blur, use edit_image (free: flux-2-klein, resolution 640px) with the prompt 'remove blur, sharpen, keep the same subject, pose, background and framing', then upscale if needed.\" Also make plan_request return a tool-choice warning when the edit row says sharpen/deblur/restore and the chosen tool is upscale_image."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.618193
+}

@@ -1,0 +1,42 @@
+{
+ "id": "64ba5cbfb2",
+ "key": "must:E25b:Man centred, face fully visible during question",
+ "symptom": "Man centred, face fully visible during question",
+ "item": "E25b",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Man centred, face fully visible during question' not met in all 3 chats?",
+    "because": "Each delivered video is a wide 832x448 frame. The man stays on the left and there is no crop or cut to him.",
+    "evidence": "grade.json in s3.old.stupid.E25b: 'No reframing; man is at left, not centred, and no cut to him.' s3.old.dumper.E25b: 'Man is left of centre, not centred'. s3.new.happy.E25b: 'Wide frame, man on left, not centred; no reframing.' The 'aspect 9:16' check fails with got ['832x448'] in all three."
+   },
+   {
+    "why": "Why is the output a wide frame with no reframing?",
+    "because": "The only tool used was edit_video (ltx-2.5, 480p, 0-10 s). It regenerates the clip from a prompt and keeps the source frame shape. The prompt asked for '9:16' and 'centred on the man', but this had no effect.",
+    "evidence": "calls.jsonl in all 3 chats: edit_video style.prompt asks for a vertical 9:16 reframe that centres each speaker. wait_for_video_project returns width 832, height 448, type VIDEO_EDITOR. edit_video has no aspect or crop argument, only name, start/end_seconds, model, resolution, assets.video_file_path and style.prompt."
+   },
+   {
+    "why": "Why did the assistant use a prompt-only regenerating editor for a crop task?",
+    "because": "Neither build has a tool that crops, reframes or sets an aspect ratio on an existing video, or follows the active speaker. The assistant first said this correctly and refused. It ran edit_video only after the simulated user pushed it ('just try it' / 'go ahead anyway').",
+    "evidence": "calls.jsonl, first 'say' (kind 'cannot') in each chat. new.happy: 'None of them can crop or reframe a video... no tool here does that.' old.dumper: 'None of the Magic Hour tools I can use will crop or reframe a video.' old.stupid says the same. The next user turn has nudge:true. In new.happy, plan_request is in the tool list but was never called, so it did not change the outcome."
+   },
+   {
+    "why": "Why does no tool offer a crop or speaker reframe?",
+    "because": "The Magic Hour API that both builds wrap has no crop or auto-reframe endpoint. Its video editor (LTX 2.5) is a generative model that keeps the input frame shape. This is a capability limit of the platform, not of one build. The test still expects a delivered result.",
+    "evidence": "E25b.json: expect.refuse=false, asks='never', and answer_sheet 'Centre the current speaker in a full-frame portrait crop'. So the test assumes a deterministic crop exists. Both tools-old.json and tools-new.json list only generative editing tools for video. In all 3 chats the assistant says the editor 'keeps the original frame shape', and the 832x448 result confirms it."
+   }
+  ],
+  "axiom": "The Magic Hour platform cannot crop or reframe an existing video, set its aspect ratio, or track the active speaker. Its only video editor (LTX 2.5 edit_video) regenerates frames from a prompt and keeps the 16:9 source shape. So a centred 9:16 crop of the man cannot be made with any tool in either build. A prompt cannot change the output shape.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a non-generative crop tool to the MCP server, for example 'reframe_video' with segments [{start,end,crop_x,crop_y,w,h}] and output aspect 9:16, built on ffmpeg or a platform crop endpoint, so the assistant can crop the man for 0 s until the speaker change and the woman after it, and keep the original audio. Without such a tool, change E25b so that expect.refuse is true (or 'beyond capability') and grade a correct refusal as a pass. The edit_video description should also say that it keeps the source frame shape and cannot crop or reframe."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.28686680000000003
+}

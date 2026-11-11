@@ -1,0 +1,52 @@
+{
+ "id": "989bdbad6a",
+ "key": "must:H44c:Both display exactly the three text lines",
+ "symptom": "Both display exactly the three text lines",
+ "item": "H44c",
+ "n": 4,
+ "builds": {
+  "new": 2,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why do both videos fail 'Both display exactly the three text lines' in all 4 chats?",
+    "because": "Every output has the text drawn by a generation model inside the picture. In old chats the title reads 'Rooffop', the venue is garbled and the 16:9 date is missing. In new chats the lines are garbled and gone after 1–4 s.",
+    "evidence": "s4.old.happy grade.json exact_text: 'Rooffop Jazz', 'Sky Teracce, Manstacer', 16:9 date missing. s4.old.dumper grade.json: 'Rooffop' in both, 16:9 has no date. s4.new.happy grade.json: 'Pily 2026', 'Vlanchester', 'Text is gone after the first second in both'. s4.new.dumper: 'Rooftop Jizz', garbled date, 'gone by 4 s'."
+   },
+   {
+    "why": "Why did the old build's videos misspell the text?",
+    "because": "The assistant made one create_video_from_text call per format with ltx-2.5 at 480p and put the three lines in the prompt. The old build has no overlay or exact-text path. ltx-2.5 cannot spell scene text reliably. The assistant knew this and only warned the user.",
+    "evidence": "s4.old.happy calls.jsonl: two create_video_from_text calls, model ltx-2.5, prompt contains '\"Rooftop Jazz\"... Text spelled exactly'. The reply says 'AI video often misspells words... add the three lines in an editor'."
+   },
+   {
+    "why": "Why did the new build, which has an exact-text planner, still fail?",
+    "because": "plan_video_production found the problem and asked how to make the words (card / model / still / accept). It recommended 'card'. In both new chats the assistant chose 'still'.",
+    "evidence": "s4.new.happy and s4.new.dumper calls.jsonl, plan_video_production output: 'ltx-2.5 got them wrong 0 of 4 times', recommend 'card'. The next call has answers {'words-1':'still'}."
+   },
+   {
+    "why": "Why did the assistant choose 'still' and not the recommended 'card'?",
+    "because": "The option texts point the assistant to 'still'. 'card' says 'The words are not over the scene', which conflicts with the brief's request for text over a filled frame. 'still' promises 'Exact; the words stay on screen for the whole clip'. That fits the brief, so a careful assistant takes it.",
+    "evidence": "plan_video_production questions.options in s4.new.happy calls.jsonl line 4. The brief in H44c.json asks to show the three lines and to 'fill the frame and keep all the text readable'."
+   },
+   {
+    "why": "Why is the 'still' promise false?",
+    "because": "The still path makes a qwen-image-2.1 picture with the words. Then ltx-2.5 create_video_from_image animates it with a slow push-in, using a server-written prompt that ends 'no title cards, no captions'. The video model redraws the text, garbles it and removes it within seconds. Nothing in the pipeline keeps the words intact.",
+    "evidence": "plan steps in s4.new.happy calls.jsonl line 5: generate_image qwen-image-2.1, then create_video_from_image ltx-2.5 with prompt '...camera slowly drifts closer... No repeated shots, no title cards, no captions'. grade.json: 'Gone by 4 s despite the claim that it stays for 10 s'. join_production_clips lists the words line as 'unchecked'."
+   },
+   {
+    "why": "Why does the video model drop or garble text from the start image?",
+    "because": "Axiom: ltx-2.5, the only free-plan 480p video model used here, cannot keep or render exact typography across frames. Both builds depend on it to draw the words.",
+    "evidence": "The planner's own stats say 'ltx-2.5 got them wrong 0 of 4 times'. Both old chats (text-to-video) and both new chats (image-to-video) show garbled text."
+   }
+  ],
+  "axiom": "ltx-2.5 (the free-plan video model) cannot render or keep exact on-screen text. The old build gives no other path. The new build's 'still' option says it is 'Exact; the words stay on screen for the whole clip', but it still passes the text through ltx-2.5, which garbles the words and removes them within seconds.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the new build, change how plan_video_production handles exact_words. Add an 'overlay' option that join_production_clips burns in as real text over the full clip (for example with ffmpeg drawtext), and make it the recommended choice. Remove the false 'Exact; the words stay on screen for the whole clip' claim from 'still'. Remove 'no captions' from the i2v prompt when the start image has text. If no overlay can be added, make 'still' say that ltx-2.5 garbles and removes the words. The old build has no exact-text path at all, so it can only warn the user."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.45729220000000004
+}

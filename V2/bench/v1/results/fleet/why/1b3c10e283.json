@@ -1,0 +1,42 @@
+{
+ "id": "1b3c10e283",
+ "key": "must:A01a:The bottle stands on a visibly veined marble surface.",
+ "symptom": "The bottle stands on a visibly veined marble surface.",
+ "item": "A01a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the image show no veined marble surface?",
+    "because": "The prompt the assistant sent to generate_image never mentions marble. It asks for a plain studio background: white in old, light gray in new. The model rendered what it was told.",
+    "evidence": "old calls.jsonl generate_image style.prompt: '...standing upright on a clean white seamless background...'. new calls.jsonl: '...on a clean light surface... plain seamless light gray background...'. The grade.json files say 'Plain white seamless background, no marble' (old) and 'Plain light gray studio surface, no marble' (new)."
+   },
+   {
+    "why": "Why did the assistant leave marble out of the prompt?",
+    "because": "The user never said marble. The stupid persona's only message was 'make a product pic of a water bottle'. The assistant filled the gaps with a generic studio look and a stainless steel bottle, so 'matte black' also failed.",
+    "evidence": "chat.json messages[0].text = 'make a product pic of a water bottle' in both chats. The item brief turns[0].text = 'Make a product photo of a matte black water bottle on marble, with soft light.'"
+   },
+   {
+    "why": "Why did the assistant not find out the setting by asking?",
+    "because": "Old asked nothing and generated at once. New ran plan_request, but it marked 'look' as source 'derived' ('clean studio product photography'), not 'missing'. So the tool's only question was about the platform. To that the user said 'you pick', which was correct for the platform.",
+    "evidence": "old calls.jsonl: the first call is generate_image, with no question turn. new calls.jsonl plan_request output: questions=[{param:'aspect',...}], look source='derived'. state: user 'you pick'. The bank in chat.json has 'Aspect ratio and platform': 'your call'."
+   },
+   {
+    "why": "Why is a missing setting a fault of the harness and not of the assistant?",
+    "because": "The test expects the assistant never to ask (expect.asks='never'). It is graded against the full brief (marble, matte black). But the stupid-persona harness sends a cut-down opening message that drops these must-have facts, and the persona gives them only when asked in plain words. Making up 'marble' without being told would be invention. The grader still holds the chat to facts the user never said.",
+    "evidence": "A01a.json expect.asks='never' and must_haves include 'visibly veined marble surface'. chat.json persona.reply: 'answer it from your knowledge bank' only when asked. The bank holds 'Setting and lighting: Marble surface with soft light.', but the opening message does not."
+   }
+  ],
+  "axiom": "The test harness gave the stupid persona an opening message ('make a product pic of a water bottle') with the must-have facts (marble, matte black) removed. The test says the assistant should never need to ask (asks='never'). The grader still checks the result against the full brief. No assistant can meet facts that it never heard and was not expected to ask for.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Choose one of these two changes in the harness. (a) For must-have facts like the setting and the finish, keep them in the stupid persona's opening message, or have the persona state them unprompted. (b) For stupid-persona runs, grade only against the facts that the user actually said, plus the facts the user gave in replies. A secondary fix for the new build: in plan_request, mark 'look'/'setting' as missing, not derived, when the user did not state it. Then the tool asks a plain-words question such as 'what should it be sitting on, and what colour is the bottle?'."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.14056760000000001
+}

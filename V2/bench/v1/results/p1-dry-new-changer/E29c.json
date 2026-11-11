@@ -1,0 +1,268 @@
+{
+  "id": "E29c",
+  "item": {
+    "id": "E29c",
+    "case": 29,
+    "case_name": "Add a logo or text overlay",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Subtle Handle Watermark Throughout",
+    "sub": "c",
+    "spec": {
+      "exact_text": [
+        "@flightschool"
+      ],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 5,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "radio-lines.mp4"
+        ],
+        "text": "Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone."
+      }
+    ],
+    "tests": "Tests exact handle rendering as a persistent, readable, translucent watermark without changing the source footage or audio.",
+    "answer_sheet": {
+      "Watermark wording": "@flightschool, exactly, with no added words.",
+      "Position and timing": "Bottom right, inset from both edges, fixed in place throughout all 7 seconds.",
+      "Watermark styling": "Small white text, slightly translucent, with a faint shadow. Exact font and opacity are your call.",
+      "Video and audio preservation": "Keep the original aspect ratio, framing, complete footage, duration, and sound. Do not add an end card or other graphics."
+    },
+    "must_haves": [
+      "The watermark reads exactly '@flightschool' and stays visible throughout the entire clip.",
+      "The handle remains fixed at the bottom right with clear space between the text and both frame edges.",
+      "The text is small, white, visibly translucent, and readable against the changing footage, with a subtle shadow.",
+      "The original cockpit footage remains unchanged apart from the watermark, with no extra card or scene.",
+      "The output lasts 5-seconds and preserves the original synchronized audio.",
+      "After the follow-up, the final result is about 5 seconds long (the user asked for 2 seconds less); everything else is as before."
+    ],
+    "changed_by": {
+      "field": "seconds",
+      "from": 7,
+      "to": 5,
+      "say": "actually, make it 2 seconds shorter and keep everything else exactly the same."
+    }
+  },
+  "session": "mcp-p1-dry-n-changer-E29c",
+  "sessionDir": "sessions/mcp-p1-dry-n-changer-E29c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone.",
+      "materials": [
+        "radio-lines.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "The connected tools don’t support a precise watermark overlay without potentially changing the rest of the clip, so I haven’t modified it.\n\nThis FFmpeg command adds **@flightschool** for the full duration—small, semi-transparent white, with a faint shadow and 4% edge padding—while preserving the audio:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"drawtext=text='@flightschool':fontsize=h/35:fontcolor=white@0.6:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=w-tw-w*0.04:y=h-th-h*0.04\" \\\n-c:v libx264 -crf 18 -preset medium -c:a copy \\\nradio-lines-watermarked.mp4\n```\n\nThe video is re-encoded to add the text; no other visual edits are applied.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Please go ahead with the free settings anyway.",
+          "calls_before": 1,
+          "nudge": true
+        },
+        {
+          "agent": "How long is the clip, in seconds? I need its duration to apply the watermark throughout.\n\nI’ll use the free 480p settings. This is an AI-based edit, so the watermark may vary slightly and other details could change despite instructions to preserve them.",
+          "asked": [
+            "question"
+          ],
+          "user": "7 seconds.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "The free-settings edit was refused because your Magic Hour account has insufficient credits. No video was created or changed.\n\nYou can add credits and retry, or use the FFmpeg command above locally at no Magic Hour credit cost.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"media-apis\"}",
+          "output": "{\"workflow\":\"media-apis\",\"title\":\"Integrate image and video generation into an application\",\"input\":\"The application's required media inputs, outputs, quality criteria and budget.\",\"product_url\":\"https://magichour.ai/api\",\"api_docs_url\":\"https://docs.magichour.ai/get-started/quick-start\",\"creation_tool\":null,\"steps\":[\"Choose the workflow that matches the required result, then inspect its current API schema and account eligibility. For Kling 3.0, Creator annual is $144 paid upfront for 144,000 credits, enough for 600 five-second 720p videos with audio off ($0.24 each at full credit use, before tax). Audio, higher resolutions and video-reference inputs cost more credits; compare current annual plans at https://docs.magichour.ai/billing/subscription-pricing before choosing.\",\"Authenticate, upload local inputs, create once, retain the project id and poll the matching project endpoint until terminal.\",\"Download the accepted output using the exact signed URL; retain the project id for recovery and reuse.\"],\"example_request\":\"Help me add portrait-to-video generation to my app, including upload, completion polling, download and recovery without duplicate paid jobs.\",\"follow_up\":\"Measure real completion, usable output, retries and credits before expanding the workflow.\",\"review\":\"Select a task-specific endpoint. Compare cost per accepted output on matched inputs; do not infer production quality from mock responses.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone.\\n[Attached: radio-lines.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/6371b546-6b4d-42d9-af50-a2facd6d7aae-video-0.mp4]\"},{\"role\":\"user\",\"text\":\"Please go ahead with the free settings anyway.\"},{\"role\":\"assistant\",\"text\":\"How long is the clip, in seconds? I need its duration to apply the watermark throughout.\\n\\nI’ll use the free 480p settings. This is an AI-based edit, so the watermark may vary slightly and other details could change despite instructions to preserve them.\"},{\"role\":\"user\",\"text\":\"7 seconds.\"}],\"attachments\":[{\"name\":\"radio-lines.mp4\",\"kind\":\"video\",\"seconds\":7}],\"tool\":\"trim_video\",\"params\":[{\"name\":\"edit\",\"value\":\"Add a subtle watermark throughout the supplied video: small white text @flightschool at bottom right, slightly transparent, faint shadow, inset from edges.\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Everything else unchanged.\",\"source\":\"user\"},{\"name\":\"seconds\",\"value\":7,\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":\"@flightschool\",\"source\":\"user\"},{\"name\":\"range\",\"value\":\"0–7 seconds (entire clip)\",\"source\":\"derived\"},{\"name\":\"sound\",\"value\":\"Preserve original audio\",\"source\":\"derived\"}]}",
+          "output": "{\"tool\":\"trim_video\",\"ready\":true,\"params\":[{\"name\":\"range\",\"value\":\"0–7 seconds (entire clip)\",\"source\":\"derived\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_video",
+          "args": {
+            "style": {
+              "prompt": "Make only one change to this clip: add the exact text '@flightschool' as a subtle, static watermark at the bottom right throughout all 7 seconds. Use small white text, slightly transparent (approximately 60% opacity), with a faint dark shadow for readability. Inset it comfortably from both the right and bottom edges (approximately 4% of frame dimensions). Keep the exact spelling and position stable throughout. Preserve all original video content, subjects, composition, motion, colors, timing, and original audio. Do not add anything else or restyle the video."
+            },
+            "end_seconds": 7,
+            "resolution": "480p",
+            "assets": {
+              "video_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/6371b546-6b4d-42d9-af50-a2facd6d7aae-video-0.mp4"
+            },
+            "model": "ltx-2.5",
+            "start_seconds": 0,
+            "name": "radio-lines — @flightschool watermark"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"media-apis\"}",
+          "result": "{\"workflow\":\"media-apis\",\"title\":\"Integrate image and video generation into an application\",\"input\":\"The application's required media inputs, outputs, quality criteria and budget.\",\"product_url\":\"https://magichour.ai/api\",\"api_docs_url\":\"https://docs.magichour.ai/get-started/quick-start\",\"creation_tool\":null,\"steps\":[\"Choose the workflow that matches the required result, then inspect its current API schema and account eligibility. For Kling 3.0, Creator annual is $144 paid upfront for 144,000 credits, enough for 600 five-second 720p videos with audio off ($0.24 each at full credit use, before tax). Audio, higher resolutions and video-reference inputs cost more credits; compare current annual plans at https://docs.magichour.ai/billing/subscription-pricing before choosing.\",\"Authenticate, upload local inputs, create once, retain the project id and poll the matching project endpoint until terminal.\",\"Download the accepted output using the exact signed URL; retain the project id for recovery and reuse.\"],\"example_request\":\"Help me add portrait-to-video generation to my app, including upload, completion polling, download and recovery without duplicate paid jobs.\",\"follow_up\":\"Measure real completion, usable output, retries and credits before expanding the workflow.\",\"review\":\"Select a task-specific endpoint. Compare cost per accepted output on matched inputs; do not infer production quality from mock responses.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}"
+        },
+        {
+          "type": "said",
+          "text": "The connected tools don’t support a precise watermark overlay without potentially changing the rest of the clip, so I haven’t modified it.\n\nThis FFmpeg command adds **@flightschool** for the full duration—small, semi-transparent white, with a faint shadow and 4% edge padding—while preserving the audio:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-vf \"drawtext=text='@flightschool':fontsize=h/35:fontcolor=white@0.6:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=w-tw-w*0.04:y=h-th-h*0.04\" \\\n-c:v libx264 -crf 18 -preset medium -c:a copy \\\nradio-lines-watermarked.mp4\n```\n\nThe video is re-encoded to add the text; no other visual edits are applied."
+        },
+        {
+          "type": "said",
+          "text": "How long is the clip, in seconds? I need its duration to apply the watermark throughout.\n\nI’ll use the free 480p settings. This is an AI-based edit, so the watermark may vary slightly and other details could change despite instructions to preserve them."
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone.\\n[Attached: radio-lines.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/6371b546-6b4d-42d9-af50-a2facd6d7aae-video-0.mp4]\"},{\"role\":\"user\",\"text\":\"Please go ahead with the free settings anyway.\"},{\"role\":\"assistant\",\"text\":\"How long is the clip, in seconds? I need its duration to apply the watermark throughout.\\n\\nI’ll use the free 480p settings. This is an AI-based edit, so the watermark may vary slightly and other details could change despite instructions to preserve them.\"},{\"role\":\"user\",\"text\":\"7 seconds.\"}],\"attachments\":[{\"name\":\"radio-lines.mp4\",\"kind\":\"video\",\"seconds\":7}],\"tool\":\"trim_video\",\"params\":[{\"name\":\"edit\",\"value\":\"Add a subtle watermark throughout the supplied video: small white text @flightschool at bottom right, slightly transparent, faint shadow, inset from edges.\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"Everything else unchanged.\",\"source\":\"user\"},{\"name\":\"seconds\",\"value\":7,\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":\"@flightschool\",\"source\":\"user\"},{\"name\":\"range\",\"value\":\"0–7 seconds (entire clip)\",\"source\":\"derived\"},{\"name\":\"sound\",\"value\":\"Preserve original audio\",\"source\":\"derived\"}]}",
+          "result": "{\"tool\":\"trim_video\",\"ready\":true,\"params\":[{\"name\":\"range\",\"value\":\"0–7 seconds (entire clip)\",\"source\":\"derived\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "edit_video",
+          "arguments": "{\"style\":{\"prompt\":\"Make only one change to this clip: add the exact text '@flightschool' as a subtle, static watermark at the bottom right throughout all 7 seconds. Use small white text, slightly transparent (approximately 60% opacity), with a faint dark shadow for readability. Inset it comfortably from both the right and bottom edges (approximately 4% of frame dimensions). Keep the exact spelling and position stable throughout. Preserve all original video content, subjects, composition, motion, colors, timing, and original audio. Do not add anything else or restyle the video.\"},\"end_seconds\":7,\"resolution\":\"480p\",\"assets\":{\"video_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/6371b546-6b4d-42d9-af50-a2facd6d7aae-video-0.mp4\"},\"model\":\"ltx-2.5\",\"start_seconds\":0,\"name\":\"radio-lines — @flightschool watermark\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "The free-settings edit was refused because your Magic Hour account has insufficient credits. No video was created or changed.\n\nYou can add credits and retry, or use the FFmpeg command above locally at no Magic Hour credit cost."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_video: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "The free-settings edit was refused because your Magic Hour account has insufficient credits. No video was created or changed.\n\nYou can add credits and retry, or use the FFmpeg command above locally at no Magic Hour credit cost.",
+        "refuse": "",
+        "tier_move": "The free-settings edit was refused because your Magic Hour account has insufficient credits. No video was created or changed.\n\nYou can add credits and retry, or use the FFmpeg command above locally at no Magic Hour credit cost.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 64
+    },
+    {
+      "text": "actually, make it 2 seconds shorter and keep everything else exactly the same.",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "That would make the original clip **5 seconds**. The watermark edit never ran, so it remains unchanged.\n\nThe connected tools don’t offer an exact trim. To remove the **last 2 seconds** locally without re-encoding, use:\n\n```bash\nffmpeg -i radio-lines.mp4 -t 5 -c copy radio-lines-5s.mp4\n```\n\nThis preserves the existing video and audio quality; the cut may vary slightly due to frame timing.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Please go ahead with the free settings anyway.",
+          "calls_before": 0,
+          "nudge": true
+        }
+      ],
+      "agent": "I can’t run this trim with the connected tools: there’s no trimming tool available, and the AI video editor would cost credits and could change the footage.\n\nTo keep everything else unchanged, run the FFmpeg command above locally. It doesn’t use Magic Hour credits.",
+      "calls": [],
+      "approvals": [],
+      "follow_up": true,
+      "timeline": [
+        {
+          "type": "said",
+          "text": "That would make the original clip **5 seconds**. The watermark edit never ran, so it remains unchanged.\n\nThe connected tools don’t offer an exact trim. To remove the **last 2 seconds** locally without re-encoding, use:\n\n```bash\nffmpeg -i radio-lines.mp4 -t 5 -c copy radio-lines-5s.mp4\n```\n\nThis preserves the existing video and audio quality; the cut may vary slightly due to frame timing."
+        },
+        {
+          "type": "said",
+          "text": "I can’t run this trim with the connected tools: there’s no trimming tool available, and the AI video editor would cost credits and could change the footage.\n\nTo keep everything else unchanged, run the FFmpeg command above locally. It doesn’t use Magic Hour credits."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "I can’t run this trim with the connected tools: there’s no trimming tool available, and the AI video editor would cost credits and could change the footage.\n\nTo keep everything else unchanged, run the FFmpeg command above locally. It doesn’t use Magic Hour credits.",
+        "refuse": "",
+        "tier_move": "I can’t run this trim with the connected tools: there’s no trimming tool available, and the AI video editor would cost credits and could change the footage.\n\nTo keep everything else unchanged, run the FFmpeg command above locally. It doesn’t use Magic Hour credits.",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 26
+    }
+  ],
+  "started": "2026-11-09T07:22:19.669Z",
+  "persona": "changer",
+  "opening": {
+    "id": "E29c",
+    "persona": "changer",
+    "text": "Add @flightschool as a subtle watermark at the bottom right for this whole clip. Small white text, slightly see-through, with a faint shadow so it's still readable. Keep it away from the edges and leave everything else alone.",
+    "as_written": true,
+    "change": {
+      "field": "seconds",
+      "from": 7,
+      "to": 5,
+      "say": "actually, make it 2 seconds shorter and keep everything else exactly the same."
+    }
+  },
+  "dry": true,
+  "change": {
+    "field": "seconds",
+    "from": 7,
+    "to": 5,
+    "say": "actually, make it 2 seconds shorter and keep everything else exactly the same.",
+    "sent": true
+  },
+  "spent": 0,
+  "seconds": 90
+}

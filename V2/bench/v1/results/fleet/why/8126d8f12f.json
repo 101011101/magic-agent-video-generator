@@ -1,0 +1,46 @@
+{
+ "id": "8126d8f12f",
+ "key": "must:E28a:Original footage, framing, sequence unchanged",
+ "symptom": "Original footage, framing, sequence unchanged",
+ "item": "E28a",
+ "n": 3,
+ "builds": {
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Original footage, framing, sequence unchanged' not met in the 3 new chats?",
+    "because": "No chat delivered the user's own frames. Happy and dumper delivered only the narration: an 11 s black-screen MP4. Stupid delivered an edit_video output that redrew the clip at 832×448.",
+    "evidence": "s3.new.happy.E28a/grade.json: 'The original footage is replaced by black frames.' s3.new.stupid.E28a/calls.jsonl line 15: edit_video result is a VIDEO_EDITOR project at width 832, height 448. Line 18: the assistant says 'The picture was redrawn.' s3.new.dumper.E28a/calls.jsonl line 10: the assistant offers only a black narration file."
+   },
+   {
+    "why": "Why did the assistants not put the narration on the original clip?",
+    "because": "Every tool call that tried to use the uploaded clip as an input failed with HTTP 404. These calls were join_production_clips (which mixes the narration onto the clips), join_videos and get_last_frame.",
+    "evidence": "happy calls.jsonl lines 3 and 7, dumper lines 6–7, stupid lines 7, 12 and 13: 'Magic Hour refused /v1/video-projects/api-assets/cmsla3fmt01cnio0zhjlc2wsv/057a12fb-...-video-0.mp4 (HTTP 404)'."
+   },
+   {
+    "why": "Why did these tools return 404 for the user's file?",
+    "because": "The new server sends any string that is not a URL to the video-projects endpoint as a project id. The upload's file_path ('api-assets/...mp4') is a stored asset, not a project id, so the API answers 404. There is no code path that reads an uploaded asset.",
+    "evidence": "In the error text, the server builds the path /v1/video-projects/<file_path>. tools-new.json: join_videos takes 'finished video project ids or video URLs'. join_production_clips: 'made: the video project id of every clip'. get_last_frame: 'a finished video project id or a video URL'. No tool takes a file_path."
+   },
+   {
+    "why": "Why was there no other route that adds sound and keeps the frames?",
+    "because": "In the new build, the only way to add a voice-over is the production pipeline. It plans a regeneration of each beat, because there is no beat type for 'the user's video, unchanged'. So the planner turned 'The user clip plays unchanged' into a create_video_from_text step. With no lossless mux available, the only fallbacks were lip sync (blocked: the narration was an .mp4 file, and lip sync rejects mp4 as audio) or edit_video, which regenerates the picture.",
+    "evidence": "plan_video_production output in all three chats: steps [{tool: create_video_from_text, prompt: 'The user-supplied silent clip, kept unchanged...'}]. tools-new.json plan_video_production beats offer only 'scene' or 'card' (and a card picture is a still image). stupid calls.jsonl line 11: lip sync 422 'mp4 is an invalid audio extension'. Line 14: edit_video fallback."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The join/mux code in the new build cannot take an uploaded asset (an api-assets file_path) as a video input. This is a defect in how the MCP tools behave. The model and the free plan do not cause it: the free plan made the narration, and joining spends no credits.",
+    "evidence": "create_production_sound succeeded in all three chats (264 credits). Only the steps that read the user's file failed. join_production_clips 'spends no credits', so no plan limit applies."
+   }
+  ],
+  "axiom": "In the new build, join_production_clips, join_videos and get_last_frame look up every input that is not a URL as /v1/video-projects/{id}. An uploaded file_path (api-assets/...) gets HTTP 404, so the narration cannot be mixed onto the user's footage. The assistants then fell back to a black narration file or to an edit_video regeneration.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Make the join/mux tools (join_production_clips `made`, join_videos `videos`, get_last_frame `video`) accept an uploaded asset file_path (api-assets/...). They should resolve it to a signed download URL instead of calling /v1/video-projects/{id}. Add a plan_video_production beat or clip kind 'user video, unchanged' that skips generation and uses that file directly, so the narration is muxed over the original frames."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.4023666
+}

@@ -1,0 +1,47 @@
+{
+ "id": "3ad01b2f30",
+ "key": "must:C15c:Male face matches portrait-man and female face matches portrait-woman",
+ "symptom": "Male face matches portrait-man and female face matches portrait-woman",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "axiom": "Magic Hour's video face-swap model changes only the inner face and keeps the target's hair, head shape and skin context. At 480p, with a big gap in hair and age (dark-haired younger man → gray-haired older man; blonde woman → dark curly-haired woman), the portrait identity does not read in the output. This is a limit of the generation model. It is not caused by the assistant's arguments or by the tool descriptions.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "None: the limit is inherent. No tool argument can make the swap carry the portrait's hair or age into the video. The only mitigation is to state in the swap_face_in_video description and result that only the inner face transfers, and that hair and head shape stay. The assistant could then warn the user when the portraits and the targets differ a lot in hair or age. This sets the user's expectations, but it would not make this item pass.",
+  "whys": [
+   {
+    "why": "Why was 'Male face matches portrait-man and female face matches portrait-woman' not met?",
+    "because": "In the output, the left man still has dark brown hair and a younger face. The woman is still the blonde original. At most the faces show subtle changes, so the grader sees no recognisable portrait identity.",
+    "evidence": "s1.old.stupid.C15c/grade.json must[1]: 'The left man has dark brown hair and a younger look... The woman is blonde with a light face... no recognizable match'. s1.new.happy.C15c/grade.json must[1]: 'At most, subtle face changes are visible'. In both files, faults[0] is major. I could not open the grade/*.jpg frames because I could not get a directory listing, so this step relies on the grader's text."
+   },
+   {
+    "why": "Was the wrong person swapped (a mapping error), since the assistant guessed the mapping?",
+    "because": "No. Both builds sent the same mapping: crop 0-0 → portrait-man and crop 0-2 → portrait-woman. Crop 0-0 is the dark-haired man on the left and crop 0-2 is the blonde woman. These are the coworkers the grader looked at, so the targets were right. The guess was a process fault but it did not cause this failure.",
+    "evidence": "calls.jsonl swap_face_in_video args in both chats: original_face .../0-0.png → new_face 368e1022 (portrait-man per chat.json), and .../0-2.png → 512f8147 (portrait-woman). The crops in s1.new.happy.C15c/assets: 01 = clean-shaven dark-haired man, 02 = bearded man (the middle face, left alone), 03 = blonde woman, 04 = side profile, later in the clip."
+   },
+   {
+    "why": "Did the swap job fail or run on only part of the clip?",
+    "because": "No. Both jobs finished at 858x480, over 0–10 s, with 240 credits charged. The swap ran with correct arguments and did not return an error.",
+    "evidence": "calls.jsonl: wait_for_video_project status 'complete', start 0, end 10, total_frame_cost 240, in both the old and the new chat. grade.json checks: 10 s, audio present, no black frames."
+   },
+   {
+    "why": "Why does a successful, correctly mapped swap still not look like the portraits?",
+    "because": "The portraits differ from the targets mostly in hair and age. Portrait-man is a gray-haired man of about 55. Portrait-woman has dark curly hair. The targets are a younger dark-haired man and a blonde woman with straight hair. The swap model replaces only the inner facial features and keeps the target's hair and head outline, so the strongest identity cues stay from the original actor. At 480p the inner-face changes look only 'subtle'.",
+    "evidence": "attachments/portrait-man.jpg (gray hair, older), attachments/portrait-woman.jpg (dark curly hair), and crops assets/01 and 03 (dark-haired younger man, blonde woman). The grader's reasons cite hair colour and age in both chats. C15c.json 'changed' (2026-11-01) says hair 'may' follow the portrait, but the tool has no parameter for hair transfer."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Both builds produced the same result from identical, correct inputs, so the build and the assistant's behaviour are not the variable. A face-swap model that transfers only the inner face, run at free-plan 480p, cannot make these targets recognisable as these portraits. That is a fixed limit of the generation model.",
+    "evidence": "Both builds used the same mapping and got the same complete 480p output, and both graders gave the same verdict. The video-face-swap guide from get_workflow_guide offers only face_swap_mode and face_mappings, with no hair or head option."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 58,
+ "usd": 0.5318428000000001
+}

@@ -1,0 +1,52 @@
+{
+ "id": "0eb1f57a8f",
+ "key": "must:G33b:One still image in 16:9",
+ "symptom": "One still image in 16:9",
+ "item": "G33b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'One still image in 16:9' not met?",
+    "because": "In both chats the only thing delivered was a 384x512 portrait PNG (about 3:4), not a 16:9 image.",
+    "evidence": "grade.json in both s4.old.dumper.G33b and s4.new.happy.G33b: the 'aspect 16:9' check fails with got [\"150x213\",\"384x512\"]. The grader says 'portrait ~3:4 (384x512), not 16:9'."
+   },
+   {
+    "why": "Why was the output portrait? Did the assistant ask for the wrong shape?",
+    "because": "No. Both assistants asked for 16:9 correctly. They called edit_image with aspect_ratio \"16:9\", model flux-2-klein, resolution 640px and image_count 1, and the prompt also said 'Create a 16:9 YouTube thumbnail'. The server took the job, charged 5 credits and returned 'complete' with no error and no warning.",
+    "evidence": "calls.jsonl line 8 (old) and line 9 (new): the edit_image args include \"aspect_ratio\":\"16:9\". The wait_for_image_project result reports status complete and gives no output size."
+   },
+   {
+    "why": "Why did a 16:9 request come back as 3:4?",
+    "because": "The output follows the shape of the one input image, not the aspect_ratio setting. The only input was the face crop from detect_faces, which is 150x213 (about 0.70, portrait). flux-2-klein snapped this to the nearest portrait size (384x512 = 3:4) and silently ignored aspect_ratio=16:9.",
+    "evidence": "In both chats the input image_file_paths was the face crop .../0-0.png from get_face_detection_results, and that crop is the 150x213 file in grade.json 'got'. Both builds show the same input-to-output pairing (150x213 → 384x512). This pairing is the basis for the inference. Missing: a control run of flux-2-klein edit with a landscape or square input, to prove that aspect_ratio is always ignored."
+   },
+   {
+    "why": "Why was a small portrait face crop the only input, and not a 16:9 frame from the video?",
+    "because": "Neither build had a working way to take a still frame from the uploaded video. The old build has no frame tool, so the assistant used detect_faces to get a face crop. In the new build, get_last_frame failed on the uploaded asset (404 with the file path, 403 with the URL). join_videos also failed (404). So the assistant fell back to the face crop.",
+    "evidence": "new calls.jsonl lines 2, 5 and 7: get_last_frame gave HTTP 404 and 403, and join_videos gave 404. Old calls.jsonl goes straight to detect_faces. Both assistants told the user: 'My tools can't pull a full still frame out of a video'."
+   },
+   {
+    "why": "Why did the assistant not notice the wrong shape and fix it before delivering?",
+    "because": "The tool result gives no output width or height, and the edit_image description does not warn that flux-2-klein ignores aspect_ratio when the input is portrait. Both assistants trusted the setting and told the user the image was 16:9 without seeing it.",
+    "evidence": "tools-new.json, edit_image (line 3360): the aspect_ratio description says only 'The aspect ratio of the output image(s). If not specified, defaults to auto.' It says nothing about the model following the input shape. The wait_for_image_project output has no dimensions. Both final replies say 'Your 16:9 thumbnail is ready/done' and admit 'I couldn't preview the image'."
+   },
+   {
+    "why": "Why does flux-2-klein edit ignore aspect_ratio?",
+    "because": "This is how the generation model behaves on the Magic Hour back end, and the free plan offers it as the edit model. The MCP layer passes the setting through unchanged and has no control over how the model treats it.",
+    "evidence": "Same result with both builds, both personas and the same arguments. The tool description lists flux-2-klein as the free-plan edit option (tools-new.json line 3316)."
+   }
+  ],
+  "axiom": "The free-plan edit model (flux-2-klein, edit_image) makes an image in the shape of the input image and silently ignores aspect_ratio=\"16:9\". The tools could give it only a portrait face crop (150x213), so the output was 3:4 (384x512). The server reported success and gave no output size.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the MCP edit_image handler, check the output size against the requested aspect_ratio after the job ends. If they do not match, return a clear mismatch warning. Better: before calling the model, pad or letterbox the input image to the requested aspect ratio (here a 16:9 canvas with the face crop on the right), so flux-2-klein keeps that shape. Also add one line to the aspect_ratio description: \"flux-2-klein follows the input image's shape; pad the input to the target ratio first\". Separately, make get_last_frame accept uploaded api-assets videos, so the assistant can use a real 16:9 frame."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.5425376
+}

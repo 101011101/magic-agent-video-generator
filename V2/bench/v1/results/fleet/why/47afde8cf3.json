@@ -1,0 +1,46 @@
+{
+ "id": "47afde8cf3",
+ "key": "must:I46a:All three labels appear exactly and legible",
+ "symptom": "All three labels appear exactly and legible",
+ "item": "I46a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'All three labels appear exactly and legible' not met?",
+    "because": "The delivered videos have no on-screen text at all. The labels are not misspelled. They are absent.",
+    "evidence": "s5.old.happy.I46a/grade.json and s5.old.dumper.I46a/grade.json: exact_text marks all three strings 'missing', read_as 'no text visible'. Grader reason: 'No on-screen text is visible in any of the sampled frames.'"
+   },
+   {
+    "why": "Why does the video have no text when the assistant asked for it?",
+    "because": "The assistant's only way to get labels was to describe them inside the text-to-video prompt. The model ltx-2.5 did not draw them.",
+    "evidence": "calls.jsonl of both chats: one create_video_from_text call with model 'ltx-2.5', resolution '480p'. The style.prompt contains 'title text in the lower-left corner reads exactly \"F-35A Lightning II\"... caption \"One engine\"... then changes to \"Conventional takeoff\"'. wait_for_video_project returns status 'complete' with no error. The output still has no text."
+   },
+   {
+    "why": "Why was ltx-2.5 used?",
+    "because": "The account is on the free plan. On the free plan the video tools default to ltx-2.5 at 480p, and the assistant chose that setting.",
+    "evidence": "tools-old.json: model descriptions such as 'Defaults to kling-3.0 on paid plans and ltx-2.5 on free plans' (create_spoken_ad_video) and 'Defaults to LTX 2.5 for free tier' (edit_video). Happy chat reply: 'It was made with ltx-2.5 at 480p, the free plan's setting'."
+   },
+   {
+    "why": "Why did the assistant not add the labels another way, for example with an exact text overlay?",
+    "because": "The old build has no tool that writes exact text onto a finished video. The descriptions also give no warning that text-to-video models cannot render exact text. The only path was a prompt request, and the result was not guaranteed.",
+    "evidence": "tools-old.json: the video tools are generative (create_video_from_text, edit_video with prompt, create_animation, upscale, translate, and others). None takes a caption or overlay string. In both chats the assistant could only warn the user ('AI video models often misspell... text') and offer to remake the clip or leave labels for the user to add in an editor."
+   },
+   {
+    "why": "Why does a text-to-video model leave out the requested text?",
+    "because": "AXIOM: diffusion text-to-video models such as ltx-2.5 do not reliably render exact multi-string, timed captions. They often leave them out or garble them. This is a limit of the generation model on the free tier.",
+    "evidence": "Both independent old chats, with different personas and differently worded prompts, got the same result: zero visible text. The same outputs also fail on the aircraft shape (grade.json: an 'F-18/F-22 hybrid'), which shows the model follows detailed prompts poorly."
+   }
+  ],
+  "axiom": "The free-plan model ltx-2.5 does not reliably render exact, timed on-screen text from a prompt. The old build gives no other way to put exact text on the video, so the labels are left to chance.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a step that writes exact text onto the finished video (strings, position and time ranges, rendered as real text, not generated). The tool descriptions should send exact-text requests to this step and not to the prompt. Without such a step, create_video_from_text should state that ltx-2.5 cannot render exact text."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.34091060000000006
+}

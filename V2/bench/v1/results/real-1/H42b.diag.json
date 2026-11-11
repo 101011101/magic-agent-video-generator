@@ -1,0 +1,58 @@
+{
+  "id": "H42b",
+  "best_tools": "yes",
+  "explanation": "The visual and text plan is appropriate, but minimax-h3 can generate speech, and the chain never explicitly removes the generated clips’ audio before adding music. Saying “no voiceover” at assembly is not an explicit instruction to discard those audio tracks. The grader’s uncertainty about continuous text visibility is not a demonstrated planning fault: step 7 correctly specifies all four lines together from 5–10 seconds without fades.",
+  "better_chain": "image (welcoming vertical gym scene) → image-to-video (5-second opening) → image (calm vertical gym background) → image-to-video (5-second closing) → music (10-second upbeat instrumental without vocals) → assemble (join clips into 10 seconds at 9:16, discard all source-clip audio, use only the music track) → text-overlay (all four exact lines together from 5–10 seconds, large high-contrast text within safe margins, no fades) → gate (verify no speech and continuous final-five-second text)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params",
+    "grader"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate animation step, but its generated audio must be discarded downstream to guarantee no speech.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 4,
+      "issue": "Appropriate animation step, but its generated audio must also be discarded downstream.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 5,
+      "issue": "",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 6,
+      "issue": "Adds music without explicitly muting or replacing the source clips’ audio. The general instruction “no voiceover” does not reliably remove speech already generated in those clips.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    },
+    {
+      "n": 7,
+      "issue": "",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "Explicitly discard both generated clips’ audio and make the instrumental music the sole soundtrack."
+}

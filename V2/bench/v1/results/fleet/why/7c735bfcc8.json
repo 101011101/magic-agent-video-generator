@@ -1,0 +1,47 @@
+{
+ "id": "7c735bfcc8",
+ "key": "must:I45a:Man offers folded newspaper; ending shows both seated and smiling",
+ "symptom": "Man offers folded newspaper; ending shows both seated and smiling",
+ "item": "I45a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why is there no newspaper, and why is the ending not the brief's resolution, in both chats?",
+    "because": "The assistant made up its own story. Old: the woman shares a sandwich and coffee with a sad old man on a dry, sunny bench. New: the woman gives a cold old man a cup of tea, and at the end they sit and drink tea. Neither prompt has a newspaper, a wet bench, or the bob, raincoat, beard and blue coat.",
+    "evidence": "old calls.jsonl line 3 style.prompt: '...offers him half of her sandwich and a cup of warm coffee...'; new calls.jsonl line 13 style.prompt: '...offers him one of the steaming cups... They sit side by side sipping tea...'; grade.json (old) must[3]: 'No newspaper; food is shared.'"
+   },
+   {
+    "why": "Why did the assistant make up the story?",
+    "because": "The stupid persona's only opening message was 'make a video about a kind gesture at a park bench'. That message has no characters, no newspaper and no wet bench. The assistant had nothing more to go on, so it filled the gap with its own content.",
+    "evidence": "chat.json messages[0].text = 'make a video about a kind gesture at a park bench'; the full brief with the newspaper is only in bank['Story and setting'] and bank['The request in full...']"
+   },
+   {
+    "why": "Why didn't the persona give the newspaper detail later?",
+    "because": "The persona only answers the questions it gets, using its bank, and it never offers facts on its own. Nobody ever asked it what happens in the story or who is in it.",
+    "evidence": "chat.json persona.reply: 'When a question is in plain words, answer it from your knowledge bank...'; old calls.jsonl: no question at all, it went straight to create_video_from_text; new state/calls: the only questions were about length, platform, sound and on-screen words (calls.jsonl lines 5, 10)"
+   },
+   {
+    "why": "Why did the new build's planning step not ask about the story?",
+    "because": "plan_request treated the one-line subject as complete (source 'user') and returned ready=true. Its questions cover only format: seconds, aspect, sound and exact_words. Its description says 'do not guess shape, length, sound or on-screen words', but it never forbids guessing story content or characters. In the old build, the assistant asked nothing and guessed every detail, including the length (5 s).",
+    "evidence": "new calls.jsonl lines 2, 7, 12: questions only for seconds, aspect, sound and exact_words; line 12 returns ready:true with subject 'a kind gesture at a park bench'; tools-new.json plan_request description: 'do not guess shape, length, sound or on-screen words'"
+   },
+   {
+    "why": "Why does neither build stop a vague subject from turning into an invented story?",
+    "because": "Neither build checks whether a story request names its characters and key actions. A vague subject is accepted as it is, and the model's own story fills the gap. This is a gap in what the tools ask for, not a limit of the generation model: the model never got the newspaper in its prompt.",
+    "evidence": "new: plan_request has no subject-detail question, only rows for 'subject, edit, keep, motion, seconds, aspect...'; old: create_video_from_text was accepted with an invented prompt and no planning step (old calls.jsonl lines 2-3)"
+   }
+  ],
+  "axiom": "The stupid persona opens with a vague one-line subject and only answers what it is asked. The MCP tools' clarifying logic (new: plan_request) asks only about format (length, aspect, sound, text) and never about story content or characters. So the assistant is free to invent a story without the newspaper or the wet bench.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, mark 'subject' as missing when a story or multi-scene request names no characters and no key actions (for example, only 'a kind gesture'). Then return the question 'Who is in it, and what happens, step by step?'. Also add 'do not invent the story or the characters' to the do-not-guess line of the description."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.1895548
+}

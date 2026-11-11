@@ -1,0 +1,47 @@
+{
+ "id": "8be0331d27",
+ "key": "must:E25b:The man is centred and his face is fully visible during his question.",
+ "symptom": "The man is centred and his face is fully visible during his question.",
+ "item": "E25b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'The man is centred and his face is fully visible during his question' not met?",
+    "because": "No output video exists in either chat, so the grader had nothing to check.",
+    "evidence": "grade.json in both chats: check 'something was made' pass=false, got 'no file'. The reasons are 'No video was produced.' (old.happy) and 'No output exists.' (new.stupid). The summary is 'The agent refused twice and produced no video'."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "Both times, the assistant told the user the task cannot be done with the tools it has. It stayed with that answer after the harness nudge ('Please go ahead with the free settings anyway' / 'huh? just try it') and started no generation job.",
+    "evidence": "state.json old.happy: two assistant turns, both kind='cannot', called=false. state.json new.stupid: turns 2 and 3 kind='cannot'. calls.jsonl old.happy has no 'call' events at all."
+   },
+   {
+    "why": "Why did the assistant say the tools cannot do it?",
+    "because": "The task is a spatial crop of the real footage: 16:9 to 9:16, centred on the speaker, with a cut at the speaker change and the original audio kept. No tool in either build can crop an existing video or change its aspect ratio.",
+    "evidence": "tools-new.json: edit_video 'Edits the appearance or content ... using a text prompt' and has no aspect or crop parameter. upscale_video works 'while preserving its aspect ratio'. join_videos: 'Every video is fitted to the first one's size'. No reframe or crop tool appears in the list. The old assistant read the same limits: 'The editor has no aspect-ratio or crop setting, so the output keeps your clip's original frame shape.'"
+   },
+   {
+    "why": "Why did the new build not get further, even though it has more tools?",
+    "because": "The new assistant looked for a workaround, but the extra tools are for joining clips, trimming time and detecting faces, not for spatial reframing. Its join_videos probe failed with 404 on the raw asset path. detect_faces only returned a job that was still 'rendering', and no tool can use face boxes to crop. So the assistant went back to refusing.",
+    "evidence": "calls.jsonl new.stupid: join_videos(videos=[api-assets/...video-0.mp4]) gave the error 'HTTP 404 not_found'. detect_faces gave an id. get_face_detection_results gave status 'rendering', faces []. The final reply says 'Magic Hour has no crop or reframe tool.'"
+   },
+   {
+    "why": "Why is a missing crop tool the end point and not a mistake by the assistant?",
+    "because": "The test expects the edit to be possible on the free plan without questions (expect.asks='never', beyond_free='no', spec aspect 9:16, audio required). But the MCP server has no operation that does it. Running the only option, edit_video, would redraw both people and keep the 16:9 shape, so it would still fail this item. The refusal was correct. The gap is in the tool set.",
+    "evidence": "E25b.json: expect {asks:'never', beyond_free:'no', refuse:false}. The answer_sheet asks to 'Centre the current speaker in a full-frame portrait crop'. The edit_video description has no crop or aspect parameter."
+   }
+  ],
+  "axiom": "Neither the old nor the new MCP server has a tool that crops or reframes an existing video to a new aspect ratio while keeping the footage and audio. The test needs such a tool, so the assistant correctly refused and nothing was produced.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a free, code-only `reframe_video` tool to the new build. It takes a video plus segments [{start, end, center_x or face_index}] and a target aspect (9:16). It crops each segment with ffmpeg at full height, centred on the given x or on a detect_faces box, joins the segments with hard cuts and copies the original audio. Its description should say: 'Crops an existing video to 9:16/1:1/16:9 and can follow a different person in each time range; keeps the footage and sound; spends no credits.'"
+ },
+ "error": null,
+ "seconds": 45,
+ "usd": 0.3608442
+}

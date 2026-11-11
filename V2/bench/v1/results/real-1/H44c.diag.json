@@ -1,0 +1,63 @@
+{
+  "id": "H44c",
+  "best_tools": "yes",
+  "explanation": "The plan treated a center crop of the finished landscape promo as a safely composed portrait version, even though the generated musicians extended beyond the portrait-safe area and the text had already been baked in. The overlay requested safe wrapping but did not establish or verify actual text bounds before cropping. The audio assembly also failed to explicitly discard the video generator’s soundtrack, leaving a route for unwanted speech despite the instrumental music request.",
+  "better_chain": "image (create sunset rooftop musicians) → image-edit (derive matching landscape and portrait compositions with every face safely inside each frame) → check (verify both compositions before animation) → image-to-video (animate each composition for 10 seconds, requesting no speech) → music (10 seconds of mellow instrumental jazz) → assemble (make each exact-ratio, 10-second video, replacing generated audio with only the jazz track) → text-overlay (add all three exact lines separately for each aspect ratio, with explicit font sizes and safe margins) → gate (verify both playable files, text visibility, faces, duration, full-frame presentation and absence of speech)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate tool and subject prompt. Portrait-safe grouping was requested, but the resulting composition needed checking before reuse for portrait.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate animation of the first still for five seconds. The generated soundtrack must subsequently be discarded rather than assumed speech-free.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 3,
+      "issue": "A reference-based edit is appropriate for a matching second shot, but the resulting image spreads musicians across the frame and is not suitable for the planned center crop. That output should have triggered correction before proceeding.",
+      "verdict": "ok",
+      "tool": "image-edit"
+    },
+    {
+      "n": 4,
+      "issue": "Animates a still visibly incompatible with the required portrait-safe composition; animation does not fix that framing.",
+      "verdict": "bad-inputs",
+      "tool": "image-to-video"
+    },
+    {
+      "n": 5,
+      "issue": "Correct duration and explicit mellow, instrumental, no-vocals music direction.",
+      "verdict": "ok",
+      "tool": "music"
+    },
+    {
+      "n": 6,
+      "issue": "Correct order, duration and landscape aspect, but adding music does not explicitly remove the generated clips’ audio. Specify replacement of all source audio with the instrumental track.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    },
+    {
+      "n": 7,
+      "issue": "Text-overlay is appropriate for these informational lines, but the vague central-crop wrapping instruction was not sufficient to ensure bounded text. Apply independently sized overlays after establishing each final aspect ratio.",
+      "verdict": "bad-params",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 8,
+      "issue": "The completed landscape video is not a safe input for this center crop: both lettering and musicians extend outside the retained region. Cropping cannot reflow baked-in text or reposition faces.",
+      "verdict": "bad-inputs",
+      "tool": "crop"
+    }
+  ],
+  "missing": "A separate portrait composition before lettering; checks of actual face and text bounds with correction when unsafe; explicit removal of generated source audio; final validation of both aspect ratios, durations, simultaneous text readability and speech-free sound."
+}

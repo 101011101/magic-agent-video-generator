@@ -1,0 +1,47 @@
+{
+ "id": "0aea08bbee",
+ "key": "must:B12b:Added space uses blurred source, no text",
+ "symptom": "Added space uses blurred source, no text",
+ "item": "B12b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Added space uses blurred source, no text' not met?",
+    "because": "The delivered image has no added space at all. Both outputs are square, the same shape as the square source, so there is no band above or below that could hold a blurred fill.",
+    "evidence": "grade.json (new.stupid): 'No added space at all. There is no blurred extension and no text.' grade.json (old.dumper): 'No added space; the background of the square itself is blurred'. In both, the checks show got '[\"640x640\"]' and the grader says the 9:16 frame was not met."
+   },
+   {
+    "why": "Why is the output square when a 9:16 story was asked for?",
+    "because": "The edit_image call asked for 9:16 correctly, but the generation returned a 640x640 image. The backend kept the input's 1:1 shape and ignored aspect_ratio.",
+    "evidence": "calls.jsonl, both chats: edit_image args include \"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"aspect_ratio\":\"9:16\". The old prompt asks to put the photo centred over 'a heavily blurred, zoomed-in copy'. The new prompt asks to outpaint above and below. Both outputs are 640x640."
+   },
+   {
+    "why": "Why did the assistant use flux-2-klein, which did not honour the shape?",
+    "because": "On a free account, the edit_image description points the assistant to flux-2-klein at 640px. The aspect_ratio field only says 'The aspect ratio of the output image(s)' and lists 9:16 as valid. Nothing warns that this model keeps the input's shape when it edits.",
+    "evidence": "tools-new.json, edit_image: 'For a Free account with no requested model, flux-2-klein at 640px with image_count=1 is an available option'. The aspect_ratio enum includes '9:16' and has no note for any model."
+   },
+   {
+    "why": "Why did the assistant not see the wrong shape and fix it before it delivered?",
+    "because": "The tool result does not report the output's width and height. In the old chat the preview did not load. So the assistant believed the request had worked and told the user it was a 9:16 frame.",
+    "evidence": "calls.jsonl: the wait_for_image_project output has status, cost and URLs, but no dimensions. Old reply: 'I couldn't preview the result.' New reply: 'It's a vertical 9:16 picture. I extended the park background above and below you'. The grader flagged this claim as false."
+   },
+   {
+    "why": "Why does the user persona not explain it (new chat: the stupid user never said 'blurred')?",
+    "because": "The persona only adds a second problem. In the new chat the assistant chose outpainting instead of a blurred copy, but no space was added in either chat. The old dumper chat asked for the blurred copy and got the same square result, so the shared cause is the shape the generator returned.",
+    "evidence": "new calls.jsonl: user said 'make it fit an instagram story, keep all my hair and shoulders, no text'. old calls.jsonl prompt: 'Fill the empty space above and below it with a heavily blurred, zoomed-in copy'. Both outputs are 640x640."
+   }
+  ],
+  "axiom": "The flux-2-klein image editor on the free plan does not do aspect_ratio=9:16 for an edited image. It returns an image the same shape as the input (640x640 from a square photo), so a generative edit cannot add a blurred or outpainted band. Side note: the harness check 'aspect 9:16' passed with 640x640, which is a defect in that check, but it did not cause this item to fail.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the new server, handle 'fit to aspect with blurred fill' in code, with no generation call. Scale the source to the full 9:16 width. Put it over a blurred, enlarged copy of itself. Upload the result. Also make edit_image and wait_for_image_project return the output's width and height and flag any shape that differs from the requested aspect_ratio. Add a note in the edit_image aspect_ratio description that flux-2-klein keeps the input's shape."
+ },
+ "error": null,
+ "seconds": 62,
+ "usd": 0.5788814
+}

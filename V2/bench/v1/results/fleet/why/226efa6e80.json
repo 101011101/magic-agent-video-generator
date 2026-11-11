@@ -1,0 +1,47 @@
+{
+ "id": "226efa6e80",
+ "key": "must:I46b:Legible 'Historical reconstruction' label",
+ "symptom": "Legible 'Historical reconstruction' label",
+ "item": "I46b",
+ "n": 6,
+ "builds": {
+  "old": 3,
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'Historical reconstruction' label not legible in all 6 chats?",
+    "because": "In the old chats no text appears at all. In the new chats the text is garbled ('reono broofofuin'), or it is exact for only about 2 s and then disappears.",
+    "evidence": "s5.old.happy grade.json: 'No label visible', all four exact_text 'missing'. s5.old.stupid grade.json: 'No text appears in any frame'. s5.new.dumper grade.json: label read as 'reono broofofuin'. s5.new.happy grade.json: 'legible in the first two frames, but it is gone by 3.2 s'."
+   },
+   {
+    "why": "Why does the old build show no text?",
+    "because": "The assistant put all four strings in the prompt of one ltx-2.5 create_video_from_text call (free model, 480p). It used no overlay, card or still. ltx-2.5 does not draw requested words.",
+    "evidence": "s5.old.happy calls.jsonl: create_video_from_text model 'ltx-2.5', prompt has 'Small text in the top right corner: \"Historical reconstruction\"'. The assistant's reply warns 'the AI model paints text into the picture, and it often misspells'. The old build has no tool that adds exact text after generation."
+   },
+   {
+    "why": "Why did the new build, which detects the text risk, still fail?",
+    "because": "plan_video_production asked how to make the words. It recommended 'card', which it calls 'Always exact'. Both new assistants chose 'still' instead. The tool describes 'still' as 'Exact; the words stay on screen for the whole clip'.",
+    "evidence": "s5.new.happy and s5.new.dumper calls.jsonl line 5: questions.words-1 options.still = 'Exact; the words stay on screen for the whole clip', recommend 'card', and 'ltx-2.5 got them wrong 0 of 4 times'. Line 6: answers {'words-1':'still'}."
+   },
+   {
+    "why": "Why did 'still' not give exact, lasting text?",
+    "because": "The still comes from qwen-image-2.1, and that model misspells four text lines in one image ('Bilt5House', 'Noth Carolina', garbled band). Then ltx-2.5 create_video_from_image animates the frame and does not keep the text. The video prompt also says 'no title cards, no captions', so the words fade out after about 3 s.",
+    "evidence": "s5.new.happy plan steps: generate_image qwen-image-2.1 with all four strings, then create_video_from_image ltx-2.5 with a prompt that ends 'no title cards, no captions'. grade.json: text gone by 3.2 s, misspellings. s5.new.dumper grade.json: all four strings garbled."
+   },
+   {
+    "why": "Why did the assistant trust 'still'?",
+    "because": "The tool's option text says 'still' is exact and stays for the whole clip. It gives no success rate for 'still', but it gives one for the model option. The assistant also likely chose 'still' to keep the words over the scene, because 'card' says 'The words are not over the scene'. The new tool description promises something that the image and video models on the free plan cannot deliver.",
+    "evidence": "tools-new plan_video_production output on line 5 of both new calls.jsonl: 'still': 'Exact; the words stay on screen…' versus 'card': 'Always exact. The words are not over the scene.' Neither assistant looked at the frames before delivery ('I haven't looked at the frames')."
+   }
+  ],
+  "axiom": "The free-plan generation models do not render exact text. ltx-2.5 draws none or garbled words, and it does not keep text from a start frame. qwen-image-2.1 misspells several text lines in one image. Only a deterministic overlay or card makes exact text. The old build has no such path. In the new build, plan_video_production describes the 'still' option as 'Exact; the words stay on screen for the whole clip', which is false, so the assistant chose it over the exact 'card'.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the new build, make 'still' (or a new 'overlay' option) burn the exact_words onto the video frames deterministically, for example with an ffmpeg drawtext overlay in join_production_clips that has its own small 'label' size. Until then, change the 'still' option text so it does not claim 'Exact; stays for the whole clip'. Give its measured success rate and recommend 'card' or the overlay. For the old build, add an exact-text overlay or card tool that the assistant can call after the generation."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.43180260000000004
+}

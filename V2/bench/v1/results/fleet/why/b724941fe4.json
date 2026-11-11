@@ -1,0 +1,47 @@
+{
+ "id": "b724941fe4",
+ "key": "must:D20b:Captions visible long enough and not clipped",
+ "symptom": "Captions visible long enough and not clipped",
+ "item": "D20b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Captions visible long enough and not clipped' not met?",
+    "because": "Neither output video has any on-screen text. The grader could not judge caption timing or clipping, so it marked the item 'no'.",
+    "evidence": "s3.old.stupid.D20b/grade.json: 'No captions at all', and all 5 exact_text entries are 'missing'. s3.new.stupid.D20b/grade.json: 'No captions exist', exact_text read_as 'no text'."
+   },
+   {
+    "why": "Why does the video have no text?",
+    "because": "The assistant never put caption text into any generation call. In the new build, every clip prompt even ends with 'no title cards, no captions', and the assistant told the user 'you didn't pick any, so it has no sound and no on-screen text'.",
+    "evidence": "s3.new.stupid.D20b/calls.jsonl: the plan_video_production step prompts say '...No repeated shots, no title cards, no captions, no other scenes.' state.json delivery message: 'Sound and text: you didn't pick any'. s3.old.stupid.D20b/state.json: the assistant delivered one 16:9 clip with background sound and did not mention captions."
+   },
+   {
+    "why": "Why did the assistant not know the five captions?",
+    "because": "The simulated stupid user's opening message dropped all the specifics of the brief. It said only 'make a café video with this pic and this pic...'. The five exact caption strings, the 9:16 shape and the mellow music were not in it. Exact wording cannot be inferred from photos.",
+    "evidence": "s3.new.stupid.D20b/chat.json: messages[0].text = 'make a café video with this pic and this pic and this pic and this pic and this pic'. The captions exist only in bank['Photo order and caption mapping']. The old chat has the same opening (state.json transcript[0]). In D20b.json, the turns text contains the captions."
+   },
+   {
+    "why": "Why were the captions still not given when the new-build assistant asked for them?",
+    "because": "The assistant put four questions into one message (length, shape, sound, on-screen text, with 'give me the exact words' as question 4). The persona rule tells the simulated user to answer only the first question it understands, so it replied only 'like 10 sec'. The assistant then treated the missing answer as 'no text' and went ahead without asking again. In the old build, the assistant asked nothing and generated at once.",
+    "evidence": "chat.json persona.reply: 'When it asks more than two things at once, answer only the first one you understand.' state.json: the assistant's question has 4 numbered items, including '4. On-screen text... If not, I'll leave the video with no text.' The user replied 'like 10 sec', and the next turn was the delivery. In the old state.json, the first assistant turn is already 'delivered'."
+   },
+   {
+    "why": "Why is this the axiom and not a tool-description defect?",
+    "because": "Two harness rules together prevent the required facts from reaching the assistant. First, the stupid-persona opening removes facts that cannot be inferred (exact caption strings). Second, the reply rule drops every question after the first. The item expects asks='never', so it assumes the full brief is present. The captions cannot be recovered unless the assistant asks one question per turn, and the persona rule actively blocks the bundled question that the new build did ask. The result is the same in both builds, with different tool sets, so the tool descriptions do not decide it.",
+    "evidence": "D20b.json expect.asks='never', and the turns text holds the full captions. The persona rules in chat.json. The failure has the same cause in old (no question asked) and new (question asked, answer dropped by the persona rule)."
+   }
+  ],
+  "axiom": "Harness artifact. The stupid-persona rewrite of the opening message removes the five exact caption strings, which cannot be inferred. Its 'answer only the first question' rule then throws away the assistant's request for on-screen text. The captions never reach the assistant, so no build can render them. The new-build assistant's choice to put the text question in a bundle and then default to 'no text' adds to the failure, but it is not the deciding cause.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the persona generator, keep spec.exact_text strings (the five captions) in the stupid user's opening message, because exact wording cannot be inferred. As an alternative, let the persona answer every plain-word question that its bank covers (here 'give me the exact words'), not only the first one."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.2780482
+}

@@ -1,0 +1,47 @@
+{
+ "id": "c99a424187",
+ "key": "check:sound:I",
+ "symptom": "sound present and audible",
+ "item": "I47a",
+ "n": 6,
+ "builds": {
+  "new": 3,
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'sound present and audible' not met?",
+    "because": "The file the grader measured had no audio track (old) or was silent at about -77 dB (new).",
+    "evidence": "s5.old.stupid.I46b/grade.json and s5.old.stupid.I48b/grade.json: 'no audio track', 1 file, 5 s, 854x480. s5.new.dumper.I47c/grade.json: 'peak -78.3 dB', duration measured '4 s'. s5.new.dumper.I46b/grade.json: 'peak -76.3 dB'. Note: no I47a chat was in the evidence; the listed chats are I46b, I48b and I47c."
+   },
+   {
+    "why": "(old) Why did the old output have no audio track?",
+    "because": "The assistant made one create_video_from_text call with ltx-2.5 and did not set `audio`. No other sound tool was called.",
+    "evidence": "s5.old.stupid.I46b/calls.jsonl and s5.old.stupid.I48b/calls.jsonl: args {name, end_seconds:5, model:'ltx-2.5', resolution:'480p', aspect_ratio:'16:9', style.prompt}. There is no audio key. The reply says 'I can ... add sound', and the grader notes 'the assistant said no sound was added'."
+   },
+   {
+    "why": "(old) Why did leaving out `audio` give a silent file?",
+    "because": "In the old tool, `audio` is off unless set ('Defaults to false'). The tool description does not tell the assistant to turn it on when the request needs narration or music. Nothing in the result warns that the clip is silent.",
+    "evidence": "tools-old.json, create_video_from_text: audio description 'Whether to include audio in the video. Defaults to `false` if not specified... ltx-2.5: Toggle-able: no additional credits'. The main description only says 'Preserve explicit requirements'. The wait_for_video_project result has no audio field."
+   },
+   {
+    "why": "(old) Why was sound not an explicit requirement for the assistant?",
+    "because": "The stupid persona sent only a vague first line. The assistant made the clip in one turn and did not ask about sound, so the narration need in the user's knowledge bank never came out.",
+    "evidence": "s5.old.stupid.I46b/chat.json: message 'make a video about biltmore house'. The bank has 'Warm English narration' but the user never says it. calls.jsonl shows no question turn, only create → wait → delivered."
+   },
+   {
+    "why": "(new) Why was the new output measured as silent when the production had narration?",
+    "because": "The new build joined the clips and the narration into a film. The join itself measured sound (narration true, peak -0 dB). But the film URL is on the local server (127.0.0.1:8000), and the harness download got a 404. So the grader only had the raw per-clip files and measured clip 01, which is a 4 s silent scene clip.",
+    "evidence": "s5.new.dumper.I47c/calls.jsonl, join_production_clips: output sound {narration:true, speech_seconds:9.2}, checked 'peak level -0 dB' = yes; files: 'download failed: download 404 http://127.0.0.1:8000/films/...mp4'. grade.json: duration '4 s', sound 'peak -78.3 dB', and the grader says 'only two clips ... first clip is silent'."
+   }
+  ],
+  "axiom": "Two separate root causes. Old build: the hosted create_video_from_text has `audio` off unless set, and its description does not say to turn it on when narration or music is needed. With a vague user, the assistant leaves it out and gets a file with no audio track. New build: a harness defect. The joined film with narration is served from 127.0.0.1:8000, the harness download returns 404, and the grader measures a silent raw clip instead.",
+  "category": "mcp_tool_description",
+  "builds": "both",
+  "fix": "Old build: in create_video_from_text and create_video_from_image, make `audio` default to true for models that can make sound at no extra cost (ltx-2.5, minimax-h3). Or add this line to the tool description: 'Set audio:true whenever the request has or implies narration, dialogue, music or sound. Leaving it out gives a silent file with no audio track.' Also return `has_audio` in the wait result. New build: make the harness download join_production_clips' download_url while the local server is still running, and fail the run (not grade a raw clip) when that download fails."
+ },
+ "error": null,
+ "seconds": 66,
+ "usd": 0.7906222000000002
+}

@@ -1,0 +1,51 @@
+{
+ "id": "f288c8ab2c",
+ "key": "must:G33c:Face and headline unobstructed, not awkwardly cropped",
+ "symptom": "Face and headline unobstructed, not awkwardly cropped",
+ "item": "G33c",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Face and headline unobstructed, not awkwardly cropped' not met in the two new-build chats?",
+    "because": "The two chats failed for different reasons. Dumper: the headline is fine, but the face is cut at the top and right edges and the phone covers the mouth and chin. Stupid: there is no headline at all, so the item cannot pass.",
+    "evidence": "s4.new.dumper.G33c/grade.json: 'Top of the head and hair are cropped at the top edge and the right side of the face is cut off. The phone covers his mouth and chin.' The other four items are 'yes', usable_as_is=true, score 4. s4.new.stupid.G33c/grade.json: 'No headline. The faces are uncropped…'"
+   },
+   {
+    "why": "Why is the face cropped and covered in the dumper image?",
+    "because": "The image model did what the assistant's prompt asked for. The prompt asked for a 'huge extreme close-up', with the face 'filling most of the right side', and a smartphone 'held just below his chin'. An extreme close-up that fills half of a 16:9 frame cuts off the forehead and the sides of the face. A phone just below the chin covers the chin and mouth.",
+    "evidence": "s4.new.dumper.G33c/calls.jsonl line 7, generate_image style.prompt (qwen-image-2.1, 640px): 'a huge extreme close-up of an exhausted man … face filling most of the right side … lit by the cold blue glow of a smartphone held just below his chin'. The prompt asks for no headroom and does not say 'whole head in frame' or 'nothing covering the face'."
+   },
+   {
+    "why": "Why did the assistant write the prompt that way?",
+    "because": "It read the brief's 'Big face' as 'extreme close-up' and added a phone as the light source to show the scrolling topic. It did not weigh this against the brief's other need (face not cropped or covered). The brief's two needs pull against each other: 'big face' against 'not cropped or covered'.",
+    "evidence": "G33c.json turn text: 'Big face, easy to read on a phone.' must_haves[4]: 'The face and headline remain unobstructed, with neither cropped awkwardly at the image edges.' Dumper plan_request subject (calls.jsonl line 5): 'big close-up face on the right side of frame', made more extreme in the final prompt."
+   },
+   {
+    "why": "Why did the tools not steer the framing, or catch the crop after the image was made?",
+    "because": "The plan_request description gives no framing advice. Its rows (subject, aspect, exact_words, look, mood…) have no field for headroom or a clear face, so the 'look' default it returned did not mention headroom. After generation, the assistant could not see the image: fetch_image_download returned an empty output, so the crop was never seen or fixed.",
+    "evidence": "tools-new.json plan_request description: the row names list has no framing or composition field. calls.jsonl line 9: fetch_image_download output \"\". Final reply (line 11): 'I couldn't open the image here to check it.'"
+   },
+   {
+    "why": "Why did the stupid chat have no headline at all (the second failure)?",
+    "because": "The new plan_request rule says 'do not guess … on-screen words', and it marks exact_words as missing when the user has not written them. The stupid user never said 'choose a headline yourself', so the assistant told the model 'No text, no letters, no words' and delivered a thumbnail with no text. In the dumper chat the same rule rejected the assistant's own headline twice ('derived' came back 'missing', with a question), even though the user had handed the choice to the assistant. There the assistant went ahead and generated anyway.",
+    "evidence": "tools-new.json plan_request: 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' Stupid calls.jsonl line 8 prompt: 'No text, no letters, no words.' Reply: 'It has no text, because you didn't give me a title.' Dumper calls.jsonl lines 5–6: exact_words comes back null/missing, with the question 'Should any words appear on it?'"
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The face-cropping chat (the one quoted) comes down to how the assistant wrote the prompt. The brief asks for a big face, the tool description has no framing guidance, and the model follows 'extreme close-up' to the letter. No tool result made the assistant crop the face. The missing headline in the stupid chat comes from the new build's strict exact_words rule. It also blocks headlines the user delegated, but that is a separate issue from cropping.",
+    "evidence": "There is no old-build failure for this item in the symptom (builds {\"new\":2}). Both failures trace to new-build calls: the dumper prompt and the stupid 'No text' prompt that followed plan_request."
+   }
+  ],
+  "axiom": "The assistant met 'Big face' by asking the image model for an 'extreme close-up' that fills half the frame, with a phone just below the chin. The model followed this literally, so the head was cropped and the chin covered. Nothing in the new tool descriptions tells the assistant to keep the whole head in frame and the face clear on thumbnails. The assistant also could not view the result to check it. In the second chat (stupid), the new plan_request rule 'do not guess on-screen words' made the assistant generate with no headline.",
+  "category": "host_behavior",
+  "builds": "new",
+  "fix": "Add a framing rule to the new build's generate_image/plan_request guidance for thumbnails and posters with a person: 'Keep the whole head in frame with a little headroom, and keep hands, phones and text off the face. Write \"close-up portrait, full head visible\", not \"extreme close-up\".' Also let plan_request accept a 'derived' exact_words when the user hands the wording to the assistant ('choose a headline yourself'). Then the rule stops removing headlines the user delegated."
+ },
+ "error": null,
+ "seconds": 107,
+ "usd": 0.22681440000000003
+}

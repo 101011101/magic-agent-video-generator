@@ -1,0 +1,504 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Asset Lineage</title>
+<style>:root{--bg:#f6f0e4;--ink:#3b2a1e;--soft:#7a5c44;--line:#d9cbb4;--ok:#4f7a3a;--bad:#a0402d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Georgia,serif}main{max-width:1200px;margin:0 auto;padding:32px 16px 80px}h1{font-weight:normal}h2{font-weight:normal;font-size:20px;border-top:1px solid var(--line);padding-top:16px;margin:28px 0 4px}.soft{color:var(--soft)}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}.card{flex:0 0 220px;background:#fbf7ef;border:1px solid var(--line);border-top:4px solid var(--ok);padding:8px;font-size:13px}.card.bad{border-top-color:var(--bad)}.card img{width:100%;display:block;margin-bottom:6px}details{margin-top:4px}</style></head><body><main>
+<h1>Litmus F · asset lineage</h1><p class="soft">Each card is one instance of an asset in one frame. Stable = visible, invariant attributes match, and the pairwise check says it is the same asset as its last stable instance (prev). source = the record the frame was built from.</p><h2>@beach <span class="soft">location · 2/16 stable</span></h2><p class="soft">Rocky tidal beach, approximately 300 metres long, with wet sand, shallow rock pools, scattered shell fragments and ribbons of kelp beneath a sloping headland.</p><div class="row">
+      <div class="card ok"><img src="s1-start.png" loading="lazy"><b>r1</b> · scene 1 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>background: Rocky shore below sloping headland, pools, shells and kelp ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed tidal rocks ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s1-end.png" loading="lazy"><b>r2</b> · scene 1 end<br>
+      ✓ stable<br>
+      prev → r1 (same)<br>source → r1
+      
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey overcast light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-start-a1.png" loading="lazy"><b>r3</b> · scene 2 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r2 (same)<br>source → text
+      
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed tidal rocks ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-start.png" loading="lazy"><b>r4</b> · scene 2 start<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → text
+      <br><span class="soft">diffs: Headland lighthouse missing</span>
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey dawn light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-end-a1.png" loading="lazy"><b>r5</b> · scene 2 end (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r4
+      <br><span class="soft">diffs: Headland lighthouse missing</span>
+      <details><summary>attributes</summary>background: Rocky tidal shore below sloping headland, pools, shell fragments and kelp ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and shallow tidal pools ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light with faint warm horizon ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-end.png" loading="lazy"><b>r6</b> · scene 2 end<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r4
+      <br><span class="soft">diffs: Headland lighthouse drastically smaller; Lighthouse gains adjoining building</span>
+      <details><summary>attributes</summary>background: Rocky tidal shore, pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-start-a1.png" loading="lazy"><b>r7</b> · scene 3 start (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → text
+      <br><span class="soft">diffs: Lighthouse much smaller relative to headland; Lighthouse now has adjoining building</span>
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed tidal rocks ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-start.png" loading="lazy"><b>r8</b> · scene 3 start<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → text
+      <br><span class="soft">diffs: Lighthouse much smaller relative to headland; Building added beside lighthouse</span>
+      <details><summary>attributes</summary>background: Rocky shore, pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed tidal rocks ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-end-a1.png" loading="lazy"><b>r9</b> · scene 3 end (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r8
+      <br><span class="soft">diffs: Lighthouse much smaller relative to headland; Building added beside lighthouse</span>
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed tidal shore ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light with pale dawn horizon ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-end.png" loading="lazy"><b>r10</b> · scene 3 end<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r8
+      <br><span class="soft">diffs: Lighthouse much smaller relative to headland; Building added beside lighthouse</span>
+      <details><summary>attributes</summary>background: Rocky shore, pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light with pale dawn horizon ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s4-end-a1.png" loading="lazy"><b>r11</b> · scene 4 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r2 (same)<br>source → r10
+      
+      <details><summary>attributes</summary>background: Rocky tidal shore, pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light with faint pink horizon ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s4-end.png" loading="lazy"><b>r12</b> · scene 4 end<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r10
+      <br><span class="soft">diffs: Lighthouse much smaller; Building added beside lighthouse</span>
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey light with pink horizon ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s5-start-a1.png" loading="lazy"><b>r13</b> · scene 5 start (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → text
+      <br><span class="soft">diffs: Stone cottage added at lighthouse base; Freestanding lighthouse becomes cottage-attached</span>
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet sand and exposed tidal rocks ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey daylight ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s5-start.png" loading="lazy"><b>r14</b> · scene 5 start<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → text
+      <br><span class="soft">diffs: Cottage added beside lighthouse; Winding headland path added</span>
+      <details><summary>attributes</summary>background: Rocky shore, pools, shell fragments and kelp below headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and tidal pools ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey overcast light ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s5-end-a1.png" loading="lazy"><b>r15</b> · scene 5 end (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r14
+      <br><span class="soft">diffs: Cottage added beside lighthouse; Winding headland path added</span>
+      <details><summary>attributes</summary>background: Rocky shore, pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and tidal rocks ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey overcast light ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s5-end.png" loading="lazy"><b>r16</b> · scene 5 end<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r14
+      <br><span class="soft">diffs: Cottage added beside lighthouse; Winding headland path added</span>
+      <details><summary>attributes</summary>background: Rock pools, shell fragments and kelp below sloping headland ✓ <span class="soft">(want Tidal shore below a sloping headland, with rock pools, shell fragments and kelp.)</span><br>condition: Wet exposed sand and rocks at low tide ✓ <span class="soft">(want Wet at low tide.)</span><br>lighting: Soft pearl-grey daylight ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div></div><h2>@lighthouse <span class="soft">location · 4/6 stable</span></h2><p class="soft">Lighthouse tower, 24 metres tall, with cylindrical salt-stained white masonry and a glass lantern room above the headland.</p><div class="row">
+      <div class="card ok"><img src="s1-start.png" loading="lazy"><b>r1</b> · scene 1 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>background: Tower on headland above shore ✓ <span class="soft">(want Tower above the shore on the headland.)</span><br>position: Upper right background ✓ <span class="soft">(want Upper right background.)</span><br>condition: Lantern appears unlit ✓ <span class="soft">(want Lantern unlit.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s1-end.png" loading="lazy"><b>r2</b> · scene 1 end<br>
+      ✓ stable<br>
+      prev → r1 (same)<br>source → r1
+      
+      <details><summary>attributes</summary>background: Tower on headland above shore ✓ <span class="soft">(want Tower above the shore on the headland.)</span><br>position: Upper right background ✓ <span class="soft">(want Upper right background.)</span><br>condition: Lantern unlit ✓ <span class="soft">(want Lantern unlit.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s5-start-a1.png" loading="lazy"><b>r13</b> · scene 5 start (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r2 (different)<br>source → r2
+      <br><span class="soft">diffs: Stone cottage added around tower base</span>
+      <details><summary>attributes</summary>background: Tower on headland above shore ✓ <span class="soft">(want Tower above the shore on the headland.)</span><br>position: Upper right background ✓ <span class="soft">(want Upper right background.)</span><br>condition: Lantern appears warmly illuminated ✗ <span class="soft">(want Lantern unlit.)</span><br>lighting: Soft pearl-grey daylight ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card ok"><img src="s5-start.png" loading="lazy"><b>r14</b> · scene 5 start<br>
+      ✓ stable<br>
+      prev → r2 (same)<br>source → r2
+      
+      <details><summary>attributes</summary>background: Tower on headland above shore ✓ <span class="soft">(want Tower above the shore on the headland.)</span><br>position: Upper right background ✓ <span class="soft">(want Upper right background.)</span><br>condition: Lantern appears unlit ✓ <span class="soft">(want Lantern unlit.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s5-end-a1.png" loading="lazy"><b>r15</b> · scene 5 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>background: White tower on headland above shore ✓ <span class="soft">(want Tower above the shore on the headland.)</span><br>position: Upper right background ✓ <span class="soft">(want Upper right background.)</span><br>condition: Lantern appears unlit ✓ <span class="soft">(want Lantern unlit.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card ok"><img src="s5-end.png" loading="lazy"><b>r16</b> · scene 5 end<br>
+      ✓ stable<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>background: Tower on headland above shore ✓ <span class="soft">(want Tower above the shore on the headland.)</span><br>position: Upper right background ✓ <span class="soft">(want Upper right background.)</span><br>condition: Lantern appears unlit ✓ <span class="soft">(want Lantern unlit.)</span><br>lighting: Soft pearl-grey daylight ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div></div><h2>@keeper <span class="soft">character · 16/24 stable</span></h2><p class="soft">Human woman, 1.68 metres tall, late middle age, narrow shoulders, weathered skin, grey hair tied in a low bun, wearing a dark wool coat, plain trousers and leather boots.</p><div class="row">
+      <div class="card ok"><img src="s1-start.png" loading="lazy"><b>r1</b> · scene 1 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Older woman near lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders, lined face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers, brown boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, downcast face ✓ <span class="soft">(want Quiet and downcast.)</span><br>pose_action: Walking with gaze lowered ✓ <span class="soft">(want Walking with gaze lowered.)</span><br>position: Lower left at waterline ✓ <span class="soft">(want Lower left at the waterline.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s1-end.png" loading="lazy"><b>r2</b> · scene 1 end<br>
+      ✓ stable<br>
+      prev → r1 (same)<br>source → r1
+      
+      <details><summary>attributes</summary>identity: Older woman beside lighthouse shore ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain dark trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, downcast face ✓ <span class="soft">(want Quiet and downcast.)</span><br>pose_action: Walking with head and gaze lowered ✓ <span class="soft">(want Walking with gaze lowered.)</span><br>position: Lower centre at waterline ✓ <span class="soft">(want Lower centre at the waterline.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-start-a1.png" loading="lazy"><b>r3</b> · scene 2 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r2 (same)<br>source → r2
+      
+      <details><summary>attributes</summary>identity: Older woman near lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and lined face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers and brown boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, downcast face ✓ <span class="soft">(want Quiet and downcast.)</span><br>pose_action: Stepping forward with lowered gaze ✓ <span class="soft">(want Stepping forward with gaze lowered.)</span><br>position: Slightly right of centre, left of shell ✗ <span class="soft">(want Left of centre beside @shell.)</span><br>lighting: Soft grey ambient light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s2-start.png" loading="lazy"><b>r4</b> · scene 2 start<br>
+      ✓ stable<br>
+      prev → r2 (same)<br>source → r2
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet and downcast ✓ <span class="soft">(want Quiet and downcast.)</span><br>pose_action: Stepping forward with lowered gaze ✓ <span class="soft">(want Stepping forward with gaze lowered.)</span><br>position: Left of centre beside shell ✓ <span class="soft">(want Left of centre beside @shell.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-end-a1.png" loading="lazy"><b>r5</b> · scene 2 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r4 (same)<br>source → r4
+      
+      <details><summary>attributes</summary>identity: Older woman on tidal shore ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, attentive downward gaze ✓ <span class="soft">(want Quietly curious.)</span><br>pose_action: Standing still, looking down at shell ✓ <span class="soft">(want Standing still, looking at @shell.)</span><br>position: Left of centre beside shell ✓ <span class="soft">(want Left of centre beside @shell.)</span><br>lighting: Soft pearl-grey ambient light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s2-end.png" loading="lazy"><b>r6</b> · scene 2 end<br>
+      ✓ stable<br>
+      prev → r4 (same)<br>source → r4
+      
+      <details><summary>attributes</summary>identity: Older woman near a lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, attentive downward gaze ✓ <span class="soft">(want Quietly curious.)</span><br>pose_action: Standing still, looking toward shell ✓ <span class="soft">(want Standing still, looking at @shell.)</span><br>position: Left of centre beside shell ✓ <span class="soft">(want Left of centre beside @shell.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-start-a1.png" loading="lazy"><b>r7</b> · scene 3 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r6 (same)<br>source → r6
+      
+      <details><summary>attributes</summary>identity: Older woman beside coastal lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quietly attentive, looking at shell ✓ <span class="soft">(want Quietly curious.)</span><br>pose_action: Kneeling with hand hovering beside shell ✓ <span class="soft">(want Kneeling, right hand hovering beside @shell.)</span><br>position: Centre foreground ✓ <span class="soft">(want Centre foreground.)</span><br>lighting: Soft grey light with warm shell highlights ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s3-start.png" loading="lazy"><b>r8</b> · scene 3 start<br>
+      ✓ stable<br>
+      prev → r6 (same)<br>source → r6
+      
+      <details><summary>attributes</summary>identity: Older woman near coastal lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quietly attentive to shell ✓ <span class="soft">(want Quietly curious.)</span><br>pose_action: Kneeling with left hand extended beside shell, right hand on knee ✗ <span class="soft">(want Kneeling, right hand hovering beside @shell.)</span><br>position: Centre foreground ✓ <span class="soft">(want Centre foreground.)</span><br>lighting: Soft grey light with amber glow on extended hand ✓ <span class="soft">(want Soft pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-end-a1.png" loading="lazy"><b>r9</b> · scene 3 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r8 (same)<br>source → r8
+      
+      <details><summary>attributes</summary>identity: Older woman near distant lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quietly studying shell ✓ <span class="soft">(want Quietly curious.)</span><br>pose_action: Kneeling, shell in open palm at waist level ✓ <span class="soft">(want Kneeling, holding @shell in an open right palm at waist level.)</span><br>position: Centre foreground ✓ <span class="soft">(want Centre foreground.)</span><br>lighting: Soft grey light and amber-lit fingers ✓ <span class="soft">(want Soft pearl-grey dawn light with amber light on her fingers.)</span></details></div>
+      <div class="card ok"><img src="s3-end.png" loading="lazy"><b>r10</b> · scene 3 end<br>
+      ✓ stable<br>
+      prev → r8 (same)<br>source → r8
+      
+      <details><summary>attributes</summary>identity: Older woman beside lighthouse shore ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair gathered in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quietly studying the shell ✓ <span class="soft">(want Quietly curious.)</span><br>pose_action: Kneeling with shell in open right palm near waist ✓ <span class="soft">(want Kneeling, holding @shell in an open right palm at waist level.)</span><br>position: Centre foreground ✓ <span class="soft">(want Centre foreground.)</span><br>lighting: Soft grey daylight with amber glow on fingers ✓ <span class="soft">(want Soft pearl-grey dawn light with amber light on her fingers.)</span></details></div>
+      <div class="card bad"><img src="s4-end-a1.png" loading="lazy"><b>r11</b> · scene 4 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r10 (same)<br>source → r10
+      
+      <details><summary>attributes</summary>identity: Older woman with lighthouse in background ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair gathered in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Tender, subdued gaze toward shell ✓ <span class="soft">(want Tender and hesitant.)</span><br>pose_action: Kneeling with shell in open left palm; right hand on knee ✗ <span class="soft">(want Kneeling, holding @shell in an open right palm at waist level.)</span><br>position: Centre foreground ✓ <span class="soft">(want Centre foreground.)</span><br>lighting: Soft grey daylight and amber-lit fingers ✓ <span class="soft">(want Soft pearl-grey dawn light with amber light on her fingers.)</span></details></div>
+      <div class="card ok"><img src="s4-end.png" loading="lazy"><b>r12</b> · scene 4 end<br>
+      ✓ stable<br>
+      prev → r10 (same)<br>source → r10
+      
+      <details><summary>attributes</summary>identity: Older woman near distant lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair gathered in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat, plain trousers and leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Gentle, subdued gaze toward shell ✓ <span class="soft">(want Tender and hesitant.)</span><br>pose_action: Kneeling, shell in open left palm near waist ✗ <span class="soft">(want Kneeling, holding @shell in an open right palm at waist level.)</span><br>position: Centre foreground ✓ <span class="soft">(want Centre foreground.)</span><br>lighting: Soft grey light with amber-lit fingers ✓ <span class="soft">(want Soft pearl-grey dawn light with amber light on her fingers.)</span></details></div>
+      <div class="card bad"><img src="s5-start-a1.png" loading="lazy"><b>r13</b> · scene 5 start (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r12 (different)<br>source → r12
+      <br><span class="soft">diffs: Younger, smoother face; Long skirt replaces trousers; Double-breasted coat replaces single-breasted coat</span>
+      <details><summary>attributes</summary>identity: Older woman near lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and mature lined face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat; lower garments partly obscured; boots not visible ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Calm, quietly resolute ✓ <span class="soft">(want Quietly resolved.)</span><br>pose_action: Holding shell against chest; uphill walking not visible ✓ <span class="soft">(want Walking uphill, holding @shell against her chest.)</span><br>position: Left of centre on tidal beach below cottage ✗ <span class="soft">(want Centre on the path below @cottage.)</span><br>lighting: Pearl-grey light with amber glow on hands ✓ <span class="soft">(want Soft pearl-grey morning light with amber light on her hands.)</span></details></div>
+      <div class="card ok"><img src="s5-start.png" loading="lazy"><b>r14</b> · scene 5 start<br>
+      ✓ stable<br>
+      prev → r12 (same)<br>source → r12
+      
+      <details><summary>attributes</summary>identity: Older woman near lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair swept back; bun not visible ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat, plain trousers and boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Serious, quietly composed ✓ <span class="soft">(want Quietly resolved.)</span><br>pose_action: Walking toward viewer on shore, shell against chest ✗ <span class="soft">(want Walking uphill, holding @shell against her chest.)</span><br>position: Centre foreground on beach below cottage ✗ <span class="soft">(want Centre on the path below @cottage.)</span><br>lighting: Pearl-grey light with amber glow on hand ✓ <span class="soft">(want Soft pearl-grey morning light with amber light on her hands.)</span></details></div>
+      <div class="card bad"><img src="s5-end-a1.png" loading="lazy"><b>r15</b> · scene 5 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>identity: Older woman near lighthouse ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair; bun not discernible ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders; skin detail indistinct ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, dark trousers and boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Calm, composed face ✓ <span class="soft">(want Quietly resolved.)</span><br>pose_action: Standing holding glowing shell at chest ✓ <span class="soft">(want Standing, holding @shell against her chest.)</span><br>position: On shore well below cottage doorway ✗ <span class="soft">(want At the doorway of @cottage.)</span><br>lighting: Grey ambient light with amber glow on hand ✓ <span class="soft">(want Soft pearl-grey morning light with amber light on her hands.)</span></details></div>
+      <div class="card ok"><img src="s5-end.png" loading="lazy"><b>r16</b> · scene 5 end<br>
+      ✓ stable<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>identity: Woman near lighthouse cottage ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair; bun not discernible ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders; skin detail indistinct ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark long coat, trousers and boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: not visible ✓ <span class="soft">(want Quietly resolved.)</span><br>pose_action: Standing holding glowing shell at chest ✓ <span class="soft">(want Standing, holding @shell against her chest.)</span><br>position: On shore path well below cottage doorway ✗ <span class="soft">(want At the doorway of @cottage.)</span><br>lighting: Pearl-grey light with amber glow on hands ✓ <span class="soft">(want Soft pearl-grey morning light with amber light on her hands.)</span></details></div>
+      <div class="card bad"><img src="s6-start-a1.png" loading="lazy"><b>r17</b> · scene 6 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r16 (same)<br>source → r12
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair gathered in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and lined skin ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, dark trousers, leather boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, attentive downward gaze ✓ <span class="soft">(want Quietly attentive.)</span><br>pose_action: Standing, holding shell near tabletop ✓ <span class="soft">(want Standing, holding @shell just above @table.)</span><br>position: Behind table at centre-right ✗ <span class="soft">(want Behind @table at centre-left.)</span><br>lighting: Soft left daylight, amber-lit fingers ✓ <span class="soft">(want Diffuse morning light with amber light on her fingers.)</span></details></div>
+      <div class="card ok"><img src="s6-start.png" loading="lazy"><b>r18</b> · scene 6 start<br>
+      ✓ stable<br>
+      prev → r16 (same)<br>source → r12
+      
+      <details><summary>attributes</summary>identity: Older woman in cottage kitchen ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers, partially visible boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quietly focused on shell ✓ <span class="soft">(want Quietly attentive.)</span><br>pose_action: Standing, holding shell above table ✓ <span class="soft">(want Standing, holding @shell just above @table.)</span><br>position: Behind table at centre-left ✓ <span class="soft">(want Behind @table at centre-left.)</span><br>lighting: Soft window light, amber-lit fingers ✓ <span class="soft">(want Diffuse morning light with amber light on her fingers.)</span></details></div>
+      <div class="card ok"><img src="s6-end.png" loading="lazy"><b>r19</b> · scene 6 end<br>
+      ✓ stable<br>
+      prev → r18 (same)<br>source → r18
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair gathered in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders, weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers, brown boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quietly focused on shell ✓ <span class="soft">(want Quietly attentive.)</span><br>pose_action: Standing leaning forward, fingertips touching shell ✓ <span class="soft">(want Standing, fingertips resting on @shell.)</span><br>position: Behind table at centre-left ✓ <span class="soft">(want Behind @table at centre-left.)</span><br>lighting: Soft left daylight, amber-lit fingertips ✓ <span class="soft">(want Diffuse morning light with amber light on her fingers.)</span></details></div>
+      <div class="card ok"><img src="s7-end.png" loading="lazy"><b>r20</b> · scene 7 end<br>
+      ✓ stable<br>
+      prev → r19 (same)<br>source → r19
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders, weathered skin ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat, plain trousers, brown boots ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Quiet, attentive downward gaze ✓ <span class="soft">(want Quietly attentive.)</span><br>pose_action: Standing, right hand lowered, watching shell ✓ <span class="soft">(want Standing, right hand lowered, looking at @shell.)</span><br>position: Behind table at centre-left ✓ <span class="soft">(want Behind @table at centre-left.)</span><br>lighting: Soft window light from left ✓ <span class="soft">(want Diffuse morning window light.)</span></details></div>
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → r20 (same)<br>source → r20
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders, lined weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat and plain dark trousers; boots obscured ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Pensive, downcast gaze ✓ <span class="soft">(want Pensive.)</span><br>pose_action: Seated, holding bread near mouth ✓ <span class="soft">(want Seated, holding @bread near her mouth.)</span><br>position: On chair behind table's left side ✓ <span class="soft">(want On @chair behind the left side of @table.)</span><br>lighting: Soft window light from left ✓ <span class="soft">(want Fading late-afternoon window light.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders, lined weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat and plain dark trousers; boots obscured ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Pensive downturned face ✓ <span class="soft">(want Pensive.)</span><br>pose_action: Seated holding bread above table, gazing toward shell ✓ <span class="soft">(want Seated, holding @bread above @table and looking at @shell.)</span><br>position: Seated behind left side of table ✓ <span class="soft">(want On @chair behind the left side of @table.)</span><br>lighting: Soft left window light and amber glow ✓ <span class="soft">(want Fading late-afternoon window light.)</span></details></div>
+      <div class="card ok"><img src="s9-start.png" loading="lazy"><b>r23</b> · scene 9 start<br>
+      ✓ stable<br>
+      prev → r22 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat and plain dark trousers; boots obscured ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Pensive, downcast gaze ✓ <span class="soft">(want Pensive.)</span><br>pose_action: Seated, looking down toward shell at frame right ✗ <span class="soft">(want Seated, looking toward the window at frame left.)</span><br>position: Left side behind table ✓ <span class="soft">(want Left side of frame behind @table.)</span><br>lighting: Blue side light and faint amber facial light ✓ <span class="soft">(want Dim blue side light with faint amber light on her face.)</span></details></div>
+      <div class="card ok"><img src="s9-end.png" loading="lazy"><b>r24</b> · scene 9 end<br>
+      ✓ stable<br>
+      prev → r23 (same)<br>source → r23
+      
+      <details><summary>attributes</summary>identity: Older human woman ✓ <span class="soft">(want Female lighthouse keeper.)</span><br>head_hair: Grey hair tied in low bun ✓ <span class="soft">(want Grey hair in a low bun.)</span><br>body: Narrow shoulders and weathered face ✓ <span class="soft">(want Narrow shoulders and weathered skin.)</span><br>wardrobe: Dark coat and dark trousers; boots obscured ✓ <span class="soft">(want Dark wool coat, plain trousers and leather boots.)</span><br>expression: Intent, alert and slightly puzzled ✓ <span class="soft">(want Alert and puzzled.)</span><br>pose_action: Seated and looking toward glowing shell ✓ <span class="soft">(want Seated, looking directly at @shell.)</span><br>position: Left side behind table ✓ <span class="soft">(want Left side of frame behind @table.)</span><br>lighting: Blue side light and amber illumination on face ✓ <span class="soft">(want Dim blue side light with bright amber light on her face.)</span></details></div></div><h2>@shell <span class="soft">prop · 12/22 stable</span></h2><p class="soft">Spiral seashell, 7 centimetres long, with an ivory surface, fine ridges and a translucent inner chamber.</p><div class="row">
+      <div class="card bad"><img src="s2-start-a1.png" loading="lazy"><b>r3</b> · scene 2 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Ivory ridged spiral shell with luminous opening ✓<br>size: Much larger than seven centimetres, boot-length scale ✗ <span class="soft">(want 7 centimetres long.)</span><br>position: On wet sand at lower right ✓ <span class="soft">(want On the sand at lower right.)</span><br>condition: Soft amber glow from opening ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light under pearl-grey ambient light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-start.png" loading="lazy"><b>r4</b> · scene 2 start<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Ivory spiral shell with fine ridges ✓<br>size: Approximately boot-length, much larger than 7 centimetres ✗ <span class="soft">(want 7 centimetres long.)</span><br>position: On sand at lower right ✓ <span class="soft">(want On the sand at lower right.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light beneath pearl-grey ambient light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-end-a1.png" loading="lazy"><b>r5</b> · scene 2 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → r4
+      
+      <details><summary>attributes</summary>identity: Ivory spiral shell with fine ridges ✓<br>size: Approximately boot-length, much larger than 7 centimetres ✗ <span class="soft">(want 7 centimetres long.)</span><br>position: On sand at lower right ✓ <span class="soft">(want On the sand at lower right.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber glow beneath pearl-grey ambient light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s2-end.png" loading="lazy"><b>r6</b> · scene 2 end<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → r4
+      
+      <details><summary>attributes</summary>identity: Ivory spiral shell with fine ridges ✓<br>size: Approximately boot-width, larger than 7 centimetres ✗ <span class="soft">(want 7 centimetres long.)</span><br>position: On sand at lower right ✓ <span class="soft">(want On the sand at lower right.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber glow beneath pearl-grey ambient light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-start-a1.png" loading="lazy"><b>r7</b> · scene 3 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Ivory spiral shell with fine ridges ✓<br>size: Small shell, approximately palm-sized ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On wet sand at lower centre ✓ <span class="soft">(want On the sand at lower centre.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light beneath soft grey daylight ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s3-start.png" loading="lazy"><b>r8</b> · scene 3 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Ivory ridged spiral seashell ✓<br>size: Small shell, roughly palm-sized ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On sand at lower centre-right ✓ <span class="soft">(want On the sand at lower centre.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber glow beneath soft pearl-grey light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s3-end-a1.png" loading="lazy"><b>r9</b> · scene 3 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r8 (same)<br>source → r8
+      
+      <details><summary>attributes</summary>identity: Ivory ridged spiral shell with luminous chamber ✓<br>size: Palm-sized, approximately seven centimetres ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: In outstretched palm, opening upward ✓ <span class="soft">(want In @keeper's right palm, opening upward.)</span><br>condition: Soft amber glow ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light beneath soft grey daylight ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s3-end.png" loading="lazy"><b>r10</b> · scene 3 end<br>
+      ✓ stable<br>
+      prev → r8 (same)<br>source → r8
+      
+      <details><summary>attributes</summary>identity: Ivory spiral shell with fine ridges and luminous interior ✓<br>size: Palm-sized, approximately seven centimetres ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: In right palm with opening angled upward ✓ <span class="soft">(want In @keeper's right palm, opening upward.)</span><br>condition: Soft amber glow; steadiness not measurable ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light against pearl-grey surroundings ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s4-end-a1.png" loading="lazy"><b>r11</b> · scene 4 end (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r10 (different)<br>source → r10
+      <br><span class="soft">diffs: Spiral shell replaced by flared, hollow tube; Fine ridges absent</span>
+      <details><summary>attributes</summary>identity: Pale spiral shell with ridges and luminous inner opening ✓<br>size: Small palm-sized shell, approximately seven centimetres ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: In keeper's left palm, opening angled toward her ✗ <span class="soft">(want In @keeper's right palm, opening toward @keeper.)</span><br>condition: Glowing soft amber ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-glow beneath pearl-grey ambient light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card ok"><img src="s4-end.png" loading="lazy"><b>r12</b> · scene 4 end<br>
+      ✓ stable<br>
+      prev → r10 (same)<br>source → r10
+      
+      <details><summary>attributes</summary>identity: Pale ridged spiral seashell with luminous interior ✓<br>size: Palm-sized, approximately seven centimetres ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: In keeper's left palm ✗ <span class="soft">(want In @keeper's right palm, opening toward @keeper.)</span><br>condition: Glowing soft amber ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-glow beneath soft pearl-grey light ✓ <span class="soft">(want Amber self-light beneath pearl-grey dawn light.)</span></details></div>
+      <div class="card bad"><img src="s5-start-a1.png" loading="lazy"><b>r13</b> · scene 5 start (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r12 (different)<br>source → r12
+      <br><span class="soft">diffs: Rounded spiral shell becomes pointed, stepped conical shell</span>
+      <details><summary>attributes</summary>identity: Ridged spiral seashell glowing amber ✓<br>size: Approximately palm-sized ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: Held in woman's hands against chest ✓ <span class="soft">(want In @keeper's hands against her chest.)</span><br>condition: Soft amber glow ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light under pearl-grey daylight ✓ <span class="soft">(want Amber self-light beneath pearl-grey morning light.)</span></details></div>
+      <div class="card ok"><img src="s5-start.png" loading="lazy"><b>r14</b> · scene 5 start<br>
+      ✓ stable<br>
+      prev → r12 (same)<br>source → r12
+      
+      <details><summary>attributes</summary>identity: Pale spiral shell with amber-lit interior ✓<br>size: Small, approximately palm-sized ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: Held in hand against keeper's chest ✓ <span class="soft">(want In @keeper's hands against her chest.)</span><br>condition: Glowing soft amber ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber glow beneath pearl-grey daylight ✓ <span class="soft">(want Amber self-light beneath pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s5-end-a1.png" loading="lazy"><b>r15</b> · scene 5 end (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>identity: Small amber-glowing shell; fine details indistinct ✓<br>size: Small, approximately palm-sized ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: Held at keeper's chest ✓ <span class="soft">(want In @keeper's hands against her chest.)</span><br>condition: Soft amber glow ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber glow beneath pearl-grey ambient light ✓ <span class="soft">(want Amber self-light beneath pearl-grey morning light.)</span></details></div>
+      <div class="card ok"><img src="s5-end.png" loading="lazy"><b>r16</b> · scene 5 end<br>
+      ✓ stable<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>identity: Small glowing shell; fine details indistinct ✓<br>size: Small hand-sized object ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: In keeper's hands against chest ✓ <span class="soft">(want In @keeper's hands against her chest.)</span><br>condition: Soft amber glow ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber glow beneath pearl-grey daylight ✓ <span class="soft">(want Amber self-light beneath pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s6-start-a1.png" loading="lazy"><b>r17</b> · scene 6 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → r16 (same)<br>source → r12
+      
+      <details><summary>attributes</summary>identity: Ridged spiral shell with luminous inner chamber ✓<br>size: Hand-sized shell, substantially over seven centimetres ✗ <span class="soft">(want 7 centimetres long.)</span><br>position: In right hand at tabletop, left of cup ✓ <span class="soft">(want In @keeper's right hand just above @table, left of @cup.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light under diffuse daylight ✓ <span class="soft">(want Amber self-light in diffuse morning light.)</span></details></div>
+      <div class="card ok"><img src="s6-start.png" loading="lazy"><b>r18</b> · scene 6 start<br>
+      ✓ stable<br>
+      prev → r16 (same)<br>source → r12
+      
+      <details><summary>attributes</summary>identity: Ivory ridged spiral shell with luminous chamber ✓<br>size: Small palm-sized shell ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: In woman's left hand above table, left of cup ✗ <span class="soft">(want In @keeper's right hand just above @table, left of @cup.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light in diffuse daylight ✓ <span class="soft">(want Amber self-light in diffuse morning light.)</span></details></div>
+      <div class="card ok"><img src="s6-end.png" loading="lazy"><b>r19</b> · scene 6 end<br>
+      ✓ stable<br>
+      prev → r18 (same)<br>source → r18
+      
+      <details><summary>attributes</summary>identity: Ridged ivory spiral shell, luminous inner chamber ✓<br>size: Palm-sized, comparable to cup height ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On table immediately left of cup ✓ <span class="soft">(want On @table immediately left of @cup.)</span><br>condition: Glowing soft amber ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light amid diffuse daylight ✓ <span class="soft">(want Amber self-light in diffuse morning light.)</span></details></div>
+      <div class="card ok"><img src="s7-end.png" loading="lazy"><b>r20</b> · scene 7 end<br>
+      ✓ stable<br>
+      prev → r19 (same)<br>source → r19
+      
+      <details><summary>attributes</summary>identity: Ridged pale spiral shell with luminous chamber ✓<br>size: Small shell, comparable to cup height ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On table immediately left of cup ✓ <span class="soft">(want On @table immediately left of @cup.)</span><br>condition: Soft amber glow ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light amid diffuse daylight ✓ <span class="soft">(want Amber self-light in diffuse morning light.)</span></details></div>
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → r20 (same)<br>source → r20
+      
+      <details><summary>attributes</summary>identity: Ridged spiral shell with luminous inner chamber ✓<br>size: Comparable to cup height, approximately seven centimetres ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On table immediately left of cup ✓ <span class="soft">(want On @table immediately left of @cup.)</span><br>condition: Glowing soft amber ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light amid soft daylight ✓ <span class="soft">(want Amber self-light in fading daylight.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Ridged spiral shell with translucent glowing opening ✓<br>size: Small shell, slightly narrower than cup height ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On table immediately left of cup ✓ <span class="soft">(want On @table immediately left of @cup.)</span><br>condition: Glowing soft amber ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light in muted daylight ✓ <span class="soft">(want Amber self-light in fading daylight.)</span></details></div>
+      <div class="card ok"><img src="s9-start.png" loading="lazy"><b>r23</b> · scene 9 start<br>
+      ✓ stable<br>
+      prev → r22 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Pale ridged spiral shell with luminous opening ✓<br>size: Small shell, comparable to cup height ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On table immediately left of cup ✓ <span class="soft">(want On @table immediately left of @cup.)</span><br>condition: Glowing with soft amber light ✓ <span class="soft">(want Glowing steadily with soft amber light.)</span><br>lighting: Amber self-light in dark interior ✓ <span class="soft">(want Amber self-light in the dark interior.)</span></details></div>
+      <div class="card ok"><img src="s9-end.png" loading="lazy"><b>r24</b> · scene 9 end<br>
+      ✓ stable<br>
+      prev → r23 (same)<br>source → r23
+      
+      <details><summary>attributes</summary>identity: Ridged spiral shell with luminous inner chamber ✓<br>size: Approximately cup-height in length ✓ <span class="soft">(want 7 centimetres long.)</span><br>position: On table immediately left of cup ✓ <span class="soft">(want On @table immediately left of @cup.)</span><br>condition: Bright amber glow; humming and pulsing not discernible ✓ <span class="soft">(want Humming softly and pulsing with amber light, at a bright crest.)</span><br>lighting: Bright amber self-light in dark room ✓ <span class="soft">(want Bright amber self-light in the dark interior.)</span></details></div></div><h2>@cottage <span class="soft">location · 2/4 stable</span></h2><p class="soft">Keeper's cottage, approximately 8 metres wide and 5 metres high, with stone walls, a slate roof and a shore-facing doorway beneath the tower.</p><div class="row">
+      <div class="card bad"><img src="s5-start-a1.png" loading="lazy"><b>r13</b> · scene 5 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>background: Stone cottage with shore-facing doorway beneath tower ✓ <span class="soft">(want Shore-facing cottage beneath the tower.)</span><br>position: Upper centre background ✓ <span class="soft">(want Upper centre background.)</span><br>lighting: Soft pearl-grey daylight ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card ok"><img src="s5-start.png" loading="lazy"><b>r14</b> · scene 5 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>background: Stone cottage beneath tower, doorway facing shore ✓ <span class="soft">(want Shore-facing cottage beneath the tower.)</span><br>position: Upper right background ✗ <span class="soft">(want Upper centre background.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card bad"><img src="s5-end-a1.png" loading="lazy"><b>r15</b> · scene 5 end (rejected)<br>
+      ✗ differs from prev<br>
+      prev → r14 (different)<br>source → r14
+      <br><span class="soft">diffs: Shore-facing doorway taller and wider</span>
+      <details><summary>attributes</summary>background: Stone cottage with shore-facing doorway beneath tower ✓ <span class="soft">(want Shore-facing cottage beneath the tower.)</span><br>position: Upper right background ✗ <span class="soft">(want Upper centre background.)</span><br>lighting: Soft pearl-grey light ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div>
+      <div class="card ok"><img src="s5-end.png" loading="lazy"><b>r16</b> · scene 5 end<br>
+      ✓ stable<br>
+      prev → r14 (same)<br>source → r14
+      
+      <details><summary>attributes</summary>background: Shore-facing stone cottage beneath tower ✓ <span class="soft">(want Shore-facing cottage beneath the tower.)</span><br>position: Upper right background ✗ <span class="soft">(want Upper centre background.)</span><br>lighting: Soft pearl-grey daylight ✓ <span class="soft">(want Soft pearl-grey morning light.)</span></details></div></div><h2>@kitchen <span class="soft">location · 7/8 stable</span></h2><p class="soft">Cottage kitchen, 4 by 5 metres, with faded blue plaster walls, worn wooden floorboards and a sea-facing window.</p><div class="row">
+      <div class="card bad"><img src="s6-start-a1.png" loading="lazy"><b>r17</b> · scene 6 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, sea-facing window ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Diffuse daylight from left window ✓ <span class="soft">(want Diffuse morning window light from the left.)</span><br>condition: Calm pale sea and daylight ✓ <span class="soft">(want Calm daylight outside.)</span></details></div>
+      <div class="card ok"><img src="s6-start.png" loading="lazy"><b>r18</b> · scene 6 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, sea-facing window ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Diffuse daylight from left window ✓ <span class="soft">(want Diffuse morning window light from the left.)</span><br>condition: Calm sea and pale daylight outside ✓ <span class="soft">(want Calm daylight outside.)</span></details></div>
+      <div class="card ok"><img src="s6-end.png" loading="lazy"><b>r19</b> · scene 6 end<br>
+      ✓ stable<br>
+      prev → r18 (same)<br>source → r18
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, sea-facing window ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Diffuse daylight from left window ✓ <span class="soft">(want Diffuse morning window light from the left.)</span><br>condition: Calm sea in daylight ✓ <span class="soft">(want Calm daylight outside.)</span></details></div>
+      <div class="card ok"><img src="s7-end.png" loading="lazy"><b>r20</b> · scene 7 end<br>
+      ✓ stable<br>
+      prev → r19 (same)<br>source → r19
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, sea-facing window ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Soft daylight from left window ✓ <span class="soft">(want Diffuse morning window light from the left.)</span><br>condition: Calm sea in daylight ✓ <span class="soft">(want Calm daylight outside.)</span></details></div>
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → r20 (same)<br>source → text
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, sea-facing window ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Soft late-afternoon light from left window ✓ <span class="soft">(want Fading late-afternoon window light from the left.)</span><br>condition: Cloudy sky over sea ✓ <span class="soft">(want Clouded daylight outside.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, sea-facing window ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Soft fading window light from left ✓ <span class="soft">(want Fading late-afternoon window light from the left.)</span><br>condition: Cloudy sky above sea ✓ <span class="soft">(want Clouded daylight outside.)</span></details></div>
+      <div class="card ok"><img src="s9-start.png" loading="lazy"><b>r23</b> · scene 9 start<br>
+      ✓ stable<br>
+      prev → r22 (same)<br>source → text
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, window overlooking water ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Dim blue light from left, amber shell glow ✓ <span class="soft">(want Dim blue night light from the left and amber light from @shell.)</span><br>condition: Rain-streaked window and dark sea outside ✓ <span class="soft">(want Rain at the window; a storm gathering outside.)</span></details></div>
+      <div class="card ok"><img src="s9-end.png" loading="lazy"><b>r24</b> · scene 9 end<br>
+      ✓ stable<br>
+      prev → r23 (same)<br>source → r23
+      
+      <details><summary>attributes</summary>background: Blue plaster walls, wooden floorboards, window overlooking dark water ✓ <span class="soft">(want Cottage interior with a sea-facing window, plaster walls and wooden floorboards.)</span><br>lighting: Dim blue light from left, bright amber shell glow ✓ <span class="soft">(want Dim blue night light from the left and a bright amber pulse from @shell.)</span><br>condition: Rain-streaked window and dark stormy exterior ✓ <span class="soft">(want Rain at the window; a storm gathering outside.)</span></details></div></div><h2>@table <span class="soft">prop · 6/8 stable</span></h2><p class="soft">Wooden kitchen table, 1.2 metres long, 75 centimetres wide and 74 centimetres high, with a worn rectangular top.</p><div class="row">
+      <div class="card bad"><img src="s6-start-a1.png" loading="lazy"><b>r17</b> · scene 6 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Worn rectangular wooden table ✓<br>size: Approximately waist-high kitchen table ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Diffuse window light on top ✓ <span class="soft">(want Diffuse morning window light.)</span></details></div>
+      <div class="card bad"><img src="s6-start.png" loading="lazy"><b>r18</b> · scene 6 start<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Wooden table with worn rectangular top ✓<br>size: Appears longer than 1.2 metres relative to woman ✗ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Diffuse window light with amber reflection ✓ <span class="soft">(want Diffuse morning window light.)</span></details></div>
+      <div class="card ok"><img src="s6-end.png" loading="lazy"><b>r19</b> · scene 6 end<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → r18
+      
+      <details><summary>attributes</summary>identity: Worn rectangular wooden table ✓<br>size: Approximately waist-high, broad rectangular top ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Diffuse daylight, amber reflection beside shell ✓ <span class="soft">(want Diffuse morning window light with an amber reflection beside @shell.)</span></details></div>
+      <div class="card ok"><img src="s7-end.png" loading="lazy"><b>r20</b> · scene 7 end<br>
+      ✓ stable<br>
+      prev → r19 (same)<br>source → r19
+      
+      <details><summary>attributes</summary>identity: Worn rectangular wooden table ✓<br>size: Hip-high table; full length not visible ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Window daylight with amber reflection beside shell ✓ <span class="soft">(want Diffuse morning window light with an amber reflection beside @shell.)</span></details></div>
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → r20 (same)<br>source → r20
+      
+      <details><summary>attributes</summary>identity: Wooden table with worn rectangular top ✓<br>size: Approximately person-scale kitchen table ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Fading daylight and amber shell reflection ✓ <span class="soft">(want Fading daylight with an amber reflection beside @shell.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Worn rectangular wooden kitchen table ✓<br>size: Approximately human-scale kitchen table ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Fading daylight, amber reflection beside shell ✓ <span class="soft">(want Fading daylight with an amber reflection beside @shell.)</span></details></div>
+      <div class="card ok"><img src="s9-start.png" loading="lazy"><b>r23</b> · scene 9 start<br>
+      ✓ stable<br>
+      prev → r22 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Wooden table with worn rectangular top ✓<br>size: Human-scale table, roughly seated waist height ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Dim blue light with amber spill near shell ✓ <span class="soft">(want Dim blue night light with steady amber spill from @shell.)</span></details></div>
+      <div class="card ok"><img src="s9-end.png" loading="lazy"><b>r24</b> · scene 9 end<br>
+      ✓ stable<br>
+      prev → r23 (same)<br>source → r23
+      
+      <details><summary>attributes</summary>identity: Wooden table with worn rectangular top ✓<br>size: Approximately person-scaled kitchen table; full length cropped ✓ <span class="soft">(want 1.2 metres long, 75 centimetres wide and 74 centimetres high.)</span><br>position: Across lower foreground ✓ <span class="soft">(want Across the lower foreground.)</span><br>lighting: Dim blue light with strong amber spill ✓ <span class="soft">(want Dim blue night light with bright amber spill from @shell.)</span></details></div></div><h2>@cup <span class="soft">prop · 7/8 stable</span></h2><p class="soft">Ceramic drinking cup, 9 centimetres high, with an off-white glaze, one handle and a chipped rim.</p><div class="row">
+      <div class="card bad"><img src="s6-start-a1.png" loading="lazy"><b>r17</b> · scene 6 start (rejected)<br>
+      ✗ attribute mismatch<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic handled cup, uneven rim ✓<br>size: Small drinking cup, roughly nine centimetres ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on right side of table ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Soft daylight from left ✓ <span class="soft">(want Diffuse morning window light.)</span></details></div>
+      <div class="card ok"><img src="s6-start.png" loading="lazy"><b>r18</b> · scene 6 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup, single handle, chipped rim ✓<br>size: Approximately 9 centimetres high ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on right side of table ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Soft window daylight ✓ <span class="soft">(want Diffuse morning window light.)</span></details></div>
+      <div class="card ok"><img src="s6-end.png" loading="lazy"><b>r19</b> · scene 6 end<br>
+      ✓ stable<br>
+      prev → r18 (same)<br>source → r18
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup, single handle, uneven rim ✓<br>size: Small hand-sized drinking cup ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on table right of shell ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Soft daylight and amber spill on left side ✓ <span class="soft">(want Diffuse morning window light with amber spill from @shell.)</span></details></div>
+      <div class="card ok"><img src="s7-end.png" loading="lazy"><b>r20</b> · scene 7 end<br>
+      ✓ stable<br>
+      prev → r19 (same)<br>source → r19
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup, single handle, uneven rim ✓<br>size: Small drinking cup, roughly 9 centimetres high ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on table's right side ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Soft daylight and amber spill on left ✓ <span class="soft">(want Diffuse morning window light with amber spill from @shell.)</span></details></div>
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → r20 (same)<br>source → r20
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup with handle and uneven rim ✓<br>size: Approximately nine centimetres high ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on right side of tabletop ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Daylight with amber spill on left side ✓ <span class="soft">(want Fading daylight with amber spill from @shell.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup with one handle, uneven rim ✓<br>size: Small hand-sized drinking cup ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on right side of table ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Soft daylight and amber spill ✓ <span class="soft">(want Fading daylight with amber spill from @shell.)</span></details></div>
+      <div class="card ok"><img src="s9-start.png" loading="lazy"><b>r23</b> · scene 9 start<br>
+      ✓ stable<br>
+      prev → r22 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup with one handle; uneven rim ✓<br>size: Small drinking cup, approximately 9 centimetres high ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on right side of table ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Amber spill on shell-facing side ✓ <span class="soft">(want Steady amber spill from @shell.)</span></details></div>
+      <div class="card ok"><img src="s9-end.png" loading="lazy"><b>r24</b> · scene 9 end<br>
+      ✓ stable<br>
+      prev → r23 (same)<br>source → r23
+      
+      <details><summary>attributes</summary>identity: Off-white ceramic cup with one handle; rim chip unclear ✓<br>size: Roughly nine centimetres tall ✓ <span class="soft">(want 9 centimetres high.)</span><br>position: Upright on table to right of shell ✓ <span class="soft">(want Upright on the right side of @table.)</span><br>lighting: Bright amber spill on cup ✓ <span class="soft">(want Bright amber spill from @shell.)</span></details></div></div><h2>@chair <span class="soft">prop · 2/2 stable</span></h2><p class="soft">Wooden kitchen chair, 85 centimetres high, with a straight slatted back and a square seat.</p><div class="row">
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Wooden chair with straight slatted back and square seat ✓<br>size: Normal seated-person scale, approximately eighty-five centimetres ✓ <span class="soft">(want 85 centimetres high.)</span><br>position: Behind left side of table, occupied by woman ✓ <span class="soft">(want Behind the left side of @table, occupied by @keeper.)</span><br>lighting: Soft light from left window ✓ <span class="soft">(want Fading late-afternoon window light.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Wooden chair with straight slatted back and square seat ✓<br>size: Standard adult-sized kitchen chair ✓ <span class="soft">(want 85 centimetres high.)</span><br>position: Behind left side of table, occupied by woman ✓ <span class="soft">(want Behind the left side of @table, occupied by @keeper.)</span><br>lighting: Soft left window daylight ✓ <span class="soft">(want Fading late-afternoon window light.)</span></details></div></div><h2>@bread <span class="soft">prop · 2/2 stable</span></h2><p class="soft">Piece of rustic bread, initially 12 centimetres long, with a brown crust and pale, coarse crumb.</p><div class="row">
+      <div class="card ok"><img src="s8-start.png" loading="lazy"><b>r21</b> · scene 8 start<br>
+      ✓ stable<br>
+      prev → none (first)<br>source → text
+      
+      <details><summary>attributes</summary>identity: Rustic bread with brown crust and pale crumb ✓<br>size: Hand-sized piece, approximately twelve centimetres ✓ <span class="soft">(want Initially 12 centimetres long.)</span><br>position: Held in both hands near mouth ✓ <span class="soft">(want In @keeper's right hand near her mouth.)</span><br>condition: No clear bite visible ✓ <span class="soft">(want Unbitten.)</span><br>lighting: Soft window light with warm highlights ✓ <span class="soft">(want Fading late-afternoon window light.)</span></details></div>
+      <div class="card ok"><img src="s8-end.png" loading="lazy"><b>r22</b> · scene 8 end<br>
+      ✓ stable<br>
+      prev → r21 (same)<br>source → r21
+      
+      <details><summary>attributes</summary>identity: Rustic bread with brown crust and pale crumb ✓<br>size: Approximately hand-length piece ✓ <span class="soft">(want Initially 12 centimetres long.)</span><br>position: Held in right hand with left support above table's left side ✓ <span class="soft">(want In @keeper's right hand above the left side of @table.)</span><br>condition: Small bite-shaped notch at top ✓ <span class="soft">(want One small bite missing.)</span><br>lighting: Soft daylight with warm amber spill ✓ <span class="soft">(want Fading late-afternoon window light.)</span></details></div></div></main></body></html>

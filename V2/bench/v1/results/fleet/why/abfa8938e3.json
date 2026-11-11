@@ -1,0 +1,46 @@
+{
+ "id": "abfa8938e3",
+ "key": "must:I47c:Each label legible and with its stage in order",
+ "symptom": "Each label legible and with its stage in order",
+ "item": "I47c",
+ "n": 3,
+ "builds": {
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Each label legible and with its stage in order' not met?",
+    "because": "The labels in the delivered videos are garbled, missing or on the wrong stage. They are not three clean words, one on each stage.",
+    "evidence": "s5.old.happy.I47c/grade.json: labels read 'Evapraton', 'Condesanian', 'Precipianton'/'Precaction!'. s5.old.dumper.I47c/grade.json: 'Evaporation' is not seen, 'Conddstion' appears at 1s during the evaporation stage, and extra text 'Ut ghh,' appears. The third (stupid) chat's reason is 'No labels'."
+   },
+   {
+    "why": "Why are the labels garbled or misplaced?",
+    "because": "The video model drew the labels as pixels inside the picture. The assistant asked for them only in the text prompt, with timed captions for 0-3s, 3-6s and 6-10s.",
+    "evidence": "calls.jsonl in both old chats: one create_video_from_text call (model ltx-2.5, 480p, audio true). The style.prompt has 'caption ... reads exactly \"Evaporation\"... changes to exactly \"Condensation\"...'. No other edit or overlay call follows."
+   },
+   {
+    "why": "Why did the assistant rely on in-prompt text rendering?",
+    "because": "The old tool list gives no tool to put exact text on top of a video. The assistant knew this and said so to the user. It shipped the result with a caveat and did not use another path.",
+    "evidence": "s5.old.happy.I47c calls.jsonl say text: 'The AI draws the captions as part of the picture... Magic Hour has no tool to put exact text on top of a video.' The dumper chat says the same: 'The AI draws the labels itself, so it can misspell them.'"
+   },
+   {
+    "why": "Why does in-picture text fail so badly here?",
+    "because": "A diffusion text-to-video model like ltx-2.5 at 480p cannot reliably spell multi-syllable words. It also cannot time captions to the second or keep them stable across frames. The voice-over script in the same prompt also leaks out as stray subtitle-like text ('Ut ghh,').",
+    "evidence": "dumper grade.json: subtitle-style garbled captions, labels on the wrong stage. happy grade.json: the last label changes mid-scene to 'Precaction!'. The prompts asked for exact spelling and 'no other text', and the model ignored both."
+   },
+   {
+    "why": "Why does only the old build fail?",
+    "because": "The new build adds plan_request with an exact_words field. That field sends exact on-screen strings down a separate, controlled path, so the new chats did not hit this failure. The old build has nothing like it.",
+    "evidence": "tools-new.json: plan_request description 'exact_words is a list of strings, one for each line of text to show, exactly as the user wrote it'. tools-old.json has no plan_request. The symptom counts are old:3, new:0."
+   }
+  ],
+  "axiom": "The text-to-video model (ltx-2.5, 480p) cannot render exact, legible, correctly timed words in the frame. The old build offers no deterministic text-overlay path, so prompt-only labels are the only option there, and they fail.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "In the old build, add (or route to) a text-overlay step: make the video with no on-screen text, then burn in the exact_words labels with set start/end times (for example 0-3s, 3-6s, 6-10s). This is what the new build's plan_request exact_words path supports. Never ask the generator to draw the exact labels."
+ },
+ "error": null,
+ "seconds": 29,
+ "usd": 0.1753912
+}

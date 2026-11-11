@@ -1,0 +1,46 @@
+{
+ "id": "d1a07bca9a",
+ "key": "must:I46a:Same aircraft design consistent between runway and airborne views",
+ "symptom": "Same aircraft design consistent between runway and airborne views",
+ "item": "I46a",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'same aircraft design between runway and airborne views' not met?",
+    "because": "In the happy chat the runway shot and the flight shot show two different jets. In the stupid chat there is no runway shot, and the jet changes inside one clip (the second tail goes away, the wing shape changes).",
+    "evidence": "s5.new.happy.I46a/grade.json: 'The runway jet and the airborne jet differ in canopy, intake and fuselage.' s5.new.stupid.I46a/grade.json: 'There are no runway views... the second tail disappears and the wing shape shifts.'"
+   },
+   {
+    "why": "Why are the two shots in the happy chat different jets?",
+    "because": "Code made them as two separate text-to-video generations (ltx-2.5, 2 s each). Neither had a picture reference, so each generation invented its own airframe from the same words.",
+    "evidence": "s5.new.happy.I46a/calls.jsonl line 8 (final plan): clip 1 and clip 3 both have 'reference':{'kind':'none'}, 'link':'new', and tool create_video_from_text. Lines 9 and 11 return 'reference':'none' for both clips."
+   },
+   {
+    "why": "Why did the plan split the takeoff and the flight into separate clips with no shared reference?",
+    "because": "The first plan had one 8 s clip for both beats (link 'moves'). Then the assistant took the recommended 'card' answer for the words. That split each beat into a 2 s scene plus a 2 s card, so the two scenes became separate clips. The planner did not add a subject still or a frame link to keep the jet the same. Its checklist only puts 'same-jet' as 'by eye' and does not act on it. Its own advice warned 'no picture reference' but offered nothing to fix it.",
+    "evidence": "calls.jsonl line 2: clips [{beats:[1,2], link 'moves'}], advice 'Clip 1 has 2 places and no picture reference.' Line 7 after answers {words-1:card, words-2:card}: four clips, scenes 1 and 3 each 'reference':{'kind':'none'}. Line 8: the assistant set beat 3 'link':'new'. The 'same-jet' checklist line is 'how':'by eye', and the join puts it under 'unchecked'."
+   },
+   {
+    "why": "Why did the stupid chat have no runway view and no fixed design at all?",
+    "because": "The stupid user only said 'make a video about the f35' and never mentioned a runway, a takeoff or labels. The assistant made one cruise clip from text only. Inside that one clip, ltx-2.5 still did not hold a constant airframe.",
+    "evidence": "s5.new.stupid.I46a/chat.json messages: 'make a video about the f35'. calls.jsonl line 13: create_video_from_text prompt 'flying smoothly above layered clouds', with no runway and no image reference. grade.json: the tail and the wings change between frames."
+   },
+   {
+    "why": "Why does a text-only prompt not produce one stable, real F-35A design?",
+    "because": "ltx-2.5 at 480p on the free plan cannot reproduce the exact geometry of a specific real aircraft from words alone. Each generation, and each part of one generation, drifts toward a generic fighter (twin-seat, upright tails). The prompt said 'single engine, true-to-life proportions', but this did not stop the drift. Only a shared picture anchor can hold the design.",
+    "evidence": "Both grade.json files: the jet is an 'F-15/F-14-style' or 'F-14/F-16 hybrid' with a two-seat canopy, although the prompts in calls.jsonl say 'real Lockheed Martin F-35A... single engine, true-to-life proportions' and 'twin canted tails and a single engine'."
+   }
+  ],
+  "axiom": "Text-only ltx-2.5 generation cannot keep the airframe of a specific real aircraft fixed across separate generations, or even within one clip. Only a shared picture reference can hold it. The new planner splits beats into separate clips with reference 'none' and does not supply that anchor.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "In plan_video_production, when the same subject appears in 2 or more scene clips (for example after a 'card' answer splits one clip), add one step that makes a subject still first (generate_image of the jet). Then start every scene clip from that still with create_video_from_image, or chain the clips with the last frame of the previous clip. Use reference kind 'subject', not 'none'. Also mark 'same-jet' as a problem, not only advice, when scene clips share no reference."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.3865436
+}

@@ -1,0 +1,178 @@
+{
+  "id": "IS06",
+  "item": {
+    "id": "IS06",
+    "case": 106,
+    "case_name": "Intent test on the MCP (vague brief, proxy answers, paid calls gated): Remove the crowd",
+    "group": "I",
+    "group_name": "Longer stories (the film pipeline)",
+    "expect": {
+      "asks": "sometimes",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Remove the crowd",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "16:9",
+      "kind": "image",
+      "outputs": 1
+    },
+    "turns": [
+      {
+        "materials": [
+          "rt3-bugatti.jpg"
+        ],
+        "text": "remove the people from this"
+      }
+    ],
+    "tests": "does the MCP ask for what it cannot know, and does its attempted call match the user's answers (aspect, words, seconds, sound)?",
+    "answer_sheet": {
+      "keep": "the car and everything else exactly"
+    },
+    "must_haves": [
+      "The attempted call matches the user's stated intent."
+    ],
+    "v4_expect_tool": "edit_image"
+  },
+  "session": "mcp-min-IS06",
+  "sessionDir": "sessions/mcp-min-IS06",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "remove the people from this",
+      "materials": [
+        "rt3-bugatti.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "What should change in the picture?",
+          "asked": [
+            "question"
+          ],
+          "user": "Remove the people, keeping the car and everything else exactly as is.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t run the edit because your Magic Hour account has **0 credits** remaining. Removing the people with this tool requires about **10 credits**. No edited image was created.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"remove the people from this\\n[Attached: rt3-bugatti.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/1792ac3e-2b52-46ea-a72d-08a9a8f6c6fe-image-0.jpg]\"}],\"attachments\":[{\"name\":\"rt3-bugatti.jpg\",\"kind\":\"image\",\"role\":\"other\"}],\"params\":[{\"name\":\"subject\",\"value\":\"Attached Bugatti photograph\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Remove all people from the photograph and fill their locations with natural background.\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"Preserve the car, display platform, framing, lighting and remaining surroundings.\",\"source\":\"derived\"},{\"name\":\"aspect\",\"value\":\"Preserve original image aspect ratio\",\"source\":\"derived\"}],\"tool\":\"edit_image\"}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":false,\"params\":[{\"name\":\"edit\",\"value\":null,\"source\":\"missing\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"Preserve the car, display platform, framing, lighting and remaining surroundings.\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[{\"param\":\"edit\",\"question\":\"What should change in the picture?\"}]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"remove the people from this\\n[Attached: rt3-bugatti.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/1792ac3e-2b52-46ea-a72d-08a9a8f6c6fe-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"What should change in the picture?\"},{\"role\":\"user\",\"text\":\"Remove the people, keeping the car and everything else exactly as is.\"}],\"attachments\":[{\"name\":\"rt3-bugatti.jpg\",\"kind\":\"image\",\"role\":\"other\"}],\"params\":[{\"name\":\"subject\",\"value\":\"rt3-bugatti.jpg\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"Remove the people\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"the car and everything else exactly as is\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"Keep original framing and aspect ratio\",\"source\":\"derived\"}],\"tool\":\"edit_image\"}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"Remove the people\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"the car and everything else exactly as is\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":null,\"source\":\"missing\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "style": {
+              "prompt": "Remove all people from this photograph, including every person in the background and at the edges. Naturally reconstruct the background in the areas they occupied. Keep the car and everything else exactly as is: preserve the Bugatti's shape, details, paint, reflections, wheels, logos, display platform, surroundings, lighting, camera angle and original framing. Change only the areas needed to remove people."
+            },
+            "resolution": "640px",
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/1792ac3e-2b52-46ea-a72d-08a9a8f6c6fe-image-0.jpg"
+              ]
+            },
+            "model": "qwen-image-2.1",
+            "name": "Bugatti — People Removed"
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "What should change in the picture?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits: this call needs about 10 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t run the edit because your Magic Hour account has **0 credits** remaining. Removing the people with this tool requires about **10 credits**. No edited image was created.",
+        "refuse": "",
+        "tier_move": "I couldn’t run the edit because your Magic Hour account has **0 credits** remaining. Removing the people with this tool requires about **10 credits**. No edited image was created.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 43
+    }
+  ],
+  "started": "2026-11-05T07:27:37.468Z",
+  "spent": 0,
+  "seconds": 44
+}

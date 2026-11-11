@@ -1,0 +1,46 @@
+{
+  "id": "H43a",
+  "best_tools": "yes",
+  "explanation": "The main failure was caption rendering: the agent supplied the exact script and explicitly requested correct FitTrack spelling, but the captions tool produced “ThickTrack.” A secondary chain error let the returned seven-second voice track determine the duration without enforcing eight seconds. The grader’s uncertainty about whether the presenter was fictional is unwarranted given her documented generation from scratch.",
+  "better_chain": "image (generate fictional presenter in a vertical home setting) → write (preserve the exact script) → voice (English synthetic female delivery targeting eight seconds) → talking-photo (animate the presenter using the complete audio) → assemble (ensure eight-second, 9:16 delivery) → captions (synchronize the supplied script) → gate (verify exact caption spelling, complete speech, duration, aspect, and speaking motion; correct any failures)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving",
+    "grader"
+  ],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate generation of a fictional adult presenter at home, with vertical framing requested.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Preserves the supplied script exactly without adding testimonial claims.",
+      "verdict": "ok",
+      "tool": "write"
+    },
+    {
+      "n": 3,
+      "issue": "Correct script, language, voice type, and requested duration; returning seven seconds was not caused by deficient instructions.",
+      "verdict": "ok",
+      "tool": "voice"
+    },
+    {
+      "n": 4,
+      "issue": "The animation tool and inputs are appropriate, but making duration follow the already seven-second audio conflicts with the eight-second target.",
+      "verdict": "bad-params",
+      "tool": "talking-photo"
+    },
+    {
+      "n": 5,
+      "issue": "The appropriate captioning tool received the exact script and an explicit brand-spelling instruction. The incorrect brand spelling is an output failure, not a wrong-tool choice.",
+      "verdict": "ok",
+      "tool": "captions"
+    }
+  ],
+  "missing": "An explicit duration-enforcement step after the seven-second audio result, plus final verification and correction of caption spelling and synchronization."
+}

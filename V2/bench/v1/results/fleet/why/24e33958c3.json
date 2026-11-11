@@ -1,0 +1,47 @@
+{
+ "id": "24e33958c3",
+ "key": "must:I46b:Location and date appear exactly and readable",
+ "symptom": "Location and date appear exactly and readable",
+ "item": "I46b",
+ "n": 3,
+ "builds": {
+  "new": 1,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Location and date appear exactly and readable' not met in 3 chats?",
+    "because": "In both old chats the delivered video has no text at all. In the new chat the text is there but garbled, so it cannot be read.",
+    "evidence": "s5.old.happy.I46b/grade.json and s5.old.dumper.I46b/grade.json: exact_text all 'missing', 'No on-screen text in any frame.' s5.new.dumper.I46b/grade.json: read_as 'Bilt Bouse', 'Jhoplrcl fckubal Acanbser', 'dibsa', 'reono broofofuin'."
+   },
+   {
+    "why": "Why did the old chats show no text?",
+    "because": "In both old chats the assistant asked the video model itself to draw the text. It made one create_video_from_text call with ltx-2.5 at 480p and put the four strings in the prompt. The model left out all the text. The old build has no other tool path that puts exact text on the video.",
+    "evidence": "s5.old.happy.I46b/calls.jsonl and s5.old.dumper.I46b/calls.jsonl line 2: style.prompt includes 'Clean on-screen title text ... \"Biltmore House\" ... \"December 24, 1895\". Small text ... \"Historical reconstruction\"'. The result completed with no error, but the frames have no text."
+   },
+   {
+    "why": "Why did ltx-2.5 not draw the text the prompt asked for?",
+    "because": "ltx-2.5 is the free-plan video model, and it cannot draw exact words in a scene. The new server's own data for this same request says it got the words right 0 of 4 times.",
+    "evidence": "s5.new.dumper.I46b/calls.jsonl line 5, plan_video_production questions[words-1]: 'ltx-2.5 got them wrong 0 of 4 times; minimax-h3 right 2 of 2 ... recommend: card'."
+   },
+   {
+    "why": "Why did the new chat show garbled text, even though the new build warned about this?",
+    "because": "The planner recommended 'card' (a separate title card, always exact). The assistant chose 'still' instead. With 'still', qwen-image-2.1 first draws a picture with all four strings, and then ltx-2.5 animates that picture. The image model garbled the four strings, so the text was wrong from the start. The video step then also asked for 'no title cards, no captions'.",
+    "evidence": "s5.new.dumper.I46b/calls.jsonl line 6: answers {'words-1':'still'}. Step 1 is generate_image qwen-image-2.1 with all 4 strings 'written large and clear'. Step 2 is create_video_from_image ltx-2.5. The tool's own option text says 'still': 'Exact'. grade.json: 'caption band ... garbled gibberish'."
+   },
+   {
+    "why": "Why did the image model fail, when the planner's option text calls 'still' exact?",
+    "because": "When the free image and video models get several lines of exact text in one prompt, they do not render it reliably. Calling 'still' 'Exact' in the plan_video_production output promises more than the model can do. That wording led the assistant away from the 'card' option, which is drawn by code and is always exact. Also, the join download failed with a 404, so the grader looked at the raw clips. But the clip itself already had the garbled text, so the 404 does not change this verdict.",
+    "evidence": "s5.new.dumper.I46b/calls.jsonl line 6 options: 'still: A picture of the scene with the words is made first ... Exact; the words stay on screen'. Line 11 files: 'download failed: download 404'. I could not open the frame JPGs, so the evidence for the garbled text is grade.json only."
+   }
+  ],
+  "axiom": "The free-plan models (ltx-2.5 for video, qwen-image-2.1 for images) cannot reliably draw several lines of exact text into a picture. Only a deterministic text overlay or title card gives exact wording. The old build has no such path. The new build has one ('card'), but its option text wrongly calls the model-drawn 'still' option 'Exact', so the assistant picked the model-drawn path.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Use code, not a generation model, for exact_words. Burn the strings onto the joined video with a deterministic overlay (for example ffmpeg drawtext as a lower-third plus a small corner label), or use 'card'. In the new plan_video_production, make this the default. Remove the claim 'Exact' from the 'still' option and add its measured success rate, as the 'model' option already does. For the old build, add the same text-overlay step, or a warning in the create_video_from_text description that the free video model does not draw text."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.3465366
+}

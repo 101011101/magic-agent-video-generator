@@ -1,0 +1,47 @@
+{
+ "id": "6229692595",
+ "key": "must:G35b:Labels 'Before' and 'After'",
+ "symptom": "Labels 'Before' and 'After'",
+ "item": "G35b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "axiom": "The test harness built the stupid persona's opening message (\"make a pic showing this kitchen renovated using this pic\") from the full brief and dropped the before/after composite and the \"Before\"/\"After\" labels. The full brief exists only in the persona's private knowledge bank. The test sets expect.asks = \"never\", so the assistant has no reason to ask, and the persona volunteers nothing. Yet the grader still checks every must_have from the full brief. Nothing the assistant was told required labels, so this is a harness/test-design defect, not a fault in the assistant or the MCP tools.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, make the stupid persona's opening message keep the brief's must-have parts (the before/after side-by-side layout and the exact label words \"Before\"/\"After\"). The persona can still be vague about technical details. As an alternative, grade stupid-persona chats only against requirements the conversation actually contains (and skip must_haves that come only from the bank) when expect.asks = \"never\".",
+  "whys": [
+   {
+    "why": "Why was the item \"Labels 'Before' and 'After'\" not met?",
+    "because": "Each output is one renovated kitchen image with no text on it at all.",
+    "evidence": "s4.new.stupid.G35b/grade.json: exact_text 'Before' and 'After' seen: missing, read_as 'no text'; must item 'Labels' met: no, 'No labels.'; first must_have: 'Output is a single renovated image only; no side-by-side.' The old chat's grader says 'No text labels at all.'"
+   },
+   {
+    "why": "Why did the image have no labels and no side-by-side layout?",
+    "because": "The assistant made one edit_image call that only asked for a renovation. It never asked for a composite or for any text, and it made no second step to combine the original with the edit.",
+    "evidence": "old calls.jsonl: one edit_image with prompt 'Show this same kitchen after a full modern renovation...' and no label text; new calls.jsonl: plan_request with exact_words: [] and then edit_image 'Show this same kitchen fully renovated...'. Neither build has a compose or label step."
+   },
+   {
+    "why": "Why did the assistant not ask for labels or a before/after layout?",
+    "because": "The user's only message asked just for a renovated picture. It said nothing about before/after, panel order, labels or 16:9, so from the conversation the assistant correctly saw 'renovate this photo' as the whole task.",
+    "evidence": "chat.json (old) messages[0].text: 'make a pic showing this kitchen renovated using this pic'; new plan_request args messages: the same text. The assistant set exact_words to [] with source 'derived', and plan_request returned ready:true with questions:[]."
+   },
+   {
+    "why": "Why did the user's message leave out the core requirements?",
+    "because": "The harness gave the stupid persona the full brief only in its private knowledge bank. Its opening message was a vague rewrite that dropped the composite and the labels. The persona adds facts only when it is asked.",
+    "evidence": "chat.json bank['The request in full...'] contains 'before-and-after image... Label them “Before” and “After”', and bank['Label wording and language']: 'Before and After, exactly'. The persona reply rules: answer only when asked, and never volunteer."
+   },
+   {
+    "why": "Why did the test still require labels the assistant was never told about?",
+    "because": "The test says the assistant should never ask (expect.asks = 'never'), but the grader checks every must_have from the full brief, whatever the persona actually said. With the stupid persona, the labels were impossible to know and also not something to ask about.",
+    "evidence": "items/G35b.json: expect.asks 'never'; must_haves includes 'Readable labels say exactly 'Before'... and 'After''; spec.exact_text ['Before','After']. Both builds failed the same way with the same persona (old 1, new 1), so the failure tracks the persona, not the build."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 25,
+ "usd": 0.1447288
+}

@@ -1,0 +1,47 @@
+{
+ "id": "63493af342",
+ "key": "must:E28b:Original conversation no longer audible",
+ "symptom": "Original conversation no longer audible",
+ "item": "E28b",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Original conversation no longer audible' not met?",
+    "because": "None of the 3 chats delivered a video. The old chats delivered only a WAV voice-over. The new chat delivered nothing but face-scan PNGs. The user's clip, with its original dialogue, was the only video left.",
+    "evidence": "s3.new.happy.E28b/grade.json: 'a video was made' failed, got 4 .png files, 'no audio track', must item why = 'No output video'. s3.old.happy and s3.old.stupid calls.jsonl: the last create call is ai_voice_generator_create_audio, followed by wait_for_audio_project returning output.wav. No video tool was called."
+   },
+   {
+    "why": "Why did the assistant stop at a WAV or a refusal instead of putting the narration on the clip?",
+    "because": "The assistant decided that no tool can remove a video's sound and lay new audio over it while keeping the picture. It told the user to mute the clip and add the WAV in CapCut or iMovie.",
+    "evidence": "old.happy say text: 'Magic Hour has no tool that just replaces a video's audio track. The closest one is lip-sync...'. old.stupid: 'none of these tools can lay new audio over an existing video without lip sync'. new.happy: 'None of them can remove the original conversation, lay a voice-over on the same 10 seconds and leave the picture exactly as it is.'"
+   },
+   {
+    "why": "Was the assistant right that no such tool exists?",
+    "because": "Yes. In tools-new.json, join_videos only joins videos and has a 'silent' flag that removes all sound. It takes no audio input. join_production_clips adds narration only to clips that the production flow made itself. create_production_sound makes narration only for a plan from plan_video_production. No tool takes (user video + audio file) and returns a muxed video. The old hosted server has only the stock generation, lip-sync, translation and subtitle tools, as the assistant listed them.",
+    "evidence": "tools-new.json lines 605-755: create_production_sound, create_production_clip, join_production_clips ('Joins the finished clips of a plan'), join_videos (`silent`: remove all sound; no audio parameter). The old chats used voices_list and ai_voice_generator_create_audio and found no mux tool."
+   },
+   {
+    "why": "Why did the new build's one workaround, the production pipeline, also fail?",
+    "because": "The assistant tried to wrap the user's clip as a 'card' beat with `picture` = the clip's file_path, so that the join step would add the narrator. The planner rejected the file_path and asked for a URL. This contradicts the beat.picture schema text ('its file_path or URL'). A card also holds a still picture, not a video. So even with a URL this route would not keep 10 s of moving footage. The assistant gave up with 'cannot'.",
+    "evidence": "s3.new.happy.E28b/calls.jsonl line 7: plan_video_production returned ok:false, problem 'beat 1: `picture` must be the picture's URL ... a Magic Hour file_path cannot be downloaded'. tools-new.json line 374: picture description says 'a picture to hold unchanged ... (its file_path or URL)'."
+   },
+   {
+    "why": "Why does the server lack an audio-replace step for user footage?",
+    "because": "Both tool sets are built around generating media. Audio reaches a video only through generation (the video model's own sound, lip-sync, translation) or the production join for generated clips. 'Replace the soundtrack of the user's own video' was never exposed as an operation. This is a missing capability in the MCP server of both builds, not a limit of the generation model or the free plan.",
+    "evidence": "tools-new.json tool set and the assistant's survey in all 3 chats. The brief (E28b.json answer_sheet: 'Remove the original conversation and replace it with narration'; 'do not alter the footage to match the narrator's mouth movements') rules out lip-sync, which is the only existing tool that puts new audio on user video."
+   }
+  ],
+  "axiom": "Neither build exposes a tool that mutes an existing user video and lays a given narration audio track over it with the picture unchanged. Lip-sync is the only tool that puts audio on user footage, and the brief forbids it. So any correct assistant can deliver at most a separate WAV, and the original conversation stays in the only video.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add an audio-replace operation. One option is an `audio` parameter on join_videos, or a new `replace_video_audio(video, audio, mode=replace|mix)` tool, that takes a user video file_path/URL and an audio project id/URL and returns the muxed MP4 with the original track removed. Also make plan_video_production accept a user video file_path (not only a still URL) as a hold-unchanged beat, so join_production_clips can put the narration on it."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.4097732
+}

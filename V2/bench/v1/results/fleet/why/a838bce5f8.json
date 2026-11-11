@@ -1,0 +1,47 @@
+{
+ "id": "a838bce5f8",
+ "key": "must:B11d:Short coherent English caption visibly added",
+ "symptom": "Short coherent English caption visibly added",
+ "item": "B11d",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'short coherent English caption' item not met?",
+    "because": "The caption in the output image is misspelled or has invented words. The text the assistant asked for was correct.",
+    "evidence": "new.stupid grade.json: 'Caption is garbled: Slow Sips, Olw Aarv Warm Hearts'. The output image assets/01-wait_for_image_project.png shows 'Slow Sips, Olw Aarv / Warm Hearts'. old.dumper grade.json: 'Sip slottwy, stay ahile.'"
+   },
+   {
+    "why": "Why is the text wrong when the assistant's request was correct?",
+    "because": "The assistant gave the exact words in the edit_image prompt. The image model drew the letters itself and got them wrong. In both chats the prompt had correct, quoted text.",
+    "evidence": "calls.jsonl edit_image style.prompt. old: 'reading exactly \"Sip slowly, stay awhile.\"'. new: 'spelled exactly: Slow Sips, Warm Hearts'. Both used model flux-2-klein at 640px."
+   },
+   {
+    "why": "Why was flux-2-klein, a model that spells badly, used?",
+    "because": "On the free plan, edit_image offers only cheap diffusion models: flux-2-klein, krea-2, qwen-edit and qwen-image-2.1. The models that render text well (gpt-image-2, nano-banana*, seedream) are listed for creator/pro/business tiers only. The description says nothing about how well any model renders text.",
+    "evidence": "tools-new.json edit_image model description: 'flux-2-klein - from 5 credits/image ... Available for tiers: free, creator, pro, business'. 'gpt-image-2 ... Available for tiers: creator, pro, business'. The same list applies to nano-banana."
+   },
+   {
+    "why": "Why was the bad text not caught and redone before delivery?",
+    "because": "The assistant called fetch_image_download to look at the result, but the call returned nothing. The assistant never saw the image. It delivered the image, claimed the requested caption was on it, and only told the user to check the spelling.",
+    "evidence": "calls.jsonl, both chats: fetch_image_download output \"\" with files []. Final reply: 'I couldn't preview the finished image on my side, so please check that the text is spelled right' (old) and 'I couldn't open a preview on my side' (new)."
+   },
+   {
+    "why": "Why is there no way to put exact text onto an image?",
+    "because": "Neither build has an image tool that draws exact text with code. The new build draws exact words with code only for video cards (plan_video_production background/picture cards). For still images it still sends the words to the generation model. plan_request (new) records exact_words but sends them on to the same edit_image call.",
+    "evidence": "tools-new.json plan_video_production beat.background: 'The card is then drawn by code, colour and words exact, with no generation call' (video only). The new chat's plan_request returned ready:true with exact_words ['Slow Sips, Warm Hearts']. The next call was edit_image with flux-2-klein."
+   }
+  ],
+  "axiom": "The free-plan image edit models (flux-2-klein at 640px) cannot reliably draw text letter by letter. Neither build gives the assistant a way to place exact text with code, or a working preview to check the result and try again.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-drawn text overlay for images, like the exact-word video cards in the new build: a tool, or an edit_image path when plan_request has exact_words, that draws the given string onto the uploaded picture with a font, position and colour. No generation model is used, so spelling is always right. Also make fetch_image_download return the image inline so the assistant can check a generated caption and redo it."
+ },
+ "error": null,
+ "seconds": 59,
+ "usd": 0.6563664
+}

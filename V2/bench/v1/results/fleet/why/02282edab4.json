@@ -1,0 +1,51 @@
+{
+ "id": "02282edab4",
+ "key": "must:F32b:Playable audio 60–120 s, ~90 s",
+ "symptom": "Playable audio 60–120 s, ~90 s",
+ "item": "F32b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Playable audio 60–120 s, ~90 s' marked not met in both new-build chats?",
+    "because": "The grader never got the joined film. It only saw single clips of 13–16 s: 15 s for dumper and 16 s for happy. It judged length from those clips.",
+    "evidence": "dumper grade.json: check 'about 90 s' got '15 s', and the reason says 'Only two 15 s clips were shown (30 s)'. happy grade.json: got '16 s', and the reason says 'Only 29 s of clips (stated ~42 s)'."
+   },
+   {
+    "why": "Why did the grader see only single clips and not the joined file?",
+    "because": "join_videos worked in both chats, but the harness could not download the joined file from the local join server. The download returned 404, so only the per-clip MP4s from wait_for_video_project went to the grader.",
+    "evidence": "dumper calls.jsonl line 20: join_videos returned seconds 90.3, loudness -0.5 dB, and files ['download failed: download 404 http://127.0.0.1:8000/films/193253d9….mp4']. happy calls.jsonl line 18: seconds 42.1, with the same 404 'download failed'."
+   },
+   {
+    "why": "In the dumper chat, was the made output really too short?",
+    "because": "No. All six 15 s clips were made, and the join measured 90.3 s, which is inside 60–120 s. The fail comes only from the missing download.",
+    "evidence": "dumper state.json mediaSeen lists 6 magichour clip URLs plus the joined film. The assistant says it runs 90 seconds and used 2,160 credits. The join output says seconds 90.3."
+   },
+   {
+    "why": "In the happy chat, why was the joined film only 42 s?",
+    "because": "The account ran out of credits after clip 3 of 6. The fourth create_production_clip was refused. The assistant joined the 3 finished clips and told the user that the film was partial.",
+    "evidence": "happy calls.jsonl line 17: approve false, reason 'insufficient credits: this call needs about 150 credits and the account's remaining allowance is lower'. Line 20: 'Your account ran out of credits after 3 of the 6 clips… Credits used: 1,008'."
+   },
+   {
+    "why": "Why did a plan that the tool priced at 2,040 credits run out after 1,008?",
+    "because": "The two chats ran at the same time on the same free-plan account. The dumper chat spent 2,160 credits a few minutes earlier, in the same window, so the happy chat had too little left. This is how the harness allots credits, not a fault of the MCP.",
+    "evidence": "happy calls.jsonl begins at t=1794364127757, and its first clip id is cmwbi62ro… (created 02:31:29). dumper's join is at t=1794364341716, with clip ids cmwbi07si…cmwbi5szi…, made just before happy's clips. Both used ltx-2.5 at about 24 credits/s. plan_video_production estimated 2,040 credits."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Both causes sit in the test harness: (1) its downloader cannot fetch the joined film from 127.0.0.1:8000 (404), and (2) concurrent chats share one credit pool. The MCP tools and the assistant did what they should. The joined length was correct for the clips that existed, and the assistant reported the partial result honestly.",
+    "evidence": "Both join_videos outputs return a valid download_url and correct seconds. The 'files' fields show the harness-side 404. The two new-build chats overlap in time on one account."
+   }
+  ],
+  "axiom": "The benchmark harness causes the fail. Its downloader gets a 404 for the joined film at http://127.0.0.1:8000/films/…, so the grader measures single 15–16 s clips and not the 90.3 s or 42.1 s join. It also runs chats at the same time on one shared free-plan credit pool, so the happy chat ran out of credits after 3 of 6 clips.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "In the harness: download the join_videos download_url while the local join server is still up (or keep its films/ directory up until download), and if the download fails, fail the run loudly instead of grading the per-clip files. Also give each concurrent chat its own credit allowance, or run chats on one account one at a time, so one chat cannot use up another chat's credits."
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 0.5148005999999998
+}

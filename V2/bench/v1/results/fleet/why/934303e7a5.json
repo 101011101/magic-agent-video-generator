@@ -1,0 +1,47 @@
+{
+ "id": "934303e7a5",
+ "key": "must:G35b:Left photo retains brown cabinets, beige tiles, clutter",
+ "symptom": "Left photo retains brown cabinets, beige tiles, clutter",
+ "item": "G35b",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Left photo retains brown cabinets, beige tiles, clutter' not met in 3 chats?",
+    "because": "No delivered image has the untouched original on the left. Both stupid chats delivered a single renovated kitchen with no panels. The dumper chat delivered a split image, but its 'Before' half is also a renovated kitchen.",
+    "evidence": "s4.old.stupid grade.json: 'No left original panel exists.' s4.new.stupid grade.json: 'No left original panel.' s4.new.dumper grade.json: 'Left shows white cabinets, white tiles, clear oak counters; the original look is gone.' The frame s4.new.dumper/assets/01-wait_for_image_project.png shows white cabinets and oak counters under the 'Before' label."
+   },
+   {
+    "why": "Why did the two stupid chats (old and new) make only a single renovated image?",
+    "because": "The simulated user's only message was 'make a pic showing this kitchen renovated using this pic'. It did not mention before/after, a left/right layout, labels, 16:9 or the style. The assistant did exactly what was asked, and the test says it should never ask questions.",
+    "evidence": "chat.json messages[0].text is the same in both s4.old.stupid and s4.new.stupid. The bank holds the full brief ('one 16:9 before-and-after image…'), but the persona gives information only when asked. G35b.json expect.asks = 'never'. In the new build, plan_request returned ready:true with no questions (s4.new.stupid calls.jsonl line 2). The old build made edit_image directly with aspect_ratio 'auto'."
+   },
+   {
+    "why": "Why did the opening message leave out the main requirement of the brief?",
+    "because": "The stupid persona rewrites the brief into a vague first message. That rewrite dropped the before/after comparison, which is the core deliverable. The test also expects the assistant never to ask, so it has no expected path to recover that requirement. The assistant cannot know that a comparison was wanted.",
+    "evidence": "chat.json persona 'stupid' plus bank key 'The request in full…' versus messages[0]. G35b.json turns[0].text has the full requirement, and must_haves[1] requires a left original panel."
+   },
+   {
+    "why": "Why did the dumper chat, which did state the requirement, still get a renovated left panel?",
+    "because": "The assistant asked edit_image (flux-2-klein) to build the whole side-by-side in one generation ('LEFT half: the original kitchen photo exactly as given, unchanged'). An image-edit model re-renders every pixel of the frame, so it renovated both halves. No tool in the set can paste the untouched source next to a generated image.",
+    "evidence": "s4.new.dumper calls.jsonl line 7: edit_image prompt asks for the left half unchanged. The output frame has two renovated halves. The tool enum in tools-new.json plan_request lists only generate/edit/video/audio tools; none of them composites or places images side by side. The assistant itself warned 'check… that the left side still matches your original photo'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Two causes reach their axioms here. In 2 of 3 chats (old and new), the simulated user's opening message dropped the deliverable while the test expects no questions. That is a harness/brief artifact that no tool description can fix. In 1 of 3 chats, the generator cannot keep part of a frame pixel-exact, and the tool set has no compositing tool, so a true before/after cannot be built.",
+    "evidence": "In the stupid chats the requirement never appears in state or calls. In the dumper chat, the requirement was passed correctly and the model still changed the left half."
+   }
+  ],
+  "axiom": "In most failing chats (2 of 3, both builds), the stupid persona's opening message ('make a pic showing this kitchen renovated using this pic') dropped the before/after comparison requirement while the test expects no questions. The assistant could not know that a left original panel was wanted. In the remaining chat, the requirement was passed, but no tool can composite the untouched original, and the edit model re-renders the whole frame.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Harness: make the stupid persona's first message keep the core deliverable (for example 'before and after pic, old one left, new one right'), or score this item for stupid users with asks='allowed'. Separately, for the dumper failure: add a compose/side-by-side tool to the server, or have the edit_image description say that the tool cannot keep part of the image unchanged. The assistant should then deliver the renovated image and tell the user to place it next to the original."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.2674286
+}

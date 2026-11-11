@@ -1,0 +1,130 @@
+# bench/mcp — the MCP baseline: Magic Hour's own MCP, as is, on the same prompts
+
+The user's rule (2026-11-01): "another baseline you should use as the benchmark is just our MCP as is. So, wherever you
+want to use this, let's say ChatGPT, install our MCP and just give it the exact same prompt you give your agent. And
+yours should knock the MCP out of the water every single time. I want to see the differences."
+
+## What runs
+
+`run.mjs` takes every bench v1 item (`bench/v1/items`, the same files the agent is run on) and gives its messages, word
+for word, to an off-the-shelf chat model with Magic Hour's hosted MCP server (`https://mcp.magichour.ai/`, 48 tools)
+connected through OpenAI's remote-MCP tool, and nothing else: no catalogue, no sheet, no planner, no state manager, no
+code tools, no gates. The chat model is the one the agent itself runs on (`lib/llm.js` MODEL), so the comparison is
+between the two systems and not between two models. The same proxy user answers its questions from the same answer
+sheet (and says "yes, go ahead" when it asks for a go), up to three rounds, like `bench/v1/run.mjs`.
+
+The record it writes has the shape `bench/v1/run.mjs` writes, so the same grader (`bench/v1/grade.mjs`), report
+(`report.mjs`) and audit page (`view.mjs`, `serve.mjs`) read it unchanged. Every MCP call (name, arguments, output,
+error) and every gate decision is kept in the record; the finished files are downloaded into
+`sessions/mcp-<prefix>-<id>/assets/`.
+
+## The free plan, emulated
+
+The benchmark runs on free models only. The key in `.env` is a creator account, so the free plan is emulated with
+OpenAI's approval gate: every create call is shown to the runner before it runs and refused, with the reason the API
+would give a free key, when it names a paid model (the free image models are those with `plan: "free"` in
+`lib/models.js`; the free video models are ltx-2.5 and minimax-h3, which the MCP's own description names), a
+resolution above the free plan's (640px images, 480p video), a 4x upscale, or more credits than a free account has
+(400 at signup, `--item-cap`). Read-only tools (guides, waits, fetches, uploads) run without approval. Two things are
+hidden from the model because they would contradict the emulation: the account-info tool (it would say "creator,
+86,000 credits") and the delete tools. Everything else the MCP offers is offered. The system prompt states the plan's
+limits once, the way a connector's setup page would; the user prompt is the item's, untouched.
+
+Attachments: the item's fixtures are uploaded to the account once (`uploads.json`, free) and the user message carries
+each one as `[Attached: name — Magic Hour file_path: …]`, with the picture itself shown to the model; that is what a
+user attaching a file to a chat gets, and what the MCP's tools need.
+
+## Compare
+
+`compare.mjs --mcp <results> --agent <results>[,<results>] [--judge]` puts the two arms side by side per item: the
+prompt, both outputs, both grades, the chains, credits, time, questions (the MCP's approval rounds counted apart), the
+calls the gate refused, and a verdict. With `--judge`, a pairwise vision judge sees both outputs in a fixed random order
+(a follow-up item also sees what each side had made before) and picks one; without a judge, or where one side made
+nothing, the verdict is made-vs-not or the grader's score. It writes `compare.md` (the numbers and the lists), `compare.json`
+and `index.html` (served by `bench/v1/serve.mjs` at `http://localhost:4748/compare-<run>/`). The agent arm is the newest
+record per item across the folders given (`real-1,latest`). `compare.mjs --from <compare-a>,<compare-b> --out <dir>` joins earlier
+comparisons into one long page in the order given, nothing re-judged: `results/compare-all-1/` is the films first, then the 152
+micro items, the MCP's result on the left of each item and the agent's on the right (`http://localhost:4748/compare-all-1/`). Each side
+carries its pathway, collapsed (open all / close all in the header): every step with its inputs, parameters and output; the MCP
+side also every call it made with the full arguments; a film's stages from the run folder (story, roots, screenplay, stills with
+their prompts and attempts, clips with their frames, sound, film), which `film/record.mjs` writes into the record. The join keeps
+the verdicts and re-reads the sides from the records the judge saw; a side re-run since is flagged on the item. `--names "Direct,Chain"`
+names the two sides on the page (the second is the `--mcp` side), so the same tool compares the pipeline's two modes.
+
+## Film briefs
+
+`film/items/` holds briefs in the bench item schema (the economists' podcast the pipeline had already made on the free
+tier, and the live bench's Cabin Coffee ad); `film/agent/` holds the pipeline's finished film as a bench record
+(`film/record.mjs --item I91a --run bench-cabin-10s`), so the pairwise judge sees the pipeline's film next to what the
+MCP makes of the same brief. `run.mjs --items V2/bench/mcp/film/items --groups I` runs the MCP side; `film/drive.sh I46a
+bench-I46a-8s` runs the pipeline side on the free tier at the item's length, handling the gates' stops the way the user
+does by hand (retry the flagged ids once, then accept), every pass in the log.
+
+**The four pairs (2026-11-01, `results/compare-film-1/`):** the MCP wins all four. Economists 30 s: 42 vs 42, the judge
+leans to the MCP's single ltx-2.5 clip on polish (the pipeline's film has garbled table lettering and a duplicated mug;
+neither delivers Leo's lines). Cabin Coffee 10 s: 58 vs 58, the MCP's clip wins on atmosphere; the pipeline's "Wake up
+slow" is exact where the MCP wrote "Cabin Cofee". F-35A 8 s: 29 vs 34; the pipeline's three labels are exact by code
+overlay and its narration is the right English (the grader's transcription of the 8 s mix misheard it), but the
+free-model still shows a distorted jet hanging over the runway; the MCP's minimax clip has a takeoff roll and real
+narration with garbled labels. Seed explainer 8 s: 37 vs 100, clear MCP win, one minimax call. Credits: pipeline 1,719,
+MCP 1,344. On the free tier, for briefs of one scene and under 15 seconds, one well-prompted text-to-video call beats
+the chain of klein stills and pinned clips; the chain's wins are the exact overlays, the narration it controls and the
+gates that stopped it 6 to 8 times per film on flux-2-klein's failures.
+
+## What the MCP arm did on the micro groups (mcp-1)
+
+By the grader: A single images 20/24 pass, B edits 16/26, C faces 8/12, D short video 3/18, E editing the user's video
+0/18 (it said it cannot crop, trim, mix music under a clip or add a voice-over, and did nothing in 11 of 18), F sound
+1/7 (no text-to-speech in the MCP), G composed pieces 3/16, H ads 1/13, J conversation 10/18. It refused all five should-refuse
+items in words (a celebrity's face into an ad, a minor's photo, a trademark), with an alternative offered each time. It asked 13 questions for
+information over 152 items and asked once for a go. It chose qwen-image-2.1 and flux-schnell for images, ltx-2.5 and
+minimax-h3 for video, on its own; the gate refused no call in the micro pass. Tool calls: 83 edit_image, 46
+generate_image, 26 create_video_from_text, 13 create_video_from_image, 8 detect_faces, 6 subtitles, 6 music, 3
+edit_video, 2 face swaps on photos, 2 on video.
+
+## Agent vs MCP on the micro groups (`results/compare-mcp-1/`, 2026-11-01)
+
+Agent records: the newest per item from `real-1` and `latest`. By the grader: agent 90 pass (59%) vs MCP 62 (41%);
+mean 75 vs 61; credits 8,275 vs 10,115; 88 vs 142 minutes. Pairwise: agent 67, MCP 69, 16 ties. By group (agent wins–MCP wins): A single images 7–17, B edits 8–16, C faces 1–7,
+D short video 10–8, E editing the user's video 13–2, F sound 5–1, G composed 8–8, H ads 8–4, J conversation 7–6.
+Read it as: the agent is far ahead on pass rate and on anything that needs a cut, a crop, a mix, a voice, a chain or a
+refusal; on a single picture both pass and the judge prefers the MCP's, which the chat model made on qwen-image-2.1
+(67 of its image calls) where the agent's free tier paints on flux-2-klein.
+
+## Runs
+
+| run | items | spend | notes |
+|---|---|---|---|
+| mcp-smoke | 3 | 35 | the first pass through the plumbing; A01d pass, B07a and J49a fail |
+| mcp-denytest | 1 | 0 | the gate with a 3-credit cap: the call refused, the model reports it and makes nothing |
+| mcp-1 | 152 | 10,115 | the micro groups A–H and J, 4 at a time, 142 min of item time; 62 pass (41%), mean 60; graded with `bench/v1/grade.mjs`, report in `results/mcp-1/report.md`, audit page `results/mcp-1/index.html`; the first pass stopped at a 6,000 cap after 123 items and the last 29 (H, J) ran in a second pass with the same prefix |
+| mcp-film-2 | 4 | 984 | the bench's film briefs I45a–I48a: one text-to-video call each (minimax-h3 or ltx-2.5, 8–15 s, 480p); I47a and I48a pass, I45a and I46a fail (garbled labels, wrong aircraft; dialogue where silence was asked) |
+| mcp-film-1 | 2 | 960 | the economists' podcast (30 s, ltx-2.5, 720 credits; the first call was refused by the API for a prompt over 2,000 characters) and Cabin Coffee (10 s, ltx-2.5, 240; "Cabin Cofee" on the end card) |
+
+## The direct arms (2026-11-01, T-058)
+
+`pipeline.mjs --until film` now defaults to direct generation (one text-to-video generation with the model's own audio,
+or a few continuing from each other's last frame); `--chain` runs the keyframe chain. The film driver passes the flags:
+`sh V2/bench/mcp/film/drive.sh I92a direct3-I92a "--clips direct --model minimax-h3"`. Arms under `film/`: `agent` (the
+chain), `direct-v1` (the first planner, from the story's rewrite), `direct` (the planner from the brief), `direct-mm`
+(the citric acid cycle on minimax in two segments, last frame fed forward), `direct-anchors` (the planner names the
+hard constraints, a lettered diagram painted on qwen-image-2.1 and attached as `@cycle`). Items added: `I92a` (a 60 s
+explainer, the citric acid cycle), `I93a` (a 60 s single take the free plan makes in two generations: continuity).
+MCP runs: `results/mcp-film-3` (I92a), `mcp-film-4` (I93a). Pages: `compare-film-direct` (direct vs MCP),
+`compare-film-chain-direct` (direct vs chain, `--names "Direct,Chain"`), `compare-all-1` (direct films, chain films,
+micro tasks). Rules learned: a reference is bound by its `@name` in the prompt (422 otherwise); the planner must plan
+from the brief, not the story's rewrite; the prompt is capped at 2,000 characters; the minimax-h3 hand-off between
+segments is near exact.
+
+## V4 against the MCP, one page (2026-11-03, `results/v4-report/`)
+
+`v4-report.mjs` reads the other session's V4 runs (`V4/runs/dry-*`, `full-*`, the items and verdicts) and the MCP runs on the
+same briefs (`results/mcp-intent`, vague briefs with the gate at 0 credits so the attempted call is the record; `results/mcp-v4`,
+the full briefs) and writes one page in three parts, the MCP on the left of every pair: (1) the conversation on thirteen vague
+briefs, both threads side by side, each side's call marked parameter by parameter against the answer sheet (the MCP asked on 3 of
+13 and guessed the rest, 8 parameters wrong; V4 asked on 9 of 13 by rule, 4 wrong, all four the shape of an edit or an animation
+its sheet has no field for); (2) the zoo ad, one 45-second generation against four joined, both films with the audio transcribed
+(the MCP's narration stops at 9 s, V4's TTS runs to 39 s) and measured, the frames at the same seconds, the frame-to-frame
+similarity with the joins marked (the MCP's scene changes are dissolves the model made itself, V4's are hard joins at 15, 30 and
+40 s), the end cards (garbled against exact), the prompts; (3) the thirteen full briefs side by side with the recorded verdicts
+(V4 4, MCP 7, tie 1). V4's outputs are copied into `V2/sessions/v4-report/` (gitignored) so `serve.mjs` serves both sides.

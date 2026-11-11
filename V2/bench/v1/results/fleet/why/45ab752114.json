@@ -1,0 +1,47 @@
+{
+ "id": "45ab752114",
+ "key": "must:D19c:Hands press along the crease after folding",
+ "symptom": "Hands press along the crease after folding",
+ "item": "D19c",
+ "n": 5,
+ "builds": {
+  "new": 3,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Hands press along the crease after folding' not met?",
+    "because": "In the output clips the hands only rest flat on the paper, or claw at its edge. No hand slides or presses along a fold line, and in most clips no clean half fold ever forms, so there is no crease to press.",
+    "evidence": "grade.json: old.happy says 'A hand rests flat on the paper in frame 3 ... end state shows no clean fold'. new.happy says 'hands rest flat below the crease line. They do not press or slide along it'. new.dumper says 'hands rest on the paper, but nothing shows a pressing motion along the crease. The right hand claws at the edge'."
+   },
+   {
+    "why": "Why did the clips show no fold and no pressing, even though the user asked for both?",
+    "because": "The step before the press never happens. The sheet morphs, resets or swaps for another shape instead of being folded in half. The press is the final step in a chain of contact actions, and the model never reaches it.",
+    "evidence": "grade.json: the fold item is 'no' and the 'single consistent object' item is 'no' in old.happy, new.happy and new.dumper ('sheet changes shape and size ... appears to unfold or reset', 'looks like a cut or replacement', 'reads as morphing')."
+   },
+   {
+    "why": "Was the assistant's prompt to blame?",
+    "because": "No, in most chats. In old.happy, new.happy and new.dumper the assistant sent all the brief's details: 16:9, 8 s, overhead, a plain blue sheet, fold in half, then 'press and run their fingers along the crease/fold to flatten'. The old.stupid prompt was weaker: a vague user led to a white sheet, 5 s and only 'creasing the folds neatly'. That clip still fails for the same model reason.",
+    "evidence": "calls.jsonl create_video_from_text args: old.happy 'fold a plain blue sheet of paper in half ... then press and run their fingers along the crease'; new.dumper 'bringing one edge over to meet the other, then press and run their fingers along the fold'; new.happy 'run their fingers along the fold to press the crease flat'; old.stupid 'folding a sheet of white paper ... creasing the folds neatly'."
+   },
+   {
+    "why": "Why did a correct prompt still give a clip without the action?",
+    "because": "Every chat ran on ltx-2.5 at 480p, a free-plan text-to-video model. This model cannot render a multi-step hand-paper task that needs the object to stay consistent: fold in half, then press the crease. It gives plausible hands, but the paper does not follow a real fold.",
+    "evidence": "calls.jsonl: in all four chats the model was 'ltx-2.5' and the resolution '480p'. The old builds first sent model 'default' and got this rejection: 'the free plan's video models are ltx-2.5 and minimax-h3'. The hand-anatomy item is 'yes' in all graded chats, so the model draws hands well but fails at the paper action."
+   },
+   {
+    "why": "Why is this not a defect of either MCP build?",
+    "because": "Both builds pass the requested arguments through without change, and both deliver a valid 8 s 16:9 silent file. The failure is in what the generation model draws. The free plan limits the choice to two low-tier models, and no tool argument can force an action to complete.",
+    "evidence": "The grade.json automatic checks pass in both builds (aspect 16:9, about 8 s, silent, file present). Old and new fail the same way with the same model, which matches the build split new:3 / old:2."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) cannot reliably render a finished multi-step hand-object action. It does not fold a sheet in half and then press along the crease, so the paper morphs or resets and the hands only rest on it. This is a limit of the generation model, not of the prompts or the tools.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "none: inherent. The only partial step is a retry with the other free model, minimax-h3. A shorter, simpler action is not an option, because the brief requires the press step."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2359234
+}

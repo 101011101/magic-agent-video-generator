@@ -1,0 +1,198 @@
+{
+  "id": "B12b",
+  "item": {
+    "id": "B12b",
+    "case": 12,
+    "case_name": "Resize for platforms",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Portrait Photo Into Story Frame",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "9:16",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg"
+        ],
+        "text": "Can you make this fit a 9:16 Instagram story? Keep all my hair and shoulders—use a blurred copy of the photo behind it if needed. No text."
+      }
+    ],
+    "tests": "Tests creating a vertical story from a square portrait without clipping the person or distorting the photo.",
+    "answer_sheet": {
+      "Source and person": "The woman in portrait-woman.jpg.",
+      "Platform and size": "Instagram story, 9:16; 360 × 640 is fine.",
+      "Framing": "Keep all the hair and shoulders visible in the original photo.",
+      "Filling extra space": "A blurred copy of the same photo behind the intact portrait is fine.",
+      "Text and retouching": "No text or retouching; preserve my appearance."
+    },
+    "must_haves": [
+      "The delivered image has a 9:16 vertical frame.",
+      "The sharp foreground portrait shows the same woman, curly hair and sweater as the attachment.",
+      "No hair or shoulder area visible in the source is lost.",
+      "The portrait is not stretched or squeezed.",
+      "Any added background space uses a blurred version of the source photo, with no text."
+    ]
+  },
+  "session": "mcp-b1-dry-new-happy-B12b",
+  "sessionDir": "sessions/mcp-b1-dry-new-happy-B12b",
+  "baseline": "mcp",
+  "provider": "anthropic",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you make this fit a 9:16 Instagram story? Keep all my hair and shoulders—use a blurred copy of the photo behind it if needed. No text.",
+      "materials": [
+        "portrait-woman.jpg"
+      ],
+      "dialog": [],
+      "agent": "I couldn't make the story version. Your Magic Hour account doesn't have enough credits, so the edit was refused and nothing was created.\n\nI'd already chosen the cheapest setting your free plan allows: the flux-2-klein model at 640px, one image, about 5 credits. So there's no cheaper way to do it on Magic Hour.\n\n**To get it made:**\n- **Add credits:** if you top up your account, I'll run the same edit. I'll keep the whole photo with all your hair and shoulders, put a blurred, enlarged copy behind it at the top and bottom, and add no text.\n- **Do it yourself for free:** you don't need AI for this. In Canva, CapCut or the Instagram story editor:\n  1. Make a 1080×1920 canvas.\n  2. Add your photo, stretch it to fill the whole canvas and blur it heavily. This is the background.\n  3. Add the photo again on top, 1080 px wide and centred, without cropping it.\n\nThe second way gives you exactly what you described and doesn't change your face at all. An AI edit might change it slightly.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you make this fit a 9:16 Instagram story? Keep all my hair and shoulders—use a blurred copy of the photo behind it if needed. No text.\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"value\":\"the attached portrait of the woman in the park\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"reframe to a 9:16 vertical story; place the full original photo centered, with a blurred, enlarged copy of the same photo filling the top and bottom\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"all of her hair and shoulders, her face and sweater unchanged, nothing cropped\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"user\"}],\"attachments\":[{\"name\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/1ccc38a9-35c4-483d-a598-aa0d308acd10-image-0.jpg\",\"kind\":\"image\",\"aspect\":\"1:1\",\"role\":\"person\"}]}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"reframe to a 9:16 vertical story; place the full original photo centered, with a blurred, enlarged copy of the same photo filling the top and bottom\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"all of her hair and shoulders, her face and sweater unchanged, nothing cropped\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"user\",\"from\":\"the user asked for no text\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/1ccc38a9-35c4-483d-a598-aa0d308acd10-image-0.jpg"
+              ]
+            },
+            "aspect_ratio": "9:16",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "image_count": 1,
+            "style": {
+              "prompt": "Reframe this square photo into a 9:16 vertical Instagram story. Place the entire original photo, unchanged and uncropped, centered in the frame at full width, so all of her curly hair and both shoulders and the sweater remain fully visible. Fill the empty top and bottom areas with a heavily blurred, enlarged copy of the same photo (soft green park bokeh). Do not alter her face, hair, expression or clothing. No text, no letters, no logos, no borders."
+            },
+            "name": "Instagram story 9:16 portrait"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "thought",
+          "text": "I'm turning a square photo into a 9:16 frame by putting the full original over a blurred, enlarged copy of itself, keeping the woman's hair, shoulders and face unchanged. The edit_image tool is the right call with aspect ratio 9:16, but the tool description says to call plan_request first, so I'll do that before editing.\n\n"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you make this fit a 9:16 Instagram story? Keep all my hair and shoulders—use a blurred copy of the photo behind it if needed. No text.\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"value\":\"the attached portrait of the woman in the park\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"reframe to a 9:16 vertical story; place the full original photo centered, with a blurred, enlarged copy of the same photo filling the top and bottom\",\"source\":\"user\"},{\"name\":\"keep\",\"value\":\"all of her hair and shoulders, her face and sweater unchanged, nothing cropped\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"user\"}],\"attachments\":[{\"name\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/1ccc38a9-35c4-483d-a598-aa0d308acd10-image-0.jpg\",\"kind\":\"image\",\"aspect\":\"1:1\",\"role\":\"person\"}]}",
+          "result": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"reframe to a 9:16 vertical story; place the full original photo centered, with a blurred, enlarged copy of the same photo filling the top and bottom\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"all of her hair and shoulders, her face and sweater unchanged, nothing cropped\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"9:16\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"user\",\"from\":\"the user asked for no text\"}],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/1ccc38a9-35c4-483d-a598-aa0d308acd10-image-0.jpg\"]},\"aspect_ratio\":\"9:16\",\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"image_count\":1,\"style\":{\"prompt\":\"Reframe this square photo into a 9:16 vertical Instagram story. Place the entire original photo, unchanged and uncropped, centered in the frame at full width, so all of her curly hair and both shoulders and the sweater remain fully visible. Fill the empty top and bottom areas with a heavily blurred, enlarged copy of the same photo (soft green park bokeh). Do not alter her face, hair, expression or clothing. No text, no letters, no logos, no borders.\"},\"name\":\"Instagram story 9:16 portrait\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "thought",
+          "text": "I'm out of credits, so I can't run the image edit. The cheapest model, flux-2-klein at 5 credits, was already the one I'd have used. I'll lay out the options: do the edit locally in any image editor, or top up credits. I can also give brief step-by-step instructions for doing it by hand.\n\n"
+        },
+        {
+          "type": "said",
+          "text": "I couldn't make the story version. Your Magic Hour account doesn't have enough credits, so the edit was refused and nothing was created.\n\nI'd already chosen the cheapest setting your free plan allows: the flux-2-klein model at 640px, one image, about 5 credits. So there's no cheaper way to do it on Magic Hour.\n\n**To get it made:**\n- **Add credits:** if you top up your account, I'll run the same edit. I'll keep the whole photo with all your hair and shoulders, put a blurred, enlarged copy behind it at the top and bottom, and add no text.\n- **Do it yourself for free:** you don't need AI for this. In Canva, CapCut or the Instagram story editor:\n  1. Make a 1080×1920 canvas.\n  2. Add your photo, stretch it to fill the whole canvas and blur it heavily. This is the background.\n  3. Add the photo again on top, 1080 px wide and centred, without cropping it.\n\nThe second way gives you exactly what you described and doesn't change your face at all. An AI edit might change it slightly."
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn't make the story version. Your Magic Hour account doesn't have enough credits, so the edit was refused and nothing was created.\n\nI'd already chosen the cheapest setting your free plan allows: the flux-2-klein model at 640px, one image, about 5 credits. So there's no cheaper way to do it on Magic Hour.\n\n**To get it made:**\n- **Add credits:** if you top up your account, I'll run the same ed",
+        "refuse": "",
+        "tier_move": "I couldn't make the story version. Your Magic Hour account doesn't have enough credits, so the edit was refused and nothing was created.\n\nI'd already chosen the cheapest setting your free plan allows: the flux-2-klein model at 640px, one image, about 5 credits. So there's no cheaper way to do it on Magic Hour.\n\n**To get it made:**\n- **Add credits:** if you top up your account, I'll run the same ed",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [
+              "portrait-woman.jpg"
+            ],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 23
+    }
+  ],
+  "started": "2026-11-11T00:48:29.257Z",
+  "persona": "happy",
+  "opening": {
+    "text": "Can you make this fit a 9:16 Instagram story? Keep all my hair and shoulders—use a blurred copy of the photo behind it if needed. No text.",
+    "as_written": true
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 23,
+  "usage": {
+    "responses": 3,
+    "input": 161059,
+    "output": 1492,
+    "reasoning": 0,
+    "cached": 106755
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "http://127.0.0.1:8772/",
+    "local": true,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "B12b.trace.json"
+}

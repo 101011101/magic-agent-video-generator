@@ -1,0 +1,52 @@
+{
+ "id": "a5955645c1",
+ "key": "must:A05a:Plain light grey background",
+ "symptom": "Plain light grey background",
+ "item": "A05a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'Plain light grey background' item not met?",
+    "because": "Both delivered headshots show a blurred office with windows and plants behind the woman, not a plain grey backdrop.",
+    "evidence": "s1.new.stupid.A05a/grade.json: 'The background is an office with windows and plants, blurred, not plain grey' (major fault). The old chat has the same failure on the same item."
+   },
+   {
+    "why": "Why did the generator draw an office background?",
+    "because": "The assistant called generate_headshot with only the image path. It sent no style or background prompt, so the tool used its default 'professional' style, and that default puts an office behind the person.",
+    "evidence": "calls.jsonl in both chats: generate_headshot args = {assets:{image_file_path:...}} and nothing else. The final replies say 'using its default professional style'."
+   },
+   {
+    "why": "Why did the assistant send no background instruction?",
+    "because": "The user's only message did not ask for a grey background or a navy blazer. It said only 'can you make this pic into a headshot'.",
+    "evidence": "s1.old.stupid.A05a/chat.json messages[0].text = 'can you make this pic into a headshot'. The brief in A05a.json turns[0] says '...A navy blazer and a plain light grey background, please.'"
+   },
+   {
+    "why": "Why was the requirement missing from the user's message?",
+    "because": "The harness gives the stupid persona the full request only as a 'knowledge bank' and has it write a short, vague opener. The persona shares bank facts only when asked. The opener it wrote dropped two must-haves from the brief.",
+    "evidence": "chat.json persona.reply: 'answer it from your knowledge bank... casually and briefly'. bank['Clothing and background'] = 'Navy blazer and plain light grey background.' This fact never reached the assistant."
+   },
+   {
+    "why": "Why did the assistant not ask about the background before it generated?",
+    "because": "The request looked complete for a one-step headshot tool, and the test expects 'asks: never'. So nothing pushed the assistant to ask about a look the user had not mentioned. It went straight to the default style in both builds.",
+    "evidence": "A05a.json expect.asks = 'never'. Both calls.jsonl files go straight from begin to generate_headshot with no question turn. The old and new runs behave the same."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The grader checks a must-have that the simulated user never said. A plain grey background is not something any assistant could infer from 'make this pic into a headshot'. The failure comes from the test harness (the persona's opener drops brief content while the test also expects no questions). It does not come from either MCP build.",
+    "evidence": "The checklist item comes from A05a.json must_haves[2], but the conversation in chat.json carries none of it. The happy-persona runs of the same item get the full brief text."
+   }
+  ],
+  "axiom": "The harness has the stupid persona rewrite the brief into a vague opener ('can you make this pic into a headshot') that drops the must-have 'plain light grey background'. The test also expects the assistant never to ask questions. The grader then scores the result against a requirement that never reached the assistant.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the harness always keep the brief's explicit requirements (clothing, background, aspect) in the stupid persona's first message, so it can be vague in tone but not drop facts. Or, for stupid-persona runs, grade only the must-haves that appear in the conversation."
+ },
+ "error": null,
+ "seconds": 27,
+ "usd": 0.13615739999999998
+}

@@ -1,0 +1,47 @@
+{
+ "id": "52ca649264",
+ "key": "must:D19c:Both hands and entire blue sheet visible on wooden table",
+ "symptom": "Both hands and entire blue sheet visible on wooden table",
+ "item": "D19c",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Both hands and entire blue sheet visible on wooden table' not met in 3 chats?",
+    "because": "In both stupid chats the video shows a WHITE sheet, so the 'blue' part fails no matter how the framing looks. In the happy chat the sheet was blue, but the model cropped its bottom corner and part of the left hand.",
+    "evidence": "s3.new.stupid grade.json: 'Sheet is white, not blue; hands visible on wood table, sheet fully visible.' s3.old.stupid grade.json: 'Paper is white, not blue; sheet partly cropped'. s3.old.happy grade.json: 'The sheet's bottom corner runs off the bottom of the frame… left hand is partly cropped.'"
+   },
+   {
+    "why": "Why is the paper white in the stupid chats?",
+    "because": "The assistant wrote 'white paper' into the generation prompt itself. The model rendered what it was told.",
+    "evidence": "s3.old.stupid calls.jsonl: style.prompt 'hands carefully folding a sheet of white paper on a wooden table'. s3.new.stupid calls.jsonl: 'a sheet of plain white paper on a wooden table'."
+   },
+   {
+    "why": "Why did the assistant pick white instead of blue?",
+    "because": "The user never said 'blue'. The stupid persona's only opening message was 'make a video of someone folding paper', so the assistant filled the missing colour with the usual default, white.",
+    "evidence": "s3.new.stupid chat.json messages[0]: 'make a video of someone folding paper'. The bank has 'plain blue sheet', but the persona answers only the questions it is asked. s3.old.stupid state.json: no question was asked before delivery."
+   },
+   {
+    "why": "Why did no question bring out the colour and the framing?",
+    "because": "Old build: the assistant generated at once without asking anything. New build: plan_request asked only for seconds, aspect, sound and exact_words. Its question set has no slot for the subject's visual details (colour, overhead view, whole sheet in frame), so the user said 'blue' and 'overhead' nowhere.",
+    "evidence": "s3.new.stupid calls.jsonl: plan_request questions were 'How long', 'Where will this be shown', 'sound', 'Should any words appear'. It returned ready:true with only subject='someone folding paper'. The test has expect.asks='never', so asking is not expected."
+   },
+   {
+    "why": "Why does the checklist still need blue when the user never asked for it?",
+    "because": "The grader scores every chat against the must_haves from the full brief, whatever the persona actually said. For the stupid persona, the item depends on facts that only the hidden bank holds. The grader itself notes this.",
+    "evidence": "D19c.json must_haves[0] says 'blue sheet', and the same list is used for all personas. s3.new.stupid grade.json fault: 'Paper is white, not blue as the must-haves require (though the user only asked for paper)'."
+   }
+  ],
+  "axiom": "The grader checks the stupid-persona chats against must-haves from the full brief ('blue', 'overhead', 'whole sheet'), but the vague user never said them. The assistant cannot honor the colour unless it guesses it. This is a grader/harness artifact and causes 2 of the 3 failures, one in each build. The third failure (happy, old build) is a separate generation-model limit: the prompt said 'Both hands and the entire blue sheet stay fully in frame', and LTX-2.5 at 480p still cropped the sheet and a hand.",
+  "category": "grader_artifact",
+  "builds": "both",
+  "fix": "In the grader, score only the must-have details that reached the transcript. For example, for persona≠happy/dumper, drop or mark N/A each must-have attribute (here 'blue') that no user message states. As a secondary fix, the assistant should not add details the user did not give (write 'a sheet of paper', not 'white paper')."
+ },
+ "error": null,
+ "seconds": 34,
+ "usd": 0.24126860000000003
+}

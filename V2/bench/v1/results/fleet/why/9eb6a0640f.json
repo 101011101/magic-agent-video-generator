@@ -1,0 +1,47 @@
+{
+ "id": "9eb6a0640f",
+ "key": "must:I46c:Three scenes in order, ~3s each: Earth, Jupiter, Saturn",
+ "symptom": "Three scenes in order, ~3s each: Earth, Jupiter, Saturn",
+ "item": "I46c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'three scenes in order: Earth, Jupiter, Saturn' not met?",
+    "because": "Neither graded output showed a real Saturn scene. In the old chat the last third is still Jupiter, now with rings added. In the new chat the grader saw only the Earth and Jupiter clips.",
+    "evidence": "s5.old.happy.I46c/grade.json: 'no true Saturn scene; frame at 8.6s still shows Jupiter with rings. Transitions are blended', plus the fault 'A ringed Jupiter appears at the end, with a second ringed planet'. s5.new.dumper.I46c/grade.json: 'Only Earth and Jupiter clips are available. No Saturn scene was supplied'."
+   },
+   {
+    "why": "Why did the old chat end on a ringed Jupiter instead of Saturn?",
+    "because": "The assistant asked for all three scenes in ONE 9-second create_video_from_text call on ltx-2.5. One prompt held 'three equal 3-second scenes with hard cuts', Scene 1 (0-3s), Scene 2 (3-6s) and Scene 3 (6-9s). The model made one continuous shot. It blended Jupiter into the Saturn part instead of cutting to a new scene.",
+    "evidence": "s5.old.happy.I46c/calls.jsonl line 2: a single create_video_from_text call (end_seconds 9, model ltx-2.5, prompt with 'Scene 1 (0-3s)… Scene 2 (3-6s)… Scene 3 (6-9s)'). There is no other generation call."
+   },
+   {
+    "why": "Why did the assistant put three scenes in one generation in the old build?",
+    "because": "The old tool list has no planner and no join tool. A single text-to-video call is the obvious path, and nothing told the assistant that one ltx-2.5 clip cannot do timed hard cuts. The new build has plan_video_production, which splits the beats into separate clips, plus join_production_clips.",
+    "evidence": "tools-old.json starts with get_workflow_guide and upload_chatgpt_image and has no plan or join tool. s5.new.dumper.I46c/calls.jsonl lines 2-3: plan_video_production returns 3 clips of 3 s each and the join step [1,2,3]."
+   },
+   {
+    "why": "Why did the new chat still fail, when it did make a separate Saturn clip?",
+    "because": "The new build did make clip 3, and it joined all three into a 9.1 s film. But the joined film URL is http://127.0.0.1:8000/films/…mp4 and the harness got a 404 when it tried to download it. So the grader got only the separate wait_for_video_project assets. It graded 'about 9 s' as '3 s', ran black-frame checks only on 01 and 02, and described only the Earth and Jupiter frames.",
+    "evidence": "s5.new.dumper.I46c/calls.jsonl line 6: clip 3 is created (cmwbi2fe604ufka010mxcosm4). Line 9: it completes, with asset 03. Line 10: join returns 9.1 s, but files says 'download failed: download 404 http://127.0.0.1:8000/films/…'. grade.json: 'about 9 s' got '3 s'; black-frame checks only for 01 and 02."
+   },
+   {
+    "why": "Why can one ltx-2.5 generation not make three timed scenes?",
+    "because": "A single text-to-video generation makes one continuous shot. It does not obey per-second scene timing or hard cuts, so later subjects morph into earlier ones. This is a property of the generation model.",
+    "evidence": "Old grade: 'Transitions are blended', 'Jupiter … has rings drawn on it and there is a second ring-bearing planet'. The new plan's advice also warns that chained clips keep the earlier place ('last-frame-keeps-place'), which shows the same continuity bias in the model."
+   }
+  ],
+  "axiom": "ltx-2.5 (the free-plan video model) makes one continuous shot for each generation. It cannot do timed hard cuts between three different planets in a single 9 s clip, so 'Saturn' becomes a ringed Jupiter. In the new build the split-clip approach would avoid this, but a harness defect hid the Saturn clip: the joined film on 127.0.0.1 gave a 404, and the grader saw only clips 1-2.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Old build: when a request names several timed scenes, steer the assistant to make one clip per scene and join them. For example, add a line to the create_video_from_text description: 'one call = one continuous shot; for multiple scenes, generate each separately and join'. Better, ship the new plan_video_production/join_production_clips tools. Harness, for the new build: make the joined film URL downloadable (serve it at a host the grader can reach, or copy the local file into assets) so the grader judges the 9 s film. At minimum, make sure all three clip assets go to the judge."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.35032179999999996
+}

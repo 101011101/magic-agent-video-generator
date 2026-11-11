@@ -1,0 +1,130 @@
+{
+  "video": {
+    "model": "wan-3.0",
+    "resolution": "720p",
+    "end_seconds": 5,
+    "audio": false
+  },
+  "steps": [
+    {
+      "name": "clip1",
+      "reused_from": "test-A/clip1.mp4",
+      "prompt": "She walks slowly toward the camera along the waterline, coat moving in the wind. Static camera. Gentle waves in the background.",
+      "credits": 0
+    },
+    {
+      "name": "clip2",
+      "reused_from": "test-A/clip2.mp4",
+      "prompt": "She stops, kneels down on the wet sand, and picks up a small glowing amber spiral shell, holding it in both hands. Static camera.",
+      "credits": 0
+    },
+    {
+      "name": "clip3",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus C clip3",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "She stands up slowly, still holding the glowing shell, and looks toward the lighthouse. Static camera."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/6438fe0c-a95a-43b9-8456-6f2688c2093c-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 99,
+      "output": "clip3.mp4",
+      "ssim_first_vs_start": 0.992
+    },
+    {
+      "name": "clip4",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus C clip4",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "She turns and walks away from the camera along the shore toward the lighthouse. Static camera."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/7334a1c7-cec2-44c4-9e21-efdd0b3bc223-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 106,
+      "output": "clip4.mp4",
+      "ssim_first_vs_start": 0.991
+    },
+    {
+      "name": "cut frame",
+      "endpoint": "/v1/ai-image-editor",
+      "request": {
+        "name": "litmus C cut frame",
+        "image_count": 1,
+        "model": "nano-banana-pro",
+        "aspect_ratio": "16:9",
+        "resolution": "2k",
+        "style": {
+          "prompt": "The same woman: grey hair in a bun, long dark wool coat, same face. New place: inside the lantern room at the top of the lighthouse at night. Warm lamp light, a large brass Fresnel lens behind her, dark sea through the windows. She holds the small glowing amber spiral shell. Painterly melancholy oil-painting style, 16:9 medium shot."
+        },
+        "assets": {
+          "image_file_paths": [
+            "api-assets/cmsla3fmt01cnio0zhjlc2wsv/cdc6410a-ff2e-4956-9bd8-aa1a9c1e2b4b-image-0.png"
+          ]
+        }
+      },
+      "credits": 200,
+      "seconds": 39,
+      "output": "cut-start.png"
+    },
+    {
+      "name": "clip5 (after cut)",
+      "endpoint": "/v1/image-to-video",
+      "request": {
+        "name": "litmus C clip5",
+        "model": "wan-3.0",
+        "resolution": "720p",
+        "end_seconds": 5,
+        "audio": false,
+        "style": {
+          "prompt": "She places the glowing shell on the windowsill and looks out at the dark sea. Static camera."
+        },
+        "assets": {
+          "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/d6434979-ec78-4bcf-bcc8-e25271318e5f-image-0.png"
+        }
+      },
+      "credits": 480,
+      "seconds": 104,
+      "output": "clip5.mp4",
+      "ssim_first_vs_start": 0.99
+    }
+  ],
+  "seams": [
+    {
+      "from": "clip1",
+      "to": "clip2",
+      "ssim_last_vs_first": 0.992
+    },
+    {
+      "from": "clip2",
+      "to": "clip3",
+      "ssim_last_vs_first": 0.992
+    },
+    {
+      "from": "clip3",
+      "to": "clip4",
+      "ssim_last_vs_first": 0.991
+    },
+    {
+      "from": "clip4",
+      "to": "clip5",
+      "ssim_last_vs_first": 0.201
+    }
+  ],
+  "total_credits": 1640
+}

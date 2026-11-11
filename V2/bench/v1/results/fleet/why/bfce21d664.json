@@ -1,0 +1,47 @@
+{
+ "id": "bfce21d664",
+ "key": "must:J55a:A tiny robot is visibly present.",
+ "symptom": "A tiny robot is visibly present.",
+ "item": "J55a",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'A tiny robot is visibly present' not met?",
+    "because": "No video or image was made, so the grader had nothing to look at. Every must-have failed for the same reason.",
+    "evidence": "s2r.old.happy.J55a/grade.json: check 'something was made' pass=false, got 'no file'. The robot item has met='no' with why 'Nothing was generated, so no robot is visible.'"
+   },
+   {
+    "why": "Why was no video made?",
+    "because": "The server refused every generation call before any job started. Nothing reached the generation model.",
+    "evidence": "In all three calls.jsonl files (old.happy, old.dumper, new.stupid), every create_video_from_text call has approve:false and files are empty. The chats end with kind 'cannot'."
+   },
+   {
+    "why": "Why did the server refuse the calls?",
+    "because": "In the old build, the first call used model 'default', which the free plan does not allow. The assistant then fixed the call to ltx-2.5 at 480p. That valid call was refused for credits: 'needs about 144 credits and 0 remain on the account'. The new build gave the same credit refusal on its first real call.",
+    "evidence": "old.happy and old.dumper calls.jsonl, line 2: reason 'model \"default\" is not available on the free plan'. Line 3: reason 'insufficient credits: this call needs about 144 credits and 0 remain'. new.stupid calls.jsonl, line 12: the same credit reason for ltx-2.5/480p/6s."
+   },
+   {
+    "why": "Was the credit refusal caused by something the assistant chose (too long, too high a resolution, the wrong model)?",
+    "because": "No. The final calls already used the cheapest valid free-plan setting for the 6 seconds the brief requires (ltx-2.5, 480p). The account balance was 0, so even a 1-second clip (about 24 credits) would have failed. No choice the assistant made in either build could have produced output.",
+    "evidence": "new.stupid calls.jsonl, line 14: the assistant says it costs 'about 24 credits per second'. All calls report '0 remain on the account'. J55a.json spec requires seconds=6."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "Both builds' chats ran on the same benchmark free-plan account within about 2.5 minutes of each other. All of them saw a balance of 0, so the account was already empty, probably drained by earlier fleet chats. The test harness did not refill the account and did not give each chat a funded account. This is a defect of the test setup, not of the MCP tools or the model.",
+    "evidence": "Timestamps: new.stupid at t=1794364455228, old.dumper at t=1794364542888, old.happy at t=1794364583068. All report 0 remaining credits. No call in any of these chats spent credits."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits when these chats ran, so the server refused every generation call in both builds. No output existed for the grader to check. This is a harness defect: the account was not funded or reset. It is not a tool, model or assistant failure.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the harness check the account's credit balance before each chat, and refill or reset the free-plan test account (or give each chat its own funded account). Mark chats that end with 'insufficient credits … 0 remain' as harness errors, and re-run them instead of grading them as must-have failures."
+ },
+ "error": null,
+ "seconds": 23,
+ "usd": 0.1052366
+}

@@ -1,0 +1,195 @@
+{
+  "id": "E26b",
+  "item": {
+    "id": "E26b",
+    "case": 26,
+    "case_name": "Trim to the best part",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "either",
+      "asks_about": "What the user considers boring, or whether to prioritize action versus cockpit dialogue.",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Cut Out the Boring Parts",
+    "sub": "b",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 8,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "jet-30s.mp4"
+        ],
+        "text": "Cut the boring parts out of this. Just a quick 8-second version."
+      }
+    ],
+    "tests": "Tests sensible editing under a vague interest criterion, producing a short source-faithful highlight without requiring user-supplied timestamps.",
+    "answer_sheet": {
+      "Which parts are boring, and what should be kept?": "your call",
+      "Prioritize jet action or cockpit dialogue?": "your call",
+      "Length": "8 seconds.",
+      "Continuous excerpt or several cuts?": "your call",
+      "Sound": "Keep the original sound with the footage you use.",
+      "Framing, captions, and effects": "Keep the original framing. No captions or extra effects."
+    },
+    "must_haves": [
+      "One playable video lasts 8 seconds, within one frame of tolerance.",
+      "All footage comes from jet-30s.mp4, without generated replacement scenes or speed changes.",
+      "The edit favors visible action or meaningful cockpit interaction over inactive lead-ins, pauses, or repetitive footage.",
+      "Any cuts preserve understandable action and do not leave an included spoken line conspicuously chopped mid-word.",
+      "Original audio accompanies the retained footage in sync, with no added narration, music, or text."
+    ]
+  },
+  "session": "b1-E26b",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Cut the boring parts out of this. Just a quick 8-second version.",
+      "materials": [
+        "jet-30s.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "I can cut the supplied clip without changing the footage, but I need the moments you want kept.\nBefore I go on I need one thing:\n· Which moments should I keep? Please give timestamps for one 8-second section or several sections totaling 8 seconds.",
+          "asked": [
+            "plan-1"
+          ],
+          "user": "Your call."
+        }
+      ],
+      "agent": "I'll use the video editor to select the strongest moments and cut them into an 8-second version, keeping the original footage unchanged.",
+      "firstQuestions": [
+        {
+          "field": "plan-1",
+          "question": "Which moments should I keep? Please give timestamps for one 8-second section or several sections totaling 8 seconds."
+        }
+      ],
+      "turnIndex": 1,
+      "sheet": {
+        "fields": [
+          {
+            "value": "jet-30s.mp4",
+            "field": "asset",
+            "quote": "[attached: jet-30s.mp4]",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "[attached: jet-30s.mp4]",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Cut out the boring parts and select the most engaging moments for an 8-second version.",
+            "field": "change",
+            "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "time",
+            "field": "change_kind",
+            "quote": "Cut the boring parts out of this.",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "Choose the most engaging section or sections across the supplied clip, totaling 8 seconds.",
+            "field": "range",
+            "quote": "Your call.",
+            "source": "inferred",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+            "source": "inferred",
+            "confidence": 0.95
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Cut the boring parts out of this. Just a quick 8-second version.",
+          "source": "session",
+          "why": "The request remains an edit to the supplied clip; the user delegated selection of the moments to keep.",
+          "confidence": 1
+        },
+        "refers_to": "jet-30s.mp4",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll use the video editor to select the strongest moments and cut them into an 8-second version, keeping the original footage unchanged.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 192,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "video-edit",
+            "model": "minimax-h3",
+            "resolution": "480p",
+            "inputs": [
+              "jet-30s.mp4"
+            ],
+            "produces": "jet-highlights-8s.mp4",
+            "params": {
+              "extra": "Editing only: retain original footage, aspect ratio, and corresponding audio; no generated frames or other visual changes.",
+              "seconds": 8,
+              "aspect": "",
+              "prompt_or_change": "Review the full clip and select its most engaging section or sections, removing dull moments and joining the selections into an exactly 8-second cut.",
+              "resolution": ""
+            },
+            "credits": 192,
+            "why": "Select and cut the most engaging moments directly from the supplied clip."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "video-edit",
+          "state": "done",
+          "output": "assets/jet-highlights-8s.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T05:39:30.540Z",
+  "spent": 0,
+  "seconds": 37,
+  "sessionDir": "sessions/b1-E26b"
+}

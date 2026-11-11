@@ -1,0 +1,46 @@
+{
+ "id": "033d482d8d",
+ "key": "must:D23b:Lower third doesn't cover face and stays stable",
+ "symptom": "Lower third doesn't cover face and stays stable",
+ "item": "D23b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Lower third doesn't cover face and stays stable' not met in s3.old.stupid.D23b?",
+    "because": "The delivered clip has no caption at all, so the grader could not find a lower third to check.",
+    "evidence": "s3.old.stupid.D23b/grade.json: 'No lower third exists.'; exact_text 'Maya Chen' and 'Community Gardener' both 'missing'; 'Caption absent in all frames, including 2s, 3.5s, 4.8s'."
+   },
+   {
+    "why": "Why does the clip have no caption?",
+    "because": "The assistant never asked the model for one. Its only successful prompt describes a woman walking through a flower garden and mentions no text, name, role or lower third. It also used a 5 s length instead of 7.",
+    "evidence": "s3.old.stupid.D23b/calls.jsonl line 3: create_video_from_text, end_seconds 5, prompt 'A woman walking slowly through a lush, blooming garden ... smooth camera tracking shot'. There is no text in the prompt."
+   },
+   {
+    "why": "Why did the assistant leave out the caption?",
+    "because": "The simulated user's only message was 'make a video of a woman in a garden'. The caption, name, role, timing and length were in the persona's knowledge bank, but the user never said them. The assistant made a reasonable default clip and did not ask questions.",
+    "evidence": "s3.old.stupid.D23b/chat.json: messages = ['make a video of a woman in a garden']; bank has the full request with Maya Chen / Community Gardener. state.json: the transcript has 1 user turn and 1 delivered reply."
+   },
+   {
+    "why": "Why did the user never get a chance to add the caption details?",
+    "because": "The stupid persona only answers questions it is asked ('answer it from your knowledge bank'). The harness ends the chat as soon as the assistant delivers ('kind: delivered' -> end). The item is marked asks 'never', so a direct delivery is the expected behaviour, but the grader still scores the full must_haves of the brief.",
+    "evidence": "chat.json persona.reply; calls.jsonl lines 6-8: say delivered -> turn_end -> end; items/D23b.json expect.asks = 'never' and must_haves include the lower-third items."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The harness grades a chat against requirements the simulated user never said, and it stops before the user can say them. No tool description in either build can affect this. In the second failing chat (s3.old.happy.D23b) the full brief was given, and the assistant correctly put the caption in the ltx-2.5 prompt. That clip failed because the model drew the text itself: the second line read 'The Chen', the caption appeared at 0.7 s and was gone by 6.7 s. That is the generation model's limit with drawn text. The assistant's own reply says the tools cannot add a real text layer.",
+    "evidence": "s3.old.happy.D23b/calls.jsonl line 2: the prompt asks for the lower third from 1 s; line 5: 'These tools can't add a real text layer to a video'. grade.json: 'it vanishes by 6.7s and changes between frames'; exact_text 'Community Gardener' read as 'The Chen'."
+   }
+  ],
+  "axiom": "The harness artifact is the main cause. In the quoted chat, the stupid persona's vague opening message leaves out the whole caption request. The harness then ends the chat on the first delivery. So the clip has no lower third, but it is still graded against the full brief. The second chat (happy) has a different cause: a generator limit. The ltx-2.5 model draws text unstably (wrong second line, wrong timing), and the old build has no tool that adds a real text overlay.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Add a harness rule: when a vague persona's opening message leaves out a must-have that the item counts as essential (here the exact lower-third text), the simulated user adds it in a follow-up after the first delivery. The other choice is to grade the must-have as not applicable when the user never said it. For the happy-chat failure, give the server a deterministic text-overlay or lower-third tool, so the caption does not depend on the video model drawing text."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.200225
+}

@@ -1,0 +1,47 @@
+{
+ "id": "148f1ae12c",
+ "key": "check:made:E",
+ "symptom": "something was made",
+ "item": "E25b",
+ "n": 9,
+ "builds": {
+  "new": 7,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was no file made in these E25b chats?",
+    "because": "The assistant replied with a 'cannot' and started no create job. In some chats it said 'cannot' again even after the user's 'just try it' nudge.",
+    "evidence": "s3.old.happy.E25b/calls.jsonl: two 'say' events with kind 'cannot', no 'call' events, and the end kind is 'cannot'. grade.json: 'something was made' pass=false, got 'no file', with the reason 'the agent refused twice'. s3.new.stupid.E25b/calls.jsonl: after 'huh? just try it' it called only join_videos (404 error) and detect_faces, then said 'cannot' ('so I didn't run it'). Its grade.json also shows 'no file'."
+   },
+   {
+    "why": "Why did the assistant say 'cannot' instead of making something?",
+    "because": "The brief asks for a 9:16 crop of the real footage that follows the speaker, with the original audio. The assistant found no tool that crops or reframes a video, so any job would spend credits and still not match the brief.",
+    "evidence": "In every chat the assistant gives the same reason. Old happy: 'No tool here crops or reframes a video... edit_video... redraws the video from a text prompt, and its output keeps the original frame shape'. New stupid: 'Magic Hour has no crop or reframe tool'. New happy: 'None of them can crop or reframe a video'."
+   },
+   {
+    "why": "Why does no tool do the reframe?",
+    "because": "Neither build has a crop or reframe operation. The only tool that takes a video in and makes a new video is edit_video (LTX 2.5, 480p). It redraws the clip from a prompt, has no aspect-ratio setting, and keeps the shape of the source clip. The new build adds trim_video and join_videos, but neither one crops.",
+    "evidence": "tools-new.json plan_request tool enum: generate_image, edit_image, create_video_from_text, create_video_from_image, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face_in_photo, swap_head_in_photo, create_talking_photo, trim_video. None crops. When an assistant ran edit_video with the prompt 'Reframe ... as 9:16' (s3.new.happy.E25b, s3.new.dumper.E25b, s3.old.dumper.E25b), wait_for_video_project returned width 832, height 448, which is still landscape."
+   },
+   {
+    "why": "Why do some chats pass and others fail with the same tools?",
+    "because": "Whether a file appears depends only on whether the assistant gives in to the nudge and runs a useless edit_video job (240 credits, landscape output). Both choices are reasonable, so the run-to-run variation decides the 'something was made' check, not the build. The 7 new / 2 old split reflects that variation, not a regression in the new build.",
+    "evidence": "s3.old.dumper.E25b and s3.new.dumper/happy.E25b ran edit_video after the nudge and delivered an 832x448 file. s3.old.happy.E25b and s3.new.stupid.E25b refused and made no file. The tools and the arguments available were the same in both builds."
+   },
+   {
+    "why": "Why does the test count an honest 'cannot' as a failure?",
+    "because": "The item is written as if the task can be done on the free plan with these tools (refuse=false, beyond_free='no', asks='never'), and the answer_sheet assumes a centred portrait crop. But the server has no crop or reframe capability, so no output can meet the must-haves, and a 'cannot' is the correct answer.",
+    "evidence": "items/E25b.json: expect {asks:'never', beyond_free:'no', refuse:false}; answer_sheet 'Centre the current speaker in a full-frame portrait crop'; spec aspect '9:16', audio 'required'. The delivered edit_video files are 832x448, so even the passing chats cannot meet must-have 1."
+   }
+  ],
+  "axiom": "The Magic Hour tools have no operation that crops or reframes an existing video. The only video-to-video tool (edit_video, LTX 2.5 480p) redraws the footage and keeps the source frame shape. So a speaker-following 9:16 recut of the real footage cannot be made in either build. E25b still expects success (refuse=false), so the 'something was made' check rewards a useless job and penalises the correct 'cannot'.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic crop_video/reframe tool to the new build. It needs a target aspect (9:16), timed crop windows (for example, the man's window from 0 to t, the woman's from t to 10), and audio passthrough. Do it server-side with an ffmpeg crop. Also list it in plan_request, and use detect_faces to place the crop windows. Until that tool exists, change E25b to expect refuse=true / 'cannot', so that a clear refusal is not graded as 'no file'."
+ },
+ "error": null,
+ "seconds": 47,
+ "usd": 0.2964348
+}

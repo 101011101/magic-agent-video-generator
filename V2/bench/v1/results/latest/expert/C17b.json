@@ -1,0 +1,67 @@
+{
+ "id": "C17b",
+ "root_cause": "agent-reasoning",
+ "contributing": [
+  "harness"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent wrote the line itself, inside the write prompt ('Write exactly this ... Do not add any words'): 12 words. That skipped the one thing the write node exists to guarantee, a stated length. The planner rule says 8 s is about 20 words, and the catalogue says 2.5 words a second. The agent then asked the voice to 'pace delivery to exactly 8 seconds' in extra. The voice tool cannot do that: it passes extra as a tone instruction to the TTS and returns however long the speech runs (4.46 s here). Talking-photo takes its length from the sound, so the video came out 4.5 s. The agent never checked that 12 words cannot fill 8 s. It seems to have assumed the voice or talking-photo would stretch to params.seconds. The sale line itself was good: upbeat, no invented discount, date or product. I would let write compose about 20 words with the no-claims constraint and the length as a constraint. I would then let the voice length set the clip, as the planner rule says.",
+ "your_plan": {
+  "say": "I'll write a short upbeat line about your sale, with no discounts, dates or products, have a friendly male voice read it, and animate your photo speaking it as an 8-second square video.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "write",
+    "inputs": [],
+    "produces": "sale-script.txt",
+    "params": {
+     "prompt_or_change": "Write one upbeat line that a shop owner says to camera, inviting viewers to come and check out our sale. Mention only 'our sale' in general: no discount, percentage, price, date, deadline, product, brand or store name, and no promise about what they will find. First person plural, warm and friendly, one or two short sentences.",
+     "extra": "length: 19 to 21 words (8 seconds spoken at about 2.5 words a second); language: English; no quotes, no hashtags, no emoji",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The user delegated the wording. Write guarantees a stated length, and 8 s of speech is about 20 words. At this TTS pace (12 words took 4.46 s), 20 words is about 7.5-8 s."
+   },
+   {
+    "tool": "voice",
+    "inputs": [
+     "sale-script.txt"
+    ],
+    "produces": "sale-voice.mp3",
+    "params": {
+     "prompt_or_change": "Read the script exactly as written.",
+     "extra": "voice: male; tone: friendly, upbeat, warm, natural conversational pace",
+     "aspect": "",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A neutral synthetic friendly male voice reading the exact words. Its length sets the clip's length."
+   },
+   {
+    "tool": "talking-photo",
+    "inputs": [
+     "portrait-man.jpg",
+     "sale-voice.mp3"
+    ],
+    "produces": "sale-talking.mp4",
+    "params": {
+     "prompt_or_change": "The man in the photo speaks the voice track to camera with natural lip sync and small friendly head movements.",
+     "extra": "no captions",
+     "aspect": "1:1",
+     "seconds": 8,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A face that speaks becomes a talking-photo. The portrait is 640x640, so the result is square. No captions step."
+   }
+  ]
+ },
+ "fix": "Harness: when a voice node has params.seconds (or feeds a node with seconds), measure the speech. If it is more than 15% off the target, rerun the write node with 'rewrite to N words', where N = round(seconds x words-per-second measured from this take), then re-voice. Both are free, code-run nodes. Add a planner guard as well: a write node that feeds a voice must not quote its full text in prompt_or_change unless the user supplied the words. When the agent composes them, the length goes in extra ('length: about 20 words'). Catalogue: add 'CANNOT: stretch or pace speech to a length; the words set the length' to voice, and 'its length is the sound's length' to talking-photo.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "The script file holds 12 words: 'Our sale is here! Take a look and see what catches your eye.' sale-voice.mp3 is 4.464 s, and sale-talking-portrait.mp4 is 640x640, 4.52 s, with 4.48 s of audio. Frames tiled at 2 fps show the same grey-haired man in the kitchen, mouth shapes changing, and no captions. The output is right in every respect except length. The judge's 4.5 s versus 8 s fail is correct. voice.js has no duration control: extra goes to the TTS as tone 'instructions'. execute.js sets the talking-photo length from the sound's duration (lenOf(sndIn))."
+}

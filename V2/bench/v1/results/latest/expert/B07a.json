@@ -1,0 +1,36 @@
+{
+ "id": "B07a",
+ "root_cause": "model-limit",
+ "contributing": [
+  "missing-tool"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "No real divergence. The agent read the request right (one supplied photo, recolour only the hatchback, keep the rest). It picked image-edit with fidelity on, so it ran on qwen, and it said what must stay. The catalogue's own note ('navy came out teal' on klein) is why qwen was the right model. My only change would be the prompt: 'the red car' is ambiguous because there is a second red car parked in the background. I would name 'the red hatchback in the foreground', ask for a deep navy, say the background car stays red, and forbid moving or reframing anything. The failure is in the editor itself. qwen redraws the whole frame and adds a small geometric warp: about a 1.7% horizontal squeeze plus a 3 px shift, with no vertical change. That moves the rear bumper, the plate and the parked cars on the right. The catalogue says plainly that image-edit cannot leave the rest pixel-identical, and no catalogue tool can merge the recoloured body back into the untouched original. The agent could not have reached 'the rest unchanged' with these tools.",
+ "your_plan": {
+  "say": "I'll recolour the red hatchback to navy with one careful edit that keeps its shape, reflections and the street around it.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "image-edit",
+    "inputs": [
+     "car-red.jpg"
+    ],
+    "produces": "car-navy.png",
+    "params": {
+     "prompt_or_change": "Recolour only the body paint of the red hatchback in the foreground to a deep navy blue (#1B2A4A), keeping its glossy finish, the bright sunny highlights and the reflections of the houses and trees in the paint. Keep the car's exact shape, size and position, its windows, wheels, tyres, red tail lights, badge, number plate, trim and shadow exactly as they are. Do not move, resize, redraw or reframe anything: the street, kerbs, houses, trees, poles and the parked cars (the small red car in the background stays red) stay exactly as in the photo, same framing.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": true
+    },
+    "why": "A supplied picture that must change: an edit of it. Fidelity runs it on qwen, which holds an exact navy (klein drifted navy to teal). No aspect is set, so the photo's own 640x384 frame is kept and nothing is cut."
+   }
+  ]
+ },
+ "fix": "Add a 'keep-rest merge-back' to the harness for image-edits where the sheet says keep_rest=yes and the change is local (a recolour, a removal, an added prop). Step 1: register the edit to the original with a global affine fit (block matching finds this one at once: dx runs from +3 px at the left edge to -7 px at the right, dy is 0). Step 2: build a change mask where chroma or luma moved past a threshold (here the car body), then dilate and feather it. Step 3: paste the aligned edit into the original inside the mask only, so every other pixel is the user's own. A code 'recolour' look on the filter tool would also work: hue-map one colour range inside an anchor box, keeping luminance so reflections survive. It is riskier, because the tail lights and the background red car share the hue. Then change the image-edit CANNOT line to 'pixel-identical outside the change (merge-back by code when keep_rest)'.",
+ "fix_generalises": true,
+ "would_pass": "unlikely",
+ "evidence": "Input car-red.jpg and output car-navy.png are both 640x384. The body paint went from about #902B39 to #0A2146 or #0F2443, a true navy, and the background red car stayed red. A pixel diff shows the whole frame re-rendered (mean abs diff 19.8, with tree texture changed everywhere). Block matching shows a pure horizontal squeeze: +3 px at x=14, 0 near x=200, -7 px at x=600, dy=0 on every row. A point that was red bumper at (440,280) is number plate in the output. In side-by-side crops the rear bumper is lower and rounder and the plate is tilted, and the dark parked car on the right sits about 6 px further left with redrawn contours. The judge's two 'no' verdicts are real, though minor. The harness passed no aspect and called no finish(), so the warp comes from the qwen editor endpoint, not our code."
+}

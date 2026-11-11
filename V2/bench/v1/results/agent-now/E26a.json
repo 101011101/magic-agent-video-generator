@@ -1,0 +1,180 @@
+{
+  "id": "E26a",
+  "item": {
+    "id": "E26a",
+    "case": 26,
+    "case_name": "Trim to the best part",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Pick the Best Ten Seconds",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 10,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "jet-30s.mp4"
+        ],
+        "text": "Trim this to the best 10 seconds. You pick the part."
+      }
+    ],
+    "tests": "Tests autonomous highlight selection and an accurate contiguous trim of the supplied video rather than a generated replacement.",
+    "answer_sheet": {
+      "Which section counts as the best part?": "your call",
+      "Length": "Exactly 10 seconds.",
+      "One continuous section or a montage?": "One continuous section.",
+      "Sound": "Keep the original sound from the selected section.",
+      "Crop, text, or other styling": "Keep the original framing; no added text or effects."
+    },
+    "must_haves": [
+      "One playable video lasts 10 seconds, within one frame of tolerance.",
+      "The output is one continuous excerpt from jet-30s.mp4, with the source framing and playback speed preserved.",
+      "The chosen excerpt contains a salient moment of jet action or cockpit interaction, rather than mostly inactive footage.",
+      "Original sound from the selected interval remains synchronized; no replacement music, narration, or captions are added."
+    ]
+  },
+  "session": "b1-E26a",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Trim this to the best 10 seconds. You pick the part.",
+      "materials": [
+        "jet-30s.mp4"
+      ],
+      "dialog": [],
+      "agent": "I'll select the strongest continuous 10 seconds and trim the clip, leaving the original file untouched.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "jet-30s.mp4",
+            "field": "asset",
+            "quote": "[attached: jet-30s.mp4]",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "supplied",
+            "field": "provenance",
+            "quote": "MATERIALS the user has: jet-30s.mp4",
+            "source": "session",
+            "confidence": 1
+          },
+          {
+            "value": "Trim to the best 10 seconds, selecting the strongest segment.",
+            "field": "change",
+            "quote": "Trim this to the best 10 seconds. You pick the part.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "time",
+            "field": "change_kind",
+            "quote": "Trim this",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "reference",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "The strongest continuous 10-second segment, selected from the supplied clip.",
+            "field": "range",
+            "quote": "You pick the part.",
+            "source": "inferred",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "language",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "yes",
+            "field": "keep_rest",
+            "quote": "Trim this to the best 10 seconds.",
+            "source": "inferred",
+            "confidence": 0.95
+          }
+        ],
+        "goal": {
+          "value": "change",
+          "quote": "Trim this to the best 10 seconds.",
+          "source": "stated",
+          "why": "The user requests trimming an existing supplied video.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "single",
+        "say": "I'll select the strongest continuous 10 seconds and trim the clip, leaving the original file untouched.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 0,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "trim",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "jet-30s.mp4"
+            ],
+            "produces": "jet-best-10s.mp4",
+            "params": {
+              "extra": "from: selected strongest segment's start time; to: that start time + 10 seconds",
+              "seconds": 10,
+              "aspect": "",
+              "prompt_or_change": "Review the supplied clip to select its strongest continuous 10-second segment, then extract that exact range without changing its contents.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Keep only the strongest continuous 10-second segment without regenerating any footage."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "trim",
+          "state": "done",
+          "output": "assets/jet-best-10s.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "0-10 s of 30 s",
+          "error": null,
+          "seconds": 2
+        }
+      ],
+      "spent": 0,
+      "seconds": 5
+    }
+  ],
+  "started": "2026-11-01T05:58:50.960Z",
+  "spent": 0,
+  "seconds": 5,
+  "sessionDir": "sessions/b1-E26a"
+}

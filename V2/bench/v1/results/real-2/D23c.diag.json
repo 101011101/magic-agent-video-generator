@@ -1,0 +1,37 @@
+{
+  "id": "D23c",
+  "best_tools": "yes",
+  "explanation": "The plan correctly separates the coffee footage, black background, assembly, and exact timed URL overlay, with silence and dimensions explicitly specified. The generated background visibly violates the solid-black prompt, while the overlay violates the requested single-line fit and safe margins; these are execution failures rather than a mistaken tool chain. The reported speech at approximately -91 dB does not establish an audible silence violation.",
+  "better_chain": "text-to-video (5-second vertical coffee pour) → image (solid-black vertical background) → check (verify the background is entirely black; regenerate if necessary) → assemble (5 seconds of coffee, 3 seconds of black, hard cut, remove all audio) → text-overlay (exact white URL centered from 5–8 seconds, with an explicit font size calculated to fit within safe margins) → gate (verify complete URL, black background, timing, dimensions, and silence)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Appropriate tool for a new generic coffee-pour scene; the prompt specifies an unmarked ceramic cup, no writing, vertical framing, and five seconds. Audio is explicitly removed during assembly.",
+      "verdict": "ok",
+      "tool": "text-to-video"
+    },
+    {
+      "n": 2,
+      "issue": "The prompt unambiguously requests a uniform black background without objects or text. The white panel in the supplied result is a generation failure, not an incorrect planned input or setting.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 3,
+      "issue": "Correct order, individual durations, total duration, vertical aspect, hard cut, and explicit removal of all audio.",
+      "verdict": "ok",
+      "tool": "assemble"
+    },
+    {
+      "n": 4,
+      "issue": "Text-overlay is appropriate for this plain exact URL over a timed clip. The exact case-sensitive string, white color, centered placement, 5–8-second timing, single line, and safe-margin fit are specified; the clipping contradicts those instructions. An explicit fitted font size would make execution more robust.",
+      "verdict": "ok",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": ""
+}

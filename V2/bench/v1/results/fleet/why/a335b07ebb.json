@@ -1,0 +1,47 @@
+{
+ "id": "a335b07ebb",
+ "key": "must:G35a:Both complete photos visible without stretching or content changes",
+ "symptom": "Both complete photos visible without stretching or content changes",
+ "item": "G35a",
+ "n": 4,
+ "builds": {
+  "new": 2,
+  "old": 2
+ },
+ "result": {
+  "axiom": "The free-plan Magic Hour tool set, in both builds, has no tool that places supplied photos on a canvas without changing them. The only tool for multi-image layouts is edit_image (AI_IMAGE_EDITOR, flux-2-klein). This tool redraws its whole output, so it cannot copy input pixels exactly, and prompt text such as \"unchanged\" does not make it do so. This is a limit of the generation model and of the tool set.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-only compose_images tool to the new build. It takes file paths, a layout (side_by_side), an aspect, padding and labels. It scales each photo to fit with letterboxing, places the photos unchanged and draws the exact label text with code. This is the image version of the existing join_videos tool and of the code-drawn cards in plan_video_production. plan_request must send \"keep unchanged\" plus a combine request to this tool and not to edit_image.",
+  "whys": [
+   {
+    "why": "Why is the item 'Both complete photos visible without stretching or content changes' not met?",
+    "because": "The delivered 640x384 image does not contain the original photos. It contains AI-redrawn versions that are cropped and changed: the window is removed, a floor is added, the cabinets are different and the sides are cut off.",
+    "evidence": "s4.new.happy.G35a/grade.json must[3]: 'Photos were cropped and redrawn: the Before is re-imagined (different layout, floor added, window removed, cabinets altered) and the After is cropped and altered'. s4.old.stupid.G35a/grade.json faults: 'Photos were regenerated, not pasted. Both are cropped and re-framed'."
+   },
+   {
+    "why": "Why were the photos redrawn and not pasted?",
+    "because": "In every chat the assistant made the collage with one edit_image call (model flux-2-klein, 640px, 16:9) and passed both photos as image_file_paths. The result type is AI_IMAGE_EDITOR, a generative model that makes a new image from a prompt.",
+    "evidence": "s4.old.happy.G35a/calls.jsonl line 2 and s4.new.happy.G35a/calls.jsonl line 3: edit_image with prompt 'Keep both photos exactly as they are, unchanged...'. wait_for_image_project returns \"type\":\"AI_IMAGE_EDITOR\". s4.new.dumper.G35a/calls.jsonl line 3 shows the same call."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for a task that asks it not to change the photos?",
+    "because": "No tool in either build places images on a canvas without changes. The assistant said this to the user and chose the closest tool it had.",
+    "evidence": "s4.old.happy.G35a/calls.jsonl say text: 'Magic Hour doesn't have a plain \"paste photos side by side\" tool, so I used its AI image editor'. tools-new.json: the plan_request tool enum lists generate_image, edit_image, upscale_image, remove_image_background and others, but no compose tool. The only code-only compose tools are join_videos and join_production_clips (videos) and the code-drawn cards in plan_video_production (video beats). None of them makes a still image collage."
+   },
+   {
+    "why": "Why did the new build's planner not stop or redirect the request?",
+    "because": "plan_request only checks that the parameters are complete. It returned ready:true for edit_image with keep='both photos unchanged' and gave no warning that edit_image cannot keep pixels.",
+    "evidence": "s4.new.happy.G35a/calls.jsonl line 2 and s4.new.dumper.G35a/calls.jsonl line 2: plan_request output {\"tool\":\"edit_image\",\"ready\":true,...,\"questions\":[]}."
+   },
+   {
+    "why": "Why does the prompt 'keep both photos exactly as they are' not keep them?",
+    "because": "flux-2-klein makes the full output image again at 640px. It cannot copy two input images into fixed regions, so it crops them to fill the 16:9 halves and changes their details. The assistants knew this and told the user that 'the AI redraws the whole image'.",
+    "evidence": "s4.new.happy.G35a/calls.jsonl say text: 'An AI image editor made it, so it redraws the photos instead of pasting them in exactly.' The grader's reasons in all 4 chats describe crops and changed content, although each prompt asked for no changes."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 40,
+ "usd": 0.39709459999999996
+}

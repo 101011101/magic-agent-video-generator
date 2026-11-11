@@ -1,0 +1,46 @@
+{
+ "id": "8270c2bfa3",
+ "key": "must:F31a:Deliverable is a standalone playable audio file, not a video",
+ "symptom": "Deliverable is a standalone playable audio file, not a video",
+ "item": "F31a",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the deliverable not a standalone audio file?",
+    "because": "In both chats the assistant delivered an MP4 link (output.mp4, 854x480, 24 fps). The picture is black and the voice is the sound track. The assistant told the user to convert it to MP3 on their own.",
+    "evidence": "s2.new.stupid.F31a/calls.jsonl and s2.new.dumper.F31a/calls.jsonl: wait_for_video_project returns type TEXT_TO_VIDEO, width 854, height 480, download …/output.mp4. Final 'say' (dumper): 'The file is an MP4 with a plain black screen, not an audio-only file… any free converter … can save it as MP3.'"
+   },
+   {
+    "why": "Why did the voice come back as a video project?",
+    "because": "The assistant used the server's voice-over path: plan_video_production with `says` and `narrator`, then create_production_sound. For this plan the server makes narration with a video model: sound.narration.tool = 'video', model ltx-2.5. The prompt is 'A plain black screen for the whole clip… Sound only: an off-camera narrator…'.",
+    "evidence": "calls.jsonl (both chats): plan_video_production output has \"narration\":{\"tool\":\"video\",…\"model\":\"ltx-2.5\",…\"prompt\":\"A plain black screen for the whole clip…\"}. create_production_sound returns narration id cmwbh…, and the 'next' field says 'wait_for_video_project with `narration`'."
+   },
+   {
+    "why": "Why does the new build make speech with a black-screen video model and not a speech tool?",
+    "because": "The new build has no text-to-speech tool. The create_production_sound description says narration is 'a video model, or the voice cloner when the story has `voice_sample`'. The voice cloner needs a voice sample from the user, and this brief has none. The only path left is the video model.",
+    "evidence": "tools-new.json: create_production_sound description: 'one narration (a video model, or the voice cloner when the story has `voice_sample`)… Returns `narration` (a video project id: wait with wait_for_video_project)'. The voice_sample field description: 'a short recording (10-30 s) of a voice the user owns'. The plan_request tool enum has generate_music but no speech tool. create_talking_photo says 'this tool does not synthesize speech'."
+   },
+   {
+    "why": "Why was the audio not extracted from the MP4 before delivery?",
+    "because": "No tool in the new build can export only the audio track. join_videos can only remove sound (`silent`). join_production_clips always outputs a video file. The assistant never called join_production_clips, so the file it delivered was the raw narration MP4.",
+    "evidence": "tools-new.json: join_videos 'silent: remove all sound… Returns the film's download URL'. join_production_clips 'Joins the finished clips… into one video file'. No extract-audio or to-mp3 tool is listed. calls.jsonl: the last tool call in both chats is wait_for_video_project."
+   },
+   {
+    "why": "Why is this a defect and not an inherent limit?",
+    "because": "The test was revised on 2026-11-01 to beyond_free = no because 'speech… [is] wired'. The new build does make the speech, and the narration track can be split out with code (ffmpeg). But the server still returns only the video container. The missing piece is a code step in the server (the join already works on audio with code: it mixes music and places the narration). It is not a limit of the model or of the free plan.",
+    "evidence": "items/F31a.json: \"revised\": [\"2026-11-01: beyond_free → no (speech and talking photo are wired)\"]. answer_sheet 'Delivery format': 'One playable audio file, not a video'. tools-new.json join_production_clips: 'the join puts each narrator sentence on its beat, mixes the music under it'."
+   }
+  ],
+  "axiom": "The new build has no audio-only output for narration. Without a voice sample, create_production_sound makes speech only as a black-screen ltx-2.5 video project. No tool returns only the audio track. A request for 'audio-only' can therefore only end as an MP4.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Add an audio-only output to the server. When the plan has narration and no picture is wanted (the user says audio-only, or sound only), plan_video_production should mark the plan audio-only. create_production_sound (or a small extract_audio tool) should then run ffmpeg on the finished narration MP4 to strip the black video track. It should return a signed MP3/M4A download_url, and the tool description should name it as the deliverable for voice-only requests."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.5695977999999999
+}

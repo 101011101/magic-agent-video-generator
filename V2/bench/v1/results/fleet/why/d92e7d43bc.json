@@ -1,0 +1,47 @@
+{
+ "id": "d92e7d43bc",
+ "key": "check:length:E",
+ "symptom": "about 10 s",
+ "item": "E28b",
+ "n": 29,
+ "builds": {
+  "old": 17,
+  "new": 12
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did the 'about 10 s' check measure 4.5 s and not about 10 s?",
+    "because": "The chat delivered no video. The duration check measured an audio file. E28b expects the 10 s source clip with new narration.",
+    "evidence": "The evidence has no E28b chat folder. In the sibling item s3.old.happy.E28a, grade.json shows 'a video was made' = fail with only .webp/.mp3/.wav files, and 'about 10 s' = fail with got '4.5 s', the same value as the symptom. In E27b (old and new) and E27c (new), the only file is a .wav. There, the duration check measured the music length (30 s or 15 s), not the clip length (10 s or 7 s)."
+   },
+   {
+    "why": "Why was the deliverable audio only, not the clip with narration?",
+    "because": "The assistant made only the narration (voice generator, then wait_for_audio_project). It did not put that narration onto the user's video. It sent a WAV link and told the user to add it in CapCut or iMovie.",
+    "evidence": "s3.old.happy.E28a/calls.jsonl: voices_list, then ai_voice_generator_create_audio, then wait_for_audio_project, which returns output.wav. No video tool was called. The final reply says: 'I couldn't put the voice onto your video myself.'"
+   },
+   {
+    "why": "Why did the assistant not put the narration onto the video?",
+    "because": "No tool on the server replaces or adds an audio track and keeps the frames unchanged. The tools that combine video and audio (lip sync, video editor) re-render the picture. The brief says the footage must stay unchanged and forbids lip sync.",
+    "evidence": "E28a reply: 'Magic Hour has no tool that just adds an audio track and leaves the picture alone… Lip sync changes the mouth movements… The video editor re-renders the whole clip.' E28b.json answer_sheet: 'Keep all 10 seconds… do not alter the footage to match the narrator's mouth movements.' tools-new.json plan_request enum: generate_image, edit_image, create_video_from_text, create_video_from_image, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face_in_photo, swap_head_in_photo, create_talking_photo, trim_video. None of these replaces audio."
+   },
+   {
+    "why": "Why did the measured length come out shorter than 10 s?",
+    "because": "The only measurable media was the narration, or the voice-preview MP3s that voices_list saves as files. A short spoken script is shorter than 10 s. Nothing ties the audio length to the clip length. The files do not show which file the grader measured: the final WAV or a 5 s preview. Either way, it was audio, not the clip.",
+    "evidence": "In E28a, grade.json has 103 files (voice previews plus one .wav), and the judge says: 'the previews are 5 s and 2 s voice samples'. In E27b and E27c, the music length (30 s or 15 s) also did not match the clip, which shows the audio length is independent of the source video."
+   },
+   {
+    "why": "Why does this happen in both builds and for all personas?",
+    "because": "Both tool lists lack an audio-mux or replace-audio capability. The failure therefore does not depend on what the user says. It happens for happy, dumper and stupid users and for old and new builds alike.",
+    "evidence": "tools-old.json and tools-new.json show the same kind of tool set with no audio-onto-video tool. The symptom counts: old 17, new 12, across happy 11, dumper 9 and stupid 9. The sibling chats in both builds (E27b old and new, E27c new) all end with a standalone .wav."
+   }
+  ],
+  "axiom": "The Magic Hour MCP server, old and new, has no tool that adds or replaces the audio track of a user's video and leaves the frames unchanged. The only video-plus-audio tools are lip sync and the video editor, and both re-render the footage, which the brief forbids. So the assistant can only deliver a separate narration file, and the duration check measures that short audio (4.5 s), not the 10 s clip.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a tool such as 'replace_video_audio' (video file_path, audio file_path, mode replace or mix, optional volume). It copies the video frames without change and puts the generated narration or music on the source video, so the output keeps the source length. Add it to the plan_request tool enum and to the voice and music tool descriptions ('to put this on the user's clip, call replace_video_audio'). Separately, make the grader measure only the delivered output file, not the voices_list preview MP3s."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.336804
+}

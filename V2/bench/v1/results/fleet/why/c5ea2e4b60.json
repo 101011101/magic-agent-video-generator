@@ -1,0 +1,47 @@
+{
+ "id": "c5ea2e4b60",
+ "key": "must:E25b:9:16 portrait edit",
+ "symptom": "9:16 portrait edit",
+ "item": "E25b",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was '9:16 portrait edit' not met?",
+    "because": "The one file delivered in all 3 chats is 832x448 landscape, not 9:16.",
+    "evidence": "s3.new.happy.E25b/grade.json: check 'aspect 9:16' pass=false, got 832x448; must 'Output is 832x448 landscape.' wait_for_video_project in all three calls.jsonl files (old dumper, old stupid, new happy) returns width 832, height 448."
+   },
+   {
+    "why": "Why did the output come out landscape when the assistant asked for 9:16?",
+    "because": "The only tool used was edit_video (VIDEO_EDITOR, ltx-2.5, 480p). It has no aspect setting. The assistant could ask for 9:16 only in the text prompt, and the model ignores that and keeps the shape of the source clip.",
+    "evidence": "calls.jsonl in all 3 chats: the edit_video args hold only name, start/end_seconds, model, resolution, style.prompt ('Reframe ... as a vertical 9:16 ...') and assets. There is no aspect field. The result is still 832x448. The assistants' own final replies say: 'This editor always keeps the original frame shape, so a prompt can't make it 9:16' (old dumper) and 'The tool keeps the source shape' (old stupid)."
+   },
+   {
+    "why": "Why did the assistant run edit_video if it knew it could not make a 9:16 file?",
+    "because": "In every chat the assistant first said, correctly, that it could not do this and ran nothing. Then the simulated user sent a scripted nudge ('go ahead anyway' / 'just try it'), and the assistant ran the closest tool as a best effort.",
+    "evidence": "calls.jsonl: new happy line 3 kind=cannot, then line 4 user 'Please go ahead with the free settings anyway.' nudge=true. Old dumper line 4 cannot, then line 5 nudge=true. Old stupid line 7 cannot, then line 8 'huh? just try it' nudge=true."
+   },
+   {
+    "why": "Why was there no tool that could make a real 9:16 crop?",
+    "because": "Neither build has a tool that crops or reframes an existing video or sets its output aspect. edit_video makes the footage again from a prompt at the source frame shape. Joining clips keeps the first clip's size. No tool follows the speaker.",
+    "evidence": "The assistants list the tools in both builds and give the same reason: 'None of them can crop or reframe a video ... edit_video ... has no way to set 9:16' (new happy). 'None of them has a 9:16 setting for an existing clip' (old dumper). Its edit_video call schema shows no aspect parameter."
+   },
+   {
+    "why": "Why does the test still expect a 9:16 result with no questions and no paid plan?",
+    "because": "E25b assumes the server can do a plain speaker-aware crop. But that capability is not in the Magic Hour tool set, and the edit model keeps the input shape.",
+    "evidence": "items/E25b.json: expect.asks='never', beyond_free='no', spec.aspect='9:16'. answer_sheet: 'Centre the current speaker in a full-frame portrait crop ... free-tier resolution is fine.'"
+   }
+  ],
+  "axiom": "Magic Hour has no crop/reframe capability. The only video edit model (edit_video / ltx-2.5 VIDEO_EDITOR) always outputs the source clip's frame shape (832x448 for this 16:9 input) and ignores aspect instructions in the prompt. So no tool call can turn a 16:9 clip into a 9:16 file.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic reframe tool to the MCP server. Example: reframe_video(video, aspect '9:16', segments [{start, end, center_x}]), which crops with ffmpeg and keeps the original audio, so the assistant can centre the man and then the woman. Until that tool exists, state in the edit_video description that output always keeps the source aspect. Also mark E25b as 'beyond capability' (expect a refusal) so the 'just try it' nudge does not produce a run that is sure to fail."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.2555528
+}

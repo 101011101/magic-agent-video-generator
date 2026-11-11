@@ -1,0 +1,234 @@
+{
+  "id": "A01d",
+  "item": {
+    "id": "A01d",
+    "case": 1,
+    "case_name": "Product shot from text",
+    "group": "A",
+    "group_name": "Single images",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Exact Brand Name on Label",
+    "sub": "d",
+    "spec": {
+      "exact_text": [
+        "VELORA"
+      ],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make a product photo of an amber glass hand soap bottle with a cream label. The brand on the label must read VELORA, spelled exactly like that."
+      }
+    ],
+    "tests": "Produces a finished product image with exact, legible brand lettering integrated into the bottle label.",
+    "answer_sheet": {
+      "Product and materials": "An amber glass hand soap bottle with a cream label.",
+      "Exact brand wording": "VELORA, all uppercase.",
+      "Other label text": "your call",
+      "Setting, lighting and mood": "your call",
+      "Aspect ratio and platform": "your call"
+    },
+    "must_haves": [
+      "An amber glass hand soap bottle is the main subject.",
+      "A cream-colored label is visibly attached to the bottle.",
+      "The label reads exactly 'VELORA' in clear uppercase letters.",
+      "The brand lettering sits within the label and looks integrated, not like a floating caption.",
+      "The brand name is unobscured and readable at the delivered image size."
+    ]
+  },
+  "session": "b1-A01d",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Make a product photo of an amber glass hand soap bottle with a cream label. The brand on the label must read VELORA, spelled exactly like that.",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "Before I go on I need one thing:\n· What size or aspect (square, portrait, landscape; for which platform)? (default: 1:1)",
+          "asked": [
+            "size"
+          ],
+          "user": "your call"
+        }
+      ],
+      "agent": "I'll generate the bottle photo, then paint VELORA onto its cream label with an image edit. I'll check the spelling afterward.",
+      "firstQuestions": [
+        {
+          "field": "size",
+          "question": "What size or aspect (square, portrait, landscape; for which platform)?"
+        }
+      ],
+      "turnIndex": 1,
+      "sheet": {
+        "fields": [
+          {
+            "value": "Product photo of an amber glass hand soap bottle with a cream label bearing the brand VELORA, spelled exactly that way.",
+            "field": "subject",
+            "quote": "Make a product photo of an amber glass hand soap bottle with a cream label. The brand on the label must read VELORA, spelled exactly like that.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "stated",
+            "field": "direction",
+            "quote": "Make a product photo",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "style",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "1:1",
+            "field": "size",
+            "quote": "your call",
+            "source": "inferred",
+            "confidence": 0.9
+          },
+          {
+            "value": "",
+            "field": "materials",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          },
+          {
+            "value": "1",
+            "field": "count",
+            "quote": "a product photo",
+            "source": "stated",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "image",
+          "quote": "Make a product photo",
+          "source": "stated",
+          "why": "The user requests a new product image; the follow-up delegates the aspect ratio without changing the goal.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "tree",
+        "say": "I'll generate the bottle photo, then paint VELORA onto its cream label with an image edit. I'll check the spelling afterward.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 10,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "image",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [],
+            "produces": "soap_bottle.png",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Studio product photo of an amber glass hand soap pump bottle with a blank cream label, centered against a clean neutral background with soft professional lighting.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Create the product and label surface before adding the brand as part of the photographed scene."
+          },
+          {
+            "tool": "image-edit",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [
+              "soap_bottle.png"
+            ],
+            "produces": "velora_soap.png",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "Print the brand name VELORA, spelled exactly V-E-L-O-R-A, centered on the cream bottle label in elegant dark lettering; preserve the bottle, lighting, and composition.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "The brand belongs on the physical label, not as an overlay on the photo."
+          },
+          {
+            "tool": "check",
+            "model": "code",
+            "resolution": null,
+            "inputs": [
+              "velora_soap.png"
+            ],
+            "produces": "label_verdict.txt",
+            "params": {
+              "extra": "",
+              "seconds": 0,
+              "aspect": "",
+              "prompt_or_change": "Does the cream label clearly read exactly VELORA, with all six letters correct and no additional or malformed letters? Return yes or no with the reason; a failed check means the image is not ready.",
+              "resolution": ""
+            },
+            "credits": 0,
+            "why": "Image editing cannot guarantee spelling, so verify the physical label before accepting the result."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "image",
+          "state": "done",
+          "output": "assets/tree-2/soap_bottle.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "image-edit",
+          "state": "done",
+          "output": "assets/tree-2/velora_soap.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "check",
+          "state": "done",
+          "output": "assets/tree-2/label_verdict.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T04:49:06.436Z",
+  "spent": 0,
+  "seconds": 27,
+  "sessionDir": "sessions/b1-A01d"
+}

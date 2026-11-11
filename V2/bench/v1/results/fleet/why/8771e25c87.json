@@ -1,0 +1,47 @@
+{
+ "id": "8771e25c87",
+ "key": "must:I45b:One assembled 15-second 16:9 film with three garden scenes",
+ "symptom": "One assembled 15-second 16:9 film with three garden scenes",
+ "item": "I45b",
+ "n": 4,
+ "builds": {
+  "old": 1,
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'one assembled 15-second 16:9 film with three garden scenes' not met in the chat the grader quoted?",
+    "because": "The grader saw only separate 5 s clips. It never saw the joined 15 s film.",
+    "evidence": "s5.new.dumper.I45b/grade.json: check 'about 15 s' got '5.2 s'. The must-have reason says 'Only two 5.2 s clips are visible ... not three clear scenes'. The aspect check lists only the per-clip files 640x640, 858x480, 858x480, 856x478."
+   },
+   {
+    "why": "Why was the joined film missing from the files the grader saw?",
+    "because": "The harness could not download the film that join_production_clips made, so no film file was saved for grading.",
+    "evidence": "s5.new.dumper.I45b/calls.jsonl line 13: join_production_clips returned download_url http://127.0.0.1:8000/films/c7cacca28c974b53bd0387f3e21ef9c8.mp4 with seconds 15.4, 858x480, 3 clips, checked 'One file, 15 s, 16:9' = yes and 'No sound' = yes. The files field is 'download failed: download 404 http://127.0.0.1:8000/films/...mp4'."
+   },
+   {
+    "why": "Why did that download return 404?",
+    "because": "The new build's join writes the film to its own local film server and returns a 127.0.0.1 link. The harness asked for that link and got 404. Most likely the film was not served at that path when the harness fetched it, or it was gone by then. Old-build tools return hosted magichour.ai links, and the harness downloads those without problems.",
+    "evidence": "In the same calls.jsonl, every videos.magichour.ai link downloaded to assets/0N-*.mp4. Only the 127.0.0.1 film link failed. The old build has no join step: s5.old.stupid.I45b/calls.jsonl only has edit_image → create_video_from_image."
+   },
+   {
+    "why": "Why did the clips the grader did see not show three garden scenes?",
+    "because": "The grader judged the parts with no join. Clip 1 shows only the woman. Clip 2 starts from the still made by edit_image. Without the join, the cut from scene to scene and the planting beat could not be judged as one story.",
+    "evidence": "grade.json faults: 'Clip 1 is a near-static profile view ... the camera setup jumps between clips'. The assistant's delivery in calls.jsonl line 15 describes three scenes that the grader could not check."
+   },
+   {
+    "why": "Do the other failing chats have the same cause?",
+    "because": "No. Their causes are different. In s5.new.stupid the assistant did not follow the 3-clip plan. It animated a 640x640 still from edit_image into one 15 s shot, and the video came out 480x480 square even though it asked for aspect_ratio 16:9. In s5.old.stupid the user's first message gave no story, and the assistant made up a 5 s park-bench clip without asking. I did not read the fourth chat (happy).",
+    "evidence": "s5.new.stupid.I45b/calls.jsonl lines 8-11: edit_image aspect_ratio 16:9 → grade shows 640x640, then create_video_from_image gives width 480, height 480. Its grade.json says 'Square 480x480, one continuous shot'. s5.old.stupid.I45b/calls.jsonl line 2 prompt 'park bench in a leafy park'. Its grade.json says 'Single 5 s square clip on a park bench'."
+   }
+  ],
+  "axiom": "Test-harness defect. The harness collects deliverables by downloading every returned URL. The new build's join_production_clips returns a local 127.0.0.1:8000/films/... link, and that download returned 404. So the real joined film (15.4 s, 858x480, 3 clips, silent, as join reported) never reached the grader. The grader then judged the separate 5 s clips. The other chats failed for other reasons: the edit_image still came out square and the assistant left the planned clip pipeline (new.stupid), and the assistant made up a story without asking (old.stupid).",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "Make the harness save the joined film. Option 1: the harness copies the file straight from the local server's films directory. Option 2: the harness downloads the 127.0.0.1 link before it stops the local server. Option 3: join_production_clips uploads the film and returns a hosted link. Add a check that marks a run 'harness error' instead of grading it if the delivered download_url gives 404."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.5194368
+}

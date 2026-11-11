@@ -1,0 +1,52 @@
+{
+ "id": "12063c8939",
+ "key": "must:H40b:Clear straight-sided glass jar, ivory wax, one wick, no label",
+ "symptom": "Clear straight-sided glass jar, ivory wax, one wick, no label",
+ "item": "H40b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'clear straight-sided glass jar, ivory wax, one wick, no label' not met?",
+    "because": "In the new chat, the jar in the first shot has a shoulder and a neck, like a mason jar, and the second shot shows a different straight tumbler. In the old chat, the only shot shows an amber, curved, lipped jar with tan wax.",
+    "evidence": "s4.new.dumper.H40b/grade.json, must[1]: 'Shot 1 shows a mason-style jar with a shoulder and neck... Shot 2 shows a straight tumbler'. s4.old.stupid.H40b/grade.json, must[1]: 'Jar is amber-tinted with a lipped, curved shape; wax is tan/caramel'."
+   },
+   {
+    "why": "Why did the new build show a necked jar when the user gave the correct description?",
+    "because": "The description reached the generator word for word, but ltx-2.5 text-to-video did not follow it. The clip 1 prompt contains 'a candle in a clear straight-sided glass jar with ivory wax, one wick, and no label' and 'the unlit candle'. The output still shows a necked jar, and the candle is already lit. The model got the prompt right and drew the wrong shape.",
+    "evidence": "s4.new.dumper.H40b/calls.jsonl line 4: the clip 1 step prompt has the exact subject words. Line 5: create_production_clip clip 1 sent with model ltx-2.5 and reference 'none'. grade.json faults: 'already lit... though the plan said unlit'."
+   },
+   {
+    "why": "Why did no shot fix or anchor the jar shape?",
+    "because": "The answered plan has no product still as an anchor. Each beat stands alone. After the two title cards were added, clip 3 changed from link 'event' (start from the last frame of clip 1) to link 'new' with reference 'none'. Clips 1 and 3 were then each generated from text alone and drew two different jars. Only clip 4 starts from a frame of clip 3.",
+    "evidence": "calls.jsonl line 2: in the first plan, clip 2 has reference last_frame of_clip 1. Line 4: after answers {card, card}, clip 3 has 'link':'new','reference':{'kind':'none'} and only clip 4 has last_frame of_clip 3. grade.json: 'jar shape changes from a necked mason jar to a straight-sided tumbler'."
+   },
+   {
+    "why": "Why did nothing catch the wrong jar before delivery?",
+    "because": "join_production_clips leaves the jar line for the assistant to check by eye. The assistant could not watch the footage. It delivered with only a general warning that the jar may differ between shots.",
+    "evidence": "calls.jsonl line 15: 'unchecked':['... a candle in a clear straight-sided glass jar with ivory wax looks the same in every clip'], 'not_met':[]. Line 17: 'I couldn't watch the footage myself. Please check that the candle looks the way you want.'"
+   },
+   {
+    "why": "Why did the old build show an amber jar?",
+    "because": "The stupid persona sent only 'make me a candle ad'. It did not give the jar details from its knowledge bank, and the assistant never asked. The assistant chose 'an amber glass jar candle' by itself and made one 5 s clip. This failure comes from the persona and the assistant, not from the generator.",
+    "evidence": "s4.old.stupid.H40b/chat.json: messages=['make me a candle ad']; the bank has the jar details. calls.jsonl line 3: prompt 'Close-up of an amber glass jar candle'. state.json: only one user turn."
+   },
+   {
+    "why": "Why can a text-only prompt not hold a fine product shape such as 'straight-sided' across shots?",
+    "because": "AXIOM: the free-plan video model (ltx-2.5) is not reliable on detailed product shape from text alone. Each text-to-video call draws its own version of the object. Without a reference image, the shape is not fixed.",
+    "evidence": "In calls.jsonl line 4, the same subject words in clip 1 and clip 3 gave a necked jar and a straight tumbler (grade.json faults[0])."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5) does not reliably draw a described product shape ('straight-sided', unlit), and it draws a different object in each separate text-only call. The planner gave it no reference image to fix the jar. In the old chat, the stupid persona also never gave the jar details, so the assistant chose an amber jar.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In plan_video_production (new build), when the product is described in words only and has no photo, add a first step. That step makes one product still with create_image from the subject words, and the assistant checks the still by eye. Every scene clip then starts from that still (or from the previous clip's last frame) through create_video_from_image. No scene clip gets reference 'none'. This also covers the case where card insertion turns a clip's link into 'new'."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.3641124
+}

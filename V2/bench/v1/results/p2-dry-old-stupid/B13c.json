@@ -1,0 +1,162 @@
+{
+  "id": "B13c",
+  "item": {
+    "id": "B13c",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which of the two attached pictures should be upscaled?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resolve the Upscale Target",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg",
+          "lake-small.jpg"
+        ],
+        "text": "upscale it please"
+      }
+    ],
+    "tests": "Asks which attachment the user means, then upscales only the selected picture without guessing or processing both.",
+    "answer_sheet": {
+      "Which picture": "The lake one, lake-small.jpg.",
+      "Output size": "your call",
+      "Enhancement style": "your call",
+      "Framing": "Keep the whole lake picture and its original proportions.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The final deliverable is an upscaled version of lake-small.jpg, following clarification.",
+      "The lake, mountains, trees, clouds, and their arrangement remain faithful to the selected source.",
+      "The delivered image has larger pixel dimensions than lake-small.jpg, not merely a renamed copy.",
+      "The full original framing and aspect ratio are preserved.",
+      "Only one edited image is delivered; the dog photo is not included or blended into it."
+    ]
+  },
+  "session": "mcp-p2-dry-o-stupid-B13c",
+  "sessionDir": "sessions/mcp-p2-dry-o-stupid-B13c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "can you make this pic or this pic clearer",
+      "materials": [
+        "blurry-dog.jpg",
+        "lake-small.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Yes—would you like me to make the **dog photo**, the **lake photo**, or **both** clearer?\n\nThe lake should sharpen more naturally. The dog photo is heavily blurred, so enhancing it may reconstruct details rather than recover exactly what was there.",
+          "asked": [
+            "question"
+          ],
+          "why": "It asks the user to choose whether to enhance the dog photo, the lake photo, or both, and waits for that choice.",
+          "user": "the lake one",
+          "calls_before": 0
+        }
+      ],
+      "agent": "I couldn’t enhance the lake photo because your Magic Hour account doesn’t have enough credits for the 2× upscale. No image was created.\n\nYou can add credits and retry, or I can walk you through sharpening it in a free photo editor.",
+      "calls": [
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"image-editor\"}",
+          "output": "{\"workflow\": \"image-editor\", \"title\": \"Edit a portrait, scene or reference image\", \"input\": \"Source images and a description of the requested edit.\", \"product_url\": \"https://magichour.ai/products/ai-image-editor\", \"api_docs_url\": \"https://docs.magichour.ai/api-reference/image-projects/ai-image-editor\", \"creation_tool\": \"edit_image\", \"steps\": [\"Use the supplied reference images. With no source image, use generate_image instead of inventing image file paths.\", \"State what changes and what stays fixed: identity, pose, clothing, background, lighting and aspect ratio.\", \"Call edit_image with supported account settings, then wait_for_image_project. Review the still before using it as a video reference.\"], \"example_request\": \"Turn this portrait into a cinematic space-pilot scene. Preserve my face and keep the framing vertical for a short video.\", \"follow_up\": \"Animate the accepted still with create_video_from_image rather than recreating its identity from a text prompt.\", \"review\": \"Check identity, unchanged regions, anatomy and requested edits. Model and resolution eligibility depend on the account.\", \"models_and_costs_url\": \"https://docs.magichour.ai/api-reference/models\", \"evaluation_url\": \"https://docs.magichour.ai/integration/evaluating-media-apis\", \"starter_recipes_url\": \"https://docs.magichour.ai/get-started/starter-recipes\", \"guidance\": [\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\", \"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\", \"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\", \"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\", \"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\", \"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\", \"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "upscale_image",
+          "args": {
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/f9843c52-9bf5-4e27-bc3f-11b9ccef9ac9-image-0.jpg"
+            },
+            "scale_factor": 2,
+            "style": {
+              "mode": "preserve"
+            },
+            "name": "Lake photo clarity enhancement"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Yes—would you like me to make the **dog photo**, the **lake photo**, or **both** clearer?\n\nThe lake should sharpen more naturally. The dog photo is heavily blurred, so enhancing it may reconstruct details rather than recover exactly what was there."
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "upscale_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t enhance the lake photo because your Magic Hour account doesn’t have enough credits for the 2× upscale. No image was created.\n\nYou can add credits and retry, or I can walk you through sharpening it in a free photo editor.",
+        "refuse": "",
+        "tier_move": "I couldn’t enhance the lake photo because your Magic Hour account doesn’t have enough credits for the 2× upscale. No image was created.\n\nYou can add credits and retry, or I can walk you through sharpening it in a free photo editor.",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 34
+    }
+  ],
+  "started": "2026-11-10T04:54:35.410Z",
+  "persona": "stupid",
+  "opening": {
+    "id": "B13c",
+    "persona": "stupid",
+    "text": "can you make this pic or this pic clearer",
+    "withheld": [
+      "Use the lake picture, not the dog picture.",
+      "You can choose the picture size.",
+      "You can choose how to improve it.",
+      "Keep the whole lake picture and its original proportions.",
+      "Do not add any text."
+    ],
+    "extras": [],
+    "as_written": false
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 34,
+  "usage": {
+    "responses": 3,
+    "input": 126823,
+    "output": 331,
+    "reasoning": 78,
+    "cached": 124147
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "https://mcp.magichour.ai/",
+    "local": false,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "B13c.trace.json"
+}

@@ -1,0 +1,52 @@
+{
+ "id": "d25e8930b4",
+ "key": "check:sound:C",
+ "symptom": "sound present and audible",
+ "item": "C15c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the check 'sound present and audible' fail with 'no audio track'?",
+    "because": "Neither chat made a video. The only files are the face-detection crop PNGs, so there is no track to measure. The audio check fails as a side effect of the missing video.",
+    "evidence": "grade.json (both builds): 'a video was made' pass=false, got [.png x4] (new) and [.png x8] (old). Must-have 'Both voices audible' = no, because 'No output video was delivered'."
+   },
+   {
+    "why": "Why was no video made?",
+    "because": "In both chats the assistant ran detect_faces and get_face_detection_results, then stopped and asked a question. It never called a face-swap tool.",
+    "evidence": "calls.jsonl (old): detect_faces twice (the second time with confidence_score 0.8), polling, fetch_image_download, then the last 'say' has kind=question and end kind=question. calls.jsonl (new): detect_faces, get_face_detection_results, fetch_image_download twice, then end. No swap call in either chat."
+   },
+   {
+    "why": "Why did the assistant stop to ask and not map the faces itself?",
+    "because": "Detection found 4 faces (3 in frame 0 and 1 at frame 132), but the user spoke of only 2 people. The assistant could not look at the crops, so it could not tell which face was the man and which was the woman.",
+    "evidence": "get_face_detection_results output lists 0-0, 0-1, 0-2 and 132-0.png. fetch_image_download on 0-0.png returned output \"\" both times in both builds. The assistant says: 'The tool can't show me the face crops' (old) and 'I can't view the face crops from my side' (new)."
+   },
+   {
+    "why": "Why would looking at the crops still not have settled it?",
+    "because": "The clip has three people (two men and one woman), and the brief says 'the man'. A face swap with only 'the man's portrait' is therefore ambiguous between two men. The test itself expects the assistant to ask which man.",
+    "evidence": "grade.json (new) faults: the crops are 'a man (A), a bearded man (B), a woman (C) and a profile of the first man (D)'. grade.json (old): 'two men and one woman'. C15c.json expect.asks_about: '(the clip has two men: asking which one is fine)'."
+   },
+   {
+    "why": "Why did the clarification not lead to a swap?",
+    "because": "The simulated user could not answer. Its answer sheet speaks only of 'the male coworker' and 'the female coworker' and says nothing about positions or which of the two men is meant. So the user kept saying 'just two people' and finally gave up. In new, the classifier labelled the question as 'delivered', and the chat ended after one turn without a user reply.",
+    "evidence": "C15c.json answer_sheet 'Face mapping': 'portrait-man.jpg replaces the male coworker's face' and gives no position. Old calls.jsonl user turns: 'my notes don't include positions', then give_up=true. New calls.jsonl line 8: say kind='delivered' although the text asks 'Please tell me which letters are the man…', then end."
+   },
+   {
+    "why": "Why does the answer sheet have no way to say which man?",
+    "because": "The test was written as if the clip had two people. In fact talk-two.mp4 shows three. The brief and answer sheet do not match the material, and nothing in this system can resolve that.",
+    "evidence": "C15c.json brief text: 'the man's face … and the woman's'. The title says 'Two Coworkers'. expect.asks_about admits the clip has two men, but the answer_sheet never says which one."
+   }
+  ],
+  "axiom": "Brief/answer-sheet defect in C15c. The brief and answer sheet assume two people ('the man', 'the woman'), but talk-two.mp4 shows two men and one woman. The test expects the assistant to ask which man, yet the simulated user has nothing to answer with. So no swap runs, no video exists, and the audio check fails by default. Two factors make it worse in both builds: fetch_image_download returned empty content, so the assistant could not see the crops. In new, the classifier also labelled the question 'delivered' and ended the chat after one turn.",
+  "category": "brief_ambiguity",
+  "builds": "both",
+  "fix": "Edit C15c.json answer_sheet 'Face mapping' so it names the target man, for example 'portrait-man.jpg goes on the man on the left (not the bearded man in the middle); portrait-woman.jpg goes on the woman on the right; leave the other man unchanged'. Then the expected 'which man?' question has an answer and the swap can run. Do this or change the clip to one with only two people."
+ },
+ "error": null,
+ "seconds": 59,
+ "usd": 0.5338301999999999
+}

@@ -1,0 +1,47 @@
+{
+ "id": "080f8e82f3",
+ "key": "must:G35b:One finished 16:9 image with original left and renovated right",
+ "symptom": "One finished 16:9 image with original left and renovated right",
+ "item": "G35b",
+ "n": 4,
+ "builds": {
+  "new": 2,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'One finished 16:9 image with original left and renovated right' not met?",
+    "because": "Where a side-by-side was delivered, its 'Before' half is not the supplied photo. The AI redrew it: it is cropped, the clutter is gone, the counters and sink are changed, and in one chat it is even white. In the third chat (new, stupid) no side-by-side was made at all.",
+    "evidence": "s4.old.happy grade.json: 'left panel is not the original; it is a different, already-renovated white kitchen'. s4.old.dumper grade.json: 'left panel is a cropped, regenerated version, not the supplied photo'. s4.new.stupid grade.json: 'Output is a single renovated image only; no side-by-side.'"
+   },
+   {
+    "why": "Why is the left half a redrawn image and not the original pixels?",
+    "because": "The assistant built the composite with the generative edit_image tool (flux-2-klein). The prompt asked for 'Left half: the original kitchen photo exactly as given, unchanged'. A diffusion edit model generates every output pixel, so it cannot paste the source unchanged.",
+    "evidence": "s4.old.happy calls.jsonl: second edit_image call with aspect_ratio 16:9 and two image_file_paths (the original and the makeover), prompt 'Left half: image 1 ... exactly as it is, unchanged'. s4.new.dumper calls.jsonl: one edit_image call with the original, prompt 'LEFT half: the original kitchen photo exactly as given, unchanged ... RIGHT half: ... renovated'."
+   },
+   {
+    "why": "Why did the assistant use a generative model for a layout step that needs exact pixels?",
+    "because": "Neither build offers a tool that places the user's image and a generated image side by side, pixel-exact, with text labels. The new build has code-drawn steps only for video (join_videos, join_production_clips, title cards drawn by code). It has nothing like that for still images. So edit_image was the only way to make 'one image'.",
+    "evidence": "tools-new.json: join_videos, get_last_frame, join_production_clips and plan_video_production cards ('drawn by code ... no generation call') are all video-only. I found no image compose, collage or overlay tool in the parts of the list I read. Both builds' assistants went to edit_image for the composite."
+   },
+   {
+    "why": "Why did the new build's planner not stop or redirect this?",
+    "because": "plan_request treats a before-and-after as a normal edit. It returned ready:true for an edit value that contains 'side by side before and after'. It gave no warning that the 'keep original' half will be regenerated. In the stupid chat it returned ready:true even though aspect was 'missing', so the 16:9 side-by-side part of the brief was never pulled out of the vague user.",
+    "evidence": "s4.new.dumper calls.jsonl, plan_request result: ready true, edit 'white shaker cabinets ... side by side before and after'. s4.new.stupid calls.jsonl, plan_request result: ready true with aspect source 'missing', questions []."
+   },
+   {
+    "why": "Why can the generative model not keep the left half exact, even with a precise prompt?",
+    "because": "This is an axiom. An image-to-image diffusion editor re-synthesizes the whole frame. It cannot copy a region bit for bit, and it drifts on crops, fixtures and clutter. Only deterministic code compositing keeps the original untouched.",
+    "evidence": "In both builds the composites change the original: the grader reports cropping, a missing sink, a marble-like counter and reduced clutter. The assistants themselves warned 'it may have changed the original side a little' (old.happy) and 'check that the left side still matches your original photo' (new.dumper)."
+   }
+  ],
+  "axiom": "The generative image editor (flux-2-klein via edit_image) redraws every pixel and cannot keep a region exact. Neither build has a deterministic image-compositing tool (side-by-side plus text labels) that could put the untouched original next to the generated makeover.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a code-only image tool, for example compose_images(images[], layout='side_by_side', aspect='16:9', labels=['Before','After']). It places the user's file and the edit_image output pixel-exact and draws the labels by code. Spends no credits. Then make edit_image's description and plan_request say: 'for before/after or comparison images, generate only the changed version, then use compose_images; never ask the model to reproduce an original unchanged'."
+ },
+ "error": null,
+ "seconds": 54,
+ "usd": 0.417057
+}

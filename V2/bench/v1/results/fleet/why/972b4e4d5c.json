@@ -1,0 +1,47 @@
+{
+ "id": "972b4e4d5c",
+ "key": "must:J50a:The final deliverable is one square image.",
+ "symptom": "The final deliverable is one square image.",
+ "item": "J50a",
+ "n": 4,
+ "builds": {
+  "new": 2,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the final deliverable not one square image?",
+    "because": "The last image the assistant delivered as the 'square' fox is still portrait: 512x640 (4:5) in the old build and 384x640 (9:16) in the new build.",
+    "evidence": "s2.old.happy.J50a/grade.json and s2.old.dumper.J50a/grade.json: check 'aspect 1:1' fails, got 512x640 for all files. s2.new.happy.J50a/grade.json and s2.new.dumper.J50a/grade.json: got 384x640 for all 5 files. Grader: 'Image 3 is portrait, about 512x640 (4:5), not 1:1'."
+   },
+   {
+    "why": "Why is the output portrait when the assistant was asked for square?",
+    "because": "The assistant asked for square correctly. It called edit_image with aspect_ratio '1:1', the first fox image as the source, and a prompt to extend the background to a square. The server ignored the ratio.",
+    "evidence": "s2.old.happy.J50a/calls.jsonl line 11: edit_image {model flux-2-klein, resolution 640px, aspect_ratio '1:1', image_file_paths:[fox 4:5 URL]}. s2.new.happy.J50a/calls.jsonl line 15: the same call with aspect_ratio '1:1' and the 4:5 fox as source. Both projects returned 'complete'."
+   },
+   {
+    "why": "Why did edit_image ignore aspect_ratio?",
+    "because": "When edit_image gets a source image, the generation (flux-2-klein, free plan) keeps the source's proportions and does not use aspect_ratio. The same thing happened earlier in the new build: a '4:5' reframe of a 9:16 source came back 9:16 (384x640). Without a source, aspect_ratio works: the old build's text-only edit_image with '4:5' returned 512x640.",
+    "evidence": "s2.new.happy.J50a/calls.jsonl lines 7-8: edit_image aspect_ratio '4:5' with a 9:16 source. grade.json shows every file is 384x640. s2.old.happy.J50a/calls.jsonl line 2: edit_image '4:5' with image_file_paths [] gave 512x640."
+   },
+   {
+    "why": "Why did the assistant expect aspect_ratio to work on an edit with a source image?",
+    "because": "The edit_image description lists aspect_ratio values including 1:1 and 4:5. It says only 'The aspect ratio of the output image(s)'. It gives no warning that the source's proportions override this value. The new build did not change this text.",
+    "evidence": "tools-new.json, edit_image inputSchema.aspect_ratio: enum [auto,16:9,9:16,4:3,3:2,1:1,4:5,2:3], description 'The aspect ratio of the output image(s). If not specified, defaults to auto.' Nothing says the value is ignored when a source image is given."
+   },
+   {
+    "why": "Why was the wrong size not caught before delivery?",
+    "because": "The tool result reports only success and download URLs, with no output size. The assistant did not view the image. It called wait_for_image_project with include_inline_downloads false and said it could not check the result. Neither build has a step that checks the output against the requested ratio.",
+    "evidence": "s2.old.happy.J50a/calls.jsonl line 12: wait output has status complete and downloads, but no width or height. Reply line 14: 'I couldn't look at the result here, so I haven't checked that nothing is cut off.' s2.new.happy.J50a/calls.jsonl line 18: 'I can't see the result from here, so please check it.'"
+   }
+  ],
+  "axiom": "With a source image, Magic Hour's edit_image (flux-2-klein, free plan) ignores aspect_ratio and returns an image with the same proportions as the source. The tool description promises the opposite: 'The aspect ratio of the output image(s)'. The tool result reports success and gives no warning, and the assistant never views the result, so the mismatch is never caught.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the MCP server, add an aspect_ratio guard to edit_image: when image_file_paths is not empty and the requested ratio differs from the source ratio, pad the source image to the target ratio before the edit (a canvas plus an outpaint prompt), or crop or pad the output with code. Then check the output size against the requested ratio and return an error or warning if they differ. Change the aspect_ratio description in both builds to say that it is followed only for prompt-only edits."
+ },
+ "error": null,
+ "seconds": 64,
+ "usd": 0.8740554
+}

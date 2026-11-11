@@ -1,0 +1,47 @@
+{
+ "id": "f892a57b36",
+ "key": "must:C15a:Face recognizably matches portrait-woman.jpg throughout",
+ "symptom": "Face recognizably matches portrait-woman.jpg throughout",
+ "item": "C15a",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the grader say the face does not recognizably match portrait-woman.jpg?",
+    "because": "The delivered frames show the original woman's face, only slightly changed or blended into a generic new face. The target's skin tone, light-brown wavy hair and face structure stay. The portrait's dark curly hair and darker, rounder face do not come through.",
+    "evidence": "s1.new.happy.C15a/grade.json: 'weak identity transfer… skin tone and features are closer to the original'; 'hair stays light brown and wavy'. s1.old.stupid.C15a/grade.json: 'The face stays close to the original woman, with only slight changes'."
+   },
+   {
+    "why": "Why does the output keep the original look? Did the assistant send the wrong inputs?",
+    "because": "No. In every chat the assistant sent the correct portrait and video to swap_face_in_video. It sent face_swap_mode=all-faces, which is right because the clip has one face. Old and new builds sent the same arguments. Some chats got the length wrong (10 s in old.stupid, 30 s in new.stupid), but new.happy (0–5 s) and old.dumper (0–5 s) still failed on identity. So length is not the cause.",
+    "evidence": "calls.jsonl in s1.old.stupid, s1.old.dumper, s1.new.stupid and s1.new.happy: image_file_path=…512f8147…-image-0.jpg, video_file_path=…3c272b7d…-video-0.mp4, face_swap_mode=all-faces. detect_faces returned one face (assets/01-get_face_detection_results.png)."
+   },
+   {
+    "why": "Why does a correct call give such a weak likeness?",
+    "because": "The face-swap model replaces only the inner face region. It keeps the target's hair, head outline and skin lighting. The target (straight light-brown hair, lighter skin, narrow smiling face) and the portrait (dark curly hair, darker and rounder face) differ most in exactly these kept features. The swapped inner face gets blended into the target's look, so it reads as the original woman or a generic woman.",
+    "evidence": "attachments/portrait-woman.jpg vs assets/01-get_face_detection_results.png (target face crop). The grader notes say the hair and skin tone follow the target in both builds."
+   },
+   {
+    "why": "Why can the assistant not ask for the hair to transfer as well, which the brief allows?",
+    "because": "swap_face_in_video has no setting for strength, hair or full-head swap. The only inputs are the image, the video, the mode and the time range. The workflow guide only says 'Check identity'. The assistant cannot check frames, and no tool can give a stronger likeness.",
+    "evidence": "get_workflow_guide output in old.stupid and new.stupid calls.jsonl: the steps list only the image, video, mode and start/end; review says 'Check identity, occlusions and temporal stability'. The swap_face_in_video args in all chats use every exposed option."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "How strongly Magic Hour's face-swap model keeps identity when the source and target differ in hair and skin tone is a property of the generation model. Neither the MCP build nor the assistant controls it. It fails the same way on both builds with the same inputs.",
+    "evidence": "Same failure in 3 old and 2 new chats with identical image and video inputs. Results files show no difference between the builds for this item."
+   }
+  ],
+  "axiom": "Magic Hour's video face-swap model replaces only the inner face and keeps the target's hair, skin tone and head shape. When the source portrait differs strongly in these features (dark curly hair and darker, rounder face vs light straight hair and lighter, narrow face), it gives only a weak likeness. The API exposes no option to raise identity strength or swap the full head.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "none: inherent. The likeness cannot be improved through the MCP. Optional mitigation: in the swap_face_in_video description and the video-face-swap guide, state that hair and skin tone stay from the target video. Then the assistant can tell the user to expect a partial likeness when they look very different, and not claim 'the face from your portrait is now on the woman'."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.35315720000000006
+}

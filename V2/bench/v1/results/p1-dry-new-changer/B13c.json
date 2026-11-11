@@ -1,0 +1,223 @@
+{
+  "id": "B13c",
+  "item": {
+    "id": "B13c",
+    "case": 13,
+    "case_name": "Upscale or restore",
+    "group": "B",
+    "group_name": "Image edits (the user brings a picture)",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which of the two attached pictures should be upscaled?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Resolve the Upscale Target",
+    "sub": "c",
+    "spec": {
+      "exact_text": [],
+      "aspect": "any",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "blurry-dog.jpg",
+          "lake-small.jpg"
+        ],
+        "text": "upscale it please"
+      }
+    ],
+    "tests": "Asks which attachment the user means, then upscales only the selected picture without guessing or processing both.",
+    "answer_sheet": {
+      "Which picture": "The lake one, lake-small.jpg.",
+      "Output size": "your call",
+      "Enhancement style": "your call",
+      "Framing": "Keep the whole lake picture and its original proportions.",
+      "Text": "No added text."
+    },
+    "must_haves": [
+      "The final deliverable is an upscaled version of lake-small.jpg, following clarification.",
+      "The lake, mountains, trees, clouds, and their arrangement remain faithful to the selected source.",
+      "The delivered image has larger pixel dimensions than lake-small.jpg, not merely a renamed copy.",
+      "The full original framing and aspect ratio are preserved.",
+      "Only one edited image is delivered; the dog photo is not included or blended into it."
+    ]
+  },
+  "session": "mcp-p1-dry-n-changer-B13c",
+  "sessionDir": "sessions/mcp-p1-dry-n-changer-B13c",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "upscale it please",
+      "materials": [
+        "blurry-dog.jpg",
+        "lake-small.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Which image would you like upscaled—the dog, the lake, or both?",
+          "asked": [
+            "question"
+          ],
+          "user": "The lake one, lake-small.jpg.",
+          "calls_before": 1
+        }
+      ],
+      "agent": "I couldn’t upscale **lake-small.jpg** because your Magic Hour account has insufficient credits. No image was created.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"upscale it please\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/89ce7206-5a62-4b70-af6a-835cc7a62ad8-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/58a8f4b2-d2d1-4fe8-957f-15de0acb2468-image-0.jpg]\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"params\":[{\"name\":\"subject\",\"source\":\"missing\"},{\"name\":\"edit\",\"value\":\"upscale\",\"source\":\"user\"}],\"tool\":\"upscale_image\"}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        },
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"upscale it please\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/89ce7206-5a62-4b70-af6a-835cc7a62ad8-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/58a8f4b2-d2d1-4fe8-957f-15de0acb2468-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Which image would you like upscaled—the dog, the lake, or both?\"},{\"role\":\"user\",\"text\":\"The lake one, lake-small.jpg.\"}],\"attachments\":[{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"params\":[{\"name\":\"subject\",\"source\":\"user\",\"value\":\"lake-small.jpg\"},{\"name\":\"edit\",\"source\":\"user\",\"value\":\"upscale\"},{\"name\":\"keep\",\"source\":\"derived\",\"value\":\"Preserve the lake photo's appearance and composition\"}],\"tool\":\"upscale_image\"}",
+          "output": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "upscale_image",
+          "args": {
+            "scale_factor": 2,
+            "style": {
+              "mode": "preserve"
+            },
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/58a8f4b2-d2d1-4fe8-957f-15de0acb2468-image-0.jpg"
+            },
+            "name": "Lake photo — 2x upscale"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"upscale it please\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/89ce7206-5a62-4b70-af6a-835cc7a62ad8-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/58a8f4b2-d2d1-4fe8-957f-15de0acb2468-image-0.jpg]\"}],\"attachments\":[{\"name\":\"blurry-dog.jpg\",\"kind\":\"image\"},{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"params\":[{\"name\":\"subject\",\"source\":\"missing\"},{\"name\":\"edit\",\"value\":\"upscale\",\"source\":\"user\"}],\"tool\":\"upscale_image\"}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "said",
+          "text": "Which image would you like upscaled—the dog, the lake, or both?"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"upscale it please\\n[Attached: blurry-dog.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/89ce7206-5a62-4b70-af6a-835cc7a62ad8-image-0.jpg]\\n[Attached: lake-small.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/58a8f4b2-d2d1-4fe8-957f-15de0acb2468-image-0.jpg]\"},{\"role\":\"assistant\",\"text\":\"Which image would you like upscaled—the dog, the lake, or both?\"},{\"role\":\"user\",\"text\":\"The lake one, lake-small.jpg.\"}],\"attachments\":[{\"name\":\"lake-small.jpg\",\"kind\":\"image\"}],\"params\":[{\"name\":\"subject\",\"source\":\"user\",\"value\":\"lake-small.jpg\"},{\"name\":\"edit\",\"source\":\"user\",\"value\":\"upscale\"},{\"name\":\"keep\",\"source\":\"derived\",\"value\":\"Preserve the lake photo's appearance and composition\"}],\"tool\":\"upscale_image\"}",
+          "result": "{\"tool\":\"upscale_image\",\"ready\":true,\"params\":[],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "upscale_image",
+          "arguments": "{\"scale_factor\":2,\"style\":{\"mode\":\"preserve\"},\"assets\":{\"image_file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/58a8f4b2-d2d1-4fe8-957f-15de0acb2468-image-0.jpg\"},\"name\":\"Lake photo — 2x upscale\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "said",
+          "text": "I couldn’t upscale **lake-small.jpg** because your Magic Hour account has insufficient credits. No image was created."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Which image would you like upscaled—the dog, the lake, or both?"
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "upscale_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn’t upscale **lake-small.jpg** because your Magic Hour account has insufficient credits. No image was created.",
+        "refuse": "",
+        "tier_move": "I couldn’t upscale **lake-small.jpg** because your Magic Hour account has insufficient credits. No image was created.",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 30
+    }
+  ],
+  "started": "2026-11-09T07:10:25.303Z",
+  "persona": "changer",
+  "opening": {
+    "id": "B13c",
+    "persona": "changer",
+    "text": "upscale it please",
+    "as_written": true,
+    "change": null
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 30
+}

@@ -1,0 +1,47 @@
+{
+ "id": "2d9fbf5369",
+ "key": "must:E27b:Deliverable is the original office video with added audible music, not just an audio file",
+ "symptom": "Deliverable is the original office video with added audible music, not just an audio file",
+ "item": "E27b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the deliverable not the office video with music added?",
+    "because": "In both chats the assistant only made a separate music track and returned a WAV link. The original talk-two.mp4 was never changed or sent back.",
+    "evidence": "s3.new.happy.E27b/calls.jsonl and s3.old.stupid.E27b/calls.jsonl: the only paid call is generate_music (duration 15, instrumental), then wait_for_audio_project, which returns output.wav. grade.json: 'a video was made' failed with got [\".wav\"], and the must-have was not met: 'Only a 15 s WAV link was delivered; the user must mix it themselves.'"
+   },
+   {
+    "why": "Why did the assistant stop at the audio file and not put it on the clip?",
+    "because": "The assistant decided before doing any work that no tool could mix music under an existing video, and it told the user so. Its plan was a track that the user adds in CapCut or iMovie.",
+    "evidence": "new state/calls line 5: 'none of the tools I have can mix music under an existing video and leave the clip and its conversation untouched… The tools that do touch your video would all replace its audio or re-generate the clip, so I won't use them here.' old calls line 4: 'none of my Magic Hour tools can mix a music track into an existing video'. Final old message: 'I can't merge the track into the video for you.'"
+   },
+   {
+    "why": "Why did it conclude that no tool could do the mix?",
+    "because": "The assistant read the tool list correctly. No exposed tool takes a user video plus an audio file and returns the video with the audio mixed in. edit_video regenerates content from a prompt. translate_video replaces the speech. join_videos only joins videos end to end, with a 'silent' option. create_talking_photo needs a still image.",
+    "evidence": "tools-new.json: edit_video 'Edits the appearance or content… using a text prompt'; translate_video 'Translates speech'; join_videos 'Join videos end to end with hard cuts… silent: remove all sound'; get_last_frame and trim_video do no audio work. tools-old.json has the same Magic Hour API tools and none of the production tools."
+   },
+   {
+    "why": "Why does the new build, which can mix music, still not cover this case?",
+    "because": "The new build's mixer only runs inside the production pipeline. join_production_clips 'mixes the music under' the narration, but only for clips made by create_production_clip from a plan_video_production plan. A plan's references are pictures or last frames, not a user video. So the user's existing clip cannot get to the mixer.",
+    "evidence": "tools-new.json: join_production_clips 'Joins the finished clips of a plan… If the plan has sound, pass sound… mixes the music under it'; create_production_clip 'Makes one clip of a plan'; plan_video_production reference.kind enum is none/picture/last_frame/file, where file is 'a picture you made or were given'."
+   },
+   {
+    "why": "Why is there no such tool at all?",
+    "because": "The server's tool set, in both the hosted build and the upgraded build, has no general 'add or mix an audio track onto a supplied video' operation. The upstream Magic Hour API tools exposed through MCP have none either. This is a gap in what the MCP server offers. The brief and the free plan are not the cause: the test expects beyond_free 'no', and generate_music worked on the free plan.",
+    "evidence": "E27b.json: expect.beyond_free 'no', and must_haves[0] requires 'the original office video with an added audible music track'. Both tool lists have no tool whose description mentions adding audio to an existing video."
+   }
+  ],
+  "axiom": "Neither build exposes a tool that mixes a generated or supplied audio track under the existing audio of a user's video. The only mixer, in the new build's join_production_clips, works only on clips generated from a production plan. So the assistant correctly said it could not do the task and delivered only the WAV.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a server-side tool, add_audio_to_video(video, audio, music_gain_db≈-18, keep_original_audio=true, fit='trim_to_video', fade_out_s=1), that runs ffmpeg like join_videos does and returns the download URL of the mixed MP4. Reuse the mixer from join_production_clips. Describe the tool in generate_music's description too ('to put this music on the user's clip, call add_audio_to_video') so that the assistant chains the two calls and does not stop at the WAV."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.366534
+}

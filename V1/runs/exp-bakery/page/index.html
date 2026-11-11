@@ -1,0 +1,185 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bakery Grid Tests</title>
+<style>
+:root{--bg:#f4f5f2;--panel:#fff;--fg:#1c211e;--mut:#5f6863;--line:#dbe0dc;--ok:#1f7a4d;--bad:#b23a2f;--mono:ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d}}
+:root[data-theme="dark"]{--bg:#111412;--panel:#191d1a;--fg:#e5eae6;--mut:#98a29c;--line:#2b322e;--ok:#5ccb8f;--bad:#f07c6d}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:16px;display:grid;gap:18px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0}.mut{color:var(--mut);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+img,video{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+pre{margin:0;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font:12.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+ul{margin:0;padding-left:20px}li{margin:2px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.cap,.cap2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font:12px var(--mono);color:var(--mut);text-align:center}.cap2{grid-template-columns:1fr 1fr}
+</style></head><body><main>
+<h1>Bakery grid tests: theme word, minimal prompt</h1>
+<p class="mut">Two isolated tests on the photoreal bakery run (<code>runs/custom-bakery-real</code>). 700 credits: two sheets at 200, one 4k grid at 300. Script: <code>V1/experiments/bakery-tests.mjs S1 G5</code>, outputs in <code>runs/exp-bakery/</code>.</p>
+
+<section class="card"><h2>1. Same spec, only the opening words changed</h2>
+<img src="s1.jpg" alt="three sheets of the neighbour">
+<div class="cap"><span>pipeline template (try 7, used in the run)</span><span>"A studio photograph of a real person…"</span><span>"A 3D animated-film character design…"</span></div>
+<p>The pipeline's sheet prompt starts with the style line and then says <em>"Reference sheet of ONE character: neighbour…"</em>. "Reference sheet of a character" names what the picture is, and it beats "live-action photographic footage" (which describes video, not a still). Seven tries, all figurines. With the medium as the noun of the sentence, the same spec gives a real person. The theme word decides it, and it has to be the thing the image <em>is</em>, not an adjective in front of "reference sheet".</p>
+<pre>A studio photograph of a real person, full length, shot on a cinema camera. The person: An older woman with a compact build, peach-toned skin, a round face, brown eyes, and a chin-length silver-grey bob tucked neatly behind her ears. She wears a soft-blue cardigan over a cream blouse, a calf-length terracotta skirt, and plain dark-brown shoes. Small round brown-framed glasses and gently creased cheeks are her fixed distinguishing features. A grown woman, slightly shorter than the baker.
+Standing, front view, neutral pose, arms relaxed, whole figure visible head to feet.
+Plain light-grey seamless studio backdrop, soft even light, nothing else in the picture; no text.</pre>
+<p class="mut">Where the theme comes from: <code>--style</code> on <code>scenes.mjs</code> replaces the story's style line (the realism run was started that way); otherwise the story call writes one. Sheets get the whole line as a prefix; grids get a one-sentence "medium" reduced from it. Neither turns it into the noun.</p>
+</section>
+
+<section class="card"><h2>2. Scene 5 from a hand-written minimal prompt (one 4k grid, 300 credits)</h2>
+<img src="g5-grid.jpg" alt="the 3 by 3 grid image from the minimal prompt">
+<img src="g5.jpg" alt="scene 5 grid from the minimal prompt, cropped cells">
+<p>Inputs: 1 the shop plate, 2 baker sheet, 3 neighbour (the photo sheet above), 4 parent sheet, 5 child sheet, 6 the frame where the bread was last seen (s3-p5). No spec text at all.</p>
+<pre>A storyboard grid of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Cells 1 to 8 are eight consecutive moments in reading order; cell 9 is the empty shop.
+Image 1 is the shop. Every cell shows this room from exactly this camera; only the people and the bread change.
+Image 2 is the baker. Image 3 is the neighbour. Image 4 is the parent. Image 5 is the child. Each keeps the same face, hair and clothes in every cell; their poses and the grey backgrounds in those images do not apply.
+Image 6 is how the bread looks now: one baked loaf on the wire cooling rack and one tray of baked croissants on the workbench. These are the only bread and pastries in the shop; the shelves stay empty.
+Throughout: the baker stands behind the counter; the neighbour (a canvas shopping bag on her arm), the parent and the child stand across the counter from the baker, the neighbour nearest the blue front door.
+1. The baker lifts one croissant from the tray.
+2. The baker slips the croissant into a small brown paper bag on the counter.
+3. The baker passes the paper bag across the counter to the neighbour.
+4. The baker lifts the loaf from the cooling rack.
+5. The baker folds a sheet of plain paper around the loaf on the counter.
+6. The parent receives the wrapped loaf; the baker's shoulders droop.
+7. The neighbour and the parent smile at the baker; the parent holds the wrapped loaf.
+8. The baker lifts their head and smiles.
+Live-action photograph, cinema camera, shallow depth of field, warm practical light.</pre>
+<ul>
+<li class="ok">Baker, neighbour, parent and child are the people from the sheets in every cell they appear in.</li>
+<li class="ok">One loaf, one tray of croissants, same shapes throughout; the loaf gets wrapped in cell 5; no other bread, shelves empty.</li>
+<li class="ok">One room, one camera across all nine cells; cell 9 is the empty shop.</li>
+<li class="bad">The customers vanish in cells 1, 2, 4, 5 and 8: when a moment's line does not mention them, the model drops them. "Throughout" was not enough; the pipeline's rule "whatever is not said to change stays the same" (or a cast list per cell) is necessary.</li>
+<li class="bad">Camera is the counter's, not the plate's wide view (the room check would flag it). Cell 7: the loaf is unwrapped again.</li>
+</ul>
+</section>
+
+<section class="card"><h2>2b. Same scene, one account: cell 1 in full, every later cell only its change (300 credits)</h2>
+<p class="mut">The grid as the model drew it (one 4k image, 3 × 3), then its cropped cells.</p>
+<img src="g5b-grid.jpg" alt="the 3 by 3 grid image from the state-plus-deltas prompt">
+<img src="g5b.jpg" alt="scene 5 grid from the state-plus-deltas prompt, cropped cells">
+<pre>A storyboard grid of 9 equal cells, 3 rows × 3 columns, edge to edge, no gutters, borders, numbers or text. Cells 1 to 8 are eight consecutive moments of one continuous shot, in reading order; cell 9 is the empty shop.
+Image 1 is the shop; every cell is this room from exactly this camera. Image 2 is the baker, image 3 the neighbour, image 4 the parent, image 5 the child: same face, hair and clothes in every cell; their poses and grey backgrounds do not apply. Image 6 shows the bread as it is now.
+Cell 1, in full: the baker stands behind the counter and lifts one croissant from the tray of baked croissants on the workbench behind them. Across the counter stand three customers: the neighbour nearest the blue front door, a canvas shopping bag on her arm; the parent beside her; the child beside the parent. One baked loaf rests on the wire cooling rack. A small brown paper bag stands open on the counter. There is no other bread or pastry anywhere; the shelves are empty.
+Each later cell is the cell before it with ONLY the change named; everyone and everything else stays exactly where it was.
+2. The baker slips the croissant into the paper bag.
+3. The baker passes the paper bag across the counter; the neighbour takes it.
+4. The baker lifts the loaf from the cooling rack.
+5. The baker folds a sheet of plain paper around the loaf on the counter.
+6. The parent holds the wrapped loaf; the baker's shoulders droop.
+7. The neighbour and the parent smile at the baker.
+8. The baker lifts their head and smiles.
+Live-action photograph, cinema camera, shallow depth of field, warm practical light.</pre>
+<ul>
+<li class="ok">Customers present in 7 of 8 cells (test 2: 3 of 8). Identity holds for all four people; one loaf, same shape; one room, one camera, close to the plate's wide view.</li>
+<li class="bad">Cell 5 drops the customers. The tray of croissants disappears after cell 1.</li>
+<li class="bad">Late cells drift in state: cell 6 gives the wrapped loaf to the neighbour, not the parent; cell 7 puts the loaf back on the rack unwrapped; cell 8 has it wrapped on the counter. Deltas written as actions pile up inference; from cell 6 on, the model loses track of who holds what.</li>
+</ul>
+<p>So: one account is right, and it fixed the vanishing. The remaining errors are in what a delta says. Written as the resulting state ("the wrapped loaf is in the parent's hands; the baker's hands are empty; the neighbour holds the paper bag"), which is what the state table holds (<code>changes[{id, now}]</code>), each cell can be checked against it, and a cell that drifts can be caught by the counts/identity check rather than inferred from the chain.</p>
+</section>
+
+<section class="card"><h2>2c. Text only: a slug for cell 1, one bullet of change per cell, no reference images (300 credits)</h2>
+<img src="t1-grid.jpg" alt="text-only grid, loaves only">
+<p>The prompt as sent: <a href="t1-prompt.txt">t1-prompt.txt</a> (header line; cell 1 in full: room, camera, the four people, two loaves on the rack, a stack of wrapping paper; then cells 2–9 as single changes). Loaves only.</p>
+<ul>
+<li class="ok">The same four people in every cell they appear in, from text alone; the same camera in all nine cells; photographic throughout; cell 9 empty with the paper stack.</li>
+<li class="ok">Cells 2, 3, 4, 6, 9 are exactly their bullet: loaf lifted, wrapped, handed to the neighbour, second loaf wrapped, empty room.</li>
+<li class="bad">Bookkeeping drifts from cell 5: two loaves still on the rack in cell 2 (one was lifted); the baker holds two loaves in cell 5; cell 7 drops the neighbour and the parent's loaf is unwrapped; two loaves are back on the counter in cell 8.</li>
+<li class="warn">The room is a plainer room than described (no far-right window, rack on the counter rather than the right wall); the camera is closer than "wide, rear corner". Without a plate there is nothing to hold it to.</li>
+</ul>
+<p>Same shape of result as 2b: identity and camera hold; what the model cannot do over eight steps is keep counts and hand-offs straight. Those are exactly the facts the state table knows per cell, so a per-cell check against it is the right place to catch them.</p>
+</section>
+
+<section class="card"><h2>2d. First and last frame: both at once (V1) against first-then-last (V2, control)</h2>
+<p>Prompts: <a href="f1-prompts.txt">f1-prompts.txt</a>. V1: one 4k image, top row = first frame | last frame, bottom row the empty room (300 credits). V2: cell 1 of that grid sent as image 1, the last frame generated from it (200 credits).</p>
+<img src="f1-grid.jpg" alt="V1: 2 by 2 grid, first and last frame on the top row">
+<p class="mut">Left to right: V1 first frame (cell 1), V1 last frame (cell 2), V2 last frame made from cell 1.</p>
+<img src="f1-pair.jpg" alt="first frame, V1 last frame, V2 last frame">
+<ul>
+<li class="ok">V1 pair: same room, same camera, same three adults between first and last; rack empty, both women hold wrapped loaves, baker smiling.</li>
+<li class="bad">V1 last frame drops the child and gives the baker a third loaf. The model wrote "Cell 1…4" labels on the image although the prompt forbids text (the layout line named the cells; the 8-cell prompts, which named them the same way, did not get labels). Cells 3–4, the empty room, are from a lower, closer camera than cells 1–2.</li>
+<li class="ok">V2 last frame: every end-state fact holds: rack empty, neighbour and parent each hold a wrapped loaf, child present and looking up, baker upright and smiling, no extra bread. Room and camera identical to the first frame (it is an edit of it). It inherited the "Cell 1" label from the crop, and the canvas bag became a brown shoulder bag.</li>
+<li class="warn">Both share V1's first frame, and that frame is further from the character specs than the 9-cell text grid was: no glasses on the neighbour, a floral blouse, the parent's hair down, a blond child instead of dark curls and medium-brown skin, no visible moustache. One long prompt describing two frames spent less of its attention on the faces than the 9-cell prompt, where the people were named in every cell.</li>
+</ul>
+<p>Two frames at once works for continuity (same room, camera, adults) and fails on bookkeeping again (a missing child, an extra loaf). Making the last frame from the first is exact on the end state. For a grid that fills in between, the pair to feed it is V1-cell-1 + V2-last.</p>
+</section>
+
+<section class="card"><h2>2e. V2 on its own: first frame, then the last frame made from it</h2>
+<p class="mut">First frame: cell 1 of the V1 grid (the "Cell 1" label is the grid's). Last frame: generated with that image as image 1 and the end state in words (prompt in <a href="f1-prompts.txt">f1-prompts.txt</a>, "V2").</p>
+<p><strong>First frame</strong></p>
+<img src="v2-first.jpg" alt="V2 first frame">
+<p><strong>Last frame</strong></p>
+<img src="v2-last.jpg" alt="V2 last frame, an edit of the first">
+</section>
+
+<section class="card"><h2>2f. The grid fills in between the first and last frame (images 1 and 2, scene text, no bullets)</h2>
+<p>Prompt: <a href="g9-prompt.txt">g9-prompt.txt</a>. Inputs: the V2 first frame and V2 last frame. One 4k image, 300 credits.</p>
+<img src="g9-grid.jpg" alt="grid filled in between the first and last frame">
+<ul>
+<li class="ok">Room, camera and the four people are identical across all nine cells: the two anchor images hold everything that text could not in 2c.</li>
+<li class="bad">Cell 1 is not image 1 as it is: the neighbour already holds a wrapped loaf and has the shoulder bag from image 2; the model blended the two anchors from the start. Cell 9 is close to image 2.</li>
+<li class="bad">The seven cells between are not a sequence: the loaf is wrapped in cells 3, 6 and again handed over in 4 and 7, both women hold loaves from cell 5 while the baker keeps wrapping more, cell 8 drops the neighbour and the child. Without a per-cell statement of what happens, "evenly spaced moments" becomes variations on the same hand-over.</li>
+</ul>
+<p>So the three pieces separate cleanly: anchor images fix room, camera and identity (2f); one line per cell fixes what happens in it (2b, 2c); and nothing so far fixes counts and hand-offs over eight steps, which only a per-cell check against the known state can. The combination to try is anchors + one line per cell.</p>
+</section>
+
+<section class="card"><h2>2g. The same nine cells, in order</h2>
+<img src="g9-strip.jpg" alt="the nine cells as one strip, left to right">
+<p class="mut">1 is meant to be the first frame as given, 9 the last frame as given, 2–8 the steps between.</p>
+<p><strong>1</strong> (should be the first frame: two loaves on the rack, neighbour empty-handed)</p><img src="g9-c1.jpg" alt="cell 1">
+<p><strong>2</strong></p><img src="g9-c2.jpg" alt="cell 2">
+<p><strong>3</strong></p><img src="g9-c3.jpg" alt="cell 3">
+<p><strong>4</strong></p><img src="g9-c4.jpg" alt="cell 4">
+<p><strong>5</strong></p><img src="g9-c5.jpg" alt="cell 5">
+<p><strong>6</strong></p><img src="g9-c6.jpg" alt="cell 6">
+<p><strong>7</strong></p><img src="g9-c7.jpg" alt="cell 7">
+<p><strong>8</strong></p><img src="g9-c8.jpg" alt="cell 8">
+<p><strong>9</strong> (should be the last frame as given)</p><img src="g9-c9.jpg" alt="cell 9">
+</section>
+
+<section class="card"><h2>2h. Video: one image-to-video call from the first frame, cheapest model (ltx-2.5, 480p, 10 s, 240 credits)</h2>
+<p class="mut">Start frame: V2's first frame with the "Cell 1" label scrubbed (<a href="i2v-start.jpg">i2v-start.jpg</a>). Prompt: <a href="i2v-prompt.txt">i2v-prompt.txt</a>, the scene in prose, fixed camera, no end frame. Script: <code>V1/experiments/i2v-single.mjs --model ltx-2.5 --res 480p --seconds 10</code>. Output 856×478, 24 fps, 241 frames; 32 s wall time. ltx-2.5 is the model the free tier is allowed, not a free model: 24 credits per second at 480p, 48 at 720p, 72 at 1080p.</p>
+<img src="i2v-start.jpg" alt="the single input image given to the video model">
+<p class="mut">The input: this one image, nothing else. Full write-up on the <a href="../i2v/index.html">video page</a>.</p>
+<video src="i2v-ltx-10s.mp4" controls muted playsinline preload="metadata"></video>
+<img src="i2v-ltx-strip.jpg" alt="the clip, one frame every half second, reading order">
+<p class="mut">One frame every half second, reading order, 0 to 9.5 s.</p>
+<img src="i2v-ltx-pair.jpg" alt="first and last frame of the clip">
+<div class="cap2"><span>clip first frame (SSIM 0.95 against the start image)</span><span>clip last frame</span></div>
+<ul>
+<li class="ok">The clip starts on the start frame: same room, same camera, same four people, same clothes, and all of it holds for the full 10 seconds. No face drifts. The first frame scores SSIM 0.95 against the input scaled to the clip size.</li>
+<li class="ok">The beat lands: baker tired at 0 s, upright and smiling at the end; both women smile back; the child looks up at him; the rack is empty.</li>
+<li class="ok">Motion is unhurried and the camera does not move, as asked. About the first second is the usual ease-in from a still.</li>
+<li class="bad">Both loaves go to the neighbour. Loaf one is handed to her at about 2 s; the baker lifts loaf two at 5 s and hands it to her again at 7 s. The parent never receives anything. "A to X, then B to Y" collapsed into "A to X, B to X", the same drift as cells 6–8 in 2b and 2c.</li>
+<li class="bad">One loaf vanishes. By the last frame the neighbour holds a single bare loaf and the parent's hands are empty.</li>
+<li class="bad">No wrapping. Both hand-offs are bare loaves: the start frame has no paper stack on the counter, so there was nothing to pick up. A prop the clip must use has to be in the frame it starts from.</li>
+</ul>
+<p>So the cheapest video model already holds what the grids held (room, camera, identity) and fails where the grids failed (who holds what, how many). Spending more per clip will not fix the bookkeeping. To test next: the same call with V2's last frame as <code>end_image_file_path</code>, so the model has a target state; and the scene as two 5 s calls split at the hand-off.</p>
+</section>
+
+<section class="card"><h2>3. The pipeline's scene 5, for comparison</h2>
+<img src="s5.jpg" alt="pipeline scene 5 cells">
+<p>Inputs were the plate, the state frame (s4-p4, people a few pixels tall) and s3-p5. The prompt's reference lines said <code>pastry tray: exactly as it looks in image 3</code> and <code>loaf: exactly as it looks in image 4</code>, with only three images sent. The people got no line at all (they were "already present" in image 2). Result: a different baker, two men instead of the neighbour and parent, round loaves everywhere (the counts check saw 6 to 48 loaves per cell), another room.</p>
+<p><strong>Was de-duplication part of the bug?</strong> Half of it. <code>inputs</code> de-duplicates files (right: the same frame should not be uploaded twice), but <code>gridPrompt</code> numbers references per element. Two elements last seen in the same frame get two numbers for one image; the second number points at nothing. Grid 2 had the same fault (baker "image 2", dough "image 3", two images sent).</p>
+</section>
+
+<section class="card"><h2>4. Why the loaf had a spec, and why it was baked before the oven</h2>
+<img src="s2.jpg" alt="pipeline scene 2 cells">
+<p>Scene 2 as the pipeline drew it: the loaf is golden and scored in cells 2 and 3, before it goes into the oven. The prompt's "Who is who" gave the loaf this text:</p>
+<pre>loaf: A broad, oval loaf with rounded ends, a honey-gold crust, and three diagonal expansion marks across its domed top. The crust has a fine, slightly uneven texture and a darker toasted-brown lower edge. Plain cream wrapping paper cups its base and lower sides in overlapping folds, leaving the scored top exposed.</pre>
+<ul>
+<li>The spec call (<code>asset-spec</code>) writes 2–4 sentences for <em>every</em> tracked thing, props included, "that a painter can follow exactly", with "every detail the story mentions". The story says "golden loaf" and "warm loaf wrapped in paper", so the spec became the baked, wrapped loaf, although the call is told to describe the start state.</li>
+<li>The wrapping paper is in the spec because the ID pass marked <code>wrapping-paper</code> as <em>inside</em> <code>loaf</code>, and the spec prompt turns every "inside" into "At the start it holds: … (draw them in it)". The same rule put six unbaked croissants into the tray's spec and a croissant into the paper bag's.</li>
+<li>Scene 3 had no reference for the loaf at all: its latest frame was s2-p6, where it sits inside the closed oven. The model drew a generic round bun. Scene 5 pointed at a missing image 4. Nothing anywhere said "no other bread", so the model dressed the shelves.</li>
+<li>There is no moment where a croissant is called a loaf in the prompt; the mixed bread is the un-referenced loaf drawn generically plus set dressing.</li>
+</ul>
+</section>
+
+<section class="card"><h2>5. What a grid prompt needs (from this test)</h2>
+<ul>
+<li>One image per person, named ("Image 3 is the neighbour"), numbered by image actually sent.</li>
+<li>One image for the state of the props as they are now, and a sentence that these are the only ones of their kind.</li>
+<li>The medium as the noun of the sentence, for sheets and grids alike.</li>
+<li>Positions stated once; one plain line per moment; plus the standing rule that everyone stays unless the line says they leave.</li>
+<li>No spec text once a reference image exists; specs only for first appearances, and then describing the invariant (shape, size, material), never a state.</li>
+</ul>
+</section>
+</main></body></html>

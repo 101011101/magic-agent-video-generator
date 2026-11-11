@@ -1,0 +1,47 @@
+{
+ "id": "82da53bf80",
+ "key": "must:E24b:Visible Spanish subtitles convey the greeting, 'today,' three easy ways, and making mornings less stressful.",
+ "symptom": "Visible Spanish subtitles convey the greeting, 'today,' three easy ways, and making mornings less stressful.",
+ "item": "E24b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why were no visible Spanish subtitles graded in either chat?",
+    "because": "No video was made in either build. The assistant called no create tool and delivered only text: an .srt block (old) and two Spanish caption lines with rough timings (new).",
+    "evidence": "s3.old.dumper.E24b/grade.json: check 'something was made' fails with 'no file'; the must-have is graded 'no' because 'No subtitles are visible in a video; the .srt text contains the content but the user must apply it themselves.' The calls.jsonl of both chats has no create/edit call. The final 'say' is 'delivered' with called:false."
+   },
+   {
+    "why": "Why did the assistant not make a subtitled video?",
+    "because": "In turn 1 both assistants decided that no tool can put Spanish text on the clip and keep the English voice. They offered only 'English subtitles' or 'stop here'. The dumper user turned down English subtitles and stopped, so the assistants could only give the user text.",
+    "evidence": "old calls.jsonl line 5: 'The subtitle tool ... has no setting for a translation language ... The translation tool ... would replace her English voice.' new calls.jsonl line 5: 'Magic Hour's subtitle tool has no language setting ... The translation tool doesn't fit either.' User replies (line 6 in both): 'English-only subtitles wouldn't help' / 'I'll stop here and try another app.'"
+   },
+   {
+    "why": "Why did the assistants conclude that the subtitle tool cannot make Spanish subtitles?",
+    "because": "That is what the tool does. add_subtitles_to_video only 'Adds automatically generated subtitles' from the speech. Its schema has start_seconds, end_seconds, assets.video_file_path and style (template/custom_config: font, colors, position). It has no language parameter, no target-language parameter and no field for caption text or an SRT file.",
+    "evidence": "tools-new.json lines 2028-2142 (add_subtitles_to_video description and inputSchema). The old assistant reported the same limit after it read the old tool list (old calls.jsonl line 5)."
+   },
+   {
+    "why": "Why was there no other way, for example translating and then overlaying the text, or drawing the agent's own Spanish text on the user's video?",
+    "because": "No tool in the server draws arbitrary text on a supplied video. translate_video dubs the speech, which the brief forbids. edit_video is a generative prompt edit that changes footage. In the new build, captions are drawn only for narrator 'says' lines inside a plan_video_production/join_production_clips film made from generated clips, not on an uploaded video. join_videos only joins files.",
+    "evidence": "tools-new.json: translate_video 'Translates speech ... into a supported target language' (line 1506). edit_video 'Edits the appearance or content ... using a text prompt' (line 1414). plan_video_production 'captions: Draw the narrator's sentences on the picture' (line 532). join_production_clips 'draws the captions' only for plan sound (line 667). join_videos has no text option (line 730)."
+   },
+   {
+    "why": "Why does this capability gap fail the test, not register as a correct refusal?",
+    "because": "The test expects the task to be possible on the free plan with no questions: expect.asks='never', beyond_free='no', refuse=false. The answer_sheet says 'Put readable Spanish subtitles on the video.' The server offers no way to do this. In the new build, plan_request even returned ready:true for language=Spanish and did not flag the limit. The gap is only in tool capability: both builds expose the same Magic Hour auto-subtitle API, and it has no language or text input.",
+    "evidence": "items/E24b.json expect and answer_sheet. new calls.jsonl line 2: plan_request output '{\"tool\":\"add_subtitles_to_video\",\"ready\":true,\"params\":[{\"name\":\"language\",\"value\":\"Spanish\"...}]}' although the tool schema has no language field."
+   }
+  ],
+  "axiom": "Neither build has a tool that puts translated or user-given text on a supplied video. Magic Hour's add_subtitles_to_video only transcribes the speech in its spoken language (no language or text input), and translate_video dubs the voice. So the test asks for something no tool can do: 'Spanish subtitles over an English voice'.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a local, credit-free tool, for example burn_subtitles(video, cues[{start,end,text}], style), that draws given caption cues onto a supplied video. Its drawing code can be the same as the caption drawing in join_production_clips. Keep the source audio and framing. Tell the agent to transcribe/translate with add_subtitles_to_video timing or its own text. Also make plan_request return ready:false with a clear note when a param such as language has no matching field on the target tool."
+ },
+ "error": null,
+ "seconds": 50,
+ "usd": 0.4308676
+}

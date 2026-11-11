@@ -1,0 +1,46 @@
+{
+ "id": "393cb1e911",
+ "key": "must:I47c:No additional on-screen text",
+ "symptom": "No additional on-screen text",
+ "item": "I47c",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'No additional on-screen text' not met?",
+    "because": "The video showed text other than the three exact labels. In the dumper chat it was subtitle-style gibberish ('Ut ghh,'). In the happy chat the last label changed mid-scene into a second garbled caption ('Precaction!').",
+    "evidence": "s5.old.dumper.I47c/grade.json: must[4] 'Subtitle-style captions such as 'Ut ghh,' appear', and faults list 'Extra caption text, 'Ut ghh,''. s5.old.happy.I47c/grade.json: must[4] 'the last caption becomes 'Precaction!', a second garbled caption'."
+   },
+   {
+    "why": "Why did extra or garbled text appear even though the assistant asked for none?",
+    "because": "The text-to-video model drew all the text itself, as pixels inside the generated frames. The prompt was only a request. Nothing guaranteed which glyphs the model drew, how many it drew, or when.",
+    "evidence": "calls.jsonl in both chats: one create_video_from_text call, model 'ltx-2.5', with the labels written inside style.prompt ('bold clean white caption at the bottom reads exactly \"Evaporation\"'). The dumper prompt also says 'No other text, no captions, no subtitles'. The happy prompt says 'no other text, letters, logos or watermarks anywhere'. The model still added text."
+   },
+   {
+    "why": "Why did the model invent subtitle-like text in particular?",
+    "because": "The same prompt told the model to draw captions, and it also carried a long quoted narration script under 'Audio: ... says: \"...\"'. A video model that is primed to draw caption text, and that sees quoted speech, tends to draw that speech as subtitles. The result was garbled pseudo-words. This is the most likely mechanism, but it cannot be proven from the frames alone.",
+    "evidence": "calls.jsonl args.style.prompt (dumper): the narration 'The sun warms the ocean, and water rises into the air. That is evaporation...' is quoted in the same prompt as the label instructions. grade.json (dumper) calls the text 'subtitle-style' and 'caption-style'. The labels themselves also came out misspelled ('Conddstion', 'Prerípitatior!'), which shows the model cannot render exact text."
+   },
+   {
+    "why": "Why did the assistant rely on in-frame text generation at all?",
+    "because": "The old build has no tool that puts exact text on top of a finished video. The only way to get labels on screen was to ask the generator to draw them. The assistant knew this was risky: it warned the user and offered a text-free version, but it delivered without checking.",
+    "evidence": "s5.old.happy.I47c calls.jsonl 'say' text: 'The AI draws the captions as part of the picture... Magic Hour has no tool to put exact text on top of a video.' Dumper 'say': 'The AI draws the labels itself, so it can misspell them or add extra text by mistake.' Both chats made one generation call and one wait call, with no overlay or compose step."
+   },
+   {
+    "why": "Why can't the prompt alone prevent the stray text?",
+    "because": "Generative video models such as LTX-2.5 cannot spell reliably, and they do not reliably obey negative instructions such as 'no other text'. This is a limit of the model, not of the arguments sent.",
+    "evidence": "In both independent chats, prompts with explicit 'no other text' wording produced garbled and extra text (grade.json exact_text: every label 'wrong' or 'missing')."
+   }
+  ],
+  "axiom": "The text-to-video model (ltx-2.5) draws on-screen text as pixels. It cannot be made to render exact strings, and it cannot be stopped from adding stray caption-like text. A quoted narration script in the same prompt makes subtitle-style output more likely. No Magic Hour tool can put exact text on top of a video, so the generator was the only source of the labels.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add or point to a deterministic text-overlay step: generate the clip with no text, then burn the exact labels in at set timestamps. Until that exists, the create_video_from_text description should tell the assistant two things. First, keep the narration script out of the visual prompt (or send it in a separate audio/voice field). Second, when exact text or 'no other text' is required, ask for a text-free clip."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.1983366
+}

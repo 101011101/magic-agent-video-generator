@@ -1,0 +1,81 @@
+{
+ "id": "F32a",
+ "root_cause": "harness",
+ "contributing": [
+  "agent-reasoning"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The ingredients were right: exact script, warm synthetic female voice (9.1 s), a 20 s gentle electronic bed, and one sounds-only assemble with a clear brief (\"voice starts at 2 seconds... duck music beneath speech... fade from 16 to 20\"). The mix is where it failed. assemble's sounds-only path keeps the FIRST input at full level and puts every other input at 0.25. It reads no offsets or ducking from extra, and the length follows the first input. The agent listed the music first, so the music played at full level and the voice sat about 20 dB under it, starting at 0 s with no music-only opening. The catalogue promises \"music under speech, not over it\" and never mentions the ordering rule, so the agent had no way to know. The transcriber caught only a garbled scrap of the buried voice ('Keeping ideas and morale high', most likely 'big ideas hiding in everyday life'). I would put the voice first, and the opening and ducking need assemble to support them.",
+ "your_plan": {
+  "say": "I'll record your exact intro in a warm synthetic female voice, make a gentle upbeat electronic bed, and mix them into one 20-second file with a short music-only opening and a smooth fade.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "write",
+    "inputs": [],
+    "produces": "intro_script.txt",
+    "params": {
+     "prompt_or_change": "Write exactly: \"Welcome to Small Wonders, the show about big ideas hiding in everyday life. I'm Maya. Let's get curious.\"",
+     "extra": "exact words",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The user's exact intro, as a file for the voice."
+   },
+   {
+    "tool": "voice",
+    "inputs": [
+     "intro_script.txt"
+    ],
+    "produces": "intro_voice.mp3",
+    "params": {
+     "prompt_or_change": "Speak the script exactly.",
+     "extra": "voice: female; warm, welcoming, unhurried",
+     "aspect": "",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "A warm synthetic female voice, about 9 s long."
+   },
+   {
+    "tool": "music",
+    "inputs": [],
+    "produces": "intro_music.mp3",
+    "params": {
+     "prompt_or_change": "Gentle, upbeat electronic instrumental for a podcast intro: soft synth pads, a light plucked arpeggio and light percussion, curious and warm; no vocals, no singing, no speech.",
+     "extra": "",
+     "aspect": "",
+     "seconds": 20,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The bed, made at the full 20 s."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "intro_voice.mp3",
+     "intro_music.mp3"
+    ],
+    "produces": "small_wonders_intro.mp3",
+    "params": {
+     "prompt_or_change": "Mix: music alone for 2 s, then the voice on top with the music ducked under it, then music back up and a smooth fade at the end.",
+     "extra": "voice at: 2; music under the voice while it speaks, full before and after; fade out over the last 3 s",
+     "aspect": "",
+     "seconds": 20,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The voice goes first because the sounds-only mix keeps input 1 at full level. The 2 s offset, the ducking and the 3 s fade need the assemble fix."
+   }
+  ]
+ },
+ "fix": "Rework assemble's sounds-only mix. (1) Put the input that came from voice on top whatever its position; never infer this from order. (2) Loudness-normalise: voice at about -16 LUFS, the bed 12–15 dB under it while speech plays (sidechain ducking) and at full level otherwise. (3) Honour \"voice at: N\" offsets and a fade length. (4) Take the total length from params.seconds. Until then, state the order rule in the catalogue. This applies to every podcast intro, audiogram or voice-over mix.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "intro_voice.mp3 (9.1 s) holds the exact script; intro_music.mp3 is 20 s. In small_wonders_intro.mp3 the half-second RMS matches the music alone exactly (-13 to -21 dB) for the whole 20 s. The voice, mixed at 0.25, sits at about -36 to -48 dB, roughly 20 dB under the music, and starts at 0 s. assemble.js uses `volume=${k ? 0.25 : 1}` with `duration=first` and no offsets. The judge is right that the intro is not clearly spoken."
+}

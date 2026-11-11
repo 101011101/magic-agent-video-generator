@@ -1,0 +1,47 @@
+{
+ "id": "3a45f71882",
+ "key": "must:J52a:Both assets contain all five text strings spelled exactly",
+ "symptom": "Both assets contain all five text strings spelled exactly",
+ "item": "J52a",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "axiom": "The shared free-plan test account had 0 credits when these chats ran, so every generation call was refused. Nothing the assistant or the MCP tools did could have produced an asset, and the item itself is marked beyond_free:\"no\", meaning a funded free-plan account should be able to complete it. The account was drained by the benchmark fleet, not by anything in this test.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, check the test account's credit balance in the harness. Top it up, or run with a reserved account. If the balance is below the item's estimated cost (about 10 credits for the image plus 192 for the 8-second 480p video), mark the run as an environment failure, not a grading failure.",
+  "whys": [
+   {
+    "why": "Why was 'Both assets contain all five text strings spelled exactly' not met?",
+    "because": "No poster and no reel were made, so there was no text to check.",
+    "evidence": "s2r.old.happy.J52a/grade.json: checks 'something was made' pass:false, got 'no file'; must item why: 'No assets exist.' The summary says nothing was produced because of 0 credits."
+   },
+   {
+    "why": "Why were no assets made?",
+    "because": "In all three chats the server refused the only generation call made, generate_image, before it ran.",
+    "evidence": "In all three calls.jsonl files, the generate_image call has approve:false, reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'. No call returned files."
+   },
+   {
+    "why": "Why was the call refused? Were the arguments wrong, or was a paid model or size chosen?",
+    "because": "No. The arguments were valid and fit the free plan: qwen-image-2.1, 9:16, 640px, and a prompt quoting all five strings exactly. The only problem was the account balance of 0.",
+    "evidence": "old.happy and old.dumper calls.jsonl line 2, and new.stupid calls.jsonl line 9: model qwen-image-2.1, resolution 640px, aspect_ratio 9:16, prompt contains \"Night Market\", \"Saturday 12 July\", \"6–10 pm\", \"Riverside Yard\", \"Free entry\"."
+   },
+   {
+    "why": "Why does this happen in both builds and with all personas?",
+    "because": "The cause is outside the build and outside the conversation. Old happy and old dumper sent the call on the first turn. New stupid first used plan_request, got the missing details, and then hit the same 0-credit refusal. All the chats share one empty account.",
+    "evidence": "new.stupid calls.jsonl: plan_request returns ready:true with exact_words filled in, then generate_image is refused with '0 remain'. The timestamps of all three chats fall within about 2.5 minutes of each other (1794364436–1794364579), so they ran in the same fleet run on the same account."
+   },
+   {
+    "why": "Why did the account have 0 credits when the item is supposed to fit the free plan?",
+    "because": "The harness ran the fleet on one free-plan account whose credits were already used up, either by earlier chats in the run or because the account was never refilled. The item expects beyond_free:'no', so the test was designed to be possible with credits.",
+    "evidence": "J52a.json expect.beyond_free:'no'. The new.stupid assistant reply estimates about 10 credits for the poster and 192 for the video. Every result says '0 remain on the account'."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 25,
+ "usd": 0.1167144
+}

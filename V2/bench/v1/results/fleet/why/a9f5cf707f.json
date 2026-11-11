@@ -1,0 +1,47 @@
+{
+ "id": "a9f5cf707f",
+ "key": "must:E29c:Watermark reads exactly '@flightschool' and visible throughout",
+ "symptom": "Watermark reads exactly '@flightschool' and visible throughout",
+ "item": "E29c",
+ "n": 4,
+ "builds": {
+  "old": 2,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Watermark reads exactly @flightschool and visible throughout' not met?",
+    "because": "The output video has no '@flightschool' text in any sampled frame.",
+    "evidence": "grade.json in all four chats (s3.old.dumper, s3.old.stupid, s3.new.dumper, s3.new.stupid): met='no', exact_text seen='missing'. In s3.new.dumper, read_as says only the subtitles 'Rook, you with me?' / 'Right here, Vega.' are visible."
+   },
+   {
+    "why": "Why is the text missing when the assistant asked for it?",
+    "because": "The video came from edit_video with model ltx-2.5 at 480p. This AI editor redraws every frame from a text prompt. It ignored the prompt's instruction to add a small translucent text overlay and returned redrawn footage without the text.",
+    "evidence": "calls.jsonl: s3.old.dumper and s3.new.dumper sent edit_video {model:'ltx-2.5', resolution:'480p', end_seconds:60, prompt:'...Only add a small, subtle watermark text reading \"@flightschool\" in the bottom-right corner...'}. s3.new.stupid sent the same with end_seconds:10. Each result is status 'complete', 832x512. The grader saw re-rendered, softer footage and a changed first shot, with no watermark."
+   },
+   {
+    "why": "Why did the assistant use a generative editor for a deterministic overlay?",
+    "because": "No tool in either build can put fixed text over an existing video. edit_video was the only tool close enough, and the user told the assistant to go ahead anyway.",
+    "evidence": "state/calls: in old.dumper and new.dumper the first reply was 'cannot' ('none of the Magic Hour tools I have can put a fixed text watermark on a video'). The user nudged: 'please just go ahead and try it anyway'. In new.stupid the assistant warned 'Magic Hour has no tool that stamps a fixed watermark' and the user said 'ya go ahead'. In new.stupid, join_videos was also tried and failed with a 404."
+   },
+   {
+    "why": "Why can't the AI editor reliably draw small, exact, translucent text?",
+    "because": "LTX 2.5 is a video-to-video diffusion model. It does not composite layers. Small, exact, low-opacity glyphs are a known weak point, and the model does not enforce instructions to add new persistent elements.",
+    "evidence": "All four outputs lack the text even though the prompts were explicit and differed in wording. The assistants themselves predicted this ('the text could come out misspelled or shift', 'Small text is hard for it')."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The Magic Hour toolset has no overlay or drawtext feature, and the free-plan generative editor cannot render the text. The failure is a capability limit of the platform and model. Neither build's tool descriptions cause it, and the assistant was honest about it.",
+    "evidence": "The same failure appears in both builds and with both personas, with different prompts and end_seconds. The assistants correctly said 'cannot' before they were nudged."
+   }
+  ],
+  "axiom": "The Magic Hour toolset (old and new) has no deterministic text or logo overlay tool. The only path is the LTX 2.5 generative video editor, which redraws frames and does not render a small, exact, translucent text watermark.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic overlay tool to the MCP server (for example an ffmpeg drawtext/overlay step: text, position, opacity, shadow, with audio copied). Until it exists, add a line to the edit_video description: 'cannot add exact text/watermarks; do not use for overlays'."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.22591000000000003
+}

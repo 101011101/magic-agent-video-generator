@@ -1,0 +1,47 @@
+{
+ "id": "c8c522b701",
+ "key": "must:E25b:Both speaking turns remain in their original order, with the full 10 seconds and original audio in sync.",
+ "symptom": "Both speaking turns remain in their original order, with the full 10 seconds and original audio in sync.",
+ "item": "E25b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'both speaking turns in original order, full 10 s, original audio in sync' not met?",
+    "because": "Neither chat made any video file, so the grader had nothing to check.",
+    "evidence": "s3.old.happy.E25b/grade.json: check 'something was made' pass=false, got 'no file'; this item says 'No output exists to preserve turns or audio.' Summary: 'The agent refused twice and produced no video.' Both calls.jsonl end with type 'end', kind 'cannot'."
+   },
+   {
+    "why": "Why was no video made?",
+    "because": "In both builds the assistant said the task could not be done and started no generation job, even after the user pushed ('Please go ahead with the free settings anyway' / 'huh? just try it').",
+    "evidence": "old calls.jsonl: two 'say' events of kind 'cannot', 'called':false, and no tool call. new calls.jsonl: replies of kind 'cannot'; its only calls were join_videos (HTTP 404), detect_faces and get_face_detection_results (status 'rendering', faces []), and then a final 'cannot'."
+   },
+   {
+    "why": "Why did the assistant judge the task impossible?",
+    "because": "The brief needs a deterministic crop of the user's real footage: a 16:9 to 9:16 crop that follows the speaker, with a cut at the speaker change, the full length kept and the original audio passed through. No tool in the list crops, reframes or changes the aspect ratio of a supplied video.",
+    "evidence": "tools-new.json: edit_video 'Edits the appearance or content ... using a text prompt' and has no aspect or crop parameter. upscale_video works 'while preserving its aspect ratio' and needs a paid plan. join_videos: 'Every video is fitted to the first one's size', with no crop or region argument. translate_video only changes speech. plan_request's tool enum lists trim_video but no crop or reframe tool. The old assistant says the same: 'No tool here crops or reframes a video.'"
+   },
+   {
+    "why": "Why not use edit_video (the free LTX 2.5 tool) as an approximation?",
+    "because": "edit_video redraws every frame from a prompt and keeps the source frame shape. It would replace the real people and would not give 9:16 or speaker cuts. So the assistant reasonably refused to spend credits on an output that fails the brief. It also had no way to centre each speaker in turn.",
+    "evidence": "The old reply says edit_video 'has no aspect-ratio or crop setting, so the output keeps your clip's original frame shape ... redraws every frame'. The new reply says 'You'd get new people and a new picture, not your footage cut down.' The edit_video schema has only start/end_seconds, model, resolution, style.prompt and assets."
+   },
+   {
+    "why": "Why does the test still expect a finished result?",
+    "because": "Item E25b is written as a task the free plan can do with no questions asked (expect.asks 'never', beyond_free 'no', refuse false, spec kind video, 9:16, 10 s, audio required). The server, old or new, has no reframe/crop capability. This gap between the test and the tool set is the axiom.",
+    "evidence": "items/E25b.json: expect {asks:'never', beyond_free:'no', refuse:false}. answer_sheet: 'Centre the current speaker in a full-frame portrait crop; a clean cut at the speaker change is fine.' No matching tool exists in tools-new.json. The old build's tool list was not fully read, but the old assistant also reports that no such tool exists."
+   }
+  ],
+  "axiom": "The Magic Hour MCP tool set (hosted old and local new) has no tool that crops or reframes a supplied video to another aspect ratio while keeping the real footage and its audio. E25b expects exactly that operation on the free plan with no questions, so the assistant correctly refused and nothing was graded.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a local, credit-free 'reframe_video' tool to the new build, next to join_videos and get_last_frame, which already run locally. Inputs: the source video plus a list of segments {start_seconds, end_seconds, center_x or face index}, and a target aspect such as 9:16. It crops each segment with ffmpeg at full source height, joins the segments with hard cuts and copies the original audio track unchanged. It can use detect_faces results to place each crop. List it in the plan_request tool enum. Its description must state that it keeps the original footage and audio and changes only the frame shape."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.313215
+}

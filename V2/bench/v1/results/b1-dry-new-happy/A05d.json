@@ -1,0 +1,219 @@
+{
+  "id": "A05d",
+  "item": {
+    "id": "A05d",
+    "case": 5,
+    "case_name": "Headshot from the user's photo",
+    "group": "A",
+    "group_name": "Single images",
+    "expect": {
+      "asks": "required",
+      "asks_about": "Which person in the photo is the user: the bearded man on the left or the short-haired blonde woman on the right?",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Choose The Right Headshot Subject",
+    "sub": "d",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "image",
+      "seconds": null,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "two-friends.jpg"
+        ],
+        "text": "Can you make me a square professional headshot from this?"
+      }
+    ],
+    "tests": "Clarifies the intended person in a two-person source before producing a single identity-preserving headshot.",
+    "answer_sheet": {
+      "Which person": "I'm the woman with short blonde hair on the right.",
+      "Clothing and background": "your call",
+      "Style and expression": "Natural and professional; keep my smile.",
+      "Platform and size": "No particular platform; square, 640 × 640 is fine.",
+      "Text": "No text."
+    },
+    "must_haves": [
+      "The only person in the final portrait is the short-haired blonde woman from the right of two-friends.jpg.",
+      "Her face, short blonde hairstyle and smile remain recognisable from the source.",
+      "The man is entirely absent, including any partial face, shoulder or arm.",
+      "The beach setting and casual presentation are replaced with professional clothing and an unobtrusive backdrop.",
+      "The output is a square head-and-shoulders portrait with natural-looking lighting and no visible editing artifacts."
+    ]
+  },
+  "session": "mcp-b1-dry-new-happy-A05d",
+  "sessionDir": "sessions/mcp-b1-dry-new-happy-A05d",
+  "baseline": "mcp",
+  "provider": "anthropic",
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Can you make me a square professional headshot from this?",
+      "materials": [
+        "two-friends.jpg"
+      ],
+      "dialog": [
+        {
+          "agent": "Before I start: this photo has two people in it, and the headshot tool needs a photo with just one face.\n\n**Which person should I make the headshot of?** The man on the left (beard, navy t-shirt) or the woman on the right (short blonde hair)?\n\nOnce you tell me, I'll crop the photo down to that person and make a square professional headshot. Please make sure it's you or someone who's agreed to it.",
+          "asked": [
+            "question"
+          ],
+          "why": "It asks the user to choose which person in the photo to use for the headshot and waits for the answer before proceeding.",
+          "user": "It's me, the woman with short blonde hair on the right.",
+          "calls_before": 0
+        }
+      ],
+      "agent": "I couldn't make your headshot because your Magic Hour account doesn't have enough credits. Nothing was created and no credits were spent.\n\nMy plan was:\n1. **Crop the photo to just you.** This would remove your friend and make a square head-and-shoulders crop, because the headshot tool only accepts a photo with one face. This step was refused for lack of credits. It costs about 5 credits.\n2. **Turn that crop into a professional headshot.** This costs 50 credits, so it needs more than the first step.\n\nTo go ahead, you'll need to add credits to your account. Buying a credit pack or upgrading from the free plan will both work. You'll need at least 55 credits. Once you have them, just tell me and I'll run both steps.\n\nIf you have a photo where you're on your own, I can skip the crop. Then the headshot would only cost the 50 credits.",
+      "calls": [
+        {
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you make me a square professional headshot from this?\"},{\"role\":\"assistant\",\"text\":\"Before I start: this photo has two people in it, and the headshot tool needs a photo with just one face.\\n\\n**Which person should I make the headshot of?** The man on the left (beard, navy t-shirt) or the woman on the right (short blonde hair)?\\n\\nOnce you tell me, I'll crop the photo down to that person and make a square professional headshot. Please make sure it's you or someone who's agreed to it.\"},{\"role\":\"user\",\"text\":\"It's me, the woman with short blonde hair on the right.\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"value\":\"the woman with short blonde hair on the right\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"remove the man on the left so only the woman remains, square crop centered on her head and shoulders\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"her face and identity exactly as in the photo\",\"source\":\"derived\"},{\"name\":\"which_face\",\"value\":\"right: woman with short blonde hair\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"derived\"}],\"attachments\":[{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"person\"}]}",
+          "output": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"remove the man on the left so only the woman remains, square crop centered on her head and shoulders\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"her face and identity exactly as in the photo\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"derived\",\"from\":\"\"}],\"questions\":[]}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "edit_image",
+          "args": {
+            "assets": {
+              "image_file_paths": [
+                "api-assets/cmsla3fmt01cnio0zhjlc2wsv/310f813f-502f-4c97-9035-bd5618f404a0-image-0.jpg"
+              ]
+            },
+            "style": {
+              "prompt": "Crop to a square head-and-shoulders portrait of only the woman with short blonde hair on the right. Remove the man on the left completely so no part of him remains. Keep her face, features and identity exactly as in the original photo."
+            },
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "aspect_ratio": "1:1",
+            "image_count": 1,
+            "name": "Headshot prep - crop to woman"
+          },
+          "approve": false,
+          "reason": "insufficient credits (dry run: this run makes nothing; the attempted call is recorded)",
+          "est": null
+        }
+      ],
+      "timeline": [
+        {
+          "type": "thought",
+          "text": "The photo shows two people, but a headshot needs exactly one detectable face, so I need to ask which one to use. I should also check whether the person in the photo is the user, since likeness consent matters here. The plan_request tool only has to come before create or edit tools, and generate_headshot isn't among them, so I'll just ask which face to use.\n\n"
+        },
+        {
+          "type": "said",
+          "text": "Before I start: this photo has two people in it, and the headshot tool needs a photo with just one face.\n\n**Which person should I make the headshot of?** The man on the left (beard, navy t-shirt) or the woman on the right (short blonde hair)?\n\nOnce you tell me, I'll crop the photo down to that person and make a square professional headshot. Please make sure it's you or someone who's agreed to it."
+        },
+        {
+          "type": "thought",
+          "text": "I need to crop the image down to just the woman, so I'm considering edit_image with qwen-edit or flux-2-klein at 640px square. After that comes generate_headshot. I'm still deciding whether plan_request should go first, since edit_image is in the tool list.\n\n"
+        },
+        {
+          "type": "call",
+          "name": "plan_request",
+          "arguments": "{\"messages\":[{\"role\":\"user\",\"text\":\"Can you make me a square professional headshot from this?\"},{\"role\":\"assistant\",\"text\":\"Before I start: this photo has two people in it, and the headshot tool needs a photo with just one face.\\n\\n**Which person should I make the headshot of?** The man on the left (beard, navy t-shirt) or the woman on the right (short blonde hair)?\\n\\nOnce you tell me, I'll crop the photo down to that person and make a square professional headshot. Please make sure it's you or someone who's agreed to it.\"},{\"role\":\"user\",\"text\":\"It's me, the woman with short blonde hair on the right.\"}],\"tool\":\"edit_image\",\"params\":[{\"name\":\"subject\",\"value\":\"the woman with short blonde hair on the right\",\"source\":\"user\"},{\"name\":\"edit\",\"value\":\"remove the man on the left so only the woman remains, square crop centered on her head and shoulders\",\"source\":\"derived\"},{\"name\":\"keep\",\"value\":\"her face and identity exactly as in the photo\",\"source\":\"derived\"},{\"name\":\"which_face\",\"value\":\"right: woman with short blonde hair\",\"source\":\"user\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"user\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"derived\"}],\"attachments\":[{\"name\":\"two-friends.jpg\",\"kind\":\"image\",\"role\":\"person\"}]}",
+          "result": "{\"tool\":\"edit_image\",\"ready\":true,\"params\":[{\"name\":\"edit\",\"value\":\"remove the man on the left so only the woman remains, square crop centered on her head and shoulders\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"keep\",\"value\":\"her face and identity exactly as in the photo\",\"source\":\"derived\",\"from\":\"\"},{\"name\":\"aspect\",\"value\":\"1:1\",\"source\":\"user\",\"from\":\"\"},{\"name\":\"exact_words\",\"value\":[],\"source\":\"derived\",\"from\":\"\"}],\"questions\":[]}"
+        },
+        {
+          "type": "call",
+          "name": "edit_image",
+          "arguments": "{\"assets\":{\"image_file_paths\":[\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/310f813f-502f-4c97-9035-bd5618f404a0-image-0.jpg\"]},\"style\":{\"prompt\":\"Crop to a square head-and-shoulders portrait of only the woman with short blonde hair on the right. Remove the man on the left completely so no part of him remains. Keep her face, features and identity exactly as in the original photo.\"},\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"aspect_ratio\":\"1:1\",\"image_count\":1,\"name\":\"Headshot prep - crop to woman\"}",
+          "result": "Refused by the account: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+        },
+        {
+          "type": "thought",
+          "text": "The headshot would cost 50 credits, and I don't have enough to cover that. I can't go ahead with it, so I need to let the user know.\n\n"
+        },
+        {
+          "type": "said",
+          "text": "I couldn't make your headshot because your Magic Hour account doesn't have enough credits. Nothing was created and no credits were spent.\n\nMy plan was:\n1. **Crop the photo to just you.** This would remove your friend and make a square head-and-shoulders crop, because the headshot tool only accepts a photo with one face. This step was refused for lack of credits. It costs about 5 credits.\n2. **Turn that crop into a professional headshot.** This costs 50 credits, so it needs more than the first step.\n\nTo go ahead, you'll need to add credits to your account. Buying a credit pack or upgrading from the free plan will both work. You'll need at least 55 credits. Once you have them, just tell me and I'll run both steps.\n\nIf you have a photo where you're on your own, I can skip the crop. Then the headshot would only cost the 50 credits."
+        }
+      ],
+      "firstQuestions": [
+        {
+          "field": "question",
+          "question": "Before I start: this photo has two people in it, and the headshot tool needs a photo with just one face.\n\n**Which person should I make the headshot of?** The man on the left (beard, navy t-shirt) or the woman on the right (short blonde hair)?\n\nOnce you tell me, I'll crop the photo down to that person and make a square professional headshot. Please make sure it's you or someone who's agreed to it."
+        }
+      ],
+      "kind": "cannot",
+      "denied": [
+        "edit_image: insufficient credits (dry run: this run makes nothing; the attempted call is recorded)"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "I couldn't make your headshot because your Magic Hour account doesn't have enough credits. Nothing was created and no credits were spent.\n\nMy plan was:\n1. **Crop the photo to just you.** This would remove your friend and make a square head-and-shoulders crop, because the headshot tool only accepts a photo with one face. This step was refused for lack of credits. It costs about 5 credits.\n2. **Turn",
+        "refuse": "",
+        "tier_move": "I couldn't make your headshot because your Magic Hour account doesn't have enough credits. Nothing was created and no credits were spent.\n\nMy plan was:\n1. **Crop the photo to just you.** This would remove your friend and make a square head-and-shoulders crop, because the headshot tool only accepts a photo with one face. This step was refused for lack of credits. It costs about 5 credits.\n2. **Turn",
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "plan_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "plan_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "plan_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 22
+    }
+  ],
+  "started": "2026-11-11T00:46:39.771Z",
+  "persona": "happy",
+  "opening": {
+    "text": "Can you make me a square professional headshot from this?",
+    "as_written": true
+  },
+  "dry": true,
+  "spent": 0,
+  "seconds": 22,
+  "usage": {
+    "responses": 4,
+    "input": 212254,
+    "output": 1529,
+    "reasoning": 0,
+    "cached": 158402
+  },
+  "server": {
+    "name": "magic-hour",
+    "version": "0.1.0",
+    "url": "http://127.0.0.1:8772/",
+    "local": true,
+    "hidden": [
+      "get_account_info",
+      "delete_video_project",
+      "delete_image_project",
+      "delete_audio_project"
+    ]
+  },
+  "trace_file": "A05d.trace.json"
+}

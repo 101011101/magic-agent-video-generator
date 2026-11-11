@@ -1,0 +1,47 @@
+{
+ "id": "aca3700801",
+ "key": "must:B12b:9:16 vertical frame",
+ "symptom": "9:16 vertical frame",
+ "item": "B12b",
+ "n": 4,
+ "builds": {
+  "old": 2,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the '9:16 vertical frame' item not met in all 4 chats?",
+    "because": "Each chat delivered a square 640x640 PNG, not a vertical image. The model redrew the square source photo and kept it square.",
+    "evidence": "s1.new.stupid.B12b/grade.json: check 'aspect 9:16' got [\"640x640\"]; must item '9:16 vertical frame' met=no, 'Output is square (about 640x640), not vertical'; the item 'Added space uses blurred source' also failed with 'No added space at all'. The grader gave the same 640x640 reason in the old-build chat."
+   },
+   {
+    "why": "Why was the output square? Did the assistant fail to ask for 9:16?",
+    "because": "No. In all four chats the assistant sent the correct parameter, aspect_ratio='9:16', to edit_image with model flux-2-klein at 640px. The prompt also asked for a vertical 9:16 frame with blurred or extended space above and below. The request was right, but the backend returned an image with the source's 1:1 shape.",
+    "evidence": "calls.jsonl in s1.old.dumper, s1.old.stupid and s1.new.dumper: edit_image args {\"model\":\"flux-2-klein\",\"resolution\":\"640px\",\"aspect_ratio\":\"9:16\",...}. In s1.new.dumper, plan_request also returned aspect 9:16 with ready=true. The source attachment is listed as aspect 1:1."
+   },
+   {
+    "why": "Why did the assistant not see the wrong shape and fix it before it delivered?",
+    "because": "No tool result reports the output's size. edit_image returns only an id and the cost. wait_for_image_project returns status and a URL with no width or height. fetch_image_download returned empty output in every chat. So the assistant could not see the image, and it said that it had not checked the result.",
+    "evidence": "calls.jsonl: wait_for_image_project output has no dimensions; fetch_image_download \"output\":\"\" in all chats. Assistant replies: 'I couldn't preview the result', 'My preview didn't load'. s1.old.stupid also claims 'Made it a vertical 9:16 picture', and the grader marked this claim as false."
+   },
+   {
+    "why": "Why does flux-2-klein ignore aspect_ratio=9:16 on an edit? Do the tool descriptions warn about this?",
+    "because": "The descriptions do not warn about it. edit_image lists aspect_ratio with the values auto, 16:9, 9:16 and more, and says only 'The aspect ratio of the output image(s)'. It does not say that a model can ignore the value or keep the input's shape. The edit_image description even offers 'flux-2-klein at 640px with image_count=1' as the Free-plan option. So the assistant had no reason to choose a different route, such as a code-made canvas with a blurred copy behind the photo.",
+    "evidence": "tools-new.json, edit_image (lines 3315-3372): the aspect_ratio description has no per-model support list. The video tools do have one (create_video_from_text aspect_ratio, line 2682). The model text for flux-2-klein lists only resolutions and the input-image count."
+   },
+   {
+    "why": "Why does the backend not apply the requested ratio?",
+    "because": "AXIOM: the Magic Hour image-editor backend, with flux-2-klein on this free account, returns an output in the source image's shape (1:1 here) and drops the requested 9:16. The same arguments give the same 640x640 result on both the hosted (old) server and the local (new) server, so this is how the generation API/model behaves. Neither MCP build causes it. The evidence cannot show whether the API drops the field or the model ignores it, because only the API's response is visible.",
+    "evidence": "Same args and the same 640x640 result in old and new chats. Neither build checks the result or reports its size. Side note: the harness check 'aspect 9:16' in grade.json shows pass=true with got 640x640, so the automatic check is also faulty. The judge's must-have decision is correct."
+   }
+  ],
+  "axiom": "The Magic Hour image editor (flux-2-klein, free plan, 640px) keeps the 1:1 shape of the source image and ignores aspect_ratio='9:16'. It returns no error and does not report the output's size. The MCP tools pass this behaviour through unchecked and do not document it.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the MCP server, after an edit_image job completes, read the output's width and height. Return them, and return a mismatch warning when they do not match the requested aspect_ratio. For a request to fit a different ratio (outpaint/fill), add a code path: make the 9:16 canvas, put a blurred, scaled-up copy of the source behind it, and center the unchanged source on top. Do not depend on the model for this. Also add a note to the edit_image aspect_ratio description that flux-2-klein keeps the input's shape."
+ },
+ "error": null,
+ "seconds": 53,
+ "usd": 0.6076155999999999
+}

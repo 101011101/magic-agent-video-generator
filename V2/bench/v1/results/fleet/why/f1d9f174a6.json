@@ -1,0 +1,47 @@
+{
+ "id": "f1d9f174a6",
+ "key": "must:E29b:Entire original clip plays before end card, unchanged",
+ "symptom": "Entire original clip plays before end card, unchanged",
+ "item": "E29b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "axiom": "The user's clip exists only as an uploaded Magic Hour file_path (api-assets/...). Neither build has a tool that joins that uploaded file to another clip. The old build has no join or append tool at all. In the new build, join_videos accepts only \"finished video project ids or video URLs\" and fails on an uploaded file_path, because it looks the path up as a video-project id.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Make join_videos accept a Magic Hour upload file_path (api-assets/...) as an input: turn it into a signed URL and do not look it up as a project id. State in the description that it accepts \"finished video project ids, uploaded file_paths, or video URLs\". Ship join_videos, or an append_card_to_video tool, on the hosted (old) server too. Then \"user clip + drawn card\" becomes one 9 s file.",
+  "whys": [
+   {
+    "why": "Why was the item 'Entire original clip plays before end card, unchanged' not met?",
+    "because": "Every failing chat delivered only a standalone 2 s end card (or stills). No 9 s file holds the 7 s source followed by the card.",
+    "evidence": "s3.old.stupid.E29b/grade.json: checks 'about 9 s' got '2 s' and 'no audio track'. The must item says 'Only a separate 2s card was delivered... not a combined video'. s3.new.dumper.E29b/calls.jsonl: the final delivered file is a 2.0 s 854x480 card."
+   },
+   {
+    "why": "Why did the old-build assistant not combine the clip and the card?",
+    "because": "The old toolset has no tool that joins two videos or adds frames after a clip. The assistant said so and offered only a separate card for the user to join in an editor.",
+    "evidence": "s3.old.dumper.E29b/calls.jsonl, line 4: 'None of the Magic Hour tools can put two clips together or add frames after the end of a video... I haven't started anything.' The assistant then makes only generate_image stills (lines 21-22). Its final message gives two PNG links and no joined video."
+   },
+   {
+    "why": "Why did the new-build assistant fail even though it has join tools?",
+    "because": "It drew the card with plan_video_production/join_production_clips (2 s, silent, correct). It then called join_videos with [uploaded file_path, card URL]. The server sent the api-assets path to /v1/video-projects/<path>, which returned 404.",
+    "evidence": "s3.new.dumper.E29b/calls.jsonl, line 5: join_videos args videos=['api-assets/cmsla3fmt01cnio0zhjlc2wsv/...-video-0.mp4', 'http://127.0.0.1:8000/films/...mp4'] -> error 'Magic Hour refused /v1/video-projects/api-assets/... (HTTP 404) not_found'."
+   },
+   {
+    "why": "Why did join_videos treat the uploaded file as a project id?",
+    "because": "join_videos supports only two input kinds: finished video project ids or video URLs. A Magic Hour upload file_path is neither kind. The tool has no step that turns the path into a URL, so it falls back to a project lookup.",
+    "evidence": "tools-new.json, join_videos description: \"`videos`: finished video project ids or video URLs. Every video is fitted to the first one's size.\" The description does not mention uploaded file_paths. Other tools (get_last_frame) also say only 'project id or a video URL'."
+   },
+   {
+    "why": "Why could the assistant not work around it inside the chat?",
+    "because": "The user's material exists only as the uploaded api-assets path. No tool returns a public URL for an upload. Without a combined file, the assistant could only ask the user for a direct .mp4 link or tell them to join it in an editor.",
+    "evidence": "s3.new.dumper.E29b/calls.jsonl, line 7: 'the joining tool only accepts web links (or videos made in Magic Hour). It doesn't accept the uploaded copy of radio-lines.mp4... Send me a direct link'. The old chats say the same: they ask the user to join in CapCut/iMovie."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2908446
+}

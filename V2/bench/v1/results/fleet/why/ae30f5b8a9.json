@@ -1,0 +1,47 @@
+{
+ "id": "ae30f5b8a9",
+ "key": "check:aspect:J",
+ "symptom": "aspect 9:16",
+ "item": "J51b",
+ "n": 17,
+ "builds": {
+  "old": 5,
+  "new": 12
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'aspect 9:16' not met in 17 J51b chats?",
+    "because": "The files that were delivered are mostly landscape (640x320, 864x474, 906x452). The only vertical file (474x864, ratio 0.549) is still not 9:16 (0.5625). The test needs a real 9:16 frame with the 16:9 clip centred and plain navy bars above and below.",
+    "evidence": "items/J51b.json: spec.aspect '9:16'. must_haves[0] is 'vertical 9:16 frame'; must_haves[1] is 'complete original widescreen picture centred with plain navy padding'. Measured sizes are from the symptom. I could not open any J51b chat with a file: the s2 J51b grade.json files (new.happy, new.dumper, new.stupid, old.dumper, old.stupid) all show 'something was made: no file' (no credits), and the s1/s3/s4 paths I tried do not exist. So the 17 failing chats are in folders I did not find."
+   },
+   {
+    "why": "Why did the assistant not just add navy bars to the finished 16:9 video?",
+    "because": "Neither build has a tool that puts an existing video on a bigger canvas or pads it. The assistants say this to the user and offer an outside editor or an AI re-render.",
+    "evidence": "s2.old.happy.J51b/calls.jsonl, assistant reply: 'None of the Magic Hour tools just puts a video in a new frame. The only one that could try is the AI video editor. It redraws every frame'. s2.new.happy.J51b/calls.jsonl: 'None of my tools can resize a video either. They can only make a new one.' s2.new.happy.J49c/calls.jsonl: trim_video returned 'Unknown tool', so there are no plain cut/frame tools."
+   },
+   {
+    "why": "Why does using edit_video (the only tool that takes a video) give a landscape or off-ratio file?",
+    "because": "The edit_video schema has no aspect_ratio or canvas parameter. It accepts only start/end, model, resolution, prompt and source video. So the output follows the source orientation, and the prompt can only ask for a reframe.",
+    "evidence": "tools-new.json lines 1413-1496: edit_video properties are name, start_seconds, end_seconds, model, resolution, style.prompt and assets.video_file_path. There is no aspect field. Its description says only 'Edits the appearance or content of a supplied video segment'."
+   },
+   {
+    "why": "Why are the sizes odd (864x474, 906x452) and not the source 854x480?",
+    "because": "The editing model renders at its own size grid and changes the frame size on each run.",
+    "evidence": "s2.new.happy.J49c/calls.jsonl: source 854x480 → edit_video result 832x512, and grade.json fails 'aspect 16:9' with ['854x480','832x512']. s2.old.happy.J50b/calls.jsonl: edit_video result is also 832x512 from an 854x480 source. The same behaviour appears in both builds."
+   },
+   {
+    "why": "Why does the fallback (generate a new vertical frame or video) also miss 9:16?",
+    "because": "New generations come at sizes the model picks: 640x320 is a 2:1 still, 474x864 is about 0.549. The model may also draw the 'navy bars' inside the picture and not as real padding. So the measured frame does not match 9:16 within the grader's tolerance.",
+    "evidence": "s2.new.happy.J51b/calls.jsonl: the fallback plan was generate_image with aspect_ratio '9:16' and a prompt that asks for navy bands drawn in the picture. The measured sizes 640x320 and 474x864 are not standard 9:16. Missing evidence: the calls.jsonl files of the 17 failing chats, which would show which tool made each size. This step is the best-supported inference from the J49c/J50b pattern, not proof."
+   }
+  ],
+  "axiom": "The Magic Hour toolset in both builds has no exact reframe/pad operation for an existing video. Its only video-to-video tool (edit_video) is an AI re-render with no aspect or canvas control, and it outputs sizes the model picks (for example 854x480 → 832x512). So 'same clip, 9:16, navy bars' cannot be produced exactly.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a code-only (ffmpeg) tool, for example 'reframe_video(video, aspect=\"9:16\", fit=\"pad\", pad_color=\"#001F3F\")'. It scales the finished clip to fit, pads it to an exact 1080x1920 (or 480x854) canvas, and keeps duration and frames unchanged. The new build already draws cards with code. Then point edit_video's description to it for any aspect change, so assistants stop re-rendering."
+ },
+ "error": null,
+ "seconds": 79,
+ "usd": 0.7293850000000001
+}

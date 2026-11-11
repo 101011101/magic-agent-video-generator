@@ -1,0 +1,479 @@
+{
+  "label": "keyref2-dry2",
+  "pipeline": "backend/keyref2",
+  "brief": "A 16-second widescreen ad for Petal & Stem, a small neighbourhood flower shop: the florist opens the shop at dawn and arranges a bouquet, then hands it to a smiling customer at the door; warm, natural light; end on the shop front.",
+  "at": "2026-11-02T04:58:53.470Z",
+  "dry": true,
+  "args": {
+    "clips": 2,
+    "model": null,
+    "resolution": "480p",
+    "audio": null,
+    "budget": 500,
+    "seeds": [
+      "runs/keyref-1/refs/shop-2.png"
+    ],
+    "pictures": {}
+  },
+  "jobs": {},
+  "calls": [],
+  "pending": {},
+  "tools": [
+    {
+      "tool": "ffmpeg",
+      "op": "copy runs/keyref-1/refs/shop-2.png into the bank as @shop",
+      "inputs": [
+        "runs/keyref-1/refs/shop-2.png"
+      ],
+      "output": "bank/shop.png",
+      "credits": 0
+    }
+  ],
+  "vlm": [
+    {
+      "stage": "seed",
+      "about": "@shop: offered runs/keyref-1/refs/shop-2.png",
+      "images": [
+        "bank/shop.png"
+      ],
+      "labels": [
+        "@shop"
+      ],
+      "answers": [
+        {
+          "q": "Does lettering in this image read exactly \"Petal & Stem\" (every letter right)?",
+          "required": true,
+          "kind": "exact text",
+          "text": "Petal & Stem",
+          "answer": "yes",
+          "frames": [
+            1
+          ],
+          "evidence": "Sign reads \"Petal & Stem\"."
+        },
+        {
+          "q": "Does this image show: The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”.",
+          "required": true,
+          "kind": "element",
+          "answer": "yes",
+          "frames": [
+            1
+          ],
+          "evidence": "Small shop, sage-painted timber frontage, glazed door, flowers, and \"Petal & Stem\" sign."
+        },
+        {
+          "q": "Is the image free of people and of any readable text other than the exact lettering asked for?",
+          "required": true,
+          "kind": "clean",
+          "answer": "yes",
+          "frames": [
+            1
+          ],
+          "evidence": "No people or other readable text visible beyond \"Petal & Stem\"."
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "llm": [
+    {
+      "name": "keyref2-piece-v1",
+      "purpose": "the whole piece as one timed prose prompt, in parts",
+      "model": "gpt-6.1-sol"
+    },
+    {
+      "name": "keyref2-vlm-v1",
+      "purpose": "check the offered seed for @shop",
+      "model": "gpt-6.1-sol"
+    }
+  ],
+  "piece": {
+    "beats": [
+      {
+        "entities": [
+          "florist",
+          "shop"
+        ],
+        "text": "0–4 seconds: In a medium-wide exterior shot at dawn, the florist unlocks and opens the shop’s front door from outside, then steps inside. Follow gently toward the doorway in warm, natural light, keeping the shop sign above the frame.",
+        "legible_text": [],
+        "to": 4,
+        "from": 0
+      },
+      {
+        "entities": [
+          "florist",
+          "shop",
+          "bouquet"
+        ],
+        "text": "4–9 seconds: Cut naturally inside to a close view of the florist’s hands gathering loose cream and peach flower stems with green foliage into one bouquet, then wrapping it in kraft paper on the worktable. Warm, natural dawn light falls across the hands; these loose stems become the single wrapped bouquet used throughout the remaining shots.",
+        "legible_text": [],
+        "to": 9,
+        "from": 4
+      },
+      {
+        "entities": [
+          "florist",
+          "customer",
+          "shop",
+          "bouquet"
+        ],
+        "text": "9–13 seconds: Cut to a medium two-shot at the open front door as the florist hands that same wrapped bouquet to the smiling customer. Hold the exchange clearly until the customer has the bouquet securely in both hands, with warm, natural light across their faces and the shop sign out of frame.",
+        "legible_text": [],
+        "to": 13,
+        "from": 9
+      },
+      {
+        "entities": [
+          "shop",
+          "florist",
+          "customer",
+          "bouquet"
+        ],
+        "text": "13–16 seconds: Cut wider outside and ease back to reveal the whole neighbourhood shop front, with the florist in the doorway and the smiling customer holding the same bouquet beside it. Settle on the facade in warm, natural dawn light, making the sign reading “Petal & Stem” clearly legible above the door.",
+        "legible_text": [
+          "Petal & Stem"
+        ],
+        "to": 16,
+        "from": 13
+      }
+    ],
+    "seconds": 16,
+    "elements": [
+      {
+        "required": true,
+        "why_required": "“the florist opens the shop at dawn and arranges a bouquet, then hands it”",
+        "exact_text": [],
+        "description": "The florist wears a cream shirt and a muted green apron, with sleeves rolled up.",
+        "kind": "person",
+        "id": "florist",
+        "name": "the florist"
+      },
+      {
+        "required": true,
+        "why_required": "“Petal & Stem, a small neighbourhood flower shop” and “end on the shop front”",
+        "exact_text": [
+          "Petal & Stem"
+        ],
+        "description": "The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”.",
+        "kind": "place",
+        "id": "shop",
+        "name": "the shop"
+      },
+      {
+        "required": true,
+        "why_required": "“arranges a bouquet, then hands it”",
+        "exact_text": [],
+        "description": "The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet.",
+        "kind": "product",
+        "id": "bouquet",
+        "name": "the bouquet"
+      },
+      {
+        "required": true,
+        "why_required": "“hands it to a smiling customer at the door”",
+        "exact_text": [],
+        "description": "The customer wears a soft blue jacket over a white shirt and smiles when receiving the bouquet.",
+        "kind": "person",
+        "id": "customer",
+        "name": "the customer"
+      }
+    ],
+    "sound_requested": false,
+    "look": "Photorealistic widescreen 16:9 ad in warm, natural dawn light.",
+    "subject": "A florist opens Petal & Stem at dawn, arranges a bouquet, and hands it to a smiling customer at the door.",
+    "nos": [
+      "No captions, subtitles, or readable text except the Petal & Stem sign in the final shot.",
+      "No speech, voiceover, or music.",
+      "No second or floating bouquet: the same flowers progress from loose stems to one wrapped bouquet, always resting on the worktable or held.",
+      "No wardrobe or shop-front changes between shots."
+    ],
+    "ends_on": "The full Petal & Stem shop front in warm dawn light, its sign legible above the florist and the smiling customer holding the bouquet.",
+    "seconds_why": "The brief explicitly asks for “A 16-second widescreen ad”.",
+    "sound_why": "The brief asks for no sound, music, voice, or speech."
+  },
+  "whole_prompt": {
+    "prompt": "Photorealistic widescreen 16:9 ad in warm, natural dawn light. A florist opens Petal & Stem at dawn, arranges a bouquet, and hands it to a smiling customer at the door. Same people, place and product throughout. The florist wears a cream shirt and a muted green apron, with sleeves rolled up. The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”. The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet. The customer wears a soft blue jacket over a white shirt and smiles when receiving the bouquet. 0–4 s: 0–4 seconds: In a medium-wide exterior shot at dawn, the florist unlocks and opens the shop’s front door from outside, then steps inside. Follow gently toward the doorway in warm, natural light, keeping the shop sign above the frame. 4–9 s: 4–9 seconds: Cut naturally inside to a close view of the florist’s hands gathering loose cream and peach flower stems with green foliage into one bouquet, then wrapping it in kraft paper on the worktable. Warm, natural dawn light falls across the hands; these loose stems become the single wrapped bouquet used throughout the remaining shots. 9–13 s: 9–13 seconds: Cut to a medium two-shot at the open front door as the florist hands that same wrapped bouquet to the smiling customer. Hold the exchange clearly until the customer has the bouquet securely in both hands, with warm, natural light across their faces and the shop sign out of frame. 13–16 s: 13–16 seconds: Cut wider outside and ease back to reveal the whole neighbourhood shop front, with the florist in the doorway and the smiling customer holding the same bouquet beside it. Settle on the facade in warm, natural dawn light, making the sign reading “Petal & Stem” clearly legible above the door. Wherever it is legible the lettering reads exactly \"Petal & Stem\", every letter right. No captions, subtitles, or readable text except the Petal & Stem sign in the final shot; no speech, voiceover, or music; no second or floating bouquet: the same flowers progress from loose stems to one wrapped bouquet, always resting on the worktable or held; no wardrobe or shop-front changes between shots; silent: no speech, no voiceover.",
+    "chars": 2316
+  },
+  "state": {
+    "rules": [
+      "Prompt first: the whole piece is written as one prose prompt with timestamps; it is cut into chunks only when it is longer than one generation (ltx-2.5 60 s, minimax-h3 30 s) or --clips forces it, at beat boundaries.",
+      "Each chunk's prompt = the shared lines (look, subject, the descriptions of the elements in it, exact words, the \"no\"s) + its beats retimed from 0.",
+      "Asset bank, for seeding only: the first appearance of something that must look specific (a picture the user gave; an exact sign or label: painted once on qwen-image-2.1, yes/no-checked, reused). Nothing else is painted.",
+      "Every other reference comes from earlier frames: for chunk k>1, the frames of earlier chunks at the seconds the state says an entity was seen are searched; the clearest is vision-confirmed and attached as @name.",
+      "Chunk k>1 also gets @previous: the last frame of chunk k-1, or the latest earlier frame that passes the state checks.",
+      "Model: ltx-2.5 when no chunk carries a reference; minimax-h3 otherwise. Audio off unless the brief asks for sound.",
+      "After each chunk: yes/no questions at each beat's timestamp (is each expected entity there?) and over the whole chunk (exact text everywhere, one product, the same people, the ending); one regeneration with the failure named if a required check fails, within the run's budget.",
+      "ffmpeg joins only when there is more than one chunk."
+    ],
+    "length_plan": {
+      "seconds": 16,
+      "seconds_why": "The brief explicitly asks for “A 16-second widescreen ad”.",
+      "chunks": [
+        {
+          "n": 1,
+          "from": 0,
+          "to": 9,
+          "seconds": 9
+        },
+        {
+          "n": 2,
+          "from": 9,
+          "to": 16,
+          "seconds": 7
+        }
+      ],
+      "why": "2 chunks forced (--clips 2), cut at beat boundaries"
+    },
+    "model": {
+      "name": "minimax-h3",
+      "resolution": "480p",
+      "why": "minimax-h3: a seed is attached (@shop) and chunks after the first carry @previous and frame references; ltx-2.5's named references are 'not documented' (reference/magic-hour-api-sheet.md table 3.1; lib/models.js refs: \"undocumented\"), so no credits were spent probing them: minimax-h3 carries any piece with a reference (up to 9 images, measured)"
+    },
+    "audio": {
+      "on": false,
+      "why": "off: the brief does not ask for sound (The brief asks for no sound, music, voice, or speech.); the model's own audio invents speech"
+    },
+    "elements": [
+      {
+        "id": "florist",
+        "kind": "person",
+        "name": "the florist",
+        "description": "The florist wears a cream shirt and a muted green apron, with sleeves rolled up.",
+        "exact_text": [],
+        "required": true,
+        "why_required": "“the florist opens the shop at dawn and arranges a bouquet, then hands it”",
+        "first_chunk": 1,
+        "seed": {
+          "needed": false,
+          "why": "a person: the prose describes them; later chunks take them from earlier frames"
+        }
+      },
+      {
+        "id": "shop",
+        "kind": "place",
+        "name": "the shop",
+        "description": "The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”.",
+        "exact_text": [
+          "Petal & Stem"
+        ],
+        "required": true,
+        "why_required": "“Petal & Stem, a small neighbourhood flower shop” and “end on the shop front”",
+        "first_chunk": 1,
+        "seed": {
+          "needed": true,
+          "why": "must read exactly \"Petal & Stem\" on its first appearance: video models misspell lettering from prose alone (the MCP's opening sign read \"Peal & Sten\")"
+        }
+      },
+      {
+        "id": "bouquet",
+        "kind": "product",
+        "name": "the bouquet",
+        "description": "The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet.",
+        "exact_text": [],
+        "required": true,
+        "why_required": "“arranges a bouquet, then hands it”",
+        "first_chunk": 1,
+        "seed": {
+          "needed": false,
+          "why": "nothing about it must be exact: the prose describes it; later chunks take it from earlier frames"
+        }
+      },
+      {
+        "id": "customer",
+        "kind": "person",
+        "name": "the customer",
+        "description": "The customer wears a soft blue jacket over a white shirt and smiles when receiving the bouquet.",
+        "exact_text": [],
+        "required": true,
+        "why_required": "“hands it to a smiling customer at the door”",
+        "first_chunk": 2,
+        "seed": {
+          "needed": false,
+          "why": "a person: the prose describes them; later chunks take them from earlier frames"
+        }
+      }
+    ],
+    "bank": {
+      "shop": {
+        "file": "bank/shop.png",
+        "source": "reused runs/keyref-1/refs/shop-2.png (painted on qwen-image-2.1 in an earlier run, 10 credits then); passed this run's checks",
+        "credits": 0,
+        "check": true,
+        "why": "must read exactly \"Petal & Stem\" on its first appearance: video models misspell lettering from prose alone (the MCP's opening sign read \"Peal & Sten\")",
+        "for_chunk": 1
+      }
+    },
+    "chunks": [
+      {
+        "n": 1,
+        "from": 0,
+        "to": 9,
+        "seconds": 9,
+        "refs": [
+          {
+            "name": "shop",
+            "file": "bank/shop.png",
+            "from": "asset bank (seed)",
+            "why": "first appearance; must read exactly \"Petal & Stem\" on its first appearance: video models misspell lettering from prose alone (the MCP's opening sign read \"Peal & Sten\")"
+          }
+        ],
+        "notes": [
+          "@florist: no reference: first appearance, nothing exact about it; the prose describes it",
+          "@bouquet: no reference: first appearance, nothing exact about it; the prose describes it"
+        ],
+        "prompt": "Photorealistic widescreen 16:9 ad in warm, natural dawn light. A florist opens Petal & Stem at dawn, arranges a bouquet, and hands it to a smiling customer at the door. Same people, place and product throughout. The florist wears a cream shirt and a muted green apron, with sleeves rolled up. The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”. The shop matches @shop. The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet. 0–4 s: 0–4 seconds: In a medium-wide exterior shot at dawn, the florist unlocks and opens the shop’s front door from outside, then steps inside. Follow gently toward the doorway in warm, natural light, keeping the shop sign above the frame. 4–9 s: 4–9 seconds: Cut naturally inside to a close view of the florist’s hands gathering loose cream and peach flower stems with green foliage into one bouquet, then wrapping it in kraft paper on the worktable. Warm, natural dawn light falls across the hands; these loose stems become the single wrapped bouquet used throughout the remaining shots. No captions, subtitles, or readable text except the Petal & Stem sign in the final shot; no speech, voiceover, or music; no second or floating bouquet: the same flowers progress from loose stems to one wrapped bouquet, always resting on the worktable or held; no wardrobe or shop-front changes between shots; silent: no speech, no voiceover.",
+        "prompt_chars": 1538,
+        "shortened": false,
+        "timeline": [
+          {
+            "from": 0,
+            "to": 4,
+            "abs_from": 0,
+            "abs_to": 4,
+            "t": 2,
+            "abs_t": 2,
+            "text": "0–4 seconds: In a medium-wide exterior shot at dawn, the florist unlocks and opens the shop’s front door from outside, then steps inside. Follow gently toward the doorway in warm, natural light, keeping the shop sign above the frame.",
+            "entities": [
+              "florist",
+              "shop"
+            ],
+            "legible_text": []
+          },
+          {
+            "from": 4,
+            "to": 9,
+            "abs_from": 4,
+            "abs_to": 9,
+            "t": 6.5,
+            "abs_t": 6.5,
+            "text": "4–9 seconds: Cut naturally inside to a close view of the florist’s hands gathering loose cream and peach flower stems with green foliage into one bouquet, then wrapping it in kraft paper on the worktable. Warm, natural dawn light falls across the hands; these loose stems become the single wrapped bouquet used throughout the remaining shots.",
+            "entities": [
+              "florist",
+              "shop",
+              "bouquet"
+            ],
+            "legible_text": []
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "key": "chunk-1",
+            "file": "chunks/chunk-1.mp4",
+            "prompt": "Photorealistic widescreen 16:9 ad in warm, natural dawn light. A florist opens Petal & Stem at dawn, arranges a bouquet, and hands it to a smiling customer at the door. Same people, place and product throughout. The florist wears a cream shirt and a muted green apron, with sleeves rolled up. The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”. The shop matches @shop. The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet. 0–4 s: 0–4 seconds: In a medium-wide exterior shot at dawn, the florist unlocks and opens the shop’s front door from outside, then steps inside. Follow gently toward the doorway in warm, natural light, keeping the shop sign above the frame. 4–9 s: 4–9 seconds: Cut naturally inside to a close view of the florist’s hands gathering loose cream and peach flower stems with green foliage into one bouquet, then wrapping it in kraft paper on the worktable. Warm, natural dawn light falls across the hands; these loose stems become the single wrapped bouquet used throughout the remaining shots. No captions, subtitles, or readable text except the Petal & Stem sign in the final shot; no speech, voiceover, or music; no second or floating bouquet: the same flowers progress from loose stems to one wrapped bouquet, always resting on the worktable or held; no wardrobe or shop-front changes between shots; silent: no speech, no voiceover.",
+            "prompt_chars": 1538,
+            "model": "minimax-h3",
+            "seconds": 9,
+            "cost": 216,
+            "failure_named": null,
+            "estimated": 216
+          }
+        ],
+        "chosen": "chunk-1"
+      },
+      {
+        "n": 2,
+        "from": 9,
+        "to": 16,
+        "seconds": 7,
+        "refs": [
+          {
+            "name": "previous",
+            "file": "frames/chunk-1-last.png",
+            "from": "chunk 1, last frame (dry: not made yet)",
+            "why": "continuity"
+          }
+        ],
+        "notes": [
+          "@florist: would be searched in earlier frames at the seconds the state saw it (dry)",
+          "@customer: would be searched in earlier frames at the seconds the state saw it (dry)",
+          "@shop: would be searched in earlier frames at the seconds the state saw it (dry)",
+          "@bouquet: would be searched in earlier frames at the seconds the state saw it (dry)",
+          "@florist: not attached",
+          "@customer: not attached",
+          "@shop: not attached",
+          "@bouquet: not attached"
+        ],
+        "prompt": "Photorealistic widescreen 16:9 ad in warm, natural dawn light. A florist opens Petal & Stem at dawn, arranges a bouquet, and hands it to a smiling customer at the door. Same people, place and product throughout. Continue directly from @previous: the same people, place, light and camera, mid-action; re-introduce nothing. The florist wears a cream shirt and a muted green apron, with sleeves rolled up. The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”. The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet. The customer wears a soft blue jacket over a white shirt and smiles when receiving the bouquet. 0–4 s: 9–13 seconds: Cut to a medium two-shot at the open front door as the florist hands that same wrapped bouquet to the smiling customer. Hold the exchange clearly until the customer has the bouquet securely in both hands, with warm, natural light across their faces and the shop sign out of frame. 4–7 s: 13–16 seconds: Cut wider outside and ease back to reveal the whole neighbourhood shop front, with the florist in the doorway and the smiling customer holding the same bouquet beside it. Settle on the facade in warm, natural dawn light, making the sign reading “Petal & Stem” clearly legible above the door. Wherever it is legible the lettering reads exactly \"Petal & Stem\", every letter right. No captions, subtitles, or readable text except the Petal & Stem sign in the final shot; no speech, voiceover, or music; no second or floating bouquet: the same flowers progress from loose stems to one wrapped bouquet, always resting on the worktable or held; no wardrobe or shop-front changes between shots; silent: no speech, no voiceover.",
+        "prompt_chars": 1832,
+        "shortened": false,
+        "timeline": [
+          {
+            "from": 0,
+            "to": 4,
+            "abs_from": 9,
+            "abs_to": 13,
+            "t": 2,
+            "abs_t": 11,
+            "text": "9–13 seconds: Cut to a medium two-shot at the open front door as the florist hands that same wrapped bouquet to the smiling customer. Hold the exchange clearly until the customer has the bouquet securely in both hands, with warm, natural light across their faces and the shop sign out of frame.",
+            "entities": [
+              "florist",
+              "customer",
+              "shop",
+              "bouquet"
+            ],
+            "legible_text": []
+          },
+          {
+            "from": 4,
+            "to": 7,
+            "abs_from": 13,
+            "abs_to": 16,
+            "t": 5.5,
+            "abs_t": 14.5,
+            "text": "13–16 seconds: Cut wider outside and ease back to reveal the whole neighbourhood shop front, with the florist in the doorway and the smiling customer holding the same bouquet beside it. Settle on the facade in warm, natural dawn light, making the sign reading “Petal & Stem” clearly legible above the door.",
+            "entities": [
+              "shop",
+              "florist",
+              "customer",
+              "bouquet"
+            ],
+            "legible_text": [
+              "Petal & Stem"
+            ]
+          }
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "key": "chunk-2",
+            "file": "chunks/chunk-2.mp4",
+            "prompt": "Photorealistic widescreen 16:9 ad in warm, natural dawn light. A florist opens Petal & Stem at dawn, arranges a bouquet, and hands it to a smiling customer at the door. Same people, place and product throughout. Continue directly from @previous: the same people, place, light and camera, mid-action; re-introduce nothing. The florist wears a cream shirt and a muted green apron, with sleeves rolled up. The shop is a small neighbourhood flower shop with a sage-painted timber frontage, a glazed front door, and a sign reading “Petal & Stem”. The bouquet consists of cream and peach flowers with green foliage, first seen as loose stems and then gathered into one kraft-paper-wrapped bouquet. The customer wears a soft blue jacket over a white shirt and smiles when receiving the bouquet. 0–4 s: 9–13 seconds: Cut to a medium two-shot at the open front door as the florist hands that same wrapped bouquet to the smiling customer. Hold the exchange clearly until the customer has the bouquet securely in both hands, with warm, natural light across their faces and the shop sign out of frame. 4–7 s: 13–16 seconds: Cut wider outside and ease back to reveal the whole neighbourhood shop front, with the florist in the doorway and the smiling customer holding the same bouquet beside it. Settle on the facade in warm, natural dawn light, making the sign reading “Petal & Stem” clearly legible above the door. Wherever it is legible the lettering reads exactly \"Petal & Stem\", every letter right. No captions, subtitles, or readable text except the Petal & Stem sign in the final shot; no speech, voiceover, or music; no second or floating bouquet: the same flowers progress from loose stems to one wrapped bouquet, always resting on the worktable or held; no wardrobe or shop-front changes between shots; silent: no speech, no voiceover.",
+            "prompt_chars": 1832,
+            "model": "minimax-h3",
+            "seconds": 7,
+            "cost": 168,
+            "failure_named": null,
+            "estimated": 168
+          }
+        ],
+        "chosen": "chunk-2"
+      }
+    ]
+  },
+  "estimate": {
+    "jobs": [
+      {
+        "key": "chunk-1",
+        "cost": 216
+      },
+      {
+        "key": "chunk-2",
+        "cost": 168
+      }
+    ],
+    "total": 384,
+    "budget": 500,
+    "note": "a regeneration, if a required check fails, costs the chunk again and runs only if the budget allows"
+  },
+  "stopped": null,
+  "credits": 0,
+  "paid_calls": 0,
+  "llm_usage": {
+    "calls": 2,
+    "cached": 0,
+    "input_tokens": 1815,
+    "output_tokens": 1472
+  }
+}

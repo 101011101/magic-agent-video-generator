@@ -1,0 +1,47 @@
+{
+ "id": "287f00b4d7",
+ "key": "must:A01d:Cream-colored label visibly attached",
+ "symptom": "Cream-colored label visibly attached",
+ "item": "A01d",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'Cream-colored label visibly attached' item not met?",
+    "because": "Both delivered images show a plain white or blank 'minimalist' label on a clear bottle. Neither shows a cream label on amber glass.",
+    "evidence": "s1.new.stupid.A01d/grade.json: 'Label is attached but is plain white, not cream', summary 'clear pump bottle with pale green soap and a blank white label'. The old chat's grader reason is 'Label is white, not cream'."
+   },
+   {
+    "why": "Why did the generator draw a white label?",
+    "because": "No prompt sent to generate_image said cream, amber or VELORA. The model picked its own default colours.",
+    "evidence": "old calls.jsonl prompt: 'sleek hand soap pump bottle with clear liquid soap, minimalist label, on a clean white marble countertop'. new calls.jsonl prompt: 'translucent bottle with pale green liquid soap, blank label with no text'."
+   },
+   {
+    "why": "Why did the assistant leave cream out of the prompt?",
+    "because": "The user never said it. The simulated user's only message was 'make a product pic of a hand soap bottle'. The amber/cream/VELORA details stayed hidden in the persona's knowledge bank.",
+    "evidence": "s1.old.stupid.A01d/chat.json: messages[0].text = 'make a product pic of a hand soap bottle'. bank['Product and materials'] = 'An amber glass hand soap bottle with a cream label.'"
+   },
+   {
+    "why": "Why were the details not drawn out later in the chat?",
+    "because": "Old build: the assistant asked nothing and delivered at once. New build: plan_request marked exact_words as missing but returned only one question, about aspect. The user answered 'whatever, you pick'. No tool or assistant asks about label colour, and an assistant cannot guess that a hidden colour exists. The persona gives a bank fact only when asked in plain words.",
+    "evidence": "new calls.jsonl: plan_request output questions = [{param:'aspect', ...}] only, then ready:true with exact_words still missing. old calls.jsonl: generate_image is called straight away with no question. Persona rule: 'When a question is in plain words, answer it from your knowledge bank'."
+   },
+   {
+    "why": "Why is this a harness defect and not an assistant fault?",
+    "because": "Test A01d expects asks='never' and grades against the full brief. The stupid persona's opening message removes the very facts the must-haves check (cream label, amber glass, VELORA). Grading against facts the user never gave is a mismatch built into the harness design.",
+    "evidence": "items/A01d.json: expect.asks='never'. must_haves include 'A cream-colored label is visibly attached'. The turns text holds the full brief, but the stupid chat sends a vague message in its place."
+   }
+  ],
+  "axiom": "The test harness gives the 'stupid' persona an opening message that leaves out the brief's required details (cream label, amber glass, VELORA). It then grades the output against the full brief's must-haves, on a test that expects the assistant never to ask. No assistant or tool can bring out a label colour it has no reason to suspect.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "In the harness, grade stupid-persona chats only on must-haves the user actually stated in the chat. Another option: make the stupid persona's opening message keep the core content facts in plain words, for example 'soap bottle, brown glass, cream label, says VELORA'."
+ },
+ "error": null,
+ "seconds": 32,
+ "usd": 0.1312502
+}

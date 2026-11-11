@@ -1,0 +1,46 @@
+{
+ "id": "138ef383b4",
+ "key": "must:E25b:Woman centred, face fully visible during answer",
+ "symptom": "Woman centred, face fully visible during answer",
+ "item": "E25b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the woman not centred with her face fully visible during her answer?",
+    "because": "The delivered video is a single wide landscape shot. The woman stays at the right edge, partly cropped, and there is never a cut to her.",
+    "evidence": "s3.old.stupid.E25b/grade.json: 'Woman stays at right edge, partly cropped; no cut to her'; faults: 'No speaker-following cuts; single wide shot throughout'. s3.old.dumper.E25b/grade.json says the same: 'Woman stays at the right edge, partly cropped at times'."
+   },
+   {
+    "why": "Why is the output still a wide landscape shot with no reframe?",
+    "because": "The only tool the assistant ran was edit_video (model ltx-2.5, 480p) with a prompt asking for a 9:16 reframe and speaker cuts. That tool regenerated the clip at the source shape, 832x448, and ignored the framing instructions.",
+    "evidence": "Both calls.jsonl files: edit_video args style.prompt 'Reframe as a vertical 9:16 shot... camera cuts to a tight frame centred on the woman'. wait_for_video_project returned width 832, height 448. The grade check 'aspect 9:16' failed with got ['832x448']."
+   },
+   {
+    "why": "Why did the assistant put the reframe request in a prompt instead of using a crop or aspect setting?",
+    "because": "The old build has no tool that crops, reframes or sets the aspect ratio of an existing video. The prompt to the AI video editor was the only thing it could try.",
+    "evidence": "tools-old.json lists upload, wait, fetch, detect_faces, talking photo and other tools, but no crop or reframe tool. In both chats the assistant said before any call: 'None of the Magic Hour tools I can use will crop or reframe a video' (dumper, line 4) and 'none sets the output aspect ratio of an existing clip' (stupid, line 7)."
+   },
+   {
+    "why": "Why did the assistant run a job at all when it had already said the task was impossible?",
+    "because": "Both times it first declined correctly. Then the simulated user pushed ('just try it' / 'please just go ahead and try it anyway'), so it ran a best-effort attempt and told the user plainly about the limits.",
+    "evidence": "calls.jsonl: in each chat the first reply has kind 'cannot', then a user turn marked nudge:true, then the edit_video call. In the final replies the assistant says the result is 'not vertical' and that 'the tool keeps the source shape'."
+   },
+   {
+    "why": "Why can't the edit_video prompt make a 9:16, speaker-centred cut?",
+    "because": "Magic Hour's AI video editor is a video-to-video regeneration model. It keeps the input frame shape and does not do camera reframing or edit-style cuts. This is a limit of the generation model and product, not of how the assistant used the tool.",
+    "evidence": "Both runs with different prompts gave the same 832x448 shape and a single wide shot. The grader also notes 'the AI regenerated the footage... faces differ'."
+   }
+  ],
+  "axiom": "The Magic Hour toolset has no crop, reframe or aspect-ratio tool for an existing video. Its only video-to-video editor (ltx-2.5) regenerates footage at the source frame shape and cannot follow or centre a speaker. So a 9:16 speaker-aware cut cannot be made inside this system. The assistant only ran the editor because the user pushed it to try.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a crop/reframe tool that does not regenerate footage: it takes a 9:16 aspect, the time ranges and a crop box for each range (it can use detect_faces boxes) and keeps the original audio. Until that exists, the edit_video description should say that it keeps the source aspect ratio and cannot crop, reframe or cut between speakers, so that the assistant keeps declining even when the user pushes it."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.26553140000000003
+}

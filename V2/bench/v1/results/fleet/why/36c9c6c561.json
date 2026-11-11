@@ -1,0 +1,47 @@
+{
+ "id": "36c9c6c561",
+ "key": "must:G35a:Both complete photos remain visible without stretching or content changes",
+ "symptom": "Both complete photos remain visible without stretching or content changes",
+ "item": "G35a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why were both photos not kept complete and unchanged in the delivered image?",
+    "because": "The image did not paste the original photos. An AI model drew both kitchens again: it cropped them, changed the angle and changed details (the After countertop went from wood to white or gray; a sink, a dishwasher and utensils were added).",
+    "evidence": "s4.new.stupid.G35a/grade.json, must item 4 'no': 'Both photos were cropped and altered… after countertop changed from wood to white or gray'; the faults list says 'regenerated, altered image'. The grader's reason for the old dumper chat (in the symptom) says the AI redrew both scenes."
+   },
+   {
+    "why": "Why did an AI model draw the scenes again?",
+    "because": "In both chats the assistant made the image with edit_image, the AI image editor (model flux-2-klein, 640px, 16:9). This tool makes all the pixels new from the input photos and a prompt. It does not place the photos as they are.",
+    "evidence": "s4.old.dumper.G35a/calls.jsonl line 2 and s4.new.stupid.G35a/calls.jsonl line 8: edit_image, model flux-2-klein, both api-assets image paths. wait_for_image_project returns type 'AI_IMAGE_EDITOR'."
+   },
+   {
+    "why": "Why did the prompt not keep the photos unchanged?",
+    "because": "Both prompts asked for no change ('Do not alter, redraw or restyle either photo' / 'exactly as photographed. Do not change either kitchen'). A generative model treats this text as a wish, not as a rule. It cannot copy the input pixels exactly, so it crops and makes up content.",
+    "evidence": "style.prompt in both edit_image calls has the 'do not change' words. The outputs still changed (grade.json). The old assistant warned the user: 'Even with that instruction, the AI redraws the whole picture.'"
+   },
+   {
+    "why": "Why did the assistant use the generative editor and not a tool that simply joins the photos?",
+    "because": "Neither tool list has a non-generative tool to join images or put them side by side. The only joining tool is join_videos, and it works on video only. The image tools are all generative. The old assistant said this to the user directly.",
+    "evidence": "tools-new.json: join_videos ('Join videos end to end…'), get_last_frame and the fetch_* tools; there is no image collage or join tool. s4.old.dumper.G35a/calls.jsonl line 6, assistant: 'Magic Hour doesn't have a simple tool to place photos side by side. I had to use its AI image editor.'"
+   },
+   {
+    "why": "Why did the new build's planning step not stop the request or warn about it?",
+    "because": "plan_request only checks that the parameters are present (aspect, exact_words). It returned ready:true with 'keep: both kitchens exactly as photographed'. It does not know that edit_image cannot keep a supplied photo exactly, and it has no other tool to send the request to.",
+    "evidence": "s4.new.stupid.G35a/calls.jsonl line 7: plan_request output ready:true, questions [], keep 'both kitchens exactly as photographed'. tools-new.json plan_request description: it checks the parameter rows only."
+   }
+  ],
+  "axiom": "The server has no tool that composes images without generating them. The only image tool that can combine two photos is the AI image editor (flux-2-klein), and a generative model always draws the whole frame again. No prompt can make it paste the photos without crops or changes.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a tool that composes images without generating them, the image version of join_videos (for example, compose_images). Input: the image file paths in order, a layout ('side_by_side'), the target aspect, and a label for each panel. The tool fits each image whole into an equal panel with padding and no stretching, draws the exact label text, returns a download URL and spends no credits. Also make plan_request send requests with 'keep exactly' on supplied photos to this tool and not to edit_image."
+ },
+ "error": null,
+ "seconds": 50,
+ "usd": 0.38595219999999997
+}

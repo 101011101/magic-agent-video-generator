@@ -1,0 +1,47 @@
+{
+ "id": "d788ff4556",
+ "key": "must:H41a:Ending clearly displays 'FitTrack'",
+ "symptom": "Ending clearly displays 'FitTrack'",
+ "item": "H41a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the ending not show 'FitTrack'?",
+    "because": "In both chats the last frames are the generated workout screen (header 'Workout'). Neither build added an end card or a title.",
+    "evidence": "new grade.json must[3]: 'The ending is the workout screen with a cropped Workout header'. Old calls.jsonl: one create_video_from_image call with end_image_file_path = app-workout.png. New calls.jsonl: plan_video_production has 2 beats (home, workout), captions:false, and the clip prompts say 'no title cards, no captions'."
+   },
+   {
+    "why": "Why did the assistant plan no end card?",
+    "because": "The assistant never got the requirement 'finish with the app name'. The stupid user's opener was only 'make an app ad using this pic and this pic'. 'End with FitTrack' sits only in the persona's knowledge bank.",
+    "evidence": "chat.json messages[0].text = 'make an app ad using this pic and this pic'. In the bank, 'On-screen wording' = 'End with FitTrack…'. The H41a.json brief says 'finish with the app name'."
+   },
+   {
+    "why": "Why did the user not give the requirement later?",
+    "because": "The stupid persona answers only questions it is asked. Neither assistant asked about on-screen text or the ending.",
+    "evidence": "Persona rule in chat.json: answer from the bank only when asked. Old: no questions; it delivered right after get_workflow_guide. New: the only user reply was '10 sec, upbeat music no voice. the first pic then the second one. idk about the motion, you pick'."
+   },
+   {
+    "why": "Why did the new build not ask about on-screen words?",
+    "because": "The assistant sent exact_words as 'missing' to plan_request. The tool returned questions only for motion, seconds and sound, and it dropped exact_words from the params it returned (the cap is 'up to 3 questions'). After the answer, the assistant did not call plan_request again. plan_video_production then accepted a story with no text.",
+    "evidence": "New calls.jsonl line 2: args contain {name:'exact_words', source:'missing'}, but the output params/questions list only motion, seconds, aspect and sound. The plan_request description in tools-new.json says 'Returns the checked sheet and up to 3 questions… call again with … the user's answer'. Line 7 is plan_video_production with captions:false."
+   },
+   {
+    "why": "Why did the old build not ask?",
+    "because": "The hosted server has no clarification gate. The static ugc-ads guide says nothing about end cards or on-screen text. The assistant made a single 5 s image-to-video clip that started on the home screenshot and ended on the workout screenshot.",
+    "evidence": "Old calls.jsonl line 2: the get_workflow_guide output has no step about text or end cards. Line 3: a single create_video_from_image call with end_image = workout."
+   }
+  ],
+  "axiom": "The vague-user opener leaves out a must-have (end on 'FitTrack'). The user reveals it only if asked about on-screen words. Neither build makes sure that question gets asked: the old build has no question step, and the new build's plan_request caps its questions at 3 and silently drops the missing exact_words row.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, never drop a 'missing' exact_words row. For ad and promo requests, always include an on-screen-words or ending question (for example: 'Should it end on your app name or a slogan?'), even if this means asking it in a second round after the 3-question cap. Also let plan_video_production add an end-card beat with the brand text when exact_words is given."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.31817680000000004
+}

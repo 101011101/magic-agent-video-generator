@@ -1,0 +1,33 @@
+{
+  "id": "E28a",
+  "best_tools": "yes",
+  "explanation": "The supplied script reaches the voice tool intact, so the reported missing opening phrase is a speech-generation failure, not an omission in the plan. Separately, assembly incorrectly requests the narration's duration rather than the source video's duration, risking a shortened video. The grader's other concerns are verification gaps, not established failures.",
+  "better_chain": "voice (speak the supplied script exactly, warmly and clearly, finishing within 10 seconds) → assemble (add the complete narration from the start while preserving the source video's full duration, framing, and sequence; no music or captions)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "state-solving"
+  ],
+  "cause": "model-quality",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correctly preserves the supplied narration verbatim. Preparing a text asset is acceptable, although no copywriting is needed.",
+      "verdict": "ok",
+      "tool": "write"
+    },
+    {
+      "n": 2,
+      "issue": "Uses the complete script and requests exact English speech with an appropriate delivery. The reported seven-second duration fits within the video; the missing opening is not explained by these inputs or settings.",
+      "verdict": "ok",
+      "tool": "voice"
+    },
+    {
+      "n": 3,
+      "issue": "The tool and asset wiring are correct, but setting output duration to the narration duration conflicts with preserving the complete original video. It should retain the source video's duration, regardless of when narration ends.",
+      "verdict": "bad-params",
+      "tool": "assemble"
+    }
+  ],
+  "missing": "An explicit source-video-duration setting for assembly; the plan instead makes the shorter narration determine output duration."
+}

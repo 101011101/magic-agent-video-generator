@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magic Hour Playground</title>
+<style>
+:root {
+  --bg: #f6f6f4; --panel: #fff; --ink: #1d1d1b; --muted: #6d6d68; --line: #dcdcd6;
+  --accent: #2f6fde; --ok: #1f8a4c; --bad: #c43d32; --warn: #b7791f; --path: #1f8a4c; --dim: .38;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151514; --panel: #1f1f1d; --ink: #ececea; --muted: #9a9a94; --line: #34342f;
+  --accent: #6c9cf0; --ok: #4cc27f; --bad: #ef6b5f; --warn: #e2a64a; --path: #4cc27f;
+} }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, system-ui, sans-serif; }
+header { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 15px; margin: 0 8px 0 0; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 7px 18px; }
+select, input, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; max-width: 100%; }
+textarea { width: 100%; min-height: 70px; resize: vertical; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.card.on-path { border-left: 4px solid var(--path); }
+.card.off-path { opacity: var(--dim); }
+.card.off-path:hover { opacity: 1; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.id { font-weight: 700; font-family: ui-monospace, monospace; }
+.pill { font-size: 11px; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.st-complete { color: var(--ok); } .st-error { color: var(--bad); } .st-running, .st-uploading, .st-queued { color: var(--warn); }
+.tag-path { color: var(--path); } .tag-dead { color: var(--muted); }
+.outs { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.out { width: 300px; max-width: 100%; }
+.out video, .out img { width: 100%; max-height: 300px; object-fit: contain; background: #0003; border-radius: 6px; display: block; }
+.out audio { width: 100%; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.chip { font-size: 12px; padding: 2px 8px; border-radius: 6px; border: 1px dashed var(--line); background: var(--bg); cursor: grab; }
+.chip:hover { border-color: var(--accent); }
+.chip.ok { border-color: var(--ok); color: var(--ok); }
+table.kv { border-collapse: collapse; margin-top: 8px; font-size: 12.5px; width: 100%; }
+table.kv td { border-top: 1px solid var(--line); padding: 3px 6px; vertical-align: top; }
+table.kv td:first-child { color: var(--muted); white-space: nowrap; width: 1%; font-family: ui-monospace, monospace; }
+table.kv td.prompt { white-space: pre-wrap; }
+pre { background: var(--bg); padding: 8px; border-radius: 6px; overflow: auto; font-size: 11.5px; max-height: 320px; }
+details > summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.maker { border: 2px solid var(--accent); }
+.field { margin: 8px 0; }
+.field > label { display: block; font-family: ui-monospace, monospace; font-size: 12px; margin-bottom: 2px; }
+.field .req { color: var(--bad); }
+.field .hint { color: var(--muted); font-family: -apple-system, system-ui, sans-serif; }
+.field .help { font-size: 12px; color: var(--muted); white-space: pre-wrap; margin: 2px 0 4px; }
+fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 8px 0; padding: 4px 10px 8px; }
+legend { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); }
+.slot { display: flex; gap: 8px; align-items: flex-start; }
+.slot input { flex: 1; }
+.slot .prev { width: 96px; height: 60px; border: 1px dashed var(--line); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); overflow: hidden; flex: none; }
+.slot .prev img, .slot .prev video { width: 100%; height: 100%; object-fit: cover; }
+.drop-hot { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.err { color: var(--bad); white-space: pre-wrap; font-size: 12.5px; }
+#lineage svg { width: 100%; display: block; }
+#lineage table { border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+#lineage th, #lineage td { text-align: left; padding: 3px 10px 3px 0; border-top: 1px solid var(--line); }
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 6px 14px; border-radius: 8px; font-size: 13px; z-index: 9; }
+@media (max-width: 600px) { .out { width: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Magic Hour Playground</h1>
+  <select id="sessionSel" title="Session"></select>
+  <button id="newSession">New session</button>
+  <span id="credits" class="muted small"></span>
+  <span class="muted small" style="margin-left:auto">Ref syntax: <code>@n3</code> · <code>@n3.1</code> (2nd output) · <code>@n3:first</code> · <code>@n3:last</code></span>
+</header>
+<main>
+  <div id="lineage" class="card" hidden></div>
+  <div id="nodes" style="display:flex;flex-direction:column;gap:14px"></div>
+  <div id="maker" class="card maker"></div>
+</main>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k.startsWith("on")) el.addEventListener(k.slice(2), v); else if (k === "html") el.innerHTML = v; else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) el.append(k instanceof Node ? k : String(k));
+  return el;
+};
+const fill = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter((k) => k != null && k !== false));
+const api = async (path, opts = {}) => { const r = await fetch(path, opts); const d = await r.json(); if (!r.ok) throw new Error(d.error || r.status); return d; };
+const toast = (msg) => { const t = h("div", { class: "toast" }, msg); document.body.append(t); setTimeout(() => t.remove(), 1600); };
+const REF = /^@(n\d+)(?:\.(\d+))?(?::(first|last))?$/;
+const clone = (x) => JSON.parse(JSON.stringify(x ?? null));
+
+let TOOLS = {}, DEFAULTS = {}, S = null, maker = { tool: null, body: {} }, pollTimer = null;
+
+// ---------- boot ----------
+async function boot() {
+  for (const t of await api("/api/tools")) TOOLS[t.id] = t;
+  DEFAULTS = await api("/api/defaults");
+  let list = await api("/api/sessions");
+  if (!list.length) { await api("/api/sessions", { method: "POST", body: "{}" }); list = await api("/api/sessions"); }
+  const want = location.hash.slice(1);
+  await openSession(list.includes(want) ? want : list[0], list);
+  api("/api/account").then((a) => $("#credits").textContent = `${a.credits} credits · ${a.tier}`).catch(() => $("#credits").textContent = "account: n/a");
+}
+async function openSession(sid, list) {
+  list = list || await api("/api/sessions");
+  $("#sessionSel").replaceChildren(...list.map((id) => h("option", { value: id, selected: id === sid }, id)));
+  location.hash = sid;
+  S = await api(`/api/sessions/${sid}`);
+  setTool(maker.tool || DEFAULTS._lastTool || "image-to-video");
+  render();
+}
+$("#sessionSel").onchange = (e) => openSession(e.target.value);
+$("#newSession").onclick = async () => { const label = prompt("Session label (optional)") || ""; const s = await api("/api/sessions", { method: "POST", body: JSON.stringify({ label }) }); openSession(s.id); };
+
+async function refresh() {
+  S = await api(`/api/sessions/${S.id}`);
+  renderNodes(); renderLineage();
+}
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  if (S.nodes.some((n) => !["complete", "error"].includes(n.status))) pollTimer = setTimeout(async () => { await refresh(); schedulePoll(); }, 3000);
+}
+function render() { renderNodes(); renderLineage(); renderMaker(); }
+
+// ---------- lineage ----------
+function ancestors(id) {
+  const seen = new Set(), stack = [id];
+  while (stack.length) { const n = S.nodes.find((x) => x.id === stack.pop()); if (!n || seen.has(n.id)) continue; seen.add(n.id); n.inputs.forEach((i) => stack.push(i.node)); }
+  return seen;
+}
+function onPathSet() { return S.final ? ancestors(S.final) : null; }
+async function setFinal(id) { S = await api(`/api/sessions/${S.id}/final`, { method: "PUT", body: JSON.stringify({ node: id }) }); render(); if (id) $("#lineage").scrollIntoView({ behavior: "smooth" }); }
+
+function renderLineage() {
+  const box = $("#lineage"), path = onPathSet();
+  box.hidden = !S.nodes.length;
+  if (!S.nodes.length) return;
+  const calls = S.nodes.filter((n) => n.tool !== "upload");
+  const byTool = {};
+  for (const n of calls) {
+    const t = byTool[n.title] ||= { calls: 0, onPath: 0, credits: 0, pathCredits: 0, errors: 0 };
+    t.calls++; t.credits += n.credits || 0; if (n.status === "error") t.errors++;
+    if (path?.has(n.id)) { t.onPath++; t.pathCredits += n.credits || 0; }
+  }
+  const total = calls.reduce((a, n) => a + (n.credits || 0), 0), onPath = calls.filter((n) => path?.has(n.id));
+  const pathCredits = onPath.reduce((a, n) => a + (n.credits || 0), 0);
+  const ordered = S.nodes.filter((n) => path?.has(n.id));
+  fill(box,
+    h("div", { class: "row" }, h("b", {}, "Lineage"),
+      S.final ? h("span", { class: "small" }, `final = ${S.final} · ${onPath.length}/${calls.length} calls contribute · ${pathCredits}/${total} credits on path`) : h("span", { class: "muted small" }, "Press “Set final” on a node to trace which calls contribute to it."),
+      S.final && h("button", { onclick: () => setFinal(null), style: "margin-left:auto" }, "Clear final")),
+    S.final && h("div", { class: "small", style: "margin-top:6px" }, "Path: ", ordered.map((n, i) => [i ? " → " : "", h("b", {}, n.id), " ", n.title])),
+    dagSvg(path),
+    h("table", {}, h("tr", {}, ...["Tool", "Calls", "On path", "Dead ends", "Errors", "Credits", "Credits on path"].map((x) => h("th", {}, x))),
+      Object.entries(byTool).map(([k, t]) => h("tr", {}, h("td", {}, k), h("td", {}, t.calls), h("td", { class: "tag-path" }, path ? t.onPath : "–"), h("td", {}, path ? t.calls - t.onPath - t.errors : "–"), h("td", { class: t.errors ? "st-error" : "" }, t.errors), h("td", {}, t.credits), h("td", {}, path ? t.pathCredits : "–")))),
+  );
+}
+function dagSvg(path) {
+  const depth = {};
+  const d = (n) => depth[n.id] ??= 1 + Math.max(-1, ...n.inputs.map((i) => { const p = S.nodes.find((x) => x.id === i.node); return p ? d(p) : -1; }));
+  S.nodes.forEach(d);
+  const cols = {}, pos = {}, W = 150, H = 34, GX = 40, GY = 12;
+  for (const n of S.nodes) { const c = depth[n.id]; cols[c] = (cols[c] || 0); pos[n.id] = { x: 10 + c * (W + GX), y: 10 + cols[c]++ * (H + GY) }; }
+  const width = 20 + (Math.max(...Object.keys(cols).map(Number)) + 1) * (W + GX), height = 20 + Math.max(...Object.values(cols)) * (H + GY);
+  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`); svg.style.maxHeight = Math.min(height, 420) + "px"; svg.style.marginTop = "8px";
+  const el = (tag, a, text) => { const e = document.createElementNS(ns, tag); for (const k in a) e.setAttribute(k, a[k]); if (text) e.textContent = text; svg.append(e); return e; };
+  const col = (on) => path ? (on ? "var(--path)" : "var(--line)") : "var(--muted)";
+  for (const n of S.nodes) for (const i of n.inputs) {
+    const a = pos[i.node], b = pos[n.id]; if (!a) continue;
+    const on = path?.has(n.id) && path?.has(i.node), x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2;
+    el("path", { d: `M${x1},${y1} C${x1 + GX / 2},${y1} ${x2 - GX / 2},${y2} ${x2},${y2}`, fill: "none", stroke: col(on), "stroke-width": on ? 2 : 1.2 });
+    if (i.mode !== "full") el("text", { x: x2 - 4, y: y2 - 4, "text-anchor": "end", "font-size": 9, fill: "var(--muted)" }, i.mode);
+  }
+  for (const n of S.nodes) {
+    const { x, y } = pos[n.id], on = path?.has(n.id);
+    const g = el("g", { style: "cursor:pointer" }); g.onclick = () => document.getElementById("card-" + n.id)?.scrollIntoView({ behavior: "smooth" });
+    const r = document.createElementNS(ns, "rect"); Object.entries({ x, y, width: W, height: H, rx: 6, fill: "var(--panel)", stroke: n.status === "error" ? "var(--bad)" : col(on), "stroke-width": on ? 2 : 1, opacity: path && !on ? .6 : 1 }).forEach(([k, v]) => r.setAttribute(k, v)); g.append(r);
+    const t = document.createElementNS(ns, "text"); Object.entries({ x: x + 8, y: y + 21, "font-size": 11.5, fill: path && !on ? "var(--muted)" : "var(--ink)" }).forEach(([k, v]) => t.setAttribute(k, v));
+    t.textContent = `${n.id} ${n.title}`.slice(0, 22) + (n.id === S.final ? " ★" : ""); g.append(t);
+  }
+  return svg;
+}
+
+// ---------- node cards ----------
+function leafRows(obj, pfx = "", out = []) {
+  if (Array.isArray(obj)) obj.forEach((v, i) => leafRows(v, `${pfx}[${i}]`, out));
+  else if (obj && typeof obj === "object") for (const [k, v] of Object.entries(obj)) leafRows(v, pfx ? `${pfx}.${k}` : k, out);
+  else out.push([pfx, obj]);
+  return out;
+}
+function copy(ref) { navigator.clipboard.writeText(ref).then(() => toast(`Copied ${ref}`)); }
+function refChip(label, ref) { return h("span", { class: "chip", draggable: "true", title: `${ref} — click to copy, or drag into a field`, onclick: () => copy(ref), ondragstart: (e) => e.dataTransfer.setData("text/plain", ref) }, label); }
+function mediaEl(sid, o, ref) {
+  const src = `/media/${sid}/${o.file}`;
+  const m = o.kind === "video" ? h("video", { src, controls: true, preload: "metadata", loop: true, muted: true }) : o.kind === "audio" ? h("audio", { src, controls: true, preload: "metadata" }) : o.kind === "image" ? h("img", { src, loading: "lazy" }) : h("a", { href: src, target: "_blank" }, o.file);
+  if (ref) { m.draggable = true; m.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", ref)); }
+  return m;
+}
+function nodeCard(n) {
+  const path = onPathSet(), on = path?.has(n.id);
+  const params = leafRows(n.body).filter(([k, v]) => !REF.test(String(v)));
+  const live = !["complete", "error"].includes(n.status);
+  return h("div", { class: "card " + (path ? (on ? "on-path" : "off-path") : ""), id: "card-" + n.id },
+    h("div", { class: "row" },
+      h("span", { class: "id" }, n.id), h("b", {}, n.title), h("span", { class: "pill st-" + n.status }, n.status + (live && n.mhStatus ? ` (${n.mhStatus})` : "")),
+      n.credits != null && h("span", { class: "muted small" }, `${n.credits} credits`),
+      n.seconds != null && h("span", { class: "muted small" }, `${n.seconds}s`),
+      live && h("span", { class: "muted small" }, `${Math.round((Date.now() - Date.parse(n.createdAt)) / 1000)}s elapsed`),
+      path && h("span", { class: "small " + (on ? "tag-path" : "tag-dead") }, on ? (n.id === S.final ? "★ final" : "on path") : "not on path"),
+      h("span", { style: "margin-left:auto" }),
+      n.tool !== "upload" && h("button", { onclick: () => { setTool(n.tool, clone(n.body)); renderMaker(); $("#maker").scrollIntoView({ behavior: "smooth" }); } }, "Reuse config"),
+      n.status === "complete" && h("button", { onclick: () => setFinal(n.id) }, S.final === n.id ? "Final ★" : "Set final")),
+    n.inputs.length > 0 && h("div", { class: "chips" }, n.inputs.map((i) => h("span", { class: "chip ok", style: "cursor:pointer", onclick: () => document.getElementById("card-" + i.node)?.scrollIntoView({ behavior: "smooth" }) }, `${i.field} ← ${i.ref}`))),
+    n.tool === "upload" ? h("div", { class: "muted small" }, n.body.name) :
+      params.length > 0 && h("table", { class: "kv" }, params.map(([k, v]) => h("tr", {}, h("td", {}, k), h("td", { class: /prompt|content|topic/.test(k) ? "prompt" : "" }, String(v))))),
+    n.error && h("div", { class: "err" }, n.error),
+    n.outputs.length > 0 && h("div", { class: "outs" }, n.outputs.map((o, i) => {
+      const base = `@${n.id}${i ? "." + i : ""}`;
+      return h("div", { class: "out" }, mediaEl(S.id, o, base),
+        h("div", { class: "chips" }, o.kind === "video" ? [refChip("Copy video", base), refChip("Copy first frame", base + ":first"), refChip("Copy last frame", base + ":last")] : refChip("Copy link", base)));
+    })),
+    (n.request || n.response) && h("details", {}, h("summary", {}, "Raw request / response"),
+      n.request && h("pre", {}, "POST " + (TOOLS[n.tool]?.path || "") + "\n" + JSON.stringify(n.request, null, 2)),
+      n.response && h("pre", {}, JSON.stringify(n.response, null, 2))),
+  );
+}
+// Rebuild only cards whose state changed, so playing videos are not reset by polling.
+const cardCache = {};
+function renderNodes() {
+  const path = onPathSet();
+  $("#nodes").replaceChildren(...S.nodes.map((n) => {
+    const live = !["complete", "error"].includes(n.status);
+    const sig = JSON.stringify([n, S.final, path?.has(n.id), live && Date.now() >> 10]);
+    if (cardCache[n.id]?.sig !== sig || cardCache[n.id].sid !== S.id) cardCache[n.id] = { sig, sid: S.id, el: nodeCard(n) };
+    return cardCache[n.id].el;
+  }));
+  schedulePoll();
+}
+
+// ---------- maker (form generated from the OpenAPI request schema) ----------
+const getAt = (o, p) => p.reduce((a, k) => a?.[k], o);
+function setAt(o, p, v) {
+  let cur = o;
+  for (let i = 0; i < p.length - 1; i++) cur = cur[p[i]] ??= typeof p[i + 1] === "number" ? [] : {};
+  if (v === undefined) Array.isArray(cur) ? cur[p.at(-1)] = undefined : delete cur[p.at(-1)]; else cur[p.at(-1)] = v;
+}
+function prune(v) {
+  if (Array.isArray(v)) { const a = v.map(prune).filter((x) => x !== undefined); return a.length ? a : undefined; }
+  if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v)) { const p = prune(x); if (p !== undefined) o[k] = p; } return Object.keys(o).length ? o : undefined; }
+  return v === "" || v == null ? undefined : v;
+}
+function seedFromSchema(s, out = {}) {
+  for (const [k, p] of Object.entries(s.properties || {})) {
+    const req = (s.required || []).includes(k);
+    if (p.type === "object") { const o = seedFromSchema(p); if (Object.keys(o).length) out[k] = o; }
+    else if (req && p.default !== undefined) out[k] = p.default;
+    else if (req && p.enum) out[k] = p.enum[0];
+  }
+  return out;
+}
+// Drop refs that point at nodes outside the current session (defaults are global).
+function stripForeignRefs(v) {
+  if (Array.isArray(v)) return v.map(stripForeignRefs);
+  if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = stripForeignRefs(x); return o; }
+  const m = typeof v === "string" && v.match(REF);
+  return m && !S.nodes.some((n) => n.id === m[1] && n.outputs.length) ? "" : v;
+}
+function setTool(tool, body) {
+  if (!TOOLS[tool]) tool = Object.keys(TOOLS)[0];
+  maker = { tool, body: body ?? stripForeignRefs(clone(DEFAULTS[tool] ?? seedFromSchema(TOOLS[tool].schema))) };
+}
+const isMediaField = (name) => /file_path|youtube_url|_face$/.test(name);
+const isLongText = (name, p) => /prompt|content|topic|art_style_custom/.test(name) || (p.maxLength || 0) > 200;
+
+function help(p) {
+  if (!p.description) return null;
+  const d = p.description.trim();
+  return d.length < 140 ? h("div", { class: "help" }, d) : h("details", {}, h("summary", {}, d.split("\n")[0].slice(0, 120) + " …"), h("div", { class: "help" }, d));
+}
+function hint(p) {
+  const bits = [p.type];
+  if (p.minimum != null || p.maximum != null) bits.push(`${p.minimum ?? ""}–${p.maximum ?? ""}`);
+  if (p.default !== undefined) bits.push(`default ${JSON.stringify(p.default)}`);
+  return h("span", { class: "hint" }, " · " + bits.join(" · "));
+}
+async function previewInto(box, v) {
+  box.replaceChildren(); const val = (v || "").trim();
+  if (!val) return box.append("drop");
+  if (REF.test(val)) {
+    try { const f = await api(`/api/sessions/${S.id}/frame?ref=${encodeURIComponent(val)}`); box.append(mediaEl(S.id, f)); } catch { box.append("bad ref"); }
+  } else if (/^https?:.*\.(png|jpe?g|webp|gif)(\?|$)/i.test(val)) box.append(h("img", { src: val }));
+  else box.append("url");
+}
+async function uploadFile(file) {
+  const n = await api(`/api/sessions/${S.id}/upload?name=${encodeURIComponent(file.name)}`, { method: "POST", body: file });
+  S.nodes.push(n); renderNodes(); renderLineage();
+  return "@" + n.id;
+}
+function droppable(el, onValue) {
+  el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("drop-hot"); });
+  el.addEventListener("dragleave", () => el.classList.remove("drop-hot"));
+  el.addEventListener("drop", async (e) => {
+    e.preventDefault(); el.classList.remove("drop-hot");
+    if (e.dataTransfer.files.length) onValue(await uploadFile(e.dataTransfer.files[0]));
+    else onValue(e.dataTransfer.getData("text/plain"));
+  });
+}
+function primitive(name, p, path, req) {
+  const v = getAt(maker.body, path);
+  const set = (x) => setAt(maker.body, path, x);
+  let input;
+  if (p.enum) {
+    input = h("select", { onchange: (e) => set(e.target.value === "" ? undefined : (p.type === "number" || p.type === "integer") ? Number(e.target.value) : e.target.value) },
+      !req && h("option", { value: "" }, p.default !== undefined ? `(unset → ${p.default})` : "(unset)"),
+      p.enum.map((x) => h("option", { value: x, selected: String(v) === String(x) }, x)));
+  } else if (p.type === "boolean") {
+    input = h("select", { onchange: (e) => set(e.target.value === "" ? undefined : e.target.value === "true") },
+      h("option", { value: "" }, p.default !== undefined ? `(unset → ${p.default})` : "(unset)"), h("option", { value: "true", selected: v === true }, "true"), h("option", { value: "false", selected: v === false }, "false"));
+  } else if (p.type === "number" || p.type === "integer") {
+    input = h("input", { type: "number", value: v ?? "", min: p.minimum, max: p.maximum, step: p.multipleOf || (p.type === "integer" ? 1 : "any"), placeholder: p.default ?? "", oninput: (e) => set(e.target.value === "" ? undefined : Number(e.target.value)) });
+  } else if (isMediaField(name)) {
+    const box = h("div", { class: "prev" });
+    input = h("input", { type: "text", value: v ?? "", placeholder: "@n1 · @n2:last · URL · or drop a file", oninput: (e) => { set(e.target.value); previewInto(box, e.target.value); } });
+    const wrap = h("div", { class: "slot" }, input, box);
+    droppable(wrap, (val) => { input.value = val; set(val); previewInto(box, val); });
+    previewInto(box, v);
+    return wrap;
+  } else if (isLongText(name, p)) {
+    input = h("textarea", { placeholder: p.example ?? "", oninput: (e) => set(e.target.value) }, v ?? "");
+  } else {
+    input = h("input", { type: "text", value: v ?? "", placeholder: p.example ?? p.default ?? "", style: "width:100%", oninput: (e) => set(e.target.value) });
+  }
+  droppable(input, (val) => { input.value = val; set(val); });
+  return input;
+}
+function field(name, p, path, req) {
+  if (p.type === "object" && p.properties) {
+    return h("fieldset", {}, h("legend", {}, path.join(".")), help(p),
+      Object.entries(p.properties).map(([k, c]) => field(k, c, [...path, k], (p.required || []).includes(k))));
+  }
+  if (p.type === "array") {
+    const arr = getAt(maker.body, path) || [];
+    const it = p.items || {};
+    const rows = arr.map((_, i) => h("div", { class: "row", style: "align-items:flex-start" },
+      h("div", { style: "flex:1" }, it.type === "object" ? field(`${name}[${i}]`, it, [...path, i], false) : primitive(name, it, [...path, i], true)),
+      h("button", { onclick: () => { arr.splice(i, 1); renderMaker(); } }, "✕")));
+    return h("div", { class: "field" }, h("label", {}, path.join("."), req && h("span", { class: "req" }, " *"), h("span", { class: "hint" }, ` · array${p.minItems ? ` ${p.minItems}–${p.maxItems ?? ""}` : ""}`)), help(p),
+      rows, h("button", { onclick: () => { setAt(maker.body, [...path, arr.length], it.type === "object" ? {} : ""); renderMaker(); } }, "+ add"));
+  }
+  return h("div", { class: "field" }, h("label", {}, path.join("."), req && h("span", { class: "req" }, " *"), hint(p)), help(p), primitive(name, p, path, req));
+}
+function renderMaker() {
+  const t = TOOLS[maker.tool];
+  const groups = { video: "Video", image: "Image", audio: "Audio", faces: "Analysis" };
+  const sel = h("select", { onchange: (e) => { setTool(e.target.value); renderMaker(); } },
+    Object.entries(groups).map(([k, label]) => h("optgroup", { label }, Object.values(TOOLS).filter((x) => x.kind === k).map((x) => h("option", { value: x.id, selected: x.id === t.id }, x.title)))));
+  const errBox = h("div", { class: "err" });
+  const run = h("button", { class: "primary", onclick: async () => {
+    run.disabled = true; errBox.textContent = "";
+    try {
+      const body = prune(clone(maker.body)) || {};
+      const n = await api(`/api/sessions/${S.id}/run`, { method: "POST", body: JSON.stringify({ tool: t.id, body }) });
+      DEFAULTS[t.id] = body; DEFAULTS._lastTool = t.id;
+      S.nodes.push(n); renderNodes(); renderLineage();
+      document.getElementById("card-" + n.id)?.scrollIntoView({ behavior: "smooth" });
+    } catch (e) { errBox.textContent = e.message; }
+    run.disabled = false;
+  } }, "Run");
+  fill($("#maker"),
+    h("div", { class: "row" }, h("b", {}, `New call → n${S.nodes.length + 1}`), sel, h("code", { class: "muted small" }, "POST " + t.path),
+      h("button", { style: "margin-left:auto", onclick: () => { maker.body = seedFromSchema(t.schema); renderMaker(); } }, "Reset to spec defaults")),
+    t.description && h("details", {}, h("summary", {}, "Tool description"), h("div", { class: "help" }, t.description)),
+    Object.entries(t.schema.properties).map(([k, p]) => field(k, p, [k], (t.schema.required || []).includes(k))),
+    h("div", { class: "row", style: "margin-top:10px" }, run, h("span", { class: "muted small" }, "Last-used values for each tool are saved as its defaults."), errBox),
+  );
+}
+boot().catch((e) => document.body.prepend(h("div", { class: "err", style: "padding:16px" }, "Boot failed: " + e.message)));
+</script>
+</body>
+</html>

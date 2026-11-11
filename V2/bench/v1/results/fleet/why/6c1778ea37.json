@@ -1,0 +1,52 @@
+{
+ "id": "6c1778ea37",
+ "key": "check:aspect:H",
+ "symptom": "aspect 16:9",
+ "item": "H41b",
+ "n": 9,
+ "builds": {
+  "old": 8,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'aspect 16:9' not met in H41b?",
+    "because": "The measured files are 640x384 and 826x496. Both have a 5:3 ratio (1.667), not 16:9 (1.778). They are landscape, but the ratio is wrong. The automatic check measures every delivered file, so the still image is measured too.",
+    "evidence": "Symptom data: measured [\"640x384\",\"640x384\",\"826x496\"]. H41b.json spec.aspect = \"16:9\" and must_have 'landscape 16:9'. In s4.old.dumper.H40c/grade.json the aspect check lists both the PNG and the MP4 (\"384x640\",\"496x826\"), so stills count."
+   },
+   {
+    "why": "Why are the files 5:3 when the assistant asked for 16:9?",
+    "because": "On the free-plan path the assistant first makes a still with generate_image (flux-2-klein, resolution \"640px\"). It then animates that still with create_video_from_image (ltx-2.5, 480p). flux-2-klein at 640px does not return an exact 16:9 or 9:16 frame. It returns 640x384 (or 384x640 for 9:16), which is 5:3 / 3:5.",
+    "evidence": "s4.old.dumper.H40c/calls.jsonl: generate_image args {model:flux-2-klein, resolution:640px, aspect_ratio:9:16}. grade.json measures that PNG as 384x640 (0.600, not 0.5625). The H41b 640x384 file is the landscape mirror of this size."
+   },
+   {
+    "why": "Why does the video also come out 5:3?",
+    "because": "create_video_from_image has no aspect_ratio parameter, so the output follows the input image ratio. ltx-2.5 at 480p scales 384x640 to 496x826 and keeps the 0.6 ratio. A 640x384 still therefore gives 826x496.",
+    "evidence": "s4.old.dumper.H40c/calls.jsonl, wait_for_video_project result: width 496, height 826 from the 384x640 still. tools-old.json create_video_from_image inputSchema: properties are name, end_seconds, model, resolution, audio, style, assets, with no aspect_ratio."
+   },
+   {
+    "why": "Why did the assistant not see or fix the ratio drift?",
+    "because": "The tool descriptions say that flux-2-klein and ltx-2.5 'support 16:9'. They do not say that 640px snaps the frame to 640x384, and they do not say that image-to-video takes its ratio from the image. The old build also has no checklist step that compares the measured size with the requested aspect, so the assistant reports the file as delivered.",
+    "evidence": "tools-old.json create_video_from_text aspect_ratio: 'ltx-2.5: Supports 9:16, 16:9, 1:1', with no pixel sizes. The model description says Free uses ltx-2.5. In s4.old.dumper.H40c the assistant delivers '9:16 at 496×826' without seeing the ratio mismatch."
+   },
+   {
+    "why": "Why does the new build fail far less often (1 vs 8)?",
+    "because": "The new build's plan_video_production sends scenes to create_video_from_text with minimax-h3 at 480p and an explicit aspect_ratio. That path gives a true 16:9 frame (858x480). The new build also returns a measured 'file … 16:9' checklist line. The one new-build failure probably took the still-then-animate path, but no H41b new chat was provided to confirm this.",
+    "evidence": "s4.new.dumper.H40c/calls.jsonl plan_video_production steps: tool create_video_from_text, model minimax-h3, resolution 480p; checklist {id:file, want:'One file, 15 s, 9:16', how:measured}. s4.old.stupid.H42a/calls.jsonl: minimax-h3 16:9 at 480p returned width 858, height 480 (1.7875 ≈ 16:9)."
+   },
+   {
+    "why": "Why does flux-2-klein at 640px give 640x384 instead of 640x360?",
+    "because": "AXIOM: the image model snaps output sizes to a 64-pixel grid. A 16:9 frame at 640 px long side becomes 640x384 (5:3). This is a property of the generation model on the free resolution, and no build controls it.",
+    "evidence": "Measured 384x640 for a 9:16 request (s4.old.dumper.H40c/grade.json) and 640x384 for 16:9 (H41b symptom). 360 is not a multiple of 64 and 384 is the next one up."
+   }
+  ],
+  "axiom": "The free-plan image model flux-2-klein at \"640px\" snaps frame sizes to multiples of 64. A requested 16:9 still comes out 640x384 (5:3). create_video_from_image has no aspect_ratio parameter and keeps the input image ratio, so the ltx-2.5 video becomes 826x496. The tool descriptions do not warn about either effect. Gap: no H41b chat files were provided. This chain comes from the identical mechanism in s4.old.dumper.H40c (384x640 → 496x826) and matches the measured H41b sizes exactly.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Option 1: in the MCP server, center-crop or pad any generate_image output to the exact requested aspect ratio before returning it. A 640x384 image becomes 640x360 (or 682x384) and is then used for image-to-video. Option 2: in the old build, make the generate_image and create_video_from_image descriptions say that 640px snaps to 5:3 and that image-to-video keeps the image ratio. Tell the assistant to use create_video_from_text with an explicit aspect_ratio (minimax-h3 480p gives 858x480) when exact 16:9 matters."
+ },
+ "error": null,
+ "seconds": 59,
+ "usd": 0.6924399999999999
+}

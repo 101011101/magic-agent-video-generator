@@ -1,0 +1,47 @@
+{
+ "id": "2c712fdabc",
+ "key": "must:I47b:Visuals show sound traveling from source to surface and back",
+ "symptom": "Visuals show sound traveling from source to surface and back",
+ "item": "I47b",
+ "n": 3,
+ "builds": {
+  "new": 1,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Visuals show sound traveling from source to surface and back' not met in 3 chats?",
+    "because": "No output clip shows a wave that leaves the source, hits the wall and comes back to the listener. Old/stupid shows one ribbon and the hiker is gone by 7 s. Old/dumper shows rings that stay centred on the child. New/stupid shows faint wire-like ripples that cross over and then vanish.",
+    "evidence": "grade.json in s5.old.stupid.I47b ('only a wave line, with no clear bounce… hiker is no longer in frame'), s5.old.dumper.I47b ('Rainbow rings expand around the child and stay centered on him; … Wall never clearly hit') and s5.new.stupid.I47b ('no clear travel to a cliff wall and return to the hiker. By the end the ripples are gone')."
+   },
+   {
+    "why": "Was the cause a bad or missing request from the assistant?",
+    "because": "No. In all 3 chats the assistant asked for the full journey in plain words: waves go out, hit the cliff or wall, bounce back and reach the shouter. Its spoken script says the same thing. So the prompt asked for exactly what the checklist wants.",
+    "evidence": "calls.jsonl, create_video_from_text style.prompt. Old/stupid: 'travel to the far rock cliff wall, bounce off it, and travel back toward the hiker'. Old/dumper: 'travel across the canyon, bounce off the big rock wall like a bouncy ball, and ripple back to the child'. New/stupid: 'travel across the canyon, hit the cliff wall and bounce back toward the hiker'."
+   },
+   {
+    "why": "Why did a correct prompt still give no visible round trip?",
+    "because": "All 3 clips came from one text-to-video pass with ltx-2.5 at 480p. The model draws a wave effect (rings or a ribbon) but does not follow a path in time: out, hit the wall, reverse, arrive. Camera wording also made things worse. Old/stupid asked for a 'smooth camera pan following the waves', so the camera left the hiker. New/stupid asked for a 'slow camera push-in', and the hiker ended up cropped.",
+    "evidence": "calls.jsonl: model 'ltx-2.5', resolution '480p', one 10 s generation in each chat. grade.json faults: 'single static-looking ribbon', 'static rainbow ring around the child', 'camera drifts so he ends cropped at the frame edge'."
+   },
+   {
+    "why": "Why ltx-2.5, a one-pass model, and no stronger model or staged visuals?",
+    "because": "The free plan allows only ltx-2.5 and minimax-h3 for video. One 10 s clip used 240 credits, so there was no room for retries or extra shots. The server even refused model 'default' for this reason.",
+    "evidence": "s5.old.stupid.I47b calls.jsonl line 2: reason 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. Every chat: credits_charged 240 for one clip."
+   },
+   {
+    "why": "Is this a defect of one build?",
+    "because": "No. Old and new builds sent nearly the same prompts and got the same failure from the same model. The new build's plan_request step fixed the aspect ratio (old/stupid came out 16:9 because no questions were asked). But no build tool can make the model render a timed bounce-and-return.",
+    "evidence": "New/stupid used plan_request and aspect_ratio '9:16', and still failed the same item. Old/dumper was 9:16 with no plan step and also failed."
+   }
+  ],
+  "axiom": "On the free plan, a single text-to-video generation (ltx-2.5, 480p) cannot reliably render a timed cause-and-effect path, such as a sound wave going from a source to a wall, reversing and arriving back at the listener. It draws generic ripple or ribbon effects instead. This is a limit of the generation model.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "none: inherent. A partial mitigation is possible: add a note to the create_video_from_text description saying that text-to-video seldom shows multi-step motion paths. It should tell the assistant to ask for one simple, large movement with a fixed camera ('static wide shot, source and wall both in frame, one bright arc moves left to the wall and back'). It should also tell the assistant to warn the user that the bounce may not be visible."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.2604688
+}

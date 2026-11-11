@@ -1,0 +1,47 @@
+{
+ "id": "924dabb01b",
+ "key": "must:D19a:The five-second widescreen clip is one continuous shot with a stationary camera.",
+ "symptom": "The five-second widescreen clip is one continuous shot with a stationary camera.",
+ "item": "D19a",
+ "n": 6,
+ "builds": {
+  "old": 2,
+  "new": 4
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'one continuous shot with a stationary camera' not met?",
+    "because": "The grader saw the background (trees, horizon) and the dog's framing move a lot between the sampled frames. It read this as the camera tracking or panning. The clip itself is 16:9 and one shot.",
+    "evidence": "s3.old.happy.D19a/grade.json: 'The background shifts a lot between frames, and the last frame looks like the camera is tracking or panning with the dog.' s3.new.happy.D19a/grade.json: 'The background shifts a lot ... the dog's heading and framing change from side-on to facing the camera ... not stationary.' The faults list also records 'The camera does not appear static' (major)."
+   },
+   {
+    "why": "Why did the video have camera motion? Did the assistant fail to ask for a still camera?",
+    "because": "No. In every chat checked, the assistant asked for a locked camera in clear words in the prompt. The fault is not in the request.",
+    "evidence": "calls.jsonl create_video_from_text style.prompt. s3.old.happy: 'static locked-off camera with no camera movement'. pilot2.old.happy: 'static locked-off camera that does not move, no cuts'. s3.new.happy: 'locked-off static camera that does not move'. s3.new.dumper: 'Static locked-off camera on a tripod, no camera movement, no pans, no zoom, no cuts'."
+   },
+   {
+    "why": "Why did a clear static-camera prompt not give a static camera?",
+    "because": "Every chat used the free model ltx-2.5 at 480p. The model treats camera words in the prompt as soft guidance. For a fast subject (a dog running and leaping), it makes the camera follow the action, which is a common pattern in its training footage. The tool call has no separate camera-lock parameter, so the prompt text is the only control.",
+    "evidence": "All four calls.jsonl files: args model 'ltx-2.5', resolution '480p'. The only camera control in the args is text in style.prompt. Output in each call is 854x480 at 24 fps."
+   },
+   {
+    "why": "Why ltx-2.5 and not a model that follows camera instructions better?",
+    "because": "The free plan blocks the default model. The server error names only ltx-2.5 and minimax-h3 as allowed. The assistant chose ltx-2.5, the first one in the list.",
+    "evidence": "s3.old.happy and pilot2.old.happy calls.jsonl, first call: approve false, reason 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. New-build chats went straight to ltx-2.5."
+   },
+   {
+    "why": "Why does the new build fail as often as the old one, or more (4 vs 2)?",
+    "because": "plan_request in the new build does not carry camera or motion through. The assistant sent a 'motion' row with 'static camera'. The checked sheet that came back has no motion row. So the new build adds no camera safeguard. The prompts were equally explicit in both builds, so the different counts point to the model's random output, not to a defect in either build.",
+    "evidence": "s3.new.happy calls.jsonl plan_request: the input params include motion 'one continuous shot, static camera'. The output params list only subject, seconds, aspect, sound, exact_words and look. s3.new.dumper shows the same thing."
+   }
+  ],
+  "axiom": "The free-plan text-to-video model (ltx-2.5 at 480p) does not reliably follow 'static locked-off camera' prompts for a fast-moving subject. It adds tracking or panning even when the prompt explicitly says not to. Free accounts cannot choose a stronger model, and the tool has no camera-lock parameter.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "When the user asks for a still camera, make the new build send a negative-motion constraint as well as the prompt text, or route the request to minimax-h3 if that model shows better camera control in a small A/B test. Keep 'motion/camera' in the plan_request sheet. Tell the user that a still camera is not guaranteed on the free model and offer to generate again. If none of this improves results, the fix is none: the limit is inherent to the model."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.280915
+}

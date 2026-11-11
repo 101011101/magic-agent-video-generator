@@ -1,0 +1,244 @@
+<!doctype html><meta charset="utf-8"><title>V3 case 1 · v3-student-1-c1-webrefs</title>
+<style>
+:root{--bg:#faf8f4;--fg:#1d1a16;--mut:#6b655c;--line:#e4ded3;--ok:#1d7a3d;--bad:#b3261e;--mid:#9a6b00;--acc:#2f5d8a;--card:#fff}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15130f;--fg:#ece7de;--mut:#a39c90;--line:#2d2922;--ok:#5ac07b;--bad:#f0756c;--mid:#e0b24a;--acc:#8ab4e8;--card:#1d1a15;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#15130f;--fg:#ece7de;--mut:#a39c90;--line:#2d2922;--ok:#5ac07b;--bad:#f0756c;--mid:#e0b24a;--acc:#8ab4e8;--card:#1d1a15;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,Inter,system-ui,sans-serif;margin:0;padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1100px;margin-inline:auto}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:34px 0 10px;padding-top:14px;border-top:1px solid var(--line)}h3{font-size:14px;margin:16px 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.mut{color:var(--mut)}pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px;max-height:420px;overflow:auto}
+.b{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;color:#fff}.b.ok{background:var(--ok)}.b.bad{background:var(--bad)}.b.mid{background:var(--mid)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{color:var(--mut);font-weight:600}
+.pipe{display:grid;gap:10px}.step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}.step>b{display:block;margin-bottom:4px}.step .n{color:var(--acc);font-weight:700;margin-right:8px}
+.op{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;line-height:1.75}.slot{display:inline}.slot i{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.05em;color:#fff;background:var(--acc);border-radius:4px;padding:0 5px;margin:0 6px 0 2px;vertical-align:middle}.slot.beat i{background:#7a4a8a}mark{background:#ffe9a8;color:#1d1a16;padding:0 2px;border-radius:3px}
+.frames{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}figure{margin:0}figure img{width:100%;border-radius:6px;border:1px solid var(--line)}figcaption{font-size:11.5px;color:var(--mut);margin-top:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.two{grid-template-columns:1fr}}video{width:100%;border-radius:8px;background:#000}
+.kv td:first-child{color:var(--mut);width:180px}details summary{cursor:pointer;color:var(--acc)}
+</style>
+<h1>V3/compose case 3 (a specific thing; the reference supplied by hand, the state manager assumed perfect) · v3-student-1-c1-webrefs</h1>
+<p class="mut">2026-11-02T23:15:51.733Z · ltx-2.5, no references, one prose prompt from a story and the guide · 720 credits · 10 LLM calls (gpt-6.1-sol) · docs: V3/docs/02-case-1-text-only.md</p>
+<p><b>Brief.</b> One clip, 15 seconds, widescreen, no dialogue. Five pictures are attached and are the references: student-teacher.jpg is the TEACHER (the man in the grey long-sleeve shirt), web-evan.jpg is EVAN (the young man with braids), web-maya.jpg is MAYA (the young woman with the fringe; ignore the umbrella and the studio props, she is a student at a desk here), web-leo.jpg is LEO (the young man in the old black-and-white portrait; render him in colour, as a present-day student in casual clothes, keeping his face and hair), and student-classroom.jpg is the CLASSROOM (the scene must be this room: these desks, these windows, this green board). Each person must look exactly like their picture. The scene: in that classroom, the teacher walks along the row and hands Evan his returned test; Evan turns it over and the score '38/100' is clear; Maya, at the next desk, leans over and points at the score; Leo looks, smirks and nudges Maya; she covers a mocking grin; Evan lowers his eyes and pulls the paper toward himself, his hand covering the score at the end. Morning light from the windows.</p>
+<h2>The clip</h2><div class="two"><div><h3>V3 · clip-2 · 15 s · audio off · <a href="clip-2.mp4">file</a></h3><video controls preload="metadata" src="clip-2.mp4"></video></div><div><h3>the other attempt · clip-2-retry (not chosen) · <a href="clip-2-retry.mp4">file</a></h3><video controls preload="metadata" src="clip-2-retry.mp4"></video></div></div>
+
+<h2>Inputs, and who chose them</h2>
+<table><tr><th></th><th>V3</th><th>MCP</th></tr>
+<tr><td>the reference</td><td><b>supplied by hand</b> on the command line (V3/runs/v3-student-1/refs/person/cand-6.jpg): a frame of clip 1 picked by a person; the state manager that would pick it is not built yet. A VLM then described it (people, objects, place, light) and those words became the fixed descriptors.</td><td><b>supplied by us</b>: the same frame, attached to the message as <code>student-teacher.jpg, web-evan.jpg, web-maya.jpg, web-leo.jpg, student-classroom.jpg</code> (uploaded to the account by the harness; the message says "the customer in the attached frame"). The MCP selected nothing from clip 1; it cannot read a video. It used the attachment where its tools take a file path.</td></tr>
+<tr><td>the still (seed / first frame)</td><td>none (text only)</td><td>no still: it went straight to video</td></tr>
+<tr><td>the video call</td><td><b>chosen in code</b>: text-to-video on minimax-h3 480p, 15 s, audio off, no references. ltx-2.5 is fixed for the free tier in V3; the story decided audio.</td><td><b>chosen by the chat model</b>: <code>create_video_from_text</code> on minimax-h3 480p, 15 s, audio off, references @TEACHER @EVAN @MAYA @LEO @CLASSROOM. It gave no reason for the model; its reply was the download link only.</td></tr>
+<tr><td>credits · time</td><td>720 · 285 s of generation</td><td>360 · 135 s end to end</td></tr></table>
+<details><summary>the MCP's prompts, call by call</summary><h3>create_video_from_text · minimax-h3</h3><p class="op"><span class="slot"><i>FORMAT</i>Create one continuous 15-second photorealistic cinematic shot, widescreen 16:9, silent with no dialogue, no music, no subtitles. </span><span class="slot"><i>LOOK</i>Use ALL FIVE named references faithfully. </span><span class="slot"><i>CONTINUITY</i>Identity assignments must never change: @TEACHER is the adult man with short curly hair, wearing the same grey long-sleeve shirt; @EVAN is the young adult male student with braids, preserve his face and hairstyle and black patterned sweatshirt; @MAYA is the young adult female student with straight brown hair and fringe, preserve her exact face and hair, seated at a student desk wearing her white blouse and dark vest, absolutely NO umbrella or studio props; @LEO is the young adult male student from the vintage monochrome portrait, preserve his facial features and swept-back hairstyle, but render him naturally in full colour in present-day casual clothes, no formal vintage suit, no bow tie, no portrait frame. </span><span class="slot"><i>LOOK</i>All students are adults. </span><span class="slot"><i>LOOK</i>The entire scene takes place in the EXACT room in @CLASSROOM: preserve its rows of brown wooden desks and metal frames, large gridded rear windows, green chalkboard on right wall, pale green walls, green lockers, ceiling fixtures and orientation. </span><span class="slot"><i>LOOK</i>Not a generic replacement classroom. </span><span class="slot"><i>LOOK</i>Soft morning daylight from these windows. </span><span class="slot"><i>LOOK</i>Stage Evan at an aisle desk, Maya at the next desk and Leo immediately beside Maya within nudging distance. </span><span class="slot"><i>LOOK</i>Camera starts medium-wide from the front-side aisle so faces and classroom are recognizable, then smoothly pushes closer and slightly higher toward Evan's desktop to make the test score legible while retaining the neighboring students' reactions. </span><span class="slot"><i>LOOK</i>Natural realistic restrained acting, consistent faces throughout. </span><span class="slot"><i>LOOK</i>Timeline: 0–4 seconds the teacher walks along the row and hands Evan a single returned test face down on his desk. </span><span class="slot"><i>LOOK</i>4–6 seconds Evan turns the paper over; show its top clearly with the large clean handwritten red score exactly '38/100', facing the camera legibly. </span><span class="slot"><i>LOOK</i>Hold this score visibly unobstructed. </span><span class="slot"><i>LOOK</i>6–9 seconds Maya leans from the next desk and points directly at the score without obscuring the digits. </span><span class="slot"><i>LOOK</i>9–11 seconds Leo looks at the same score, smirks subtly and gently nudges Maya with his elbow. </span><span class="slot"><i>LOOK</i>11–12.</span><span class="slot"><i>LOOK</i>5 seconds Maya raises a hand to cover a mocking grin. </span><span class="slot"><i>LOOK</i>12.</span><span class="slot"><i>LOOK</i>5–15 seconds Evan lowers his eyes, visibly embarrassed, and draws the same paper toward himself, placing his hand over the score; end with the score fully hidden by his hand. </span><span class="slot"><i>LOOK</i>The teacher remains neutral. </span><span class="slot"><i>LOOK</i>Preserve causality, one paper, anatomically correct hands, believable small gestures, no exaggerated laughter, no cuts, no scene transitions. </span><span class="slot"><i>LOOK</i>Prioritize exact reference identities, exact reference room, chronological actions, legible 38/100 before the final concealment.</span></p></details>
+
+<p class="mut">Not judged yet.</p>
+
+<h2>The pipeline as it ran</h2>
+<div class="pipe">
+<div class="step"><b><span class="n">1</span>Story <span class="mut">(LLM: v3-story-v1)</span></b>
+<p>The second-floor classroom has cream walls, east windows facing a paved courtyard, and desks in rows. Begin in a medium shot of Evan beside the windows. Evan has short black hair, a navy hoodie, and round glasses. He turns over his returned test. Cut close: “38/100” is clear; other marks are indistinct. Maya has a dark ponytail, a mustard cardigan, and silver stud earrings. Leo has curly brown hair, a gray sweatshirt, and a red wristband. Maya leans over and points at the score. Leo looks, smirks, and nudges Maya; she covers a mocking grin. Evan lowers his eyes and pulls the paper toward himself. End close on his hand covering the score.</p>
+<table class="kv"><tr><td>kind</td><td>fiction</td></tr>
+<tr><td>people</td><td>evan: Evan has short black hair, a navy hoodie, and round glasses.; maya: Maya has a dark ponytail, a mustard cardigan, and silver stud earrings.; leo: Leo has curly brown hair, a gray sweatshirt, and a red wristband.</td></tr><tr><td>place · time · mood</td><td>The second-floor classroom has cream walls, east windows facing a paved courtyard, and desks in rows. ·  · </td></tr>
+<tr><td>exact words</td><td><mark>38/100</mark></td></tr>
+<tr><td>seconds · aspect · sound</td><td>15 s · 16:9 · none (from the story)</td></tr>
+<tr><td>progression</td><td><ol style="margin:0;padding-left:18px"></ol></td></tr>
+<tr><td>specific · first frame</td><td>none · none</td></tr></table><details><summary>raw</summary><pre>{
+ &quot;prose&quot;: &quot;The second-floor classroom has cream walls, east windows facing a paved courtyard, and desks in rows. Begin in a medium shot of Evan beside the windows. Evan has short black hair, a navy hoodie, and round glasses. He turns over his returned test. Cut close: “38/100” is clear; other marks are indistinct. Maya has a dark ponytail, a mustard cardigan, and silver stud earrings. Leo has curly brown hair, a gray sweatshirt, and a red wristband. Maya leans over and points at the score. Leo looks, smirks, and nudges Maya; she covers a mocking grin. Evan lowers his eyes and pulls the paper toward himself. End close on his hand covering the score.&quot;,
+ &quot;kind&quot;: &quot;fiction&quot;,
+ &quot;people&quot;: [
+  &quot;evan: Evan has short black hair, a navy hoodie, and round glasses.&quot;,
+  &quot;maya: Maya has a dark ponytail, a mustard cardigan, and silver stud earrings.&quot;,
+  &quot;leo: Leo has curly brown hair, a gray sweatshirt, and a red wristband.&quot;
+ ],
+ &quot;place&quot;: &quot;The second-floor classroom has cream walls, east windows facing a paved courtyard, and desks in rows.&quot;,
+ &quot;time&quot;: &quot;&quot;,
+ &quot;mood&quot;: &quot;&quot;,
+ &quot;exact_words&quot;: [
+  &quot;38/100&quot;
+ ],
+ &quot;seconds&quot;: 15,
+ &quot;aspect&quot;: &quot;16:9&quot;,
+ &quot;sound&quot;: &quot;none&quot;,
+ &quot;sound_why&quot;: &quot;from the story&quot;,
+ &quot;progression&quot;: [],
+ &quot;specific&quot;: [],
+ &quot;first_frame&quot;: &quot;&quot;,
+ &quot;carried&quot;: [
+  &quot;the teacher: the man in the teacher photo (grey long-sleeve shirt)&quot;,
+  &quot;Evan: the young man with braids in his photo&quot;,
+  &quot;Maya: the young woman with the fringe in her photo&quot;,
+  &quot;Leo: the young man in the old black-and-white portrait, in colour here&quot;,
+  &quot;the classroom: the room in the classroom photo&quot;
+ ]
+}</pre></details></div>
+
+<div class="step"><b><span class="n">0</span>Reference <span class="mut">(supplied by hand; the state manager assumed perfect · VLM: v3-ref-seen-v1)</span></b>
+<div class="frames"><figure><img src="reference.jpg" loading="lazy"><figcaption>@teacher · V3/runs/v3-student-1/refs/person/cand-6.jpg</figcaption></figure><figure><img src="ref-evan.jpg" loading="lazy"><figcaption>@evan · V3/runs/v3-student-1/refs/web-students/evan.jpg</figcaption></figure><figure><img src="ref-maya.jpg" loading="lazy"><figcaption>@maya · V3/runs/v3-student-1/refs/web-students/maya.jpg</figcaption></figure><figure><img src="ref-leo.jpg" loading="lazy"><figcaption>@leo · V3/runs/v3-student-1/refs/web-students/leo-approved.jpg</figcaption></figure><figure><img src="ref-classroom.jpg" loading="lazy"><figcaption>@classroom · V3/runs/v3-student-1/refs/classroom/cand-10.jpg</figcaption></figure></div><p class="mut">all 5 sent as named references to minimax-h3</p>
+<div class="two"><div></div><div><table class="kv"><tr><td>person</td><td>One adult man, shown from head to upper thighs.: Light skin, short thick wavy brown hair, blue-grey eyes, angular face, faint stubble, closed mouth and serious expression. Looking toward the camera, torso slightly turned, arms folded across his chest. Wearing a plain light-grey long-sleeved crew-neck shirt and blue jeans with contrasting stitching.</td></tr><tr><td>place · light</td><td>Plain white to very pale grey background; no visible setting details. · Soft, bright, even lighting with mild shadows beneath the chin and in clothing folds.</td></tr></table></div></div></div>
+<div class="step"><b><span class="n">2</span>Route <span class="mut">(code)</span></b> case 3 (a specific thing) <span class="mut">· carried from the reference: the teacher: the man in the teacher photo (grey long-sleeve shirt); Evan: the young man with braids in his photo; Maya: the young woman with the fringe in her photo; Leo: the young man in the old black-and-white portrait, in colour here; the classroom: the room in the classroom photo; first frame required: </span></div>
+<div class="step"><b><span class="n">2b</span>Seed still <span class="mut">(image editor  from the reference · VLM check: v3-seed-check-v1)</span></b>
+<div class="frames"></div>
+</div>
+
+<div class="step"><b><span class="n">3</span>Operational prompt <span class="mut">(LLM: v3-prompt-v1 · sequence + guide.md)</span></b>
+<p class="mut">1956 characters (limit 2,000) · 5 beats · 5 shots · code check: length <span class="b ok">yes</span> exact words <span class="b ok">yes</span></p>
+<p class="op"><span class="slot"><i>FORMAT</i>Create a 15-second silent classroom drama about a returned test, widescreen 16:9, inside @classroom, matching its wooden desks, grid windows, green lockers and green chalkboard. </span><span class="slot"><i>LOOK</i>Photorealistic colour, soft morning window light, restrained performances and an uncomfortable mood. </span><span class="slot"><i>CONTINUITY</i>Five coherent shots preserve reference likenesses, clothing, desk positions and one test paper throughout; use the images as identity and setting references, not pasted photographs. </span><span class="slot beat"><i>BEAT 1</i>0–3 seconds: medium two-shot, @teacher, light-skinned with short wavy brown hair, faint stubble, grey long-sleeved shirt and blue jeans, hands a face-down white test paper to seated @evan, with short black twists, silver necklaces and a black sweatshirt with white scribbles and red patches; wooden desks line the aisle, gentle lateral slide; @evan now holds the paper and @teacher's hands are empty. </span><span class="slot beat"><i>BEAT 2</i>3–6 seconds: over-shoulder close-up, @evan turns the test face-up on the wooden desktop; its large handwritten score reads exactly <mark title="EXACT WORDS">'38/100'</mark>, unobstructed and legible, slow push in. </span><span class="slot beat"><i>BEAT 3</i>6–9 seconds: medium close-up, @maya, brown hair with bangs, white ruffled blouse and black vest, already leaning from the next desk, points at the score with a teasing expression; the green board is softly visible behind, gentle lateral slide. </span><span class="slot beat"><i>BEAT 4</i>9–12 seconds: medium two-shot, @leo, clean-shaven with swept-back wavy hair and the reference face, rendered in natural colour wearing a modern charcoal sweatshirt, nudges @maya with his elbow, a smug smirk on his face; adjacent wooden desks remain visible, slow push in. </span><span class="slot beat"><i>BEAT 5</i>12–15 seconds: wider establishing view of the three adjacent desks, @evan sits with downcast eyes, the paper close against his body and his palm completely obscuring the score; @maya's hand rests over a mocking grin, @leo remains smirking. </span><span class="slot"><i>HOLD</i>Hold this still, readable tableau for all three seconds. </span><span class="slot"><i>GRADE</i>Natural colour grade, measured pacing. </span><span class="slot"><i>NEGATIVES</i>No audio, subtitles, text overlays, umbrella or studio props.</span></p>
+<h3>beats as the writer listed them</h3><table><tr><th>#</th><th>range</th><th>shows</th></tr><tr><td>1</td><td>0–3 s</td><td>@teacher hands the face-down test to seated @evan.</td></tr><tr><td>2</td><td>3–6 s</td><td>@evan turns the test over, revealing the clear score.</td></tr><tr><td>3</td><td>6–9 s</td><td>@maya points at the score from the adjacent desk.</td></tr><tr><td>4</td><td>9–12 s</td><td>@leo smirks while nudging @maya with his elbow.</td></tr><tr><td>5</td><td>12–15 s</td><td>Still tableau: @evan shields score; @maya conceals grin; @leo smirks.</td></tr></table>
+<details><summary>the MCP's prompt for the same brief, for comparison (2698 chars · minimax-h3 · 15 s · audio off)</summary><p class="op"><span class="slot"><i>FORMAT</i>Create one continuous 15-second photorealistic cinematic shot, widescreen 16:9, silent with no dialogue, no music, no subtitles. </span><span class="slot"><i>LOOK</i>Use ALL FIVE named references faithfully. </span><span class="slot"><i>CONTINUITY</i>Identity assignments must never change: @TEACHER is the adult man with short curly hair, wearing the same grey long-sleeve shirt; @EVAN is the young adult male student with braids, preserve his face and hairstyle and black patterned sweatshirt; @MAYA is the young adult female student with straight brown hair and fringe, preserve her exact face and hair, seated at a student desk wearing her white blouse and dark vest, absolutely NO umbrella or studio props; @LEO is the young adult male student from the vintage monochrome portrait, preserve his facial features and swept-back hairstyle, but render him naturally in full colour in present-day casual clothes, no formal vintage suit, no bow tie, no portrait frame. </span><span class="slot"><i>LOOK</i>All students are adults. </span><span class="slot"><i>LOOK</i>The entire scene takes place in the EXACT room in @CLASSROOM: preserve its rows of brown wooden desks and metal frames, large gridded rear windows, green chalkboard on right wall, pale green walls, green lockers, ceiling fixtures and orientation. </span><span class="slot"><i>LOOK</i>Not a generic replacement classroom. </span><span class="slot"><i>LOOK</i>Soft morning daylight from these windows. </span><span class="slot"><i>LOOK</i>Stage Evan at an aisle desk, Maya at the next desk and Leo immediately beside Maya within nudging distance. </span><span class="slot"><i>LOOK</i>Camera starts medium-wide from the front-side aisle so faces and classroom are recognizable, then smoothly pushes closer and slightly higher toward Evan's desktop to make the test score legible while retaining the neighboring students' reactions. </span><span class="slot"><i>LOOK</i>Natural realistic restrained acting, consistent faces throughout. </span><span class="slot"><i>LOOK</i>Timeline: 0–4 seconds the teacher walks along the row and hands Evan a single returned test face down on his desk. </span><span class="slot"><i>LOOK</i>4–6 seconds Evan turns the paper over; show its top clearly with the large clean handwritten red score exactly '38/100', facing the camera legibly. </span><span class="slot"><i>LOOK</i>Hold this score visibly unobstructed. </span><span class="slot"><i>LOOK</i>6–9 seconds Maya leans from the next desk and points directly at the score without obscuring the digits. </span><span class="slot"><i>LOOK</i>9–11 seconds Leo looks at the same score, smirks subtly and gently nudges Maya with his elbow. </span><span class="slot"><i>LOOK</i>11–12.</span><span class="slot"><i>LOOK</i>5 seconds Maya raises a hand to cover a mocking grin. </span><span class="slot"><i>LOOK</i>12.</span><span class="slot"><i>LOOK</i>5–15 seconds Evan lowers his eyes, visibly embarrassed, and draws the same paper toward himself, placing his hand over the score; end with the score fully hidden by his hand. </span><span class="slot"><i>LOOK</i>The teacher remains neutral. </span><span class="slot"><i>LOOK</i>Preserve causality, one paper, anatomically correct hands, believable small gestures, no exaggerated laughter, no cuts, no scene transitions. </span><span class="slot"><i>LOOK</i>Prioritize exact reference identities, exact reference room, chronological actions, legible 38/100 before the final concealment.</span></p></details>
+<details><summary>guide.md as given to the writer</summary><pre># The operational prompt (text-to-video)
+
+The Magic Hour guide says: specify the subject, one action, camera move, framing and mood; request only audio and
+duration the model supports; then review the actual result. The prompt that works is ONE prose paragraph, under 2,000
+characters, in this order:
+
+1. FORMAT: the duration, the kind of piece, the subject, the aspect, in one sentence.
+   &quot;Create a 16-second cinematic advertisement for Petal &amp; Stem, a small neighbourhood flower shop. Widescreen 16:9.&quot;
+2. LOOK: medium, light, mood, the texture of the world, in one sentence. For action, the look line also carries the
+   ENERGY in plain words (&quot;tight, fast-paced editing, roaring engines, cars accelerating hard, streetlights streaking
+   past&quot;): the model renders the pace it is told, and a race described calmly comes out slow.
+   &quot;Photorealistic, intimate, warm natural dawn sunlight, soft golden highlights, authentic lived-in neighbourhood.&quot;
+3. CONTINUITY: how many shots, and what stays the same across them, in one sentence.
+   &quot;Four coherent shots with natural edits, same florist, shop and bouquet throughout.&quot;
+4. BEATS: timed ranges that together cover the whole duration, in order. Each beat, in this order: the time range,
+   the framing, the subject with one identifying detail, ONE action, one environment detail, the camera or lens.
+   &quot;0–4 seconds: exterior medium-wide shot at dawn, an adult florist in a sage-green apron unlocks and opens the
+   wood-and-glass shop door, warm sunlight on the flower buckets beside the entrance.&quot;
+   One action per beat. Never two things happening. Never a thing that must appear later mentioned early.
+   The request's own verbs are the beats' actions and each gets its own beat: &quot;arranges a bouquet&quot; is a beat of hands
+   placing stems, and wrapping is a different action; do not merge two of the request's actions into one beat.
+   When possession changes, the beat ends with the new state stated plainly: &quot;the customer now holds the bouquet, the
+   florist's hands are empty&quot;.
+   The last beat is a separate establishing shot with no new action: the place alone, or the people standing still.
+   Every beat has a camera MOVE (push, slow orbit, lateral slide, ease back, handheld follow), never &quot;stationary&quot; or
+   &quot;locked-off&quot; except the final hold. Name the key object concretely once (blush pink roses, cream flowers, brown
+   kraft paper), not &quot;a bouquet&quot;; the model renders nouns it is given.
+   A beat is 3–6 seconds, so a 16-second clip has 3–5 beats and a 30-second clip 5–8. Two-second beats make a
+   cut every two seconds, which the model renders as a jumble; the shot count in CONTINUITY equals the beat count.
+5. EXACT WORDS: any lettering the video must show, quoted once, inside the beat where it is seen.
+   &quot;clear tasteful shop sign reads exactly 'Petal &amp; Stem'.&quot;
+6. SOUND (only when audio is on): ambient, or the character of music, or the spoken lines quoted with their time
+   range and who speaks. Narration and dialogue are the expensive part of the budget; keep them short.
+7. HOLD: the last beat ends on a still, readable image. &quot;Hold on the storefront for the final two seconds.&quot;
+8. GRADE: colour treatment and pacing, one short sentence. &quot;Gentle cinematic colour grade, calm uplifting pacing.&quot;
+9. NEGATIVES: one line, last, only what the model would otherwise add. &quot;No voiceover, no subtitles, no text overlays.&quot;
+
+Quality words are descriptive, never technical: cinematic, photorealistic, shallow depth of field, natural hands and
+anatomically correct movement, realistic textures. No resolution words, no &quot;8k&quot;, no seeds, no camera brands.
+
+Never: shot-list headings, a separate negatives block, a constraint on every sentence, &quot;do not show X&quot; for things that
+appear later, repeating a sentence, a sign mentioned in a beat where it must not be seen.
+
+Budget: about 450 characters go to format, look, continuity, hold, grade and negatives. The rest is beats, about 200
+characters each. Compress the story into the beats; do not paste it.
+
+# Image-to-video (a start frame is supplied)
+
+Same slots, same order, two changes:
+- FORMAT shrinks to the duration and &quot;matching the source image&quot; (the aspect is the image's).
+- LOOK becomes PRESERVE: name what the image already fixes and must stay: &quot;Preserve the woman's face, dark hair in a
+  low bun and cream jacket, and the bouquet of yellow, magenta, cream and red flowers in pale paper, exactly as in the
+  image; keep the morning light and the doorway.&quot;
+- The first beat describes the image as it is and the first motion out of it, so the model continues the picture
+  instead of cutting away. Later beats may cut, with the continuity sentence naming the same people and the bouquet by
+  the same words every time.
+
+# When people carry the scene (a handoff, a conversation, a reunion)
+
+The MCP's scene 2 clip read as more alive than ours with the same still route. The differences were in the prompt:
+- ONE continuous shot with a very slow push in, not five cuts in 16 seconds. On image-to-video every cut abandons the
+  start frame; one shot keeps the faces and lets a performance develop.
+- Performance verbs and eye lines in every beat: &quot;exchanging warm eye contact&quot;, &quot;he smiles warmly and reaches out with
+  both hands&quot;, &quot;they exchange affectionate smiles&quot;, &quot;she steps close beside him&quot;. Behaviour, not inventory.
+- A physically ordered action: &quot;only after he has a firm grip does she release it&quot;.
+- PRESERVE is three anchors per person (hair, one garment, one detail) and one line for the object, said once. The
+  identity is in the start frame; a 600-character inventory repeated in every beat buys nothing and starves the beats.
+- End on the faces: &quot;a stable medium two-shot showing both faces and the bouquet, hold three seconds&quot;, not a wide
+  establishing shot of people standing still.
+- Framing: the seed still should be a medium shot where faces are large enough to act; a medium-wide doorway reads
+  as staging.
+
+# A sequence inside a film (case 2)
+
+- Say the PLACE first and relationally: &quot;inside the Resolute's bridge: narrow steel interior, slanted front windows
+  overlooking a cold grey ocean&quot;. Never list the ship's exterior or the sea as things to preserve in an interior clip;
+  the model will build them. Only the bible entries that appear in this clip go in.
+- People from a start frame get their positions: &quot;Vale at left, the lookout in the centre, the helmsman at right&quot;.
+- A distant thing gets its scale and where it is seen: &quot;a tiny silhouette on the horizon through the windows&quot;.
+- Lines are short and distinct, one per beat (&quot;Enemy cruiser on the horizon!&quot; … &quot;Fire!&quot;), never one line for the
+  whole clip; with audio on, a single quoted line is repeated by the model.
+- The last sentence states the clip's place in the film: &quot;clip 1 of 3: end on the order; no guns firing, that is the
+  next clip&quot;.
+</pre></details></div>
+
+<div class="step"><b><span class="n">4</span>Generation clip-2 <span class="mut">(Magic Hour /v1/text-to-video)</span></b>
+<table class="kv"><tr><td>call</td><td>text-to-video · model minimax-h3 · 15 s · 16:9 · 480p · audio off · references none</td></tr>
+<tr><td>credits · time</td><td>360 credits · 178 s wall · rendered 15.1 s</td></tr>
+<tr><td>prompt sent</td><td class="mut">the operational prompt above, unchanged</td></tr></table>
+<h3>frames: first, each beat's middle, last</h3><div class="frames"><figure><img src="frames/clip-2-first.jpg" loading="lazy"><figcaption>first frame</figcaption></figure><figure><img src="frames/clip-2-b1-1.5s.jpg" loading="lazy"><figcaption>beat 1 · 1.5 s</figcaption></figure><figure><img src="frames/clip-2-b2-4.5s.jpg" loading="lazy"><figcaption>beat 2 · 4.5 s</figcaption></figure><figure><img src="frames/clip-2-b3-7.5s.jpg" loading="lazy"><figcaption>beat 3 · 7.5 s</figcaption></figure><figure><img src="frames/clip-2-b4-10.5s.jpg" loading="lazy"><figcaption>beat 4 · 10.5 s</figcaption></figure><figure><img src="frames/clip-2-b5-13.5s.jpg" loading="lazy"><figcaption>beat 5 · 13.5 s</figcaption></figure><figure><img src="frames/clip-2-last.jpg" loading="lazy"><figcaption>last frame</figcaption></figure></div></div>
+<div class="step"><b><span class="n">5</span>Review clip-2 <span class="mut">(VLM: v3-review-v1 on 7 frames)</span></b> <span class="b bad">FAIL</span>
+<table><tr><th>beat</th><th>subject present</th><th>action seen</th><th>evidence</th></tr><tr><td>1</td><td><span class="b ok">yes</span></td><td><span class="b mid">unclear</span></td><td class="mut">The first frame shows the teacher offering a sheet to seated Evan; at 1.5 seconds Evan holds it over his desk. The handoff is supported, but the required face-down orientation is not established.</td></tr><tr><td>2</td><td><span class="b ok">yes</span></td><td><span class="b mid">unclear</span></td><td class="mut">At 4.5 seconds the test is face-up between Evan's hands and clearly displays 38/100. The actual turning-over motion is not visible in the supplied frames.</td></tr><tr><td>3</td><td><span class="b ok">yes</span></td><td><span class="b mid">unclear</span></td><td class="mut">Maya is seated with one hand raised in a gesture, looking toward Evan's direction. Neither the score nor a clear pointing finger directed at it is visible in this shot.</td></tr><tr><td>4</td><td><span class="b ok">yes</span></td><td><span class="b bad">no</span></td><td class="mut">Leo smiles mischievously beside Maya, but his hand extends forward rather than showing an elbow nudge against her.</td></tr><tr><td>5</td><td><span class="b ok">yes</span></td><td><span class="b bad">no</span></td><td class="mut">Evan holds the paper upright with its blank side toward the others, and Leo smirks. Maya raises a hand near her face but leaves her grin visible. Maya's and Leo's hand poses change between 13.5 seconds and the last frame, so the tableau is not fully still.</td></tr></table>
+<table class="kv"><tr><td>exact words</td><td>'38/100' reads “38/100” <span class="b ok">yes</span></td></tr>
+<tr><td>identity vs the reference</td><td>teacher <span class="b ok">yes</span> <span class="mut">The teacher retains the reference's short brown hair, long narrow face, grey long-sleeve shirt, and blue jeans.</span><br>Evan <span class="b ok">yes</span> <span class="mut">Evan retains the reference's braids, facial appearance, necklace, and black sweatshirt with white linework and red chest patches.</span><br>Maya <span class="b ok">yes</span> <span class="mut">Maya retains the brown hair with blunt fringe, similar facial features, white ruffled blouse, and black waistcoat.</span><br>Leo <span class="b ok">yes</span> <span class="mut">Leo's swept, side-parted hair and narrow facial features resemble the portrait in colour. His formal portrait clothing is replaced by a dark crew-neck sweatshirt.</span><br>classroom <span class="b ok">yes</span> <span class="mut">The room preserves the distinctive gridded windows, upper window air conditioners, green lockers, wooden desks with metal frames, and right-wall green chalkboard.</span></td></tr><tr><td>same people and place</td><td><span class="b ok">yes</span></td></tr><tr><td>last frame holds</td><td><span class="b bad">no</span></td></tr>
+
+<tr><td>artifacts</td><td>Seating continuity is questionable: Maya and Leo appear directly side-by-side in beat 4, while the final wide view places Maya farther behind Leo.; No obvious major facial or limb deformation is visible in the supplied frames.</td></tr><tr><td>failures</td><td>beat 4 must visibly show: @leo smirks while nudging @maya with his elbow. (seen: Leo smiles mischievously beside Maya, but his hand extends forward rather than showing an elbow nudge against her.); beat 5 must visibly show: Still tableau: @evan shields score; @maya conceals grin; @leo smirks. (seen: Evan holds the paper upright with its blank side toward the others, and Leo smirks. Maya raises a hand near her face but leaves her grin visible. Maya's and Leo's hand poses change between 13.5 seconds and the last frame, so the tableau is not fully still.); the final two seconds hold one still image with no new action</td></tr></table></div><div class="step"><b><span class="n">6</span>Generation clip-2-retry <span class="mut">(Magic Hour /v1/text-to-video)</span></b>
+<table class="kv"><tr><td>call</td><td>text-to-video · model minimax-h3 · 15 s · 16:9 · 480p · audio off · references none</td></tr>
+<tr><td>credits · time</td><td>360 credits · 107 s wall · rendered 15.1 s</td></tr>
+<tr><td>failures folded in</td><td>beat 4 must visibly show: @leo smirks while nudging @maya with his elbow. (seen: Leo smiles mischievously beside Maya, but his hand extends forward rather than showing an elbow nudge against her.); beat 5 must visibly show: Still tableau: @evan shields score; @maya conceals grin; @leo smirks. (seen: Evan holds the paper upright with its blank side toward the others, and Leo smirks. Maya raises a hand near her face but leaves her grin visible. Maya's and Leo's hand poses change between 13.5 seconds and the last frame, so the tableau is not fully still.); the final two seconds hold one still image with no new action</td></tr><tr><td>prompt sent</td><td><pre>Create a 15-second silent classroom drama about a returned test, widescreen 16:9, inside @classroom with wooden desks, grid windows, green lockers and green chalkboard. Photorealistic colour, soft morning window light, restrained performances, uncomfortable mood. Five coherent shots preserve reference likenesses, clothing, desk positions and one test paper throughout; use the images as identity and setting references, not pasted photographs. 0–3 seconds: medium two-shot, @teacher, light-skinned, short wavy brown hair, faint stubble, grey long-sleeved shirt, blue jeans, hands a face-down white test to seated @evan, short black twists, silver necklaces, black sweatshirt with white scribbles and red patches; desks line the aisle, gentle lateral slide; @evan holds the paper, @teacher's hands empty. 3–6 seconds: over-shoulder close-up, @evan turns the test face-up on the wooden desktop; large handwritten score reads exactly '38/100', unobstructed and legible, slow push in. 6–9 seconds: medium close-up, @maya, brown hair with bangs, white ruffled blouse, black vest, already leaning from the next desk, points at the score teasingly; green board softly visible behind, gentle lateral slide. 9–12 seconds: medium two-shot, @leo, clean-shaven, swept-back wavy hair, reference face, natural colour, modern charcoal sweatshirt, visibly presses his bent elbow against @maya's upper arm in a nudge while smirking; adjacent desks visible, slow push in. 12–15 seconds: wider view of three adjacent desks. Still tableau: @evan sits downcast, paper close against his body, palm completely obscuring the score; @maya's hand fully conceals her mocking grin; @leo smirks. All poses, hands, faces, paper and camera remain fixed for all three seconds. The final two seconds hold one identical still image. Natural colour grade, measured pacing. No audio, subtitles, text overlays, umbrella or studio props.</pre></td></tr></table>
+<h3>frames: first, each beat's middle, last</h3><div class="frames"><figure><img src="frames/clip-2-retry-first.jpg" loading="lazy"><figcaption>first frame</figcaption></figure><figure><img src="frames/clip-2-retry-b1-1.5s.jpg" loading="lazy"><figcaption>beat 1 · 1.5 s</figcaption></figure><figure><img src="frames/clip-2-retry-b2-4.5s.jpg" loading="lazy"><figcaption>beat 2 · 4.5 s</figcaption></figure><figure><img src="frames/clip-2-retry-b3-7.5s.jpg" loading="lazy"><figcaption>beat 3 · 7.5 s</figcaption></figure><figure><img src="frames/clip-2-retry-b4-10.5s.jpg" loading="lazy"><figcaption>beat 4 · 10.5 s</figcaption></figure><figure><img src="frames/clip-2-retry-b5-13.5s.jpg" loading="lazy"><figcaption>beat 5 · 13.5 s</figcaption></figure><figure><img src="frames/clip-2-retry-last.jpg" loading="lazy"><figcaption>last frame</figcaption></figure></div></div>
+<div class="step"><b><span class="n">7</span>Review clip-2-retry <span class="mut">(VLM: v3-review-v1 on 7 frames)</span></b> <span class="b bad">FAIL</span>
+<table><tr><th>beat</th><th>subject present</th><th>action seen</th><th>evidence</th></tr><tr><td>1</td><td><span class="b ok">yes</span></td><td><span class="b ok">yes</span></td><td class="mut">The teacher initially holds a sheet across the desk; at 1.5 s, seated Evan has received it with the blank side visible.</td></tr><tr><td>2</td><td><span class="b ok">yes</span></td><td><span class="b mid">unclear</span></td><td class="mut">At 4.5 s, the test lies face-up with a large, clear 38/100. The supplied frames establish the reveal but do not show Evan turning the sheet over.</td></tr><tr><td>3</td><td><span class="b ok">yes</span></td><td><span class="b ok">yes</span></td><td class="mut">At 7.5 s, Maya leans from the adjacent desk and extends her index finger toward the scored test.</td></tr><tr><td>4</td><td><span class="b ok">yes</span></td><td><span class="b mid">unclear</span></td><td class="mut">At 10.5 s, Leo leans toward Maya and visibly smirks. His arm is beside her, but an elbow nudge is not clearly established by the sampled frame.</td></tr><tr><td>5</td><td><span class="b ok">yes</span></td><td><span class="b bad">no</span></td><td class="mut">All three requested expressions or gestures are present: Evan hides the score, Maya covers her grin, and Leo smirks. However, Evan changes from holding the paper upright at 13.5 s to bending forward and clutching it against himself in the last frame, so the tableau is not still.</td></tr></table>
+<table class="kv"><tr><td>exact words</td><td>'38/100' reads “38/100” <span class="b ok">yes</span></td></tr>
+<tr><td>identity vs the reference</td><td>teacher <span class="b ok">yes</span> <span class="mut">The teacher retains the reference's short wavy brown hair, long angular face, grey long-sleeve shirt, and blue jeans.</span><br>Evan <span class="b ok">yes</span> <span class="mut">Evan retains the short hanging braids, facial appearance, necklace, and distinctive black sweatshirt with white intersecting lines and red chest patches.</span><br>Maya <span class="b ok">yes</span> <span class="mut">Maya retains the brown hair with a blunt fringe, similar facial features, white ruffled blouse, and black waistcoat.</span><br>Leo <span class="b mid">unclear</span> <span class="mut">Leo has a similar swept, side-parted hairstyle, but his facial proportions do not provide a confident match to the monochrome portrait. He is shown in colour wearing a dark crewneck rather than the reference's formal suit.</span><br>classroom <span class="b ok">yes</span> <span class="mut">The room preserves the distinctive gridded upper windows, green lockers, wooden desks with metal frames, teacher's computer desk, and green chalkboard.</span></td></tr><tr><td>same people and place</td><td><span class="b ok">yes</span></td></tr><tr><td>last frame holds</td><td><span class="b bad">no</span></td></tr>
+
+<tr><td>artifacts</td><td>none noted</td></tr><tr><td>failures</td><td>beat 5 must visibly show: Still tableau: @evan shields score; @maya conceals grin; @leo smirks. (seen: All three requested expressions or gestures are present: Evan hides the score, Maya covers her grin, and Leo smirks. However, Evan changes from holding the paper upright at 13.5 s to bending forward and clutching it against himself in the last frame, so the tableau is not still.); the final two seconds hold one still image with no new action</td></tr></table></div>
+
+<div class="step"><b><span class="n">8</span>Return to the loop</b> clip <code>clip-2.mp4</code> · review <span class="b bad">FAIL</span> · state record: evan: Evan has short black hair, a navy hoodie, and round glasses.; maya: Maya has a dark ponytail, a mustard cardigan, and silver stud earrings.; leo: Leo has curly brown hair, a gray sweatshirt, and a red wristband. at The second-floor classroom has cream walls, east windows facing a paved courtyard, and desks in rows., ; words seen: '38/100' → “38/100”; last frame <code>frames/clip-2-last.jpg</code><details><summary>raw</summary><pre>[
+ {
+  &quot;clip&quot;: &quot;clip-2.mp4&quot;,
+  &quot;seconds&quot;: 15.1,
+  &quot;people&quot;: [
+   &quot;evan: Evan has short black hair, a navy hoodie, and round glasses.&quot;,
+   &quot;maya: Maya has a dark ponytail, a mustard cardigan, and silver stud earrings.&quot;,
+   &quot;leo: Leo has curly brown hair, a gray sweatshirt, and a red wristband.&quot;
+  ],
+  &quot;place&quot;: &quot;The second-floor classroom has cream walls, east windows facing a paved courtyard, and desks in rows.&quot;,
+  &quot;time&quot;: &quot;&quot;,
+  &quot;mood&quot;: &quot;&quot;,
+  &quot;words_seen&quot;: [
+   {
+    &quot;text&quot;: &quot;38/100&quot;,
+    &quot;exact&quot;: true,
+    &quot;reads&quot;: &quot;38/100&quot;
+   }
+  ],
+  &quot;identity&quot;: [
+   {
+    &quot;evidence&quot;: &quot;The teacher retains the reference's short brown hair, long narrow face, grey long-sleeve shirt, and blue jeans.&quot;,
+    &quot;carried&quot;: &quot;teacher&quot;,
+    &quot;same_as_reference&quot;: &quot;yes&quot;
+   },
+   {
+    &quot;evidence&quot;: &quot;Evan retains the reference's braids, facial appearance, necklace, and black sweatshirt with white linework and red chest patches.&quot;,
+    &quot;carried&quot;: &quot;Evan&quot;,
+    &quot;same_as_reference&quot;: &quot;yes&quot;
+   },
+   {
+    &quot;evidence&quot;: &quot;Maya retains the brown hair with blunt fringe, similar facial features, white ruffled blouse, and black waistcoat.&quot;,
+    &quot;carried&quot;: &quot;Maya&quot;,
+    &quot;same_as_reference&quot;: &quot;yes&quot;
+   },
+   {
+    &quot;evidence&quot;: &quot;Leo's swept, side-parted hair and narrow facial features resemble the portrait in colour. His formal portrait clothing is replaced by a dark crew-neck sweatshirt.&quot;,
+    &quot;carried&quot;: &quot;Leo&quot;,
+    &quot;same_as_reference&quot;: &quot;yes&quot;
+   },
+   {
+    &quot;evidence&quot;: &quot;The room preserves the distinctive gridded windows, upper window air conditioners, green lockers, wooden desks with metal frames, and right-wall green chalkboard.&quot;,
+    &quot;carried&quot;: &quot;classroom&quot;,
+    &quot;same_as_reference&quot;: &quot;yes&quot;
+   }
+  ],
+  &quot;last_frame&quot;: &quot;frames/clip-2-last.jpg&quot;
+ }
+]</pre></details></div>
+</div>
+
+<h2>Calls and cost</h2>
+<table><tr><th>#</th><th>kind</th><th>what</th><th>credits</th></tr><tr><td>1</td><td>LLM</td><td>v3-ref-seen-v1 · what the reference frame shows</td><td>0</td></tr><tr><td>2</td><td>LLM</td><td>v3-ref-seen-v1 · what the extra reference &quot;evan&quot; shows</td><td>0</td></tr><tr><td>3</td><td>LLM</td><td>v3-ref-seen-v1 · what the extra reference &quot;maya&quot; shows</td><td>0</td></tr><tr><td>4</td><td>LLM</td><td>v3-ref-seen-v1 · what the extra reference &quot;leo&quot; shows</td><td>0</td></tr><tr><td>5</td><td>LLM</td><td>v3-ref-seen-v1 · what the extra reference &quot;classroom&quot; shows</td><td>0</td></tr><tr><td>6</td><td>LLM</td><td>v3-story-c3-v1 · the story with the reference's descriptors fixed</td><td>0</td></tr><tr><td>7</td><td>LLM</td><td>v3-prompt-i2v-v1 · the image-to-video prompt</td><td>0</td></tr><tr><td>8</td><td>LLM</td><td>v3-review-c3-v1 · review of clip-2 with the reference</td><td>0</td></tr><tr><td>9</td><td>LLM</td><td>v3-prompt-fix-v1 · failures folded in</td><td>0</td></tr><tr><td>10</td><td>LLM</td><td>v3-review-c3-v1 · review of clip-2-retry with the reference</td><td>0</td></tr><tr><td>11</td><td>text-to-video</td><td>/v1/text-to-video · minimax-h3 15 s 480p audio off · 178 s</td><td>360</td></tr><tr><td>12</td><td>ffmpeg</td><td>audio was off but minimax-h3 returned a sound bed; stripped (original kept as clip-2-with-sound-bed.mp4)</td><td>0</td></tr><tr><td>13</td><td>ffmpeg</td><td>frames of clip-2</td><td>0</td></tr><tr><td>14</td><td>text-to-video</td><td>/v1/text-to-video · minimax-h3 15 s 480p audio off · 107 s</td><td>360</td></tr><tr><td>15</td><td>ffmpeg</td><td>audio was off but minimax-h3 returned a sound bed; stripped (original kept as clip-2-retry-with-sound-bed.mp4)</td><td>0</td></tr><tr><td>16</td><td>ffmpeg</td><td>frames of clip-2-retry</td><td>0</td></tr><tr><td></td><td></td><td><b>total</b></td><td><b>720</b></td></tr></table>
+<p class="mut">LLM usage: 9 calls, 40805 in / 4029 out tokens  · the MCP's run for this brief: 4 calls, 360 credits, 135 s end to end, no machine review.</p>

@@ -1,0 +1,47 @@
+{
+ "id": "c2f686ea9f",
+ "key": "must:B07d:No visible alterations outside bottle mask",
+ "symptom": "No visible alterations outside bottle mask",
+ "item": "B07d",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'No visible alterations outside bottle mask' not met?",
+    "because": "In both chats, the pixels outside the bottle are not the source pixels. The model drew the whole picture again: the wood grain, the plant, the chair and the background are smoother or a different texture.",
+    "evidence": "s1.new.stupid.B07d/grade.json: 'Image appears re-rendered; wood grain and background are a bit smoother/different in texture'. s1.old.happy.B07d/grade.json: 'The whole image was redrawn. The wood grain, the plant and the chair look slightly smoothed or repainted.' Both files also record the fault 'AI redraw softness'."
+   },
+   {
+    "why": "Why was the whole picture drawn again, and not only the bottle?",
+    "because": "Both assistants made exactly one edit_image call. Each call held only a text prompt and the full source image. No mask was sent and no step pasted the result back onto the original. The keep-everything-else request existed only as words in the prompt.",
+    "evidence": "s1.old.happy.B07d/calls.jsonl: edit_image with model qwen-edit, 640px, style.prompt 'Change only the color of the black bottle ... Do not change anything else...', and one image_file_path. s1.new.stupid.B07d/calls.jsonl: edit_image with model flux-2-klein, 640px, and the same kind of prompt. Neither call sent a mask argument."
+   },
+   {
+    "why": "Why did the assistants not send a mask or limit the edit to the bottle area?",
+    "because": "The edit_image tool has no input for a mask or an edit area. Its only inputs are prompt, model, resolution, aspect_ratio, image_count and image_file_paths. No other tool in the list does masked inpainting or pastes the edited area back onto the original.",
+    "evidence": "tools-new.json, edit_image: 'Edits one or more supplied images using a text prompt.' The inputSchema properties are name, image_count, model, aspect_ratio, resolution, style.prompt and assets.image_file_paths only. The old build's call uses the same argument shape. I did not read the old build's edit_image entry in tools-old.json."
+   },
+   {
+    "why": "Why does a prompt like 'keep everything else exactly the same' not keep the background pixels?",
+    "because": "Instruction-based edit models (qwen-edit and flux-2-klein, the models open to the free plan) encode the whole image and decode it again. Every output pixel is new, so texture changes outside the target are certain, even when the model obeys the prompt.",
+    "evidence": "In s1.old.happy.B07d/calls.jsonl the assistant tells the user: 'An AI edit redraws the whole image ... they won't match your original pixel for pixel.' Both models gave the same smoothing, and the chats used different personas and builds."
+   },
+   {
+    "why": "Why does the cause sit in both builds?",
+    "because": "The new build added plan_request, but plan_request only checks the brief and asks questions. It does not change how edit_image runs and adds no masking step. The fault does not depend on the build or the persona. It comes from the edit model and the tool having no mask input.",
+    "evidence": "s1.new.stupid.B07d/calls.jsonl: plan_request returned ready:true with keep='everything else unchanged...', and the next call was the same prompt-only edit_image call. The symptom counts are old:1 and new:1."
+   }
+  ],
+  "axiom": "The image edit models open to the free plan (qwen-edit, flux-2-klein) draw every pixel of the output again. Because edit_image has no mask or paste-back step, nothing outside the target can stay pixel-identical. The test needs pixels to match outside the bottle, which this setup cannot give.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a server-side paste-back step for keep-the-rest edits, either as an edit_image option (for example preserve_outside: '<object>') or as its own tool. The step finds the named object in the source image (segmentation), resizes the edited output to the source size, and pastes only the masked area, with a slightly feathered edge, back onto the original pixels. Then update the edit_image description to say that prompt-only edits redraw the whole image, and that this option is the way to keep everything else exactly the same."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.614874
+}

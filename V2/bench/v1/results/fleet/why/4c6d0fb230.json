@@ -1,0 +1,47 @@
+{
+ "id": "4c6d0fb230",
+ "key": "must:D18c:Camera stationary and lighting consistent",
+ "symptom": "Camera stationary and lighting consistent",
+ "item": "D18c",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Camera stationary and lighting consistent' not met in both chats?",
+    "because": "Both clips change the evening light over time: the sky, the left slope and the reflections turn a stronger orange. The old chat also has a camera push-in.",
+    "evidence": "s3.new.happy.D18c/grade.json: 'Camera is still, but the left slope and the clouds turn strongly orange, and the water reflections shift from muted to vivid'. s3.old.stupid.D18c/grade.json: 'The camera pushes in... The sky and reflections shift toward a stronger orange glow.'"
+   },
+   {
+    "why": "Why does the old chat have a push-in?",
+    "because": "The stupid user only wrote 'make this pic into a lake video' and never said 'no camera movement'. The old assistant called create_video_from_image directly, with no plan step, and added 'slow cinematic push-in' to the prompt on its own. It also chose 5 s.",
+    "evidence": "s3.old.stupid.D18c/chat.json messages: 'make this pic into a lake video'. calls.jsonl line 2: style.prompt ends '...pine trees sway lightly in the breeze, slow cinematic push-in', end_seconds 5. The assistant's reply says 'with a slow push in toward the mountains'."
+   },
+   {
+    "why": "Is the push-in enough to explain the failure?",
+    "because": "No. The new chat had no push-in (the grader confirms a still camera) and still failed on the lighting half. So the lighting drift is the shared cause, and the push-in only adds to the failure in the old chat.",
+    "evidence": "s3.new.happy.D18c/grade.json: 'Camera is still, but...'; the faults list 'Lighting is not constant: the left mountain and trees gain orange alpenglow' as major."
+   },
+   {
+    "why": "Why did the light drift when the new assistant asked for unchanged light?",
+    "because": "The new assistant passed the request correctly: plan_request returned ready, and the prompt explicitly asked for 'Static locked-off camera... Warm evening light unchanged.' The model did not follow that instruction.",
+    "evidence": "s3.new.happy.D18c/calls.jsonl line 2: plan_request keep='mountains and trees still, same wide framing, evening light', ready:true. Line 3: prompt 'Static locked-off camera, no camera movement... Warm evening light unchanged.', model ltx-2.5, 480p."
+   },
+   {
+    "why": "Why does the model not follow the request to keep the light the same?",
+    "because": "Both builds used the free-plan image-to-video model ltx-2.5 at 480p. Over an 8 s clip this model re-renders the sky, the clouds and the reflections. The colour drifts toward warmer sunset tones, and the clouds morph instead of drifting. The prompt cannot stop this. It is a limit of the generation model on the free plan.",
+    "evidence": "Both calls.jsonl: model 'ltx-2.5', resolution '480p', output 826x496. New grade.json also fails 'Clouds drift slowly' ('Clouds appear, dissolve and re-form'), the same re-render behaviour. The same drift appears in the old clip under a different prompt."
+   }
+  ],
+  "axiom": "The free-plan image-to-video model (ltx-2.5, 480p) does not keep the source photo's lighting fixed. It drifts the sky and the reflections toward a warmer orange even when the prompt says 'Warm evening light unchanged'. In the old chat, the assistant's own 'slow cinematic push-in' (for a vague user, with no plan step) adds to the failure, but the lighting drift alone would still fail the item.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "None for the lighting drift: it comes from ltx-2.5 on the free plan. For the old build's push-in only: tell the assistant in the create_video_from_image description not to add camera moves the user did not ask for, or require plan_request as the new build does."
+ },
+ "error": null,
+ "seconds": 36,
+ "usd": 0.19458740000000002
+}

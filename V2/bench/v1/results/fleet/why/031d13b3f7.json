@@ -1,0 +1,47 @@
+{
+ "id": "031d13b3f7",
+ "key": "must:E24b:Natural Spanish translation without added advice",
+ "symptom": "Natural Spanish translation without added advice",
+ "item": "E24b",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Natural Spanish translation without added advice' not met?",
+    "because": "The delivered video has subtitles only in English. No Spanish text is burned into the video, so the grader had no Spanish wording to judge.",
+    "evidence": "s3.old.happy.E24b/grade.json: 'Subtitles are in English, not Spanish' and 'No Spanish text exists.' The new happy chat and the old stupid chat each delivered one add_subtitles_to_video output, with the same kind of result."
+   },
+   {
+    "why": "Why were the subtitles in English?",
+    "because": "In all three chats the only generation call was add_subtitles_to_video, with just name, start/end seconds, video_file_path and a style template. No language or translation value was sent.",
+    "evidence": "calls.jsonl: old.happy args {start 0,end 60,style minimalist}; old.stupid {start 0,end 60,style cinematic}; new.happy {start 0,end 10,style cinematic}. Each result is a completed AUTO_SUBTITLE project."
+   },
+   {
+    "why": "Why was no language or translation value sent?",
+    "because": "The add_subtitles_to_video schema has no language, target-language or custom-text field. It only 'adds automatically generated subtitles' from the speech, with style.template or style.custom_config (font, colors, position). So the tool can only write the spoken English.",
+    "evidence": "tools-old.json add_subtitles_to_video (lines 1367-1481): properties are name, start_seconds, end_seconds, assets.video_file_path and style{template, custom_config}. In both builds the assistants say 'it has no setting to change the language' / 'It has no translate setting' (state of old.happy and new.happy)."
+   },
+   {
+    "why": "Why did the assistant not use another tool to put Spanish text on the video?",
+    "because": "No tool in either build can draw text the user chooses onto an existing video. The only translation tool dubs the voice into Spanish, and the brief forbids that ('Leave her voice in English'). The assistants saw this and offered English subtitles, or (new build) a Spanish .srt file in chat. They delivered the English-subtitle video only after the harness nudge 'Please go ahead with the free settings anyway.'",
+    "evidence": "old.happy and new.happy calls.jsonl 'say' entries: 'Translate tool: It replaces her speech with a Spanish voice.' new.happy also wrote a Spanish SRT in chat, but nothing was burned in, and the grader judges output frames. A user turn with nudge:true comes before each add_subtitles call. In old.stupid the assistant ran English subtitles at once and never said they were not Spanish."
+   },
+   {
+    "why": "Why does the subtitle tool have no translation option?",
+    "because": "The Magic Hour auto-subtitle API writes down speech in the spoken language. It has no translate or custom-text mode. The MCP schema shows only what the API offers, so this is a capability limit of the product. The new build's plan_request even echoed language=Spanish with ready:true, but the create schema still had no field to carry that value.",
+    "evidence": "The tool schema is the same in both builds (all three chats sent the same fields). In new.happy, plan_request output {\"ready\":true,\"params\":[{\"name\":\"language\",\"value\":\"Spanish\"}]} was not followed by any language argument, because no such argument exists."
+   }
+  ],
+  "axiom": "Magic Hour's auto-subtitle endpoint only writes down speech in the language that is spoken. It cannot translate or burn in custom text, and the toolset has no other way to overlay text on a video. So Spanish subtitles over English audio cannot be made on either build.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a target_language (translate) option to add_subtitles_to_video, or a tool that burns in user-supplied SRT/text over an existing video. Until then, the new build's plan_request should report 'language' as unsupported (ready:false), not echo it as ready, and the test should treat a clear 'cannot' answer plus an SRT as the expected outcome."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.4516084
+}

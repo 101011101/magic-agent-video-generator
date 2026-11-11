@@ -1,0 +1,53 @@
+{
+ "id": "E28c",
+ "root_cause": "harness",
+ "contributing": [
+  "missing-tool",
+  "grader",
+  "spec"
+ ],
+ "grader_right": true,
+ "agent_vs_you": "The agent's chain is the catalogue's own recipe for narration (voice, then assemble), with the exact words verbatim and the clip untouched. That is my plan too. Its 'Remove all original audio' instruction went into assemble's extra, which assemble never reads. No catalogue tool can drop a clip's own sound: every video code tool maps 0:a. assemble always mixes the clip's audio in. Worse, it treats any added sound as music: because the clip has audio ('speech'), it puts the narration at volume 0.25 (about -12 dB) under the radio calls, then fades out the last second. So the transcriber heard only 'Rook, you with me?', and 'safely home' was faded away. The voice itself was fine: speech runs from 0 to 6.83 s, followed by 1.36 s of trailing silence, which already meets the 0-0.5 s start and 6.5-7.0 s end windows. The agent's 'target duration 6.8 seconds' was ignored but did not matter here. The only reasoning gap: it trusted free-text extra to change a tool's audio behaviour. The catalogue gave no 'replace sound' option, and an expert would have flagged that before running.",
+ "your_plan": {
+  "say": "I'll record the line in a calm synthetic English narrator voice and lay it over your 7-second clip in place of all the original sound, leaving the picture untouched.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "voice",
+    "inputs": [],
+    "produces": "narration.mp3",
+    "params": {
+     "prompt_or_change": "Above the clouds, every second counts. Stay focused, trust your training, and bring everyone safely home.",
+     "extra": "voice: male narrator; tone: calm, steady, natural pace, short pauses only",
+     "aspect": "",
+     "seconds": 7,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The exact words are spoken verbatim by a neutral synthetic voice. 17 words at a calm pace come to about 6.8 s, which fits the 7 s clip."
+   },
+   {
+    "tool": "assemble",
+    "inputs": [
+     "radio-lines.mp4",
+     "narration.mp3"
+    ],
+    "produces": "radio-lines-narrated.mp4",
+    "params": {
+     "prompt_or_change": "Keep the clip exactly as it is and replace its whole soundtrack with the narration, starting at 0 s.",
+     "extra": "sound: replace",
+     "aspect": "",
+     "seconds": 7,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "The voice goes onto the clip, with its length and frames kept. 'sound: replace' (needs the harness fix) drops the radio calls and puts the voice at full level, with no fade over speech."
+   }
+  ]
+ },
+ "fix": "Changes to assemble.js: (1) Support extra 'sound: replace' (or 'clip sound: off'): build the clip pieces with -an or anullsrc so the clip's own audio is dropped. Have the planner set it whenever the sheet says 'replace the sound' or 'remove the original audio'. (2) Do not duck a VOICE input: duck only music (tell the two apart by the producing tool, voice or music). A narration over a clip goes at full level, and the clip's own sound, when kept, goes under it. (3) Fade only music. Trim a voice track's trailing silence instead of fading the last second, so a final word is never faded out. The voice tool should also trim leading and trailing silence and report its speech length against params.seconds. Catalogue: assemble 'extra sound: replace drops the clips' own sound'. Grader: text burned into the user's source footage is not 'added' text.",
+ "fix_generalises": true,
+ "would_pass": "likely",
+ "evidence": "narration.mp3 is 8.21 s long, with speech from 0 to 6.83 s and silence after. The source radio-lines.mp4 is 1280x720, 7.0 s, with radio dialogue at -19.5 dB mean. The output radio-lines-narrated.mp4 is 7.0 s at -19.4 dB mean, almost unchanged from the source, so the narration was mixed in at about a quarter level. assemble.js sets level 0.25 when any clip has audio, amixes [0:a] with it, and applies afade from L-1. The burned-in subtitles 'Rook, you with me?' and 'Right here, Vega.' are already in the source frames. The judge's 'dialogue captions despite no-captions' is wrong: no captions were added. Its narration verdicts are right."
+}

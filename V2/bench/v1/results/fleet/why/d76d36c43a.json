@@ -1,0 +1,47 @@
+{
+ "id": "d76d36c43a",
+ "key": "must:J51b:The video remains silent.",
+ "symptom": "The video remains silent.",
+ "item": "J51b",
+ "n": 3,
+ "builds": {
+  "old": 2,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The video remains silent.' not met in the 3 chats?",
+    "because": "No video file was produced in any of the 3 chats, so the grader had nothing to judge as silent. The agent only promised a silent video for later.",
+    "evidence": "s2r.old.stupid.J51b/grade.json: check 'something was made' pass=false, got 'no file'; the silent item says 'There is no video to be silent. Nothing was delivered.' The summary says no video was delivered because the account had 0 credits."
+   },
+   {
+    "why": "Why was no video produced?",
+    "because": "Every create_video_from_text call was refused before it ran (approve:false), so no job started and no file came back.",
+    "evidence": "old.stupid calls.jsonl lines 3 and 12, old.dumper lines 3 and 11, new.stupid lines 8 and 16: each call has approve:false and reason 'insufficient credits: this call needs about 120/192 credits and 0 remain on the account'."
+   },
+   {
+    "why": "Why were the calls refused? Did the assistant pick bad parameters?",
+    "because": "No. The parameters fit the free plan: model ltx-2.5, 480p, audio:false, 5–8 s. The only reason given for the refusal was a credit balance of 0. The earlier 'default model' refusal in the old build was fixed on the next call, so it did not block anything.",
+    "evidence": "old.dumper calls.jsonl line 2 refused model 'default'; line 3 used ltx-2.5 at 480p with audio:false and was still refused for 0 credits. In new.stupid, plan_request returned ready:true (line 7) before the 0-credit refusal (line 8)."
+   },
+   {
+    "why": "Why did the account have 0 credits in both builds?",
+    "because": "The benchmark ran on a shared free-plan account that was already empty when these chats started. This is account state, not the behavior of either MCP build. Both builds hit the same 0-credit balance within minutes of each other.",
+    "evidence": "All three chats ran within about 3 minutes (t≈1794364431000–1794364623000) and every chat saw '0 remain on the account'. J51b.json has expect.beyond_free='no', so the test should be possible on a funded free plan (8 s at 480p ≈ 192 credits)."
+   },
+   {
+    "why": "Why does the empty account count as the end of the chain?",
+    "because": "The test harness ran J51b without first checking or refilling the credits of the test account, and the grader still scored the must-haves as 'no' instead of marking the run invalid. Inside the system, the credit balance is an external precondition that the harness owns.",
+    "evidence": "grade.json scores every must-have as 'no' with the reason 'no video exists'. Its only check is 'something was made', and nothing in it flags the 0-credit precondition. The agent behaved correctly: it reported the block and did not invent a result (say kind='cannot')."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits when these chats ran. Every generation call was refused before it ran, so no video existed to be silent. This is a harness/account precondition, not a defect of either MCP build or of the assistant.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each chat, make the harness check the test account's credit balance (and refill it or wait for the refill) so it holds at least the estimated cost of the item (≈192 credits for J51b). If a generation call is refused with 'insufficient credits … 0 remain', mark the chat invalid or rerun it instead of grading its must-haves as 'not met'."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.1307562
+}

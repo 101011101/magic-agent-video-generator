@@ -1,0 +1,47 @@
+{
+ "id": "d0c8f21d5d",
+ "key": "must:G38b:Bottle matches original silhouette, proportions, lid, matte finish",
+ "symptom": "Bottle matches original silhouette, proportions, lid, matte finish",
+ "item": "G38b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Bottle matches original silhouette, proportions, lid, matte finish' not met in both chats?",
+    "because": "In both chats the delivered bottles drift from the source in small details. The vented square spout on the cap becomes a solid loop handle, a ribbed band appears at the base, and the white-background bottle gets a glossy, 3D-render sheen.",
+    "evidence": "s4.old.happy.G38b/grade.json: 'white-bg shot has a more tapered shoulder and a glossier look… bench bottle has a ribbed base… close-up loop is a solid rounded handle, unlike the original's perforated cap'. s4.new.stupid.G38b/grade.json: 'base gets ribbed texture… forest image changes the lid to a plain loop handle… white image looks glossier'. attachments/product-bottle.jpg shows a plain matte bottle with a square spout that has a window cut into it. new assets/03 (forest) shows a solid loop. new assets/01 (white) shows a glossy, render-like bottle with a ribbed foot. old assets/03 (close-up) shows a large solid loop handle on a flat lid."
+   },
+   {
+    "why": "Why did the outputs change the bottle when the assistant asked to keep it?",
+    "because": "Both assistants sent the source photo to edit_image with flux-2-klein at 640px, and the prompt told the model to keep the product unchanged. The model does not paste the original pixels. It re-renders the whole frame, including the bottle, so it fills fine details with typical bottle features such as a carry loop, a ribbed foot or a sheen.",
+    "evidence": "old calls.jsonl lines 2-4 and new calls.jsonl lines 3-5: model 'flux-2-klein', resolution '640px', assets.image_file_paths set to the uploaded product photo, and prompts with 'unchanged in shape, cap and finish' (old) or 'Keep the bottle identical: same shape, matte black finish, same cap' (new). The drift still occurs. The old assistant's own reply says 'the AI rebuilds the bottle in each image'."
+   },
+   {
+    "why": "Why is the lid drift worst in the old close-up?",
+    "because": "The old assistant described the cap in its prompt as having a 'carry loop'. The source spout is a square nozzle with a window cut into it, not a handle, so this wording pushed the model toward a loop handle when it re-rendered the cap at macro scale. The new chat's prompt only said 'same cap', but its forest image still turned the cap into a loop. So the prompt wording made the drift worse in one chat but did not cause it.",
+    "evidence": "old calls.jsonl line 4 prompt: 'keeping the same cap with its carry loop and the same matte powder-coat texture'. new calls.jsonl line 5 prompt has no 'loop' wording, yet new assets/03 shows a loop handle."
+   },
+   {
+    "why": "Why was the drift not caught and fixed before delivery?",
+    "because": "Neither assistant looked at the results. Both called wait_for_image_project with include_inline_downloads=false and delivered the links. The old assistant openly said it had not checked them, so no drifted image was regenerated.",
+    "evidence": "old and new calls.jsonl: every wait_for_image_project call has 'include_inline_downloads': false. old final message: 'I haven't looked at the results myself… Look at the cap shape and the loop most closely.' The new final message has no check at all."
+   },
+   {
+    "why": "Why does the edit model re-render the product rather than preserve it?",
+    "because": "flux-2-klein is a generative image editor that rebuilds the full image at 640px. On this free account it cannot guarantee exact preservation of small product features. This is a property of the model, not of the MCP build: both builds send the same model and inputs and get the same kind of drift.",
+    "evidence": "Both builds use the same model, the same resolution and the same source file path, and both produce the same kinds of drift (loop cap, ribbed base, gloss). The new build's plan_request (new calls.jsonl line 2) checks parameters only and has no influence on output fidelity."
+   }
+  ],
+  "axiom": "The free-plan image editor (flux-2-klein, 640px) re-renders the whole image from the reference. It cannot guarantee exact preservation of small product features such as the windowed spout, the base profile or the matte sheen, so 'keep my exact bottle' drifts whatever the prompt says. Not checking the outputs before delivery let the drifted images through.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In both builds' edit_image / image-editor workflow guidance, add a rule for exact-product briefs: describe the product only as the user did, without inventing parts like 'carry loop'; call wait_for_image_project with include_inline_downloads=true; compare each output with the source photo; regenerate any image whose cap, silhouette or finish changed before delivering. Re-rolls lower but cannot remove the model's drift."
+ },
+ "error": null,
+ "seconds": 55,
+ "usd": 0.5016812000000002
+}

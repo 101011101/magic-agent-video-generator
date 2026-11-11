@@ -1,0 +1,42 @@
+{
+ "id": "0a1115a278",
+ "key": "must:E25b:The output is a 9:16 portrait edit of the attached office conversation.",
+ "symptom": "The output is a 9:16 portrait edit of the attached office conversation.",
+ "item": "E25b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 'The output is a 9:16 portrait edit of the attached office conversation' item not met?",
+    "because": "Neither chat produced any video. In both chats the assistant ended the run with a 'cannot' reply.",
+    "evidence": "s3.old.happy.E25b/calls.jsonl: two 'say' events, both kind=cannot, called=false, then end kind=cannot, with no create call. s3.new.stupid.E25b/calls.jsonl: ends with kind=cannot. Its only calls were join_videos (HTTP 404) and detect_faces/get_face_detection_results (status rendering, faces []). The grader says: 'No output was produced; the agent declined to run any job.'"
+   },
+   {
+    "why": "Why did the assistant refuse, even after the user said 'Please go ahead with the free settings anyway' / 'huh? just try it'?",
+    "because": "The assistant decided that no tool can crop or reframe the user's real footage to 9:16. It saw the only video-in tool as an AI redraw that keeps the source frame shape. So running that tool would cost credits and still fail the brief (real footage, speaker-centred cuts, original audio).",
+    "evidence": "Old chat: 'No tool here crops or reframes a video... edit_video... redraws the video from a text prompt, and its output keeps the original frame shape.' New chat: 'Magic Hour has no crop or reframe tool... The join tool only puts whole clips end to end.'"
+   },
+   {
+    "why": "Was that judgement correct, given the tool descriptions?",
+    "because": "Yes. No tool in the list takes a video and outputs a crop of it or a changed aspect ratio. edit_video has no aspect_ratio parameter and only does prompt-based appearance edits. upscale_video says 'preserving its aspect ratio' and needs a paid plan. join_videos only concatenates and fits clips 'to the first one's size'. aspect_ratio exists only on create_video_from_text, which generates new video. detect_faces only returns faces for face swap, so it can't drive a crop either.",
+    "evidence": "tools-new.json: edit_video schema (start/end_seconds, model, resolution, style.prompt, assets; no aspect or crop), upscale_video ('while preserving its aspect ratio... Requires a paid plan'), join_videos ('Every video is fitted to the first one's size'), create_video_from_text (the only aspect_ratio enum). The old-build assistant described the same tool set in the same way."
+   },
+   {
+    "why": "Why does the test still expect a 9:16 edit on the free plan with no refusal?",
+    "because": "The test assumes that a speaker-aware portrait recut is a supported 'Editing the user's video' case: expect.refuse=false, beyond_free='no', asks='never'. But neither build exposes the deterministic crop/reframe operation that the case needs. This is a gap in the server's capabilities, not an assistant error. Every honest path leads to a refusal or an off-brief AI redraw.",
+    "evidence": "items/E25b.json: case_name 'Recut 16:9 to 9:16', expect {refuse:false, beyond_free:'no'}, answer_sheet 'Centre the current speaker in a full-frame portrait crop; a clean cut at the speaker change is fine.' No crop tool exists in tools-new.json, and the old assistant reports none in its build either."
+   }
+  ],
+  "axiom": "Neither the old nor the new Magic Hour MCP server has a crop/reframe (aspect-change) tool for a user's video. The only video-in editor (edit_video) redraws frames by prompt and keeps the source aspect. The case E25b assumes that capability exists, so with no such tool the assistant rightly declined.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a free, code-based crop_video/reframe_video tool. Like join_videos, it would run with ffmpeg and use no generation credits. Inputs: video, target aspect (9:16/1:1), and a list of time segments, each with a crop centre x (or a detect_faces face index to centre on), with hard cuts between segments and the original audio kept. Add it to plan_request's tool enum, and say in edit_video's description that edit_video cannot change aspect and that reframing should use crop_video."
+ },
+ "error": null,
+ "seconds": 44,
+ "usd": 0.5131878
+}

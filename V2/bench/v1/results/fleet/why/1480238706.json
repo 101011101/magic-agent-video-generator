@@ -1,0 +1,47 @@
+{
+ "id": "1480238706",
+ "key": "must:E29a:Logo small and doesn't obscure face",
+ "symptom": "Logo small and doesn't obscure face",
+ "item": "E29a",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Logo small and doesn't obscure face' not met?",
+    "because": "No video was delivered, so the grader had no frame in which to judge the logo's size or position.",
+    "evidence": "s3.new.happy.E29a/grade.json: check 'a video was made' failed with got [\".png\"]; the must item reads 'Nothing placed in a video.' The old happy grade gives the same reason: 'No video, so no logo placement.'"
+   },
+   {
+    "why": "Why was no video delivered?",
+    "because": "In all three chats the assistant made only one generation call, remove_image_background on mascot-fox.png. It never called a video tool with talk-one.mp4.",
+    "evidence": "calls.jsonl for old.happy, new.happy and new.dumper: the only create call is remove_image_background (5 credits), then wait_for_image_project. The output is a PNG in assets/01-wait_for_image_project.png."
+   },
+   {
+    "why": "Why did the assistant stop after the background removal?",
+    "because": "It concluded that no Magic Hour tool can place an image over an existing video and leave the rest unchanged. It gave the user CapCut, iMovie or ffmpeg steps instead.",
+    "evidence": "'say' text in each calls.jsonl, e.g. new.happy: 'None of my Magic Hour tools can place an image on top of a video.' old.happy adds: 'Magic Hour has no tool that places an image on top of a video as an overlay.'"
+   },
+   {
+    "why": "Why did it not use the AI video editor as a fallback?",
+    "because": "That tool regenerates every frame from a prompt. It cannot pin an exact asset at a fixed spot and size, and it would change the speaker and the sound. The brief says to keep the video and sound unchanged, so the assistant correctly declined to run it.",
+    "evidence": "old.happy reply: 'redraws every frame from a text prompt... could not place the logo at an exact spot or size... On the free plan, the editor also cannot take the fox image as a reference.' Brief in E29a.json: 'keep the video and sound otherwise unchanged.'"
+   },
+   {
+    "why": "Why does neither build offer such a tool?",
+    "because": "The Magic Hour tool set has no deterministic compositing or overlay operation, such as image over video at x/y/scale with audio passthrough. Both builds show the same behaviour, and new.dumper's plan_request routed the request only to remove_image_background. So the gap is in the product's capability set, not in a tool description.",
+    "evidence": "new.dumper calls.jsonl: plan_request returned tool remove_image_background, ready true. tools-new.json lists only generation and editing workflows (video-face-swap, image-editor, image-to-video, video-generator, lip-sync, ugc-ads, talking-photo, media-apis) with no overlay workflow. I did not search the full tools-old.json and tools-new.json lists for every tool name. I rely on the assistant's statements in both builds."
+   }
+  ],
+  "axiom": "The Magic Hour API/MCP has no deterministic logo or overlay compositing tool that keeps the source video and audio. The test E29a expects that capability (expect.beyond_free 'no', asks 'never'). So the item can only fail, or pass only through a generative editor that breaks the 'unchanged' rule.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic overlay tool to the MCP server, for example an ffmpeg-based 'overlay_image_on_video(video, image, corner, scale, margin)' that copies the audio. Or, if the product will not support this, mark E29a as an expected 'cannot' case with the PNG plus instructions as the correct answer, so the logo-placement checks are not graded against a capability that does not exist."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.1515906
+}

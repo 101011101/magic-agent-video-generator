@@ -1,0 +1,47 @@
+{
+ "id": "c74cb35965",
+ "key": "must:E29a:Same woman at kitchen table, source framing preserved",
+ "symptom": "Same woman at kitchen table, source framing preserved",
+ "item": "E29a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Same woman at kitchen table, source framing preserved' not met?",
+    "because": "Neither chat produced a video. The only output was a PNG of the fox with its background removed, so the grader had no frames of the woman to check.",
+    "evidence": "s3.new.dumper.E29a/grade.json: check 'a video was made' failed with got [\".png\"], 'no audio track', and the reason 'No video was output; only a fox cutout image.' Both calls.jsonl files hold only remove_image_background followed by wait_for_image_project (5 credits). Neither has a video create or edit call."
+   },
+   {
+    "why": "Why did the assistant stop after the fox cutout and not make a video?",
+    "because": "In both builds the assistant found no tool that places an image on top of a video and leaves the rest unchanged. It chose not to run the AI video editor, because that would break the user's 'keep the video and sound unchanged'. It told the user to add the logo in CapCut, iMovie or a similar editor.",
+    "evidence": "Final 'say' text in old calls.jsonl: 'Magic Hour doesn't have a tool that places an image on top of a video. Its only video editing tool is an AI editor, and it redraws every frame from a text prompt.' New calls.jsonl: 'None of my Magic Hour tools can lay a picture over a video and leave everything else as it is... That goes against \"keep the video and sound unchanged\", so I didn't use it.'"
+   },
+   {
+    "why": "Why was edit_video not a usable way to add the logo?",
+    "because": "edit_video is a prompt-driven generative editor that changes the look of the clip. It does not paste a layer on top. On the free plan it defaults to ltx-2.5. The reference images (the only way to pass in the user's fox) are listed only for gemini-omni-1.1, wan-3.0 and gemini-omni, and wan-3.0 needs a paid plan. On the free plan, the fox would be AI-drawn and the woman and the framing could change.",
+    "evidence": "tools-old.json edit_video: 'Edits the appearance or content of a supplied video segment using a text prompt'. model: 'Defaults to LTX 2.5 for free tier... wan-3.0 requires a paid tier'. references: 'Reference images for gemini-omni-1.1, wan-3.0, gemini-omni.' No ltx is listed there."
+   },
+   {
+    "why": "Why is there no other tool that can do it?",
+    "because": "The Magic Hour tool set has no deterministic compositing, overlay or watermark tool in either build. The video tools are edit_video, translate_video, upscale_video, create_animation, talking photo, spoken ad and face swap, and each one generates or transforms the video. In the new build, plan_request sent the assistant to remove_image_background and returned no overlay tool.",
+    "evidence": "tools-old.json tool list (lines 1-1100) has no overlay or composite tool. In new calls.jsonl, plan_request returned {\"tool\":\"remove_image_background\",\"ready\":true}. Both assistants said separately that no such tool exists."
+   },
+   {
+    "why": "Why was this counted as a failure when the assistant was honest?",
+    "because": "The test assumes the task can be done on the free plan with no questions (expect.asks='never', beyond_free='no'), and its must_haves require a composited video. The product cannot make that output, so an honest decline fails every must_have. The grader also marked the honest 'cannot' answer as a major fault.",
+    "evidence": "items/E29a.json: expect {\"asks\":\"never\",\"beyond_free\":\"no\",\"refuse\":false}, spec kind 'video', audio 'required'. new grade.json faults: 'Assistant claimed tools could not overlay image, pushed work to user' (major)."
+   }
+  ],
+  "axiom": "Magic Hour has no deterministic image-on-video overlay tool. Its only video editor (edit_video) redraws frames from a prompt, and on the free plan (ltx-2.5) it cannot take the user's fox as a reference image. So 'keep the video unchanged + add this exact logo' cannot be done in either build. Test E29a still expects it to be done on the free plan with no questions.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Choose one of these fixes. (1) Add a deterministic overlay/watermark tool to the MCP server, for example ffmpeg-style compositing: image path, corner, scale, padding, full duration, original audio copied through. Then plan_request can send logo requests to it. (2) Change E29a to an 'unsupported' case: refuse=true or beyond_free='yes'. Then the expected good answer is the transparent cutout plus a clear explanation, and the grader no longer marks the honest decline as a fault."
+ },
+ "error": null,
+ "seconds": 38,
+ "usd": 0.28973580000000004
+}

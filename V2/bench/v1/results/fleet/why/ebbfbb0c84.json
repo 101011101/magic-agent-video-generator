@@ -1,0 +1,46 @@
+{
+ "id": "ebbfbb0c84",
+ "key": "must:D20a:Transitions between photos are smooth, and no added text appears.",
+ "symptom": "Transitions between photos are smooth, and no added text appears.",
+ "item": "D20a",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Transitions between photos are smooth, and no added text appears' marked not met?",
+    "because": "The finished reel joins the five shots with hard cuts, and the assistant says so in its reply. No text appears, so the failure comes only from the transitions.",
+    "evidence": "s3.new.dumper.D20a/grade.json: must item 5 is 'no' with the reason 'The assistant admits the shots change with straight cuts, not smooth transitions. No text appears in the frames I saw.' The faults list 'Straight hard cuts between shots… major'. In s3.new.happy.D20a/calls.jsonl line 17 the delivered text says 'the shots change with straight cuts, not smooth crossfades.'"
+   },
+   {
+    "why": "Why does the reel have hard cuts when the user asked for 'nice smooth transitions'?",
+    "because": "The assistant made the reel through the new build's production pipeline (plan_video_production → create_production_clip ×5 → join_production_clips). The final join step only puts clips together end to end with hard cuts.",
+    "evidence": "s3.new.happy.D20a/calls.jsonl lines 2–15: plan_video_production, five create_production_clip calls, create_production_sound, then join_production_clips(made={1..5}, sound={music}), which returns download_url with 11.7 s. tools-new.json, join_production_clips: 'Joins the finished clips of a plan into one video file, in story order, with hard cuts.'"
+   },
+   {
+    "why": "Why could the assistant not ask for a crossfade or dissolve some other way?",
+    "because": "None of the new build's tools has a transition parameter. join_production_clips takes only production, made and sound. The other joiner, join_videos, also says 'with hard cuts'. The plan schema has no transition field: beat.link only describes how the story continues (continues/event/moves/new), not how clips are edited together.",
+    "evidence": "tools-new.json: the join_production_clips inputSchema has properties {production, made, sound}. join_videos: 'Join videos end to end with hard cuts… `videos`, `silent`'. plan_video_production beats.link: 'How this beat relates to the beat before it… new = nothing carries over.' No field mentions a transition, crossfade or dissolve."
+   },
+   {
+    "why": "Why did the plan not make up for this, for example by warning the assistant or by chaining clips so each one flows into the next?",
+    "because": "The planner treats the five photos as five separate 'new' beats, each with a picture reference. It gives no advice and no checklist line about transitions, even though the request text it received says 'just nice smooth transitions'. So the gap appears only after the join, when the assistant can only admit it.",
+    "evidence": "s3.new.happy.D20a/calls.jsonl line 2: request contains 'No text, just nice smooth transitions.' Every beat has link:'new'. The output has 'advice':[] and 'problems':[], and the checklist has file/order/same-*/music lines but no transition line."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Axiom: in the new build, the server's join step is built to do hard cuts only, and no tool or plan option can make a smooth transition. The video model is not the limit here, because a crossfade is a plain edit that happens after generation. The assistant behaved correctly: it reported the gap honestly in both chats (happy and dumper). In the dumper chat it told the user to add a crossfade in Instagram, and in the happy chat it offered a morph redo.",
+    "evidence": "s3.new.dumper.D20a/state.json, assistant reply: 'The tool I used can't make crossfades. A crossfade transition in Instagram's editor will give you the smooth look.' s3.new.happy.D20a/calls.jsonl line 17: 'These tools can only join clips with straight cuts.' I did not read the old-build chats or tools-old.json. The symptom shows only new-build failures, so I attribute the cause to the new build's production pipeline."
+   }
+  ],
+  "axiom": "In the new build, join_production_clips (and join_videos) can only join clips with hard cuts. No tool or plan_video_production field lets the assistant ask for a crossfade or dissolve. So a request for smooth transitions between photos cannot be met through the pipeline the assistant is pointed to.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Add an optional `transition` parameter to join_production_clips and join_videos, with values cut or crossfade and a length in seconds of about 0.5 s. Implement crossfade with ffmpeg xfade/acrossfade, and take the overlap into account in the planned length. Also have plan_video_production set it, and add a checklist line 'smooth transitions', when the request mentions smooth transitions, crossfades or dissolves."
+ },
+ "error": null,
+ "seconds": 124,
+ "usd": 0.3883926
+}

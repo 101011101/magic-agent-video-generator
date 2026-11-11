@@ -1,0 +1,46 @@
+{
+ "id": "40dab3397e",
+ "key": "must:F31b:One standalone audio file, no music or SFX",
+ "symptom": "One standalone audio file, no music or SFX",
+ "item": "F31b",
+ "n": 2,
+ "builds": {
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'One standalone audio file, no music or SFX' not met?",
+    "because": "In both chats the only file delivered is an 8 s MP4 video with a soundtrack, not an audio file. The grader marks the item 'no' for that reason. Music and SFX could not be checked.",
+    "evidence": "s2.new.happy.F31b/grade.json: check 'a audio was made' got [\".mp4\"]; must item 5 met:no, 'The output is an MP4 video, not an audio-only file'. Both calls.jsonl: one file, assets/01-wait_for_video_project.mp4."
+   },
+   {
+    "why": "Why did the assistant deliver an MP4 and not an audio file?",
+    "because": "It made the dialogue with create_video_from_text (ltx-2.5, audio:true, 480p, 8 s). The prompt put the four lines in two voices (deep man, bright woman) and said 'no music, no sound effects'. The tool returns a video project, so the result is a video download URL.",
+    "evidence": "happy calls.jsonl line 12 and dumper calls.jsonl line 14: create_video_from_text args with audio:true and the dialogue prompt. wait_for_video_project returned project_type 'video' and output.mp4."
+   },
+   {
+    "why": "Why did it choose a video tool for an audio-only request?",
+    "because": "Before it called any tool, the assistant told the user that no tool gives an audio-only file. Its reasons: no text-to-speech tool, the only audio generator makes music, the narration reads all lines in one voice, and no tool saves only the sound of a video. It offered the video as the closest option and told the user to extract the audio. Both users agreed.",
+    "evidence": "happy calls.jsonl line 3 and dumper line 4 (assistant text). User replies: 'Yes, go ahead.' and 'I'll pull the audio out myself with a converter.'"
+   },
+   {
+    "why": "Was the assistant right that the new build has no route to an audio-only speech file?",
+    "because": "Yes. In tools-new.json the only tool that makes audio is generate_music (music, 15 to 300 s). create_talking_photo needs an audio file as input and says it 'does not synthesize speech'. create_spoken_ad_video, create_video_from_text and create_video_from_image all return videos. create_production_sound makes narration with 'a video model ... in one voice' and returns a video project id. join_videos has only a `silent` flag that removes the sound; it cannot keep only the sound. No tool extracts audio or does TTS.",
+    "evidence": "tools-new.json: generate_music description; create_talking_photo 'text alone is not accepted and this tool does not synthesize speech'; create_production_sound 'one narration (a video model...) ... in one voice'; join_videos '`silent`: remove all sound'. plan_request tool enum lists no speech tool."
+   },
+   {
+    "why": "Why does the test expect an audio-only deliverable within the free plan?",
+    "because": "The item was revised to beyond_free 'no' with the note 'speech and talking photo are wired'. The answer sheet asks for 'One combined playable audio file ... not a video'. The new build's tool list exposes no speech tool and no audio export, so the brief assumes a capability the server does not give the assistant. The server already decodes and re-encodes video (join_videos reports length and loudness), so an audio-only output is a missing server feature, not a model limit.",
+    "evidence": "items/F31b.json: revised '2026-11-01: beyond_free → no (speech and talking photo are wired)'; answer_sheet 'Delivery format'; tests field says standalone speech synthesis is 'outside the listed free-tier tools'. That text contradicts the revision."
+   }
+  ],
+  "axiom": "The new build has no tool that returns an audio-only file. There is no text-to-speech tool and no way to export only the sound of a generated video: join_videos can only strip sound. All two-voice speech must therefore come out as an MP4 from a video model. The test item was revised to say speech is wired, but the tool list does not expose it.",
+  "category": "mcp_tool_behavior",
+  "builds": "new",
+  "fix": "Add an audio-only output to the server. For example, add an `audio_only` flag to join_videos, or a new extract_audio tool, that takes a finished video project id and returns an MP3 or WAV download URL. Describe it in plan_request and create_production_sound as the way to deliver speech as audio. Alternative: if this is not possible, change F31b back to beyond_free 'yes' and stop expecting an audio file."
+ },
+ "error": null,
+ "seconds": 58,
+ "usd": 0.8713936000000002
+}

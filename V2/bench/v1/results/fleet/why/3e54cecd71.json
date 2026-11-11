@@ -1,0 +1,47 @@
+{
+ "id": "3e54cecd71",
+ "key": "must:I45a:One playable 15-second widescreen film with three sequential scenes",
+ "symptom": "One playable 15-second widescreen film with three sequential scenes",
+ "item": "I45a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why did neither chat deliver a 15 s, three-scene film of the wet-bench and newspaper story?",
+    "because": "Each build made one text-to-video clip of a story the assistant made up. Old: a 5 s clip where a woman shares a sandwich and coffee. New: a 15 s clip where a woman gives tea. Neither clip has a wet bench, a newspaper, the described characters or three scenes.",
+    "evidence": "old grade.json: 'Output is a single 5-second clip with one scene', 'No newspaper; food is shared'. new grade.json: 'One continuous 15s clip, but it shows the tea story'. old calls.jsonl prompt: '...offers him half of her sandwich and a cup of warm coffee'. new calls.jsonl prompt: '...two paper cups of hot tea...'."
+   },
+   {
+    "why": "Why did the assistant make up the story and not use the brief's story?",
+    "because": "The assistant never got the story. The stupid persona's only opening message was 'make a video about a kind gesture at a park bench'. It does not name the characters, the wet bench, the newspaper, the three scenes or the 15 s length. The persona gives facts from its bank only when it gets a plain-words question about them.",
+    "evidence": "chat.json messages[0]: 'make a video about a kind gesture at a park bench'. chat.json persona.reply: 'answer it from your knowledge bank... Never invent a fact'. The bank holds 'Story and setting: A wet park bench; ... folded newspaper...' and 'One 15-second widescreen 16:9 video, with three scenes'."
+   },
+   {
+    "why": "Why did the assistant not ask who is in the film and what happens?",
+    "because": "Old build: nothing in the old flow makes the assistant ask. It created a clip at once, with end_seconds 5 and the model 'default'. After a model rejection it retried on ltx-2.5 and delivered without any question. New build: the assistant asked only the questions that plan_request returned (length, platform, sound, words). The user answered '15 sec, no sound. widescreen'. But no question was about the story content, so the bank's story never came out.",
+    "evidence": "old state.json: one assistant turn, 'delivered', no questions. old calls.jsonl: create_video_from_text with end_seconds 5 and no plan step. new calls.jsonl: plan_request questions = seconds/aspect/sound, then exact_words, then 'ready':true. new state.json: the assistant asked the returned questions word for word."
+   },
+   {
+    "why": "Why did the new plan_request say ready when the content was only a vague theme?",
+    "because": "plan_request checks only shape fields. The assistant sent subject='a kind gesture at a park bench' with source 'user', and the tool accepted it as a full subject. The rows have no characters, story or scene breakdown, and the tool has no rule that a story-length video needs them. The tool description warns only 'do not guess shape, length, sound or on-screen words'. So the description lets the assistant invent the content.",
+    "evidence": "tools-new.json plan_request description: 'Row names: subject, edit, keep, motion, seconds, aspect, sound, exact_words, look, mood, script...' and 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' new calls.jsonl: the final plan_request output has the subject row accepted, 'questions':[], 'ready':true."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "Neither build has a step that treats a theme-only subject for a multi-scene or story-length video as missing content. The old build has no planning gate at all. The new gate checks only format. So for a vague user, the system design makes invention of the story certain.",
+    "evidence": "The old build makes no plan_request call (old calls.jsonl). The new plan_request output never questions 'subject' (new calls.jsonl lines 2, 7, 12)."
+   }
+  ],
+  "axiom": "The new plan_request gate (and the old build, which has no gate) checks only format fields: length, aspect, sound and words. It accepts a theme-only subject ('a kind gesture at a park bench') as complete. So nothing makes the assistant ask the vague user who is in the film and what happens. The assistant then invents the story, and the bank's wet-bench, newspaper and three-scene story never comes out.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, add a 'story' row (characters and what happens, scene by scene). Mark it missing when the subject is only a theme and the request is a story or a video longer than one clip (seconds > 10 or more than one scene). Return the plain-words question 'Who is in it, what do they look like, and what happens in each part?'. Change the description to 'do not invent characters or plot'. Give the hosted (old) server the same planning gate."
+ },
+ "error": null,
+ "seconds": 46,
+ "usd": 0.24760200000000002
+}

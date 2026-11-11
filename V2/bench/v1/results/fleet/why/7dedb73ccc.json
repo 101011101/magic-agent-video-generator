@@ -1,0 +1,47 @@
+{
+ "id": "7dedb73ccc",
+ "key": "must:B07a:Body paint is navy blue",
+ "symptom": "Body paint is navy blue",
+ "item": "B07a",
+ "n": 4,
+ "builds": {
+  "old": 2,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Body paint is navy blue' not met?",
+    "because": "In each output the car is a bright, saturated royal or cobalt blue, not a dark navy. Every other must-have passed: shape, lighting, background and framing all held.",
+    "evidence": "s1.old.happy.B07a/grade.json says 'fairly bright royal/cobalt blue, lighter than navy'. s1.new.happy.B07a/grade.json says 'bright medium/cobalt blue, not navy'. The frame s1.old.happy.B07a/assets/01-wait_for_image_project.png shows a vivid medium blue hatchback."
+   },
+   {
+    "why": "Why did the edit come out royal blue? Did the assistant pass the wrong colour?",
+    "because": "No. In all four chats the assistant passed the user's exact words 'navy blue' to edit_image. Each time it used model flux-2-klein at 640px, the free-plan setting. The user's intent reached the tool intact, on both builds and for both personas.",
+    "evidence": "calls.jsonl edit_image prompts: s1.old.happy 'Change the paint color of the red hatchback car in the foreground to navy blue…'. s1.new.happy 'Change the paint color of the red hatchback car to navy blue…'. s1.old.stupid 'Change the car paint colour from red to navy blue. Keep the exact same paint finish, gloss, reflections…'. pilot2.new.stupid 'Change the colour of the red car to navy blue…'. All four use model flux-2-klein and resolution 640px."
+   },
+   {
+    "why": "Why does the same prompt give royal blue every time, on both builds?",
+    "because": "The colour comes from flux-2-klein, not from the MCP server. With the word 'navy blue', a red car in strong sunlight and the instruction to keep the original gloss, reflections and highlights, the model makes a lighter, saturated blue. Keeping the bright highlights of the original red paint pushes the result away from a dark navy.",
+    "evidence": "In all four chats the arguments are essentially the same and the result is the same royal blue. The new build's plan_request only checks the parameters (ready:true, edit='change the car paint color from red to navy blue'). It does not change the colour wording or the model. The old build makes the same edit_image call and gets the same result."
+   },
+   {
+    "why": "Why did the assistant not catch the wrong shade and run the edit again?",
+    "because": "The assistant never looked at the output image before it delivered. It said the car was navy and only asked the user to check. Simulated users who get a link do not inspect it, so no second attempt happened.",
+    "evidence": "s1.old.happy says: 'I couldn't preview the result myself, so please check it.' s1.new.happy says: 'I haven't looked at the result myself… If the blue isn't dark enough…tell me'. pilot2.new.stupid and s1.old.stupid say 'Your car is now navy blue' with no check. The new grade lists the fault 'said the car was navy blue without checking the result'."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The request was clear and was passed on correctly, and the free plan offers only this model and size for the edit. What remains is how the generation model reads the colour word 'navy'. That is a model limit. Nothing in the tool descriptions or the assistant's arguments explains it further.",
+    "evidence": "In all four calls.jsonl files the model is flux-2-klein at 640px. The brief in items/B07a.json is clear ('Navy blue, retaining the original paint finish and reflections'). The same failure appears on both builds and for both personas."
+   }
+  ],
+  "axiom": "The free-plan image editor (flux-2-klein, 640px) renders the plain words 'navy blue' as a bright royal or cobalt blue when it recolours a sunlit glossy red car. This is a limit of how the generation model reads colours. The assistant passed the colour correctly in every chat.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the edit_image description, or in plan_request's rewrite of the 'edit' value, expand a named colour into explicit terms before generation. Example: 'navy blue' becomes 'very dark navy blue (#1B2A4A), deep and nearly black-blue, darker than royal blue'. Also have the assistant fetch and inspect the output, and re-run the edit with a darker wording when the shade is off."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.2655756
+}

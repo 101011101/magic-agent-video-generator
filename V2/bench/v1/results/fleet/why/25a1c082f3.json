@@ -1,0 +1,52 @@
+{
+ "id": "25a1c082f3",
+ "key": "must:J51b:The words 'Small steps' remain fully visible throughout.",
+ "symptom": "The words 'Small steps' remain fully visible throughout.",
+ "item": "J51b",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Small steps remain fully visible throughout' not met?",
+    "because": "No video file was delivered at all, so the grader had no text to check. It marked every must-have 'no'.",
+    "evidence": "s2r.old.dumper.J51b/grade.json: check 'something was made' pass=false, got 'no file'. The must-have reason is 'No video exists to show the text.' The summary says every attempt was refused for lack of credits."
+   },
+   {
+    "why": "Why was no video delivered?",
+    "because": "The server refused every create_video_from_text call before generation, so nothing ran in turn 1 or turn 2.",
+    "evidence": "In all three calls.jsonl files, every create_video_from_text call has approve:false and reason 'insufficient credits: this call needs about 120/192 credits and 0 remain on the account'. old.dumper: 2 tries in turn 1 and 1 retry after the nudge. new.stupid: 1 call in turn 1 and 1 retry after the nudge. old.stupid: 3 calls."
+   },
+   {
+    "why": "Why did the calls fail? Were the arguments wrong?",
+    "because": "The arguments were not the cause. The first old-build call used model 'default' and was refused, but the assistant then set ltx-2.5 at 480p, which the free plan allows. That call was also refused, and only for the credit balance. On the new build, plan_request returned ready:true before the call.",
+    "evidence": "old.dumper calls.jsonl line 2: 'model \"default\" is not available on the free plan'. Line 3 (ltx-2.5, 480p, 16:9, 8 s, audio:false, prompt includes \"Small steps\" at the top) was refused with '0 remain on the account'. new.stupid line 7: plan_request ready:true. Line 8 was refused for credits."
+   },
+   {
+    "why": "Why did turn 2 have nothing to resize, and why could the assistant not fix this?",
+    "because": "J51b depends on a turn-1 video, and the turn-2 resize can only reuse it. With 0 credits, turn 1 produced nothing. The assistant told the user correctly that it had no video to resize, and it could not get past a credit balance of 0.",
+    "evidence": "J51b.json: 'tests' says it 'reuses and reformats the existing video', and expect.beyond_free is 'no', so the test assumes free credits can cover the clip. old.stupid state of the turn-2 reply: 'There's no video to resize... Your account has 0 credits'."
+   },
+   {
+    "why": "Why did the account have 0 credits?",
+    "because": "The bench ran every chat, on both builds, against one shared free-plan account, and that account's credits were already used up when these chats ran. This is a property of the harness setup, not of the tools or the assistant. The evidence does not show whether earlier fleet chats used the credits or whether the account was never refilled. Either way, the harness had no credit check before the chat and no reset.",
+    "evidence": "All four failing chats (old and new, stupid, dumper and happy) show the same '0 remain on the account' refusal. chat.json mode 'live' points to the real hosted account. Calls on both builds report the same 0 balance."
+   },
+   {
+    "why": "Did the grader account for this?",
+    "because": "No. The grader scored a chat that could never succeed as a must-have failure. It did not mark the chat invalid or blocked by the environment.",
+    "evidence": "grade.json: wants:true, all must-haves are 'no', and there is no flag for an environment or credit block."
+   }
+  ],
+  "axiom": "The shared free-plan test account had 0 credits when these live chats ran. The server refused every generation call for this reason alone, so no video, and no 'Small steps' text, could exist in either build. This is a test-harness artifact, not a tool or assistant defect.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Before each live chat, check the account's credit balance and refill or reset it, or give each chat its own funded free-plan account. In the grader, mark a chat 'invalid: environment' when every generation call fails with 'insufficient credits ... 0 remain', and do not score its must-haves as failures."
+ },
+ "error": null,
+ "seconds": 28,
+ "usd": 0.15284740000000002
+}

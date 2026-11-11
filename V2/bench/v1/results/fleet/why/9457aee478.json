@@ -1,0 +1,47 @@
+{
+ "id": "9457aee478",
+ "key": "must:B13a:Faces, expressions, clothing, framing faithful",
+ "symptom": "Faces, expressions, clothing, framing faithful",
+ "item": "B13a",
+ "n": 6,
+ "builds": {
+  "new": 3,
+  "old": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why does the checklist item 'Faces, expressions, clothing, framing faithful' fail in B13a?",
+    "because": "The delivered 640x640 image is a generative redraw of the 320x320 scan. Faces have new features and broader smiles. Hands, shoes and hair have invented detail. The framing is kept.",
+    "evidence": "s1.old.happy.B13a/grade.json and s1.new.happy.B13a/grade.json: 'faces were regenerated, with different features and broader smiles... Framing is the same'. Faults: 'looks like AI redrawing, not a faithful upscale'."
+   },
+   {
+    "why": "Why was the image redrawn, when the user asked to keep the faces the same?",
+    "because": "Every route the assistant took sends the scan through a generative model. Two chats (old.stupid, new.dumper) used edit_image with flux-2-klein (project type AI_IMAGE_EDITOR) and a 'keep every face exactly' prompt. Two chats (old.happy, new.happy) chose the most conservative option the tools offer: upscale_image with scale_factor 2 and mode 'preserve' (IMAGE_UPSCALER). The grader still found redrawn faces with both tools.",
+    "evidence": "s1.old.stupid.B13a/calls.jsonl and s1.new.dumper.B13a/calls.jsonl: edit_image args model 'flux-2-klein', resolution '640px'. s1.old.happy.B13a/calls.jsonl and s1.new.happy.B13a/calls.jsonl: upscale_image args {scale_factor:2, style:{mode:'preserve'}}. The grade.json for the happy chats says faces were redrawn 'despite preserve'."
+   },
+   {
+    "why": "Why does even the 'preserve' upscaler change faces?",
+    "because": "The 'preserve' mode is itself a model pipeline (the 'fast pro pipeline'), not a pixel resize. In this scan each face is only a few dozen pixels high. At a 2x upscale the model must invent the missing facial detail, so identity and expression drift. A text prompt cannot stop this: the edit_image prompts asked for the same faces, and the faces still changed.",
+    "evidence": "tools-new.json upscale_image, style.mode description: '\"preserve\" uses the fast pro pipeline (1x credit multiplier)'. The description makes no claim that pixels or faces stay intact. Source is 320x320 with four people (assistant replies in calls.jsonl). The grader saw redrawn faces in both the upscaler and the editor chats."
+   },
+   {
+    "why": "Why did the assistant not pick a route that keeps the faces?",
+    "because": "The tool list has no non-generative way to resize or denoise an image. The only image-enlarging tools are upscale_image (modes preserve, balanced and creative, all model pipelines) and edit_image. The upscale_image description does not warn that preserve can redraw small faces. So the assistant believed preserve 'doesn't redraw anything' and told the user so.",
+    "evidence": "tools-new.json: the image tools are generate_image, edit_image, upscale_image, remove_image_background, colorize_photo, swap_face_in_photo and others; none is a plain resize. The upscale_image description lists only cost, scale and modes. In s1.old.happy and s1.new.happy the 'say' text claims 'It sharpens... without redrawing anything... faces stay as they were'."
+   },
+   {
+    "why": "Why did the redraw go to the user without being caught?",
+    "because": "The assistant did not compare the result with the source before delivery. In old.happy it said it 'couldn't preview the result'. In new.dumper it said it had not looked at the result. Even with a preview, the tools offer no faithful alternative to fall back to.",
+    "evidence": "s1.old.happy.B13a/calls.jsonl: fetch_image_download output is ''. The reply says 'I couldn't preview the result here'. s1.new.dumper.B13a reply: 'I haven't been able to look at the result myself yet'."
+   }
+  ],
+  "axiom": "Magic Hour's image upscaler (even in 'preserve' mode) and its image editor are generative models. On a 320x320 group photo with tiny faces, they invent facial detail and change identity and expression. The MCP server has no deterministic resize or denoise tool, so no tool call can enlarge this scan with the faces unchanged.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a non-generative image tool to the server: Lanczos resize to a target long edge plus mild denoise, done by code at no credit cost. Change the upscale_image description to say that all modes, including preserve, can redraw small faces. In plan_request, send 'enlarge or restore and keep the faces the same' requests to the non-generative tool."
+ },
+ "error": null,
+ "seconds": 63,
+ "usd": 0.6103754
+}

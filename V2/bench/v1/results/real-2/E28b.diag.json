@@ -1,0 +1,70 @@
+{
+  "id": "E28b",
+  "best_tools": "no",
+  "explanation": "The plan inspected only still frames and never recovered the original dialogue, so the writer could describe movements but could not explain the schedule change or Monday’s nine o’clock start. It also used check, a verdict tool, as an observation-writing tool. The audio-replacement and timing instructions were sound; the grader’s uncertainty about residual dialogue, music, or clipping does not establish additional planning failures.",
+  "better_chain": "captions (transcribe the original conversation on a temporary analysis copy, not the delivered video) → write (use the recovered dialogue to explain the schedule change and that Mondays now start at nine, without inventing details; keep under 23 words) → voice (friendly neutral English narration, comfortably under 10 seconds) → assemble (use the untouched original video for exactly 10 seconds, discard all source audio, and add only the narration; no music or captions)",
+  "inputs": "flawed",
+  "chain_logic": "flawed",
+  "also": [
+    "tool-fit",
+    "prompt-or-params"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correctly extracts an unchanged opening frame for visual context, but cannot reveal the conversation’s content.",
+      "verdict": "ok",
+      "tool": "frame"
+    },
+    {
+      "n": 2,
+      "issue": "Requests descriptive observations from a tool documented to return a yes/no verdict. Its reported pass is not a substantive observation record or dialogue transcript.",
+      "verdict": "wrong-tool",
+      "tool": "check"
+    },
+    {
+      "n": 3,
+      "issue": "Correct source and timestamp for inspecting the middle of the footage.",
+      "verdict": "ok",
+      "tool": "frame"
+    },
+    {
+      "n": 4,
+      "issue": "Again uses a verdict tool to produce descriptive source material; visual inspection cannot establish the schedule discussion.",
+      "verdict": "wrong-tool",
+      "tool": "check"
+    },
+    {
+      "n": 5,
+      "issue": "Correct source and timestamp for inspecting the ending without altering the video.",
+      "verdict": "ok",
+      "tool": "frame"
+    },
+    {
+      "n": 6,
+      "issue": "Repeats the verdict-versus-description mismatch and supplies no evidence about the spoken content.",
+      "verdict": "wrong-tool",
+      "tool": "check"
+    },
+    {
+      "n": 7,
+      "issue": "Receives only visual-check outputs rather than the original dialogue. The visible-events-only instruction further prevents the required explanation, although the tone and word limit are suitable.",
+      "verdict": "bad-inputs",
+      "tool": "write"
+    },
+    {
+      "n": 8,
+      "issue": "Appropriate narration tool, voice, and duration settings; the reported seven-second output fits. The script’s factual omission originates upstream.",
+      "verdict": "ok",
+      "tool": "voice"
+    },
+    {
+      "n": 9,
+      "issue": "Correctly wires the original video and replacement narration, explicitly removes source audio, preserves all 10 seconds, and excludes music and captions.",
+      "verdict": "ok",
+      "tool": "assemble"
+    }
+  ],
+  "missing": "Recover and inspect the original spoken dialogue before writing. Ground the narration in its schedule-change information, including that Mondays now start at nine, rather than relying exclusively on visible movements."
+}

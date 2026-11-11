@@ -1,0 +1,46 @@
+{
+ "id": "4127e43267",
+ "key": "must:I45b:Man reveals a small flowering plant from behind his back, then both place it in the pot together",
+ "symptom": "Man reveals a small flowering plant from behind his back, then both place it in the pot together",
+ "item": "I45b",
+ "n": 3,
+ "builds": {
+  "new": 3
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'man reveals the plant from behind his back, then both place it in the pot' marked not met?",
+    "because": "In the frames the grader saw, the man already holds a potted pink plant. No move from behind the back is visible, and the plant is never set into the empty pot by both people.",
+    "evidence": "s5.new.dumper.I45b/grade.json must[3]: 'No reveal from behind his back is visible. He already holds the potted plant... never placed into the empty pot'. s5.new.stupid.I45b/grade.json must[3]: 'holding the plant by 10.6 s... reveal not visible... planting together is not clearly shown'."
+   },
+   {
+    "why": "Why do the clips lack these actions when the assistant asked for them?",
+    "because": "The prompts asked for them clearly and in order. The video model did not perform them. The cause is not a missing or vague instruction.",
+    "evidence": "dumper calls.jsonl line 6: clip 2 prompt '...one hand behind his back, smiles and brings out a small potted plant with pink flowers from behind his back'; clip 3 prompt 'Together they set the flowering plant into the terracotta pot, press the soil...'. stupid calls.jsonl line 10: one minimax-h3 image-to-video prompt with '5-10 s: ...brings a small flowering plant ... out from behind his back... 10-15 s: they kneel together, plant the little flower in the pot'."
+   },
+   {
+    "why": "Why did the model skip the actions?",
+    "because": "Both are hidden-object and hand-object state changes: an object comes out of hiding, then goes into a pot. In the stupid chat all three beats were packed into one 15 s minimax-h3 shot, so each action got about 5 s inside one continuous take. In the dumper chat, clip 2 (minimax-h3 text-to-video, guided by a still where the hand is behind the back) showed the man already holding the plant. Clip 3 (ltx-2.5 from the last frame) had to start from that state.",
+    "evidence": "stupid calls.jsonl line 7: plan puts beats [1,2,3] in clip 1, 15 s. Line 10 sends them as one create_video_from_image call. dumper calls.jsonl line 3: edit_image prompt 'The man holds one hand behind his back'. Lines 6-11: clip 2 minimax-h3, clip 3 ltx-2.5 with reference last_frame of clip 2."
+   },
+   {
+    "why": "Why did the dumper chat's grader not see the planting clip (clip 3) either?",
+    "because": "The join made a local URL that returned 404. The grader saw only the separate clip files and judged 'only two 5.2 s clips'. Its black-frame and silence checks cover only 02 and 03.mp4, not 04.mp4 (clip 3). So the dumper verdict on planting is also partly a harness gap. But clip 2 shows the reveal failure by itself, and the stupid chat fails on both actions with no harness problem.",
+    "evidence": "dumper calls.jsonl line 13 files: 'download failed: download 404 http://127.0.0.1:8000/films/...mp4'. grade.json checks: 'about 15 s' got '5.2 s'; no-black-frames only for 02 and 03. must[0] why: 'Only two 5.2 s clips are visible'."
+   },
+   {
+    "why": "Why does this count as the end of the chain?",
+    "because": "The current free-plan video models (minimax-h3, ltx-2.5 at 480p) do not reliably render short sequential hand-object actions: hidden object revealed, object planted by two people. This happens even when the prompt gives the actions with timestamps. Nothing in the tool descriptions or in the assistant's arguments explains the miss. The prompts were correct.",
+    "evidence": "Same failure in two chats with different structures: a single 15 s i2v shot (stupid) and a 3-clip t2v+i2v chain (dumper). In both, the plant appears already held, and no planting shows."
+   }
+  ],
+  "axiom": "Generation-model limit: minimax-h3 and ltx-2.5 (free-plan 480p) do not reliably act out short, ordered hand-object actions (pull a hidden plant from behind the back, then two people plant it), even with explicit timed prompts. The dumper chat adds a harness confound: the joined film returned 404 and the grader never saw the planting clip.",
+  "category": "generator_limit",
+  "builds": "new",
+  "fix": "In plan_video_production, put each hand-object action in its own clip, and never pack it with other beats into one long shot. Pin the start and end states with keyframes made by edit_image: for the reveal, 'hand behind back, no plant visible' → 'plant held out'; for the planting, 'plant held above empty pot' → 'plant in pot, both smiling'. Use a first+last-frame image-to-video step so the model only has to move between them. Separately, fix the harness so the joined film can be downloaded (the 127.0.0.1:8000 404) and the grader sees every clip."
+ },
+ "error": null,
+ "seconds": 49,
+ "usd": 0.4807334
+}

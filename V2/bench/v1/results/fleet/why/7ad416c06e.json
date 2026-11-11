@@ -1,0 +1,47 @@
+{
+ "id": "7ad416c06e",
+ "key": "must:B07c:Framing, geometry and detail unchanged apart from colour",
+ "symptom": "Framing, geometry and detail unchanged apart from colour",
+ "item": "B07c",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Framing, geometry and detail unchanged apart from colour' not met?",
+    "because": "The output has more contrast, saturation and sharpness than the source, with crushed shadows, so the change is more than a colour shift. The layout itself stayed the same.",
+    "evidence": "s1.new.stupid.B07c/grade.json: 'Contrast, saturation and sharpness were boosted; ... HDR-like'. s1.old.happy.B07c/grade.json: 'Contrast and saturation are crushed, shadows are darker'. s1.old.stupid.B07c/grade.json: 'forests and shoreline are crushed to near-black'. All three pass the 'same positions' item."
+   },
+   {
+    "why": "Why did a 'warmer colours only' request change tone and detail?",
+    "because": "The assistant sent the request to edit_image (model flux-2-klein, 640px). This AI editor draws the whole image again from a text prompt. It does not apply a pixel filter, so contrast, sharpness and fine detail are generated again too.",
+    "evidence": "calls.jsonl in all three chats: edit_image with model 'flux-2-klein', resolution '640px', and a style.prompt that says 'Colour grade only ... Keep everything else exactly the same'. The assistant's own reply in s1.old.happy says the editor 'creates the image again instead of applying a filter'. In s1.new.stupid it says the edit 'redraws the whole picture'."
+   },
+   {
+    "why": "Why did the assistant not use a colour adjustment that keeps every pixel?",
+    "because": "Neither build has a tool for colour, white balance or temperature. edit_image is the only tool that can change colour, so the assistant had no other route. Even in s1.old.happy, the assistant could only tell the user to use a warmth slider in a photo app.",
+    "evidence": "tools-new.json, plan_request 'tool' enum: generate_image, edit_image, create_video_*, generate_music, add_subtitles_to_video, upscale_image, remove_image_background, swap_face/head, create_talking_photo, trim_video. No colour tool is in it. s1.old.happy calls.jsonl reply: 'a simple \"warmth\" or \"temperature\" slider in any photo app will warm the colours'."
+   },
+   {
+    "why": "Why was the shift so strong, and why did the saturation go up so much?",
+    "because": "The answer sheet leaves 'Strength of warmth' as 'your call'. The assistant chose strong wording ('more golden, amber and orange tones in the sky, light and water'), and the generative model reads this as a sunset-style grade with more saturation and contrast. The wording adds to the effect, but it is not the main cause: the extra sharpness and crushed detail come from the redraw itself.",
+    "evidence": "B07c.json answer_sheet 'Strength of warmth': 'your call'. edit_image prompts in s1.old.happy ('golden, amber and orange'), s1.old.stupid and s1.new.stupid ('golden and orange tones'). The prompts are almost the same in both builds, and both builds fail the same way."
+   },
+   {
+    "why": "Why does the problem show up in both builds?",
+    "because": "The new build adds plan_request, but it only checks the parameters. It returned ready=true with edit='make the colors warmer' and sent the request to the same edit_image/flux-2-klein path. Nothing in either build sends 'colour only' edits to a method that keeps every pixel.",
+    "evidence": "s1.new.stupid.B07c/calls.jsonl line 7: plan_request returned ready:true. Line 8: the same kind of edit_image call as the old build."
+   }
+  ],
+  "axiom": "The free-plan image editor (flux-2-klein, 640px) is a generative model that draws the whole image again. It cannot do a pure colour-temperature change, so contrast, saturation and sharpness change as well. Neither build has a deterministic colour-adjust tool that would keep the content of every pixel.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic colour-adjust tool: a white-balance/temperature shift done in code (for example Pillow) on the user's image, with a small default strength. Make plan_request send edit='colour/warmth/brightness only' with keep='everything else' to this tool instead of edit_image."
+ },
+ "error": null,
+ "seconds": 37,
+ "usd": 0.2524144
+}

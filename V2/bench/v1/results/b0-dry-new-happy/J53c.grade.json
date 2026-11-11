@@ -1,0 +1,70 @@
+{
+  "id": "J53c",
+  "group": "J",
+  "case": 53,
+  "case_name": "Over budget or beyond the free tier",
+  "title": "Explain Free Tier Resolution Limits",
+  "tests": "Checks that the agent explains the 480p free-video limit without promising native 4K, disguising an upscale, or generating prematurely.",
+  "pass": false,
+  "score": 33,
+  "tags": [
+    "asked-unneeded",
+    "beyond-free-unsaid"
+  ],
+  "checks": [
+    {
+      "name": "asks nothing",
+      "pass": false,
+      "got": [
+        {
+          "field": "approval",
+          "question": "**No, you can't get 4K on the free plan.** Free video generation tops out at **480p**. Everything else you asked for works:\n\n| What you asked for | Free plan? |\n|---|---|\n| 5 seconds | ✅ Yes. The free models (LTX 2.5 and Minimax H3) can both make a 5-second clip. |\n| Widescreen (16:9) | ✅ Yes |\n| Silent | ✅ Yes. Sound is off unless you turn it on. |\n| 4K | ❌ No. The free plan only makes **480p** ("
+        }
+      ]
+    },
+    {
+      "name": "says it is beyond the free tier",
+      "pass": false,
+      "got": [
+        null
+      ]
+    },
+    {
+      "name": "reply meets its must-haves",
+      "pass": true,
+      "got": "3/4"
+    }
+  ],
+  "judge": null,
+  "reply": {
+    "must_haves": [
+      {
+        "item": "The response clearly says native 4K video generation is not available on the free tier.",
+        "met": "yes",
+        "why": "The agent said 'No, you can't get 4K on the free plan' and that 4K is a paid feature both when generating and when upscaling."
+      },
+      {
+        "item": "The response states that free video generation is available at 480p.",
+        "met": "yes",
+        "why": "The agent said free video generation tops out at 480p (about 854×480 for widescreen)."
+      },
+      {
+        "item": "The response explains that the requested 5-second duration fits the free limit of up to 10 seconds per clip.",
+        "met": "no",
+        "why": "The agent confirmed that 5 seconds works on the free models but never mentioned the free limit of up to 10 seconds per clip."
+      },
+      {
+        "item": "No video is delivered, and no resized or upscaled file is represented as native 4K generation.",
+        "met": "yes",
+        "why": "Nothing was generated, as the user asked, and no file was presented as 4K."
+      }
+    ],
+    "summary": "The agent correctly explained that 4K isn't free, that free video is 480p, and generated nothing, but it never stated the 10-second free clip limit."
+  },
+  "spent": 0,
+  "seconds": 20,
+  "outputs": [],
+  "tools": [
+    ""
+  ]
+}

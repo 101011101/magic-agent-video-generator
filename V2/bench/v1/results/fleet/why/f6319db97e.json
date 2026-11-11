@@ -1,0 +1,47 @@
+{
+ "id": "f6319db97e",
+ "key": "must:A01a:The bottle has a matte black finish rather than a glossy or metallic finish.",
+ "symptom": "The bottle has a matte black finish rather than a glossy or metallic finish.",
+ "item": "A01a",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "axiom": "The test harness makes the \"stupid\" user's opening message by rewriting the brief, and this rewrite drops facts. The brief says \"Make a product photo of a matte black water bottle on marble, with soft light.\" The opener says only \"make a product pic of a water bottle\". The grader still checks the result against every must-have in the full brief. So the item checks a finish that nobody in the chat ever stated. This is a harness defect. It is not caused by the tools or the generation model.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the stupid-persona opener keep every must-have fact from the brief. It can stay casual and lower-case, for example \"make a product pic of a black matte water bottle on marble, soft light\". Or grade stupid-persona chats only on must-haves that the user said during the chat.",
+  "whys": [
+   {
+    "why": "Why does the bottle in the image look brushed silver and not matte black?",
+    "because": "The prompt that the assistant sent asked for a stainless steel bottle. It did not ask for a black one. The model drew exactly what the prompt said.",
+    "evidence": "old calls.jsonl generate_image style.prompt: 'sleek reusable stainless steel water bottle, matte finish, ... white seamless background'. new calls.jsonl generate_image style.prompt: 'sleek reusable stainless steel water bottle ... plain seamless light gray background'. new grade.json: 'Bottle is brushed silver stainless steel, not matte black.'"
+   },
+   {
+    "why": "Why did the assistant choose stainless steel over matte black?",
+    "because": "No message in the chat mentioned colour, finish or marble. The assistant picked a common default material on its own.",
+    "evidence": "chat.json messages[0].text = 'make a product pic of a water bottle'. new calls.jsonl plan_request subject = 'a water bottle, product photo', source user. In both builds the reply says the bottle is stainless steel, and nothing the user said asked for it."
+   },
+   {
+    "why": "Why did the assistant not ask about the colour or finish?",
+    "because": "The test expects no questions (expect.asks = 'never'), and a plain 'water bottle' request does not look underspecified about colour. In the new build, plan_request asked only about aspect, and the user answered 'you pick'. In the old build, the assistant generated at once. Neither tool description tells the assistant to ask about the subject's colour or material.",
+    "evidence": "A01a.json expect.asks = 'never'. new calls.jsonl plan_request returned only the question about where the image will be shown, and the user replied 'you pick'. In tools-new.json, the plan_request rows are subject/aspect/look/etc., and 'do not guess' covers only shape, length, sound and on-screen words."
+   },
+   {
+    "why": "Why did the user's message leave out 'matte black' and 'marble'?",
+    "because": "The harness gave the stupid persona a cut-down opener in place of the brief text. The facts exist only in the persona's hidden knowledge bank, and the persona reveals them only when someone asks.",
+    "evidence": "chat.json bank['The request in full...'] = 'Make a product photo of a matte black water bottle on marble, with soft light.', but messages[0] = 'make a product pic of a water bottle'. persona.reply: answer only plain-word questions from the bank."
+   },
+   {
+    "why": "Why does this count as a failure?",
+    "because": "The grader checks the full brief's must-haves no matter which facts reached the assistant. Both builds received the same lossy opener, so both failed in the same way.",
+    "evidence": "A01a.json must_haves includes 'The bottle has a matte black finish...'. new grade.json marks it 'no' and also fails the marble item. The old chat used the same opener and the same stainless-steel prompt."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.14405279999999998
+}

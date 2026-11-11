@@ -1,0 +1,47 @@
+{
+ "id": "0acb441444",
+ "key": "must:H41a:Both screenshots recognizable and readable, no invented UI",
+ "symptom": "Both screenshots recognizable and readable, no invented UI",
+ "item": "H41a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Both screenshots recognizable and readable, no invented UI' not met?",
+    "because": "Neither build showed the supplied screenshots as they are. Both builds showed a generative re-render. In the new build, clip 1 added a phone frame, a status bar and a garbled tab bar, and clip 2 added highlight boxes. In the old build, the text broke up during the change from one screen to the next.",
+    "evidence": "new grade.json: 'invents a phone frame, status bar and a garbled bottom tab bar… Workout clip has highlight boxes'; fault 'Screenshot is a generative re-render'. old grade.json: 'Text is garbled in transition: Worouth in, Worok 60, Water 5 of 1 glasses, duplicated Push-ups'."
+   },
+   {
+    "why": "Why did the new build re-render the screens and add a phone frame instead of animating the original screenshots?",
+    "because": "plan_video_production sent each clip to create_video_from_text (minimax-h3). It wrote a prompt that tells the model to treat the screenshot only as a loose guide and to build a new scene: 'Use @home as a likeness guide, not a pasted photo. Build the scene around it… A clean phone app screen filling the frame'. That prompt invites the model to invent a phone mockup and extra UI.",
+    "evidence": "new calls.jsonl line 7: the plan output steps are tool create_video_from_text, model minimax-h3, with a prompt that contains 'likeness guide, not a pasted photo. Build the scene around it'. Line 11: the result type is TEXT_TO_VIDEO."
+   },
+   {
+    "why": "Why did the planner choose a likeness-guide text-to-video route when the screenshots had to be copied exactly?",
+    "because": "The assistant marked both screenshots and both story subjects with role 'copy'. The planner has no faithful route for 'copy' references. It made a generative clip with the 'picture' reference, the same as for any other subject. The role was ignored.",
+    "evidence": "new calls.jsonl line 2: plan_request attachments are app-home.png and app-workout.png with role 'copy'. Line 7: story subjects have role 'copy', but the clips come back with reference kind 'picture' and the 'likeness guide, not a pasted photo' wording."
+   },
+   {
+    "why": "Why did the old build also fail, even though it used the screenshots as frames?",
+    "because": "The old assistant made one create_video_from_image call on ltx-2.5. It used the home screenshot as the start image and the workout screenshot as the end image. The model created all the frames between them, so the UI text in the middle frames was hallucinated. The old tool set has no non-generative way to show a still image with camera motion.",
+    "evidence": "old calls.jsonl line 3: create_video_from_image, model ltx-2.5, with image_file_path set to home and end_image_file_path set to workout. old grade.json: text is garbled in the transition. The assistant's own reply also says 'The AI can blur or change on-screen text'."
+   },
+   {
+    "why": "Why does any generative route change the UI text and layout?",
+    "because": "Image-to-video and text-to-video models create every pixel again. They cannot keep small UI text and layout exactly, especially at 480p on the free plan. They also add plausible extras such as frames, bars and highlights. Neither build offers a deterministic route, for example a pan/zoom of the original still or an overlay in the join step, for a 'copy' asset.",
+    "evidence": "Both outputs are 480p generative clips (old 480x854, new 480x858). new grade.json: 'background gradients and slightly altered colors'. The new assistant's reply says 'the video model used your screenshots as a guide. It didn't paste them in as they are.'"
+   }
+  ],
+  "axiom": "Generative video models create every pixel again, so they cannot keep UI screenshots exactly. Neither build has a non-generative route that animates an exact still. In addition, the new planner ignores the 'copy' role and writes a 'likeness guide, not a pasted photo, build the scene around it' text-to-video prompt, and that prompt invites invented phone frames and extra UI.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_video_production, make subjects and attachments with role 'copy' use a deterministic clip: join_production_clips renders a pan/zoom of the original screenshot over a background with the right aspect ratio, with no generation. At minimum, use create_video_from_image with the screenshot as the first frame and a 'camera motion only, do not add or change UI' prompt. Never use a 'likeness guide, build the scene around it' text-to-video prompt for these subjects."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.27417260000000004
+}

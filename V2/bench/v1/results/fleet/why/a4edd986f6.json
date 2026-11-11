@@ -1,0 +1,52 @@
+{
+ "id": "a4edd986f6",
+ "key": "must:H42b:Text reads exactly the four lines",
+ "symptom": "Text reads exactly the four lines",
+ "item": "H42b",
+ "n": 4,
+ "builds": {
+  "new": 2,
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Text reads exactly the four lines' not met in 4 chats?",
+    "because": "In 3 chats the four lines are on screen but misspelled. In the fourth chat (new/stupid) no text was made at all.",
+    "evidence": "grade.json exact_text: old.dumper 'Northside', 'Mon-Fer 6am-10m', '18 Cedar-Road'; old.happy '18 Eaenar hhan', 'Sat - 6h 8am-4'; new.dumper 'Mon–Fri' line is 'garbled glyphs', '3am' for '8am'; new.stupid 'No text appears in any frame'."
+   },
+   {
+    "why": "Why are the lines misspelled?",
+    "because": "In every chat a generative model drew the text as pixels. Old.dumper put the four lines in an ltx-2.5 text-to-video prompt. Old.happy drew them with qwen-edit at 640px and then animated with ltx-2.5. New.dumper drew them with qwen-image (plan option 'still') and then animated with ltx-2.5. No step used a reliable text layer.",
+    "evidence": "old.dumper calls.jsonl: create_video_from_text prompt '...large bold white text ... \"Northside Gym\" ... spelled exactly'. old.happy calls.jsonl: edit_image qwen-edit 640px with the four lines, then create_video_from_image ltx-2.5 with end_image_file_path. new.dumper calls.jsonl: plan_video_production answers {words-2:'still'}, then generate_image qwen-image-2.1 'written large and clear ... spelled exactly', then ltx-2.5."
+   },
+   {
+    "why": "Why didn't drawing the text in a still image first keep it exact?",
+    "because": "The image model already garbled the text in the still. The video model then changed the letters again from frame to frame, and in new.dumper it removed them. In old.happy the assistant never looked at the still before it spent 240 credits on the video.",
+    "evidence": "old.happy assets/02-wait_for_image_project.png shows 'IFIM', 'Northside Gymn', '18 Eaenar hham', 'Mon - Fll 6am - 10Pm', 'Sat 8h 8am-4om'. new.dumper grade: text 'gone by 3.5 s and 4.8 s'. old.happy grade: 'Text morphs and shifts between frames'."
+   },
+   {
+    "why": "Why did the new build pick a text path that cannot keep the text exact, when it offers an exact one?",
+    "because": "plan_video_production offered 'card' as 'Always exact' and recommended it. It also described 'still' as 'Exact; the words stay on screen for the whole clip'. That claim is false, because the still is drawn by qwen-image and then animated by ltx-2.5. The assistant chose 'still' because it keeps the gym behind the text, which the brief asked for.",
+    "evidence": "new.dumper calls.jsonl line 2: options.still = 'A picture of the scene with the words is made first and the clip starts from it. Exact; the words stay on screen for the whole clip.', recommend 'card'. Line 3: answers {words-2:'still'}."
+   },
+   {
+    "why": "Why did new.stupid have no text at all?",
+    "because": "The stupid persona never gave the four lines. plan_request marked exact_words as 'missing' but did not create a question for it, so the assistant prompted 'No on-screen text'. This is a separate cause, and it explains only 1 of the 4 chats.",
+    "evidence": "new.stupid calls.jsonl: plan_request returns exact_words source 'missing' with questions [] and ready:true. The video prompt says 'No on-screen text, no logos.'"
+   },
+   {
+    "why": "Why do the image and video models misspell multi-line text?",
+    "because": "Free-plan models (ltx-2.5 at 480p, qwen-image and qwen-edit at 640px) cannot reliably render four exact lines of small text with en dashes and times, and video diffusion does not keep glyphs stable. The plan tool itself reports that ltx-2.5 got the words wrong 0 of 4 times.",
+    "evidence": "new.dumper plan output: 'ltx-2.5 got them wrong 0 of 4 times; minimax-h3 right 2 of 2'. old.happy still image is already garbled before any animation."
+   }
+  ],
+  "axiom": "Free-plan image and video models (ltx-2.5 at 480p, qwen-image and qwen-edit at 640px) cannot reliably draw four exact lines of text and keep them stable. The old build has no exact text overlay. The new build has one ('card'), but its plan text labels the generative 'still' option as 'Exact', so the assistant chose a path that cannot keep the text exact.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "New build: in plan_video_production, remove 'Exact' from the 'still' option and state that the image model can misspell the words and the video model can warp them. Add an exact text option that keeps the scene behind the text: put the words over the clip (or over its frozen last frame) as a deterministic text layer during join_production_clips. Old build: add a deterministic text overlay or end-card tool. Both builds: when exact_words is given, check the drawn still before animating it."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.475507
+}

@@ -1,0 +1,46 @@
+{
+ "id": "35e720f15f",
+ "key": "must:D18b:Square framing, fixed camera, silent, ~5s",
+ "symptom": "Square framing, fixed camera, silent, ~5s",
+ "item": "D18b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Square framing, fixed camera, silent, ~5s' not met in either chat?",
+    "because": "The clip is square (640x640), 5 s and silent. But the subject moves and scales a lot during the clip, so the grader saw it as a camera or subject move. The happy chat has a forward move, a head turn into profile and a background perspective shift. The dumper chat has the subject scaling up and moving down at 2 s.",
+    "evidence": "s3.old.happy.D18b/grade.json: automatic checks pass for aspect 1:1 (640x640), about 5 s and no audio track. The must item says 'she moves forward and shifts… background perspective also shifts in the last frame', and a fault says 'head turns to a three-quarter profile by 4.8 s'. s3.old.dumper.D18b/grade.json: 'subject scales up and shifts down at 2s, which reads as a zoom or camera move'."
+   },
+   {
+    "why": "Why did the clip have large motion? Did the assistant ask for it?",
+    "because": "No. In both chats the assistant sent a prompt that asked clearly for no camera move and only subtle motion. Format arguments were also correct. The arguments carry no cause.",
+    "evidence": "calls.jsonl in both chats: create_video_from_image with end_seconds 5, audio false, and a prompt that starts 'Static locked-off camera, no camera movement, no zoom. The woman stays still… blinks once naturally and breathes gently… Same square framing' (happy), or a similar prompt that ends 'Subtle, natural, nothing dramatic' (dumper)."
+   },
+   {
+    "why": "Why did the generator ignore the prompt?",
+    "because": "Both chats ran on ltx-2.5 at 480p. On the free plan the only video models are ltx-2.5 and minimax-h3. The server blocked model 'default', and the assistant took the first free model. With this source image, ltx-2.5 made big head and body moves and a camera-like move, even though the prompt asked for a locked-off camera.",
+    "evidence": "calls.jsonl, line 2 in both chats: approve false, reason 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. Line 3: model 'ltx-2.5', resolution '480p'. The two independent runs failed in the same way (both scored 2)."
+   },
+   {
+    "why": "Why did no one find the problem and run it again before delivery?",
+    "because": "The assistant cannot watch video. It delivered without a check and said so. It offered minimax-h3 as a retry, but the one-turn brief ended the chat at delivery. Nothing in this test asks for a second generation. So the model output is the final output.",
+    "evidence": "In both chats, the final 'say' text in calls.jsonl reads 'I can't play videos here, so I haven't checked the result myself' (happy) and 'I haven't watched the clip' (dumper). Both offer minimax-h3. The turn_end kind is 'delivered'. D18b.json has expect.asks 'never'."
+   },
+   {
+    "why": "Why is this the axiom?",
+    "because": "The prompt asked for a locked camera, and ltx-2.5 did not keep one. The image-to-video model on the free plan does not reliably follow motion limits like 'static camera' and 'tiny breathing'. The tools give no camera-lock or motion-strength setting to force this. This is a limit of the generation model, not of the tool description or of what the assistant sent.",
+    "evidence": "The prompts were correct (see calls.jsonl), but the frames still drift (grade.json in both chats). There is no new-build failure for this item in the symptom (builds {old:2}). I did not get the frame images to open (file names unknown) and did not read create_video_from_image in tools-old.json. So the motion claims rest on the grader's text, and a missing camera-lock setting is not confirmed."
+   }
+  ],
+  "axiom": "With the free plan's ltx-2.5 model at 480p, a correct 'static locked-off camera, no zoom, only blink and gentle breathing' prompt still gave large subject and camera-like motion. The model does not reliably hold a fixed camera or keep motion small. The assistant cannot watch the output to find this before delivery.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "none: inherent to the free-plan model. A possible change: when a request asks for a still camera and very small motion, the server could suggest minimax-h3 over ltx-2.5. But no run here shows that minimax-h3 does better, so this needs a test first."
+ },
+ "error": null,
+ "seconds": 46,
+ "usd": 0.276028
+}

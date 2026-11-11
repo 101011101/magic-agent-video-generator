@@ -1,0 +1,35 @@
+{
+ "id": "G35a",
+ "root_cause": "harness",
+ "contributing": [],
+ "grader_right": true,
+ "agent_vs_you": "The agent's plan is the right one and the same as mine: compose (code), the before photo first, labels Before and After, 16:9, fit: contain, nothing redrawn. The fault was in compose's label parser at run time: \"labels: Before, After\" was taken as a single label, and that label went onto the first panel only, so one box reading \"Before, After\" sits over the old kitchen and the new one has none. compose.js was edited three minutes after this run (output 05:55:13, file 05:58:00). It now splits labels on \"|\" or \",\", and drops a label list whose count does not match the pictures, so the same plan would now label each panel.",
+ "your_plan": {
+  "say": "I'll put the two kitchen photos side by side in one 16:9 image, the old one on the left labelled Before and the renovated one on the right labelled After, both whole and unchanged.",
+  "refuse": "",
+  "questions_left": [],
+  "steps": [
+   {
+    "tool": "compose",
+    "inputs": [
+     "kitchen-before.jpg",
+     "kitchen-after.jpg"
+    ],
+    "produces": "kitchen-before-after.png",
+    "params": {
+     "prompt_or_change": "Old kitchen on the left labelled \"Before\", renovated kitchen on the right labelled \"After\"; both photos whole, scaled only.",
+     "extra": "layout: row; labels: Before | After",
+     "aspect": "16:9",
+     "seconds": 0,
+     "lettering": false,
+     "fidelity": false
+    },
+    "why": "Code keeps both photos exactly, puts them in the right order and gives each panel its own label."
+   }
+  ]
+ },
+ "fix": "The fix is already in the working tree: compose splits labels on '|' or ',' and requires one label per picture. Add a regression test with 'labels: Before, After', and keep the catalogue example 'labels: Before | After'. This covers every labelled compose.",
+ "fix_generalises": true,
+ "would_pass": "yes",
+ "evidence": "kitchen-before-after.png is 1280x720. The brown-cabinet kitchen is on the left and the white-cabinet kitchen on the right, both whole and unstretched on a neutral ground. One grey label box reading 'Before, After' sits above the left panel only; the right panel has none. The run note says 'labelled Before, After', and the current code would print 'Before / After'. The judge is right."
+}

@@ -1,0 +1,52 @@
+{
+ "id": "06188b01f8",
+ "key": "check:sound:H",
+ "symptom": "sound present and audible",
+ "item": "H40a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "axiom": "Harness defect: the new build's joined film is only served from a local URL (http://127.0.0.1:8000/films/…mp4), and the harness could not fetch it (download 404). The audio check then ran only on the silent intermediate clips and ignored the music .wav. In the new chat the music was made and mixed, and the judge heard the .wav peak at -1 dB. The -51 dB result measures the harness, not the product.",
+  "category": "harness_artifact",
+  "builds": "new",
+  "fix": "In the harness, keep the local film server running until grading ends, or copy the file that join_production_clips writes into the chat's assets/. Then run 'sound present and audible' on the joined film. If no joined film exists, use the loudest of all files, including .wav. If the film download fails, mark the check 'cannot_tell', not fail. Separate issue: the old-build silent result (s4.old.stupid.H41a, -76.3 dB) is a different test. There, ltx-2.5 returned no sound even with audio:true and an end image. The old tool description should warn that this model may return no sound.",
+  "whys": [
+   {
+    "why": "Why did 'sound present and audible' fail with peak -51 dB in s4.new.dumper.H40a?",
+    "because": "The grader measured only the files it had: three generated clips and one .wav. The loudest video clip peaked at -51 dB, which is effectively silent.",
+    "evidence": "s4.new.dumper.H40a/grade.json: checks list files [.mp4,.wav,.mp4,.mp4] and 'about 15 s' got '4.5 s', so the grader looked at one single clip, not the 15.6 s film. In 'must', the judge writes 'The audio track has sound at a peak of -1 dB … The video clips are silent.'"
+   },
+   {
+    "why": "Why were the video clips silent?",
+    "because": "That is by design. The new build's plan makes every scene clip with audio:false and makes the music as a separate track. The music is mixed in only at join time.",
+    "evidence": "calls.jsonl line 2, plan_video_production output: each step has \"audio\":false, plus sound.music {seconds:17, prompt:'mellow, calm lo-fi…'}. Line 6: create_production_sound returned the music id. Line 8: wait_for_audio_project completed and saved assets/02-wait_for_audio_project.wav."
+   },
+   {
+    "why": "Why did the grader not measure the final film with the music in it?",
+    "because": "The joined film exists only at a local URL, and the harness got a 404 when it tried to download it. So the final file never reached the grade folder.",
+    "evidence": "calls.jsonl line 13: join_production_clips returned download_url http://127.0.0.1:8000/films/4deeef4d….mp4, seconds 15.6, sound {music:true}, and checked 'Music under the whole film' = yes. The harness 'files' field shows 'download failed: download 404 http://127.0.0.1:8000/films/….mp4'."
+   },
+   {
+    "why": "Why did the assistant and the build not cause this?",
+    "because": "The assistant followed the plan exactly: it called create_production_sound, waited for the music and passed sound:{music} to the join. It also told the user that mellow music plays the whole way through, with no voice. Nothing in the chat is wrong.",
+    "evidence": "calls.jsonl lines 6, 8 and 13 (the join args include sound.music = cmwbi8ifv054nh401aafgomkx). Line 15: the delivered text describes the music."
+   },
+   {
+    "why": "Why does the audio check still say fail instead of 'cannot tell'?",
+    "because": "The automatic check does not include the .wav, and it does not treat a failed film download as missing evidence. It takes the silent intermediate clips as the deliverable. This is a harness/grader defect, and it is the axiom.",
+    "evidence": "grade.json: 'sound present and audible' pass=false, got 'peak -51 dB'. In the same grade, the judge says the .wav peaks at -1 dB and gives 'cannot_tell' for the music item."
+   },
+   {
+    "why": "What about the old-build chat in the cluster?",
+    "because": "The evidence for the old build is s4.old.stupid.H41a, a different test, with peak -76.3 dB, not -51 dB. There, ltx-2.5 with audio:true and start+end images returned a silent clip. The old build's own H40a chat passed the audio check at -6.6 dB. So the old failure has a separate cause: the model sometimes returns no audio. It is not part of this -51 dB symptom.",
+    "evidence": "s4.old.stupid.H41a/calls.jsonl line 3: ltx-2.5, audio:true, with end_image_file_path. Its grade.json shows peak -76.3 dB. s4.old.stupid.H40a/grade.json shows 'sound present and audible' pass=true, peak -6.6 dB."
+   }
+  ]
+ },
+ "error": null,
+ "seconds": 31,
+ "usd": 0.36559939999999996
+}

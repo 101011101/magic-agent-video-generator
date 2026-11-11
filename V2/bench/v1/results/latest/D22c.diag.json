@@ -1,0 +1,28 @@
+{
+  "id": "D22c",
+  "best_tools": "yes",
+  "explanation": "The initial image prompt omitted 'cartoon' entirely, producing the glossy 3D source shown; preserving that source during animation then carried the wrong style forward. The animation tool, reference wiring, motion instructions, duration setting and silent-output handling were appropriate, and the double-spout defect was already present in the source image. The grader also overreaches by treating unverifiable playback, silence and identity as demonstrated failures.",
+  "better_chain": "image (explicitly request a flat 2D cartoon drawing, with the specified robot and a normal single-spout red watering can) → image-to-video (animate that exact image tipping the can and watering the seedlings, fixed camera, same drawing style, 5 seconds, silent) → trim (to exactly 5 seconds if the generated clip overruns)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [
+    "model-quality",
+    "grader"
+  ],
+  "cause": "prompt-or-params",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "The correct image tool was used, but its prompt omitted the requested cartoon drawing style. Explicit flat 2D styling should lead the prompt to avoid the known drift toward rendered imagery.",
+      "verdict": "bad-params",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correctly animates the existing image with explicit identity, style, watering motion, silence and aspect-preservation instructions. It inherits the source's rendering style and malformed can rather than introducing those defects through faulty wiring.",
+      "verdict": "ok",
+      "tool": "image-to-video"
+    }
+  ],
+  "missing": "The requested cartoon drawing style was not included in the initial image-generation prompt."
+}

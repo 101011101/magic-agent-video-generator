@@ -1,0 +1,39 @@
+{
+  "id": "C17a",
+  "best_tools": "yes",
+  "explanation": "The tools correctly cover exact speech, photo-based lip animation, and square framing, but the voice step returned only five seconds and the plan never corrected the duration. Passing '8s' to talking-photo and crop does not guarantee an eight-second result; crop only reframes. The grader's additional lip-sync criticism is not established by its evidence, but the runtime failure is clear.",
+  "better_chain": "voice (speak the exact supplied script in a friendly female English synthetic voice) → talking-photo (animate the supplied portrait using that audio, without captions) → crop (square framing, preserving audio) → frame (extract the final frame) → assemble (join the talking clip and a silent final-frame hold to exactly 8 seconds, preserving speech speed and synchronization)",
+  "inputs": "sound",
+  "chain_logic": "flawed",
+  "also": [
+    "grader"
+  ],
+  "cause": "state-solving",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Correctly preserves the exact supplied script; writing it again is optional but harmless.",
+      "verdict": "ok",
+      "tool": "write"
+    },
+    {
+      "n": 2,
+      "issue": "Appropriate voice and exact-script instructions. However, eight-second pacing is not guaranteed, and the reported five-second output needed downstream duration handling.",
+      "verdict": "ok",
+      "tool": "voice"
+    },
+    {
+      "n": 3,
+      "issue": "Correct portrait and speech inputs for identity-preserving talking-head animation. The '8s' instruction does not resolve the shorter supplied audio.",
+      "verdict": "ok",
+      "tool": "talking-photo"
+    },
+    {
+      "n": 4,
+      "issue": "Correct tool for square reframing, but the duration instruction cannot extend a five-second clip. A separate duration-setting step was required.",
+      "verdict": "bad-params",
+      "tool": "crop"
+    }
+  ],
+  "missing": "A duration-setting assemble step after the five-second speech result, with a final-frame hold if needed, to deliver exactly eight seconds without cutting or changing the script."
+}

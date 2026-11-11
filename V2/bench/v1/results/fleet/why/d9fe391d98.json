@@ -1,0 +1,47 @@
+{
+ "id": "d9fe391d98",
+ "key": "must:H41c:Scene 2 reads 'Plan your day in one place.'",
+ "symptom": "Scene 2 reads 'Plan your day in one place.'",
+ "item": "H41c",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Plan your day in one place.' not on screen in s4.new.stupid.H41c (grader: 'No text on screen')?",
+    "because": "The assistant's video prompt asked for a live-action woman with a phone and ended with 'No readable text.' None of the three lines was in the prompt.",
+    "evidence": "s4.new.stupid.H41c/calls.jsonl line 8: create_video_from_text style.prompt '...polished advertising look. No readable text.' grade.json: exact_text for all three lines is 'missing'."
+   },
+   {
+    "why": "Why did the assistant leave the lines out of the prompt?",
+    "because": "It never learned the lines. The stupid user only said 'make an ad for my planning app'. The assistant asked about length, where it will be shown, and sound, but never asked for on-screen words.",
+    "evidence": "state.json transcript: the assistant asks 3 questions (length, place, sound). The user answers '9 sec, no sound... youtube... wide one'. chat.json bank has 'Exact on-screen copy: Scene 2: Plan your day in one place.', so the user would have given the lines if asked."
+   },
+   {
+    "why": "Why did the assistant not ask for the exact words?",
+    "because": "It followed plan_request. The first call returned only 3 questions (seconds, aspect, sound) and left out exact_words because of the 3-question cap. The second call returned ready:true and questions:[], even though exact_words was still 'missing'.",
+    "evidence": "calls.jsonl line 2 output: questions = seconds/aspect/sound, exact_words missing. Line 7 output: \"ready\":true, exact_words {value:null, source:'missing'}, \"questions\":[]."
+   },
+   {
+    "why": "Why did plan_request say ready while exact_words was missing?",
+    "because": "In the new build, the planner treats exact_words as optional for create_video_from_text. Its own description says 'If ready is true, create with the returned values' and 'do not guess... on-screen words'. So the assistant created a video with no text, as the tool told it to. For an ad, the slogan or brand words are the core of the request.",
+    "evidence": "tools-new.json plan_request description: 'If ready is true, create with the returned values. A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.' The assistant's reply: 'It has no app name or words on screen, since you didn't give any.'"
+   },
+   {
+    "why": "Why did the same item fail in s4.old.happy.H41c, where the user gave the lines?",
+    "because": "This is a separate cause. The assistant put the exact line in the ltx-2.5 prompt, but the video model garbled the text ('Plan your day in one placs', no period). Text rendering in video models is a limit of the model itself.",
+    "evidence": "s4.old.happy.H41c/calls.jsonl line 2: prompt contains 'centered headline reads exactly: \"Plan your day in one place.\"'. grade.json: read_as 'Plan your day in one placs (last word fading, no period)'. Scene 1 is also garbled ('Les strorlinl')."
+   }
+  ],
+  "axiom": "Two causes. (1) New build, quoted 'No text on screen' chat: the plan_request planner treats exact_words as optional for a video ad. It returned ready:true with exact_words missing and no question, and its description tells the assistant to create with the returned values and not to guess on-screen words. A vague user who only answers what is asked never supplies the copy. (2) Old build: the user gave the copy, but the ltx-2.5 text-to-video model cannot reliably render exact text and garbled 'place.' into 'placs'. That is a limit of the model.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the new build's plan_request, make exact_words a required question for ads and promos (subject contains ad, promo, commercial or similar). Keep it ready:false until exact_words is set, with [] meaning 'no text'. Also, when the 3-question cap is hit, ask about exact_words in the next round instead of dropping it. For the old-build failure (a model limit), have the tool description point to the more reliable route: make a text-checked still image first, then animate it."
+ },
+ "error": null,
+ "seconds": 39,
+ "usd": 0.2215204
+}

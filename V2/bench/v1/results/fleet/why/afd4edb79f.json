@@ -1,0 +1,47 @@
+{
+ "id": "afd4edb79f",
+ "key": "must:G34a:All wording readable and inside boundaries",
+ "symptom": "All wording readable and inside boundaries",
+ "item": "G34a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'All wording readable and inside boundaries' not met?",
+    "because": "Neither chat's images showed the requested copy. The new chat has no text at all. The old chat shows only garbled, faint fake text.",
+    "evidence": "s4.new grade.json: 'There is no wording', exact_text read_as 'no text' x3. s4.old grade.json: 'Wording is garbled and faint', read_as 'Thank Cafre', 'hanik'."
+   },
+   {
+    "why": "Why did the images have no real copy?",
+    "because": "The assistant never put the three lines into a prompt. New build: all 4 prompts end in 'photo, no text'. Old build: the prompt asks for 'clean empty space on one side for title text' and gives no words, so z-image-turbo filled the space with made-up letters.",
+    "evidence": "s4.new calls.jsonl lines 8-11 (style.prompt '... photo, no text'). s4.old calls.jsonl line 2 (ai-background-generator prompt with 'empty space ... for title text', image_count 4, 16:9)."
+   },
+   {
+    "why": "Why did the assistant not know the wording?",
+    "because": "The stupid user's only message was 'make me some café slides'. The three lines sit only in the persona's knowledge bank, and the persona gives a bank fact only when a plain-words question asks for it.",
+    "evidence": "s4.new chat.json: messages[0] 'make me some café slides'. The bank has 'Exact wording: Slide 1: Slow Sunday...'. The persona rule says 'answer it from your knowledge bank' only when asked."
+   },
+   {
+    "why": "Why was the user never asked for the wording?",
+    "because": "Old build: the assistant asked nothing and generated at once. New build: the assistant marked exact_words 'missing' in plan_request, but the tool returned only an aspect question. After 'instagram' it returned ready:true with exact_words still null, so the assistant created images and chose no text.",
+    "evidence": "s4.old calls.jsonl: generate_image is the first call, with no question turn. s4.new calls.jsonl line 2: questions=[aspect only]. Line 7: ready:true, exact_words value null, source missing."
+   },
+   {
+    "why": "Why did plan_request return ready with exact_words missing?",
+    "because": "plan_request treats exact_words as optional. Its description tells the host 'do not guess ... on-screen words', but the tool does not ask about them when they are unknown. A slides/carousel request where words are expected goes ahead with no copy. The old build has no planning step at all, so the assistant chose by itself and guessed 'title text space'.",
+    "evidence": "tools-new.json plan_request description: 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words... send [] when the user wants no text.' Its output never asks about exact_words."
+   }
+  ],
+  "axiom": "The vague persona leaves out the required on-screen copy, and nothing in either build makes the assistant ask for it. The new build's plan_request finds exact_words missing but still returns ready:true without asking about it. The old build has no such check, and the assistant generated at once. When no copy is given, the image model either prints no text or makes up garbled letters.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, keep ready:false while exact_words is missing and the subject implies text (slides, carousel, poster, banner, title, quote). Add a plain-words question such as \"Should the slides show any words? If yes, type them exactly, one per slide.\" The old build has no plan_request, so add the same rule to the generate_image description there: ask for the exact words before you create text-bearing designs."
+ },
+ "error": null,
+ "seconds": 30,
+ "usd": 0.266863
+}

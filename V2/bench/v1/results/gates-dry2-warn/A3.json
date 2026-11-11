@@ -1,0 +1,511 @@
+{
+  "id": "A3",
+  "item": {
+    "id": "A3",
+    "case": "A3",
+    "case_name": "Continue this clip, 6 s + 6 s (the canary)",
+    "group": "DENSE",
+    "group_name": "Dense benchmark (BENCH-DESIGN.md)",
+    "title": "Continue the portrait clip",
+    "sub": "a",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "spec": {
+      "kind": "video",
+      "aspect": "1:1",
+      "seconds": 12,
+      "outputs": 1,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [
+          "portrait-woman.jpg",
+          "bench-portrait-clip.mp4"
+        ],
+        "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds."
+      }
+    ],
+    "nudge": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+    "tests": "Tests reading a clip's last frame, identity across the join, the asked action, joining two clips, and not regenerating what already exists.",
+    "answer_sheet": {
+      "Inputs": "The attached 6-second clip and the portrait it was made from.",
+      "New part": "6 more seconds: she turns and walks out of frame; same face, hair and clothes.",
+      "Output": "One 12-second file: the original 6 seconds first, unchanged, then the new 6 seconds; same shape as the clip.",
+      "Sound": "Silent.",
+      "Anything else": "Your call. Yes, go ahead."
+    },
+    "must_haves": [
+      "One playable video file runs for 12 seconds, plus or minus 1 second.",
+      "The first 6 seconds are the original clip, unchanged.",
+      "There is no jump at the join.",
+      "Her face, hair and clothes stay the same in the new 6 seconds.",
+      "She turns and walks out of frame.",
+      "The video is silent.",
+      "The cost is about one 6-second generation."
+    ]
+  },
+  "session": "mcp-gdw2-A3",
+  "sessionDir": "sessions/mcp-gdw2-A3",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\n\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.",
+      "materials": [
+        "portrait-woman.jpg",
+        "bench-portrait-clip.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "I couldn’t create the finished video because Magic Hour refused the generation: the six-second continuation needs about **144 credits**, and your account has **0 credits remaining**.\n\nYour original clip is unchanged. No continuation or combined 12-second file was produced. Once credits are available, I can resume from the extracted last frame and append the silent continuation.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.",
+          "calls_before": 7
+        }
+      ],
+      "agent": "[Download the silent combined video](http://127.0.0.1:8766/films/0a0e724a444f4e0d98ede62183b9c2e4.mp4)\n\nThis fallback plays the original clip twice, with no generated turn-and-exit. Her appearance stays unchanged. The exported file is **12.1 seconds**, rather than exactly 12.",
+      "calls": [
+        {
+          "name": "start_request",
+          "arguments": "{\"original\":\"The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\\n\\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/5757a202-d39b-43b2-8d75-c1e8802f70ae-image-0.jpg]\\n[Attached: bench-portrait-clip.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0f4aff64-e686-49da-abc4-8325f1400120-video-0.mp4 — URL: http://127.0.0.1:8799/bench-portrait-clip.mp4]\",\"attachments\":[\"portrait-woman.jpg\",\"bench-portrait-clip.mp4\"]}",
+          "output": "{\"request\":\"req-23b1d29756\",\"comparison\":\"SIMPLE: every item below is true.\\n- One idea: one subject doing one thing in one place (a robot waters a sunflower).\\n- At most 15 seconds.\\n- No exact words that must appear on screen, and no spoken line that must be said word for word.\\n- At most one attached file, used as the look or the start of the video.\\n- Not a continuation or an edit of an attached video.\\n\\nHARD: any item below is true.\\n- Two or more ideas: different places, different people at different times, shots listed in order, a card or end card.\\n- Longer than 15 seconds.\\n- Exact words on screen (a title, an end card, captions) or an exact spoken line or voice-over script.\\n- Two or more attached files, or a person and a product that must both stay the same.\\n- Continue, extend or edit an attached video, keeping part of it.\\n- Music or a voice-over across several shots.\\n\",\"questions\":{\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"seconds\":\"How long should it be?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"language\":\"Which language for the voice or captions?\",\"which_face\":\"Whose face goes where (which person in the picture)?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\",\"subject\":\"What should it show?\",\"edit\":\"What should change in the picture?\",\"keep\":\"What must stay exactly as it is?\",\"motion\":\"What should move, and how (small natural motion, a slow push in, something happening)?\",\"mood\":\"What mood or genre for the music?\",\"script\":\"What should be said, word for word? Or should I write it from the gist?\",\"range\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"},\"next\":\"Read the comparison. Call classify_request with `simple` or `hard` and the reasons, each naming the item it matches.\"}",
+          "error": null
+        },
+        {
+          "name": "classify_request",
+          "arguments": "{\"verdict\":\"hard\",\"request\":\"req-23b1d29756\",\"reasons\":[\"Continue, extend or edit an attached video, keeping part of it: preserve original six seconds and append a six-second continuation.\",\"Two or more attached files: source clip and identity portrait.\"]}",
+          "output": "{\"next\":\"Call submit_plan with the request token, the question sheet, the checklist and the steps.\",\"sheet\":{\"subject\":\"What should it show?\",\"seconds\":\"How long should it be?\",\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"},\"must_carry\":[{\"kind\":\"seconds\",\"value\":\"12\"},{\"kind\":\"file\",\"value\":\"portrait-woman.jpg\"},{\"kind\":\"file\",\"value\":\"bench-portrait-clip.mp4\"},{\"kind\":\"sound\",\"value\":\"silent\"}]}",
+          "error": null
+        },
+        {
+          "name": "get_workflow_guide",
+          "arguments": "{\"workflow\":\"image-to-video\"}",
+          "output": "{\"workflow\":\"image-to-video\",\"title\":\"Animate a product photo, portrait or scene\",\"input\":\"A reference image and a motion instruction.\",\"product_url\":\"https://magichour.ai/products/image-to-video\",\"api_docs_url\":\"https://docs.magichour.ai/api-reference/video-projects/image-to-video\",\"creation_tool\":\"create_video_from_image\",\"steps\":[\"Animate the approved supplied image directly when it already meets the brief. Use Image Editor only for a requested visual change or a source problem that prevents the shot.\",\"Describe subject motion and one camera move; preserve identity, style, lighting and aspect ratio from the reference.\",\"Call create_video_from_image with a supported model, resolution and duration, then wait_for_video_project with the returned id.\"],\"example_request\":\"Animate this portrait: the pilot turns toward a distant planet as the camera slowly pushes in. Keep the face and outfit consistent.\",\"follow_up\":\"Keep the accepted footage for captions, lip sync or later editing. For a new shot, reuse the same reference image.\",\"review\":\"Check identity, anatomy, motion and the first and last frames. Keep one clear action and camera move; add exact text in a separate editing step.\",\"models_and_costs_url\":\"https://docs.magichour.ai/api-reference/models\",\"evaluation_url\":\"https://docs.magichour.ai/integration/evaluating-media-apis\",\"starter_recipes_url\":\"https://docs.magichour.ai/get-started/starter-recipes\",\"guidance\":[\"This guide reads static documentation only; it spends no generation credits and does not verify account access.\",\"Inspect the current creation tool schema and check model eligibility and estimated credits before generating.\",\"Compare regular USD prices using https://docs.magichour.ai/billing/usage-based-pricing and prepaid terms at https://docs.magichour.ai/billing/subscription-pricing; match the model, resolution, audio, duration and reference inputs.\",\"An effective annual allocation is not a usage-based charge or a standalone purchase. This static guide is not an account-specific price or eligibility quote.\",\"Creation is asynchronous. Save the project ID, wait with the matching wait_for_*_project tool and preserve signed download URLs exactly.\",\"A timeout or failed inline download is not permission to create a replacement job. Resume the same project id; after completion, retrieve its existing download URLs.\",\"Commercial use requires a paid subscription, credit-pack purchase or agreed paid usage-based arrangement, plus rights to the assets used. Check current terms at https://magichour.ai/terms-of-service.\"]}",
+          "error": null
+        },
+        {
+          "name": "submit_plan",
+          "arguments": "{\"request\":\"req-23b1d29756\",\"sheet\":{\"subject\":{\"source\":\"user\",\"quote\":\"she turns and walks out of frame.\",\"answer\":\"The same woman turns and walks out of frame in the same park.\"},\"seconds\":{\"source\":\"user\",\"quote\":\"Give me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.\",\"answer\":\"12 seconds total; six seconds original followed by six seconds newly generated.\"},\"aspect\":{\"source\":\"your call\",\"answer\":\"Preserve source clip aspect ratio and framing; final join uses source dimensions.\"},\"sound\":{\"source\":\"user\",\"quote\":\"Keep it silent.\",\"answer\":\"No audio in generated continuation; strip any audio in final join.\"},\"exact_words\":{\"source\":\"your call\",\"answer\":\"No added words or captions.\"},\"look\":{\"source\":\"user\",\"quote\":\"Keep her face, hair and clothes the same.\",\"answer\":\"Photorealistic, preserve woman identity, dark curly hair and grey knit sweater shown in portrait; same source scene and lighting.\"},\"keep\":{\"source\":\"user\",\"quote\":\"the original 6 seconds first, unchanged\",\"answer\":\"Do not regenerate or edit original footage. Use source directly as first join input; portrait is identity reference, source last frame is animation starting image.\"}},\"checklist\":[{\"id\":\"length\",\"want\":\"One 12-second video: original 6 seconds, then new 6 seconds.\",\"check\":\"Generated duration and final joined duration reported by tools.\"},{\"id\":\"original\",\"want\":\"Original 6 seconds first, unchanged.\",\"check\":\"Use original file directly as join first input, no generative edit or resizing of source.\"},{\"id\":\"motion\",\"want\":\"\\\"she turns and walks out of frame\\\"\",\"check\":\"Inspect continuation if available; otherwise report generated motion instructions and verification limits.\"},{\"id\":\"identity\",\"want\":\"\\\"Keep her face, hair and clothes the same.\\\"\",\"check\":\"Use last frame to preserve continuity and portrait appearance description; inspect if available.\"},{\"id\":\"silent\",\"want\":\"\\\"Keep it silent.\\\"\",\"check\":\"audio false for generation and silent true for joined output.\"}],\"steps\":[{\"n\":1,\"tool\":\"get_last_frame\",\"does\":\"Extract final frame of original clip api-assets/cmsla3fmt01cnio0zhjlc2wsv/0f4aff64-e686-49da-abc4-8325f1400120-video-0.mp4 as start image for continuation, not portrait.\",\"covers\":[\"original\",\"identity\"]},{\"n\":2,\"tool\":\"create_video_from_image\",\"model\":\"ltx-2.5\",\"seconds\":6,\"does\":\"Animate source last frame for six seconds at 480p, audio false. Same woman turns naturally and walks fully out of frame camera right. Fixed camera; preserve face, dark curly hair, grey knitted sweater, scene lighting and source aspect. Portrait supplied for visual identity guidance, not used as new start image.\",\"covers\":[\"length\",\"motion\",\"identity\",\"silent\"]},{\"n\":3,\"tool\":\"wait_for_video_project\",\"does\":\"Wait for continuation and retrieve completed project.\",\"covers\":[\"length\",\"motion\",\"identity\"]},{\"n\":4,\"tool\":\"join_videos\",\"does\":\"Join original source clip first and finished six-second continuation second, silent true. Use original Magic Hour path if accepted, otherwise provided source URL. Preserve source as first input and output dimensions.\",\"covers\":[\"original\",\"length\",\"silent\"]}]}",
+          "output": "{\"ok\":true,\"plan\":\"pla-9d5a618055\",\"notes\":{\"ideas-per-call\":{\"applies_to\":[\"create_video_from_image\",\"ltx-2.5\"],\"finding\":\"About two ideas hold in one call of about 15 s. More ideas in one call: the model plays the shots more than once and mixes them.\",\"evidence\":\"B1 old MCP: 4 shots in one 30 s call played 3 times. C6 and C10: 4 seasons in one 20 s call played twice. An 18 s call with 2 shots played them twice. Calls of 5 to 13 s with 1 or 2 beats held.\"},\"ltx-words\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 does not spell words it is asked to show in a scene.\",\"evidence\":\"0 of 4: \\\"walk anway\\\" (A2 old), \\\"13 awway\\\" (A2 v1), \\\"walk anwwy\\\" (approach W1), \\\"Avalabile 12 Dembmer\\\" (A1 old end card).\"},\"ltx-sound\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"ltx-2.5 is silent when audio is off.\",\"evidence\":\"Approach C2: -91 dB.\"},\"last-frame-continues\":{\"applies_to\":[\"create_video_from_image\",\"ltx-2.5\",\"get_last_frame\"],\"finding\":\"Image-to-video from the last frame of a clip continues it; joined after the clip, the cut is hard to see.\",\"evidence\":\"Approach C2 (ltx-2.5): similarity across the join 0.98. C3 (minimax-h3): 0.88, a small jump. C4 (minimax-h3 with the clip as a reference, no start frame): 0.41, a visible jump.\"},\"last-frame-keeps-place\":{\"applies_to\":[\"create_video_from_image\",\"get_last_frame\"],\"finding\":\"A clip that starts from another clip's last frame keeps that clip's place, also when the prompt names a new place.\",\"evidence\":\"S2 and C7 chained: winter stayed spring; the sea stayed behind the autumn bench.\"},\"words-only-places-merge\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"Without a picture reference, two places described in one call merged into one place.\",\"evidence\":\"C7 medium-only (ltx-2.5, 2 x 10 s): cherry trees on a beach; autumn and winter never came.\"},\"person-in-words\":{\"applies_to\":[\"create_video_from_image\",\"ltx-2.5\"],\"finding\":\"A person described in words is the same inside one call and a look-alike across calls.\",\"evidence\":\"C7 one call per season: coats and hair held, faces changed. C10: Theo the same when his two seasons shared a call; Mara a look-alike in every split.\"},\"spoken-line\":{\"applies_to\":[\"ltx-2.5\"],\"finding\":\"A spoken line written inside a shot description was not spoken; the same line in one long call was spoken many times.\",\"evidence\":\"B2 v1 (ltx-2.5, 13 s clip): not spoken. B2 old MCP (one 30 s call): about 10 times. B2 Replicate (ltx-2.5-fast): once.\"},\"join-silent\":{\"applies_to\":[\"join_videos\"],\"finding\":\"Joining with the sound off removes any sound the clips have.\",\"evidence\":\"Approach C2 to C4: -91 dB after the join.\"}},\"next\":\"Read every note. Call review_plan with one review for each note id: the steps it applies to, whether a step goes against it, and the change or the reason it is fine.\"}",
+          "error": null
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"pla-9d5a618055\",\"reviews\":[{\"note\":\"ideas-per-call\",\"steps\":[2],\"conflict\":false,\"change\":\"Only a single continuous turn-and-exit action over six seconds.\"},{\"note\":\"ltx-words\",\"steps\":[2],\"conflict\":false,\"change\":\"No on-screen text requested.\"},{\"note\":\"ltx-sound\",\"steps\":[2],\"conflict\":false,\"change\":\"Audio explicitly disabled.\"},{\"note\":\"last-frame-continues\",\"steps\":[1,2,4],\"conflict\":false,\"change\":\"Extract actual source last frame and use it as start image, then join after original.\"},{\"note\":\"last-frame-keeps-place\",\"steps\":[1,2],\"conflict\":false,\"change\":\"Continuation should remain in original park.\"},{\"note\":\"words-only-places-merge\",\"steps\":[2],\"conflict\":false,\"change\":\"One place anchored by actual source frame.\"},{\"note\":\"person-in-words\",\"steps\":[1,2],\"conflict\":false,\"change\":\"Identity anchored by source last-frame image, not merely words; one generation.\"},{\"note\":\"spoken-line\",\"steps\":[2],\"conflict\":false,\"change\":\"No speech.\"},{\"note\":\"join-silent\",\"steps\":[4],\"conflict\":false,\"change\":\"silent true ensures silent output.\"}]}",
+          "output": "{\"ok\":true,\"approved\":\"app-5b88593875\",\"next\":\"Pass `approved` as `plan_token` to every create tool the plan names. When the result is made, call final_check.\"}",
+          "error": null
+        },
+        {
+          "name": "get_last_frame",
+          "arguments": "{\"video\":\"http://127.0.0.1:8799/bench-portrait-clip.mp4\"}",
+          "output": "{\"file_path\":\"api-assets/cmsla3fmt01cnio0zhjlc2wsv/ba6f02d9-c4bc-466e-95c5-04e4b49a3928-image-0.jpg\"}",
+          "error": null
+        },
+        {
+          "name": "final_check",
+          "arguments": "{\"approved\":\"app-5b88593875\",\"results\":[{\"id\":\"length\",\"met\":\"no\",\"evidence\":\"Generation refused: requires about 144 credits; account has 0 credits. No continuation or joined video made.\"},{\"id\":\"original\",\"met\":\"partly\",\"evidence\":\"Original source was not edited; last frame extracted read-only. No final join possible.\"},{\"id\":\"motion\",\"met\":\"no\",\"evidence\":\"Generation blocked by insufficient credits.\"},{\"id\":\"identity\",\"met\":\"no\",\"evidence\":\"Source final frame prepared for identity continuity, but generation blocked.\"},{\"id\":\"silent\",\"met\":\"no\",\"evidence\":\"Silent settings prepared, but no output produced.\"}]}",
+          "output": "{\"ok\":false,\"not_met\":[{\"id\":\"length\",\"want\":\"One 12-second video: original 6 seconds, then new 6 seconds.\",\"met\":\"no\",\"evidence\":\"Generation refused: requires about 144 credits; account has 0 credits. No continuation or joined video made.\"},{\"id\":\"original\",\"want\":\"Original 6 seconds first, unchanged.\",\"met\":\"partly\",\"evidence\":\"Original source was not edited; last frame extracted read-only. No final join possible.\"},{\"id\":\"motion\",\"want\":\"\\\"she turns and walks out of frame\\\"\",\"met\":\"no\",\"evidence\":\"Generation blocked by insufficient credits.\"},{\"id\":\"identity\",\"want\":\"\\\"Keep her face, hair and clothes the same.\\\"\",\"met\":\"no\",\"evidence\":\"Source final frame prepared for identity continuity, but generation blocked.\"},{\"id\":\"silent\",\"want\":\"\\\"Keep it silent.\\\"\",\"met\":\"no\",\"evidence\":\"Silent settings prepared, but no output produced.\"}],\"next\":\"Fix these with another step if you can; else tell the user plainly which are not met.\"}",
+          "error": null
+        },
+        {
+          "name": "start_request",
+          "arguments": "{\"original\":\"The attached clip is 6 seconds long. It was made from the attached portrait. Continue the clip for 6 more seconds: she turns and walks out of frame. Keep her face, hair and clothes the same. Keep it silent.\\n\\nGive me one 12-second video file: the original 6 seconds first, unchanged, then the new 6 seconds.\\n[Attached: portrait-woman.jpg — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/5757a202-d39b-43b2-8d75-c1e8802f70ae-image-0.jpg]\\n[Attached: bench-portrait-clip.mp4 — Magic Hour file_path: api-assets/cmsla3fmt01cnio0zhjlc2wsv/0f4aff64-e686-49da-abc4-8325f1400120-video-0.mp4 — URL: http://127.0.0.1:8799/bench-portrait-clip.mp4]\\n\\nMake as much of this as you can with the tools you have, and give me the closest thing to one finished file.\",\"attachments\":[\"portrait-woman.jpg\",\"bench-portrait-clip.mp4\"]}",
+          "output": "{\"request\":\"req-d7b34bc8c4\",\"comparison\":\"SIMPLE: every item below is true.\\n- One idea: one subject doing one thing in one place (a robot waters a sunflower).\\n- At most 15 seconds.\\n- No exact words that must appear on screen, and no spoken line that must be said word for word.\\n- At most one attached file, used as the look or the start of the video.\\n- Not a continuation or an edit of an attached video.\\n\\nHARD: any item below is true.\\n- Two or more ideas: different places, different people at different times, shots listed in order, a card or end card.\\n- Longer than 15 seconds.\\n- Exact words on screen (a title, an end card, captions) or an exact spoken line or voice-over script.\\n- Two or more attached files, or a person and a product that must both stay the same.\\n- Continue, extend or edit an attached video, keeping part of it.\\n- Music or a voice-over across several shots.\\n\",\"questions\":{\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"seconds\":\"How long should it be?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"language\":\"Which language for the voice or captions?\",\"which_face\":\"Whose face goes where (which person in the picture)?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\",\"subject\":\"What should it show?\",\"edit\":\"What should change in the picture?\",\"keep\":\"What must stay exactly as it is?\",\"motion\":\"What should move, and how (small natural motion, a slow push in, something happening)?\",\"mood\":\"What mood or genre for the music?\",\"script\":\"What should be said, word for word? Or should I write it from the gist?\",\"range\":\"Which part should be kept (from when to when, or 'the best 10 seconds')?\"},\"next\":\"Read the comparison. Call classify_request with `simple` or `hard` and the reasons, each naming the item it matches.\"}",
+          "error": null
+        },
+        {
+          "name": "classify_request",
+          "arguments": "{\"verdict\":\"hard\",\"request\":\"req-d7b34bc8c4\",\"reasons\":[\"Continue, extend or edit an attached video, keeping part of it.\",\"Two or more attached files in original request; fallback reuses existing source footage without generation.\"]}",
+          "output": "{\"next\":\"Call submit_plan with the request token, the question sheet, the checklist and the steps.\",\"sheet\":{\"subject\":\"What should it show?\",\"seconds\":\"How long should it be?\",\"aspect\":\"Where will this be shown or posted (Instagram, TikTok, YouTube, a website, print, somewhere else)?\",\"sound\":\"Should it have sound: music, a voice, or silent?\",\"exact_words\":\"Should any words appear on it? If so, which, exactly?\",\"look\":\"Any look in mind (realistic, illustrated, a brand colour, a mood)? 'Your call' is fine.\"},\"must_carry\":[{\"kind\":\"seconds\",\"value\":\"12\"},{\"kind\":\"file\",\"value\":\"portrait-woman.jpg\"},{\"kind\":\"file\",\"value\":\"bench-portrait-clip.mp4\"},{\"kind\":\"sound\",\"value\":\"silent\"}]}",
+          "error": null
+        },
+        {
+          "name": "submit_plan",
+          "arguments": "{\"request\":\"req-d7b34bc8c4\",\"sheet\":{\"subject\":{\"source\":\"user\",\"quote\":\"Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.\",\"answer\":\"Best available zero-credit fallback: original clip repeated twice in one finished file; explicitly disclose no new motion.\"},\"seconds\":{\"source\":\"user\",\"quote\":\"Give me one 12-second video file\",\"answer\":\"12 seconds from two copies of supplied six-second clip.\"},\"aspect\":{\"source\":\"your call\",\"answer\":\"Keep original dimensions and aspect ratio.\"},\"sound\":{\"source\":\"user\",\"quote\":\"Keep it silent.\",\"answer\":\"Remove all audio during joining.\"},\"exact_words\":{\"source\":\"your call\",\"answer\":\"No added text.\"},\"look\":{\"source\":\"user\",\"quote\":\"Keep her face, hair and clothes the same.\",\"answer\":\"Reuse original footage; portrait identity requires no modification.\"}},\"checklist\":[{\"id\":\"file\",\"want\":\"One finished 12-second file.\",\"check\":\"join_videos download URL and duration.\"},{\"id\":\"original\",\"want\":\"Original six seconds first, unchanged visually.\",\"check\":\"Original used directly as first join input.\"},{\"id\":\"silent\",\"want\":\"Silent output.\",\"check\":\"silent true and returned loudness.\"},{\"id\":\"identity\",\"want\":\"Same face, hair and clothes.\",\"check\":\"Only original footage reused.\"},{\"id\":\"motion\",\"want\":\"New six seconds where she turns and walks out of frame.\",\"check\":\"Cannot meet with zero generation credits; disclose second half repeats original instead.\"}],\"steps\":[{\"n\":1,\"tool\":\"join_videos\",\"seconds\":12,\"does\":\"Join provided original URL http://127.0.0.1:8799/bench-portrait-clip.mp4 twice, silent true. This zero-credit fallback has no newly generated motion. Deliver download URL and clearly disclose repeated second half.\",\"covers\":[\"file\",\"original\",\"silent\",\"identity\"]}]}",
+          "output": "{\"ok\":false,\"problems\":[\"checklist: nothing carries the file the user named: \\\"portrait-woman.jpg\\\"\",\"checklist: nothing carries the file the user named: \\\"bench-portrait-clip.mp4\\\"\",\"checklist 'motion': no step makes it true\"],\"next\":\"Fix the plan and call submit_plan again.\"}",
+          "error": null
+        },
+        {
+          "name": "submit_plan",
+          "arguments": "{\"request\":\"req-d7b34bc8c4\",\"sheet\":{\"subject\":{\"source\":\"user\",\"quote\":\"Make as much of this as you can with the tools you have, and give me the closest thing to one finished file.\",\"answer\":\"Zero-credit fallback: repeat source clip twice; disclose no new turn-and-exit motion.\"},\"seconds\":{\"source\":\"user\",\"quote\":\"Give me one 12-second video file\",\"answer\":\"12 seconds.\"},\"aspect\":{\"source\":\"your call\",\"answer\":\"Original aspect and dimensions.\"},\"sound\":{\"source\":\"user\",\"quote\":\"Keep it silent.\",\"answer\":\"silent true.\"},\"exact_words\":{\"source\":\"your call\",\"answer\":\"No added words.\"},\"look\":{\"source\":\"user\",\"quote\":\"Keep her face, hair and clothes the same.\",\"answer\":\"Reuse original footage, which was made from portrait-woman.jpg; no identity changes.\"}},\"checklist\":[{\"id\":\"file\",\"want\":\"One 12-second finished file using bench-portrait-clip.mp4, original six seconds first.\",\"check\":\"Join output duration and input order.\"},{\"id\":\"identity\",\"want\":\"Keep face, hair and clothes from portrait-woman.jpg as already depicted in bench-portrait-clip.mp4.\",\"check\":\"Reuse existing footage without generative changes.\"},{\"id\":\"silent\",\"want\":\"Silent output.\",\"check\":\"silent true.\"},{\"id\":\"fallback\",\"want\":\"Closest available finished file: disclose that second six seconds repeat the original, not the requested new turn-and-exit.\",\"check\":\"Join duplicates source; final message explicitly describes unmet motion.\"}],\"steps\":[{\"n\":1,\"tool\":\"join_videos\",\"seconds\":12,\"does\":\"Join http://127.0.0.1:8799/bench-portrait-clip.mp4 twice, silent true, no credits. Original footage preserves portrait identity. Deliver URL clearly labeled repeated-clip fallback, not a generated continuation.\",\"covers\":[\"file\",\"identity\",\"silent\",\"fallback\"]}]}",
+          "output": "{\"ok\":true,\"plan\":\"pla-294e7f8ff8\",\"notes\":{\"join-silent\":{\"applies_to\":[\"join_videos\"],\"finding\":\"Joining with the sound off removes any sound the clips have.\",\"evidence\":\"Approach C2 to C4: -91 dB after the join.\"}},\"next\":\"Read every note. Call review_plan with one review for each note id: the steps it applies to, whether a step goes against it, and the change or the reason it is fine.\"}",
+          "error": null
+        },
+        {
+          "name": "review_plan",
+          "arguments": "{\"plan\":\"pla-294e7f8ff8\",\"reviews\":[{\"note\":\"join-silent\",\"steps\":[1],\"conflict\":false,\"change\":\"Use silent true to remove all sound.\"}]}",
+          "output": "{\"ok\":true,\"approved\":\"app-9c1cc75336\",\"next\":\"Pass `approved` as `plan_token` to every create tool the plan names. When the result is made, call final_check.\"}",
+          "error": null
+        },
+        {
+          "name": "join_videos",
+          "arguments": "{\"videos\":[\"http://127.0.0.1:8799/bench-portrait-clip.mp4\",\"http://127.0.0.1:8799/bench-portrait-clip.mp4\"],\"silent\":true}",
+          "output": "{\"download_url\":\"http://127.0.0.1:8766/films/0a0e724a444f4e0d98ede62183b9c2e4.mp4\",\"seconds\":12.1,\"width\":640,\"height\":640,\"loudness_db\":-91}",
+          "error": null
+        },
+        {
+          "name": "final_check",
+          "arguments": "{\"approved\":\"app-9c1cc75336\",\"results\":[{\"id\":\"file\",\"met\":\"partly\",\"evidence\":\"One joined MP4 produced, 640x640, duration reported as 12.1 seconds rather than exactly 12; original clip first then repeated.\"},{\"id\":\"identity\",\"met\":\"yes\",\"evidence\":\"Both inputs are original footage with no generated appearance changes.\"},{\"id\":\"silent\",\"met\":\"yes\",\"evidence\":\"silent true; reported loudness -91 dB.\"},{\"id\":\"fallback\",\"met\":\"yes\",\"evidence\":\"Source joined twice; user told before join and final delivery will clearly label repeat, not new turn-and-exit.\"}]}",
+          "output": "{\"ok\":false,\"not_met\":[{\"id\":\"file\",\"want\":\"One 12-second finished file using bench-portrait-clip.mp4, original six seconds first.\",\"met\":\"partly\",\"evidence\":\"One joined MP4 produced, 640x640, duration reported as 12.1 seconds rather than exactly 12; original clip first then repeated.\"}],\"next\":\"Fix these with another step if you can; else tell the user plainly which are not met.\"}",
+          "error": null
+        }
+      ],
+      "approvals": [
+        {
+          "name": "create_video_from_image",
+          "args": {
+            "assets": {
+              "image_file_path": "api-assets/cmsla3fmt01cnio0zhjlc2wsv/ba6f02d9-c4bc-466e-95c5-04e4b49a3928-image-0.jpg"
+            },
+            "end_seconds": 6,
+            "resolution": "480p",
+            "model": "ltx-2.5",
+            "audio": false,
+            "name": "Park portrait — six-second turn and exit continuation",
+            "plan_token": "app-5b88593875",
+            "style": {
+              "prompt": "Continue naturally from this exact starting frame in one uninterrupted photorealistic shot. The same adult woman turns toward screen right and walks away to screen right until she is fully out of frame by the end of six seconds. If seated, she naturally rises as she turns before walking out. Keep her exact facial identity, shoulder-length dark curly hair, grey textured knit sweater and all existing clothes unchanged. Preserve the park, background, lighting, proportions and framing of the starting image. Locked stationary camera, no pan or zoom, no cuts. Natural anatomically correct movement; hair and sweater move subtly with her steps. Hold briefly on the unchanged empty scene after she exits. No words, captions, music or speech."
+            }
+          },
+          "approve": false,
+          "reason": "insufficient credits: this call needs about 144 credits and 0 remain of the free account's 0",
+          "est": null
+        }
+      ],
+      "firstQuestions": [],
+      "kind": "delivered",
+      "denied": [
+        "create_video_from_image: insufficient credits: this call needs about 144 credits and 0 remain of the free account's 0"
+      ],
+      "plan": {
+        "shape": "mcp",
+        "say": "[Download the silent combined video](http://127.0.0.1:8766/films/0a0e724a444f4e0d98ede62183b9c2e4.mp4)\n\nThis fallback plays the original clip twice, with no generated turn-and-exit. Her appearance stays unchanged. The exported file is **12.1 seconds**, rather than exactly 12.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": null,
+        "steps": [
+          {
+            "tool": "start_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "start_request-1",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "classify_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "classify_request-2",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "submit_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "submit_plan-3",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-4",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "final_check",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:length",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "start_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "start_request-6",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "classify_request",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "classify_request-7",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "submit_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "submit_plan-8",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "submit_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "submit_plan-9",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "review_plan",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "review_plan-10",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          },
+          {
+            "tool": "join_videos",
+            "inputs": [],
+            "produces": "01-join_videos.mp4",
+            "params": {},
+            "credits": 0
+          },
+          {
+            "tool": "final_check",
+            "model": null,
+            "resolution": null,
+            "inputs": [],
+            "produces": "job:file",
+            "params": {
+              "model": null,
+              "resolution": null,
+              "seconds": null,
+              "aspect": null,
+              "prompt": ""
+            },
+            "credits": 0
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "start_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "classify_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "submit_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "final_check",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "start_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "classify_request",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "submit_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "submit_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "review_plan",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "join_videos",
+          "state": "done",
+          "output": "assets/01-join_videos.mp4",
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "downloaded from the job's signed URL",
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "final_check",
+          "state": "done",
+          "output": null,
+          "credits": 0,
+          "cached": false,
+          "simulated": false,
+          "note": "the job was created but its result was never fetched",
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 127
+    }
+  ],
+  "started": "2026-11-07T08:25:21.459Z",
+  "spent": 0,
+  "seconds": 129
+}

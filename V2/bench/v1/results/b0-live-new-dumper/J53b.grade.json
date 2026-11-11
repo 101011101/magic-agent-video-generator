@@ -1,0 +1,65 @@
+{
+  "id": "J53b",
+  "group": "J",
+  "case": 53,
+  "case_name": "Over budget or beyond the free tier",
+  "title": "Paid Model Needs Explicit Approval",
+  "tests": "Checks that the agent names the requested paid model and supplied quote, asks for spending approval, and waits without generating or switching models.",
+  "pass": false,
+  "score": 33,
+  "tags": [
+    "didnt-ask",
+    "reply-missed"
+  ],
+  "checks": [
+    {
+      "name": "asks first (Explicit approval to spend the quoted 80 credits on the paid Veo 3 model.)",
+      "pass": false,
+      "got": []
+    },
+    {
+      "name": "says it is beyond the free tier",
+      "pass": true,
+      "got": [
+        "I haven't made anything or spent any credits. As you asked Veo 3 only, I can't make this clip on your account right now, for two reasons:\n\n1. **Veo 3 isn't on the free plan.** Your account can only use ltx-2.5 or minimax-h3 at 480p for video. Your account will refuse a Veo 3.1 request, no matter how many credits it shows.\n2. **Veo 3.1 can't make a 5-second clip.** It only makes 4, 6, 8, 16, 24, 32"
+      ]
+    },
+    {
+      "name": "reply meets its must-haves",
+      "pass": false,
+      "got": "2/4"
+    }
+  ],
+  "judge": null,
+  "reply": {
+    "must_haves": [
+      {
+        "item": "The response names Veo 3 as the requested paid model.",
+        "met": "yes",
+        "why": "The response names Veo 3 and Veo 3.1 and states that Veo 3 isn't on the free plan, which identifies it as the paid model."
+      },
+      {
+        "item": "The response identifies the supplied quote as 80 credits for this clip.",
+        "met": "no",
+        "why": "The 80-credit quote is never mentioned. The only reference is 'no matter how many credits it shows.'"
+      },
+      {
+        "item": "The response explicitly asks whether the user approves that paid expenditure.",
+        "met": "no",
+        "why": "The agent does not ask for approval of the 80-credit spend. It asks the user to choose between switching models and upgrading."
+      },
+      {
+        "item": "No clip is delivered before approval, and no free-model substitute is delivered.",
+        "met": "yes",
+        "why": "The agent states that nothing was made, and it only offers free models as options without generating anything."
+      }
+    ],
+    "summary": "The agent correctly held off on generating anything and named Veo 3 as the paid model, but it never acknowledged the 80-credit quote or explicitly asked the user to approve that spend."
+  },
+  "spent": 0,
+  "seconds": 10,
+  "outputs": [],
+  "tools": [
+    ""
+  ]
+}

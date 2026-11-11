@@ -1,0 +1,52 @@
+{
+ "id": "42027d3636",
+ "key": "must:E25c:9:16 edit with woman centred, face visible",
+ "symptom": "9:16 edit with woman centred, face visible",
+ "item": "E25c",
+ "n": 5,
+ "builds": {
+  "old": 3,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the checklist item '9:16 edit with woman centred, face visible' not met?",
+    "because": "Every delivered file is the source landscape frame (858x480) with captions added. No chat delivered a vertical file.",
+    "evidence": "In the calls.jsonl of s3.old.stupid, s3.new.stupid, s3.old.dumper and s3.new.happy, wait_for_video_project on the final AUTO_SUBTITLE project returns width 858 and height 480. In s3.old.stupid/grade.json the grader says: 'Output is 858x480 landscape, not 9:16; woman is centred and face visible.'"
+   },
+   {
+    "why": "Why is the final file still 858x480?",
+    "because": "The only tool that writes the final file is add_subtitles_to_video. It burns captions into the source at the source size and takes no aspect, crop or reframe argument.",
+    "evidence": "The add_subtitles_to_video arguments in all four calls.jsonl files hold only name, start/end_seconds, assets.video_file_path and style (template/custom_config). The tool result keeps the size of the input: 858x480."
+   },
+   {
+    "why": "Why did the assistant not crop to 9:16 before captioning?",
+    "because": "Neither build has a crop or reframe tool for video. The only video-to-video editor (edit_video) has no aspect argument. When it was asked by prompt to make a 9:16 frame, it still gave back a landscape file.",
+    "evidence": "In s3.new.happy/calls.jsonl, edit_video was called with the prompt 'Reframe this video to vertical 9:16 portrait format...' and resolution 480p. The result was width 832, height 448. The assistant told the user: 'None of my tools can crop or reframe a video.' In s3.old.dumper the assistant said: 'Magic Hour has no tool that crops or reframes a video to a new shape.' In tools-new.json the plan_request tool enum lists trim_video and add_subtitles_to_video but no crop tool."
+   },
+   {
+    "why": "Why did the edit_video attempt not give a portrait frame?",
+    "because": "edit_video (ltx-2.5) regenerates the clip at the input orientation. A text prompt cannot change the output size. It also redraws the face and the voice, so the assistant rejected it to keep the user's 'original voice'.",
+    "evidence": "s3.new.happy/calls.jsonl, line 5: VIDEO_EDITOR output 832x448 after a 9:16 prompt. The final reply says: 'It still gave back a landscape video (832×448), and it redraws the whole picture... So I didn't use it.'"
+   },
+   {
+    "why": "Why do the stupid-persona chats also fail, even with no attempt?",
+    "because": "The stupid user only said 'can you make a captioned video from this clip' and never asked for 9:16. The assistant did only captions. If the user had asked, the result would be the same, because no tool can reframe.",
+    "evidence": "s3.old.stupid/state.json transcript: the only user message is 'can you make a captioned video from this clip'. In s3.new.stupid/calls.jsonl, plan_request gets no aspect row and returns ready:true, and only add_subtitles_to_video is called."
+   },
+   {
+    "why": "Why is this the end of the chain?",
+    "because": "The Magic Hour API that both builds expose has no deterministic crop or reframe operation. The generative editor keeps the input orientation. This is a capability limit of the platform and its models, not a description or routing defect.",
+    "evidence": "The failure is the same in both builds: old (dumper, stupid) and new (happy, stupid) all end at 858x480. Side note: the deterministic 'aspect 9:16' check in s3.old.stupid/grade.json passes with got ['858x480'], which is a separate grader-check bug."
+   }
+  ],
+  "axiom": "The Magic Hour toolset has no video crop or reframe operation. The only video-to-video generative editor (edit_video, ltx-2.5) keeps the input landscape orientation whatever the prompt says. So a 16:9 clip cannot become 9:16 inside this system in either build.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "Add a deterministic crop/reframe step: a crop_video tool, or an aspect/crop option on add_subtitles_to_video. It must take a target aspect and a centre point (for example from detect_faces), crop the source to 9:16 around the face, and keep the original audio. Then caption the cropped file. Separately, fix the harness 'aspect 9:16' check, which passes 858x480."
+ },
+ "error": null,
+ "seconds": 41,
+ "usd": 0.2932072
+}

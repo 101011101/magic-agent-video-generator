@@ -1,0 +1,27 @@
+<section class="card"><h2>What happened</h2>
+<h3>Clip 1 (references: the six elements in its column)</h3>
+<ul>
+<li class="ok">The hero is the man from the sheet: skin, white forelock, mustard shirt, rust neckerchief, chest satchel, all through both clips. This is the first run where identity came from a sheet, not from a frame, and it held.</li>
+<li class="ok">The chamber is the plate: pale sandstone, roof slot, the sand bank in the rear corner. The scarab comes out of the sand at about 1.5 s (reveal one) and goes into the satchel at 2–3.5 s; the flap is closed by 4 s.</li>
+<li class="ok">He is buried to the waist and digs (4.5–6 s).</li>
+<li class="bad">The last two seconds cut to a new camera: a wide shot from outside the arch, the hero tiny and face-down in the sand far from the arch. The prompt said "fixed medium-wide camera" and "end mid-heave gripping the arch". Seedance read the long action list as a multi-shot scene, as it did in the adventure chain. The hand-off frame is therefore a wide shot with a small, turned-away hero.</li>
+<li class="warn">He sits in the sand from frame 0 rather than crouching beside it, so "the sand bank slumps and buries him" is more "he is already in it".</li>
+</ul>
+<h3>Clip 2 (references: all seven elements plus @last_frame)</h3>
+<ul>
+<li class="ok">It starts from the hand-off: the same wide view through the arch, the hero in the sand. SSIM against the hand-off is only 0.578 because a reference is not a first frame: the model re-rendered the view (wider arch, slightly different wall texture) rather than copying pixels. As a cut it reads as continuous.</li>
+<li class="ok">Every must-show fact lands: he crawls free (0–2.5 s), comes through the arch (3–4 s) from the sandstone chamber into the blue-grey basalt gallery, which is the gallery plate, opens the satchel (4.5–6 s), takes the scarab out and raises it to camera (6.5–8 s), reveal two. Same man, same clothes.</li>
+<li class="ok">The room transition is the clearest in any run so far: two different plates, both recognisable, joined by the arch.</li>
+<li class="warn">The scarab is a plain gold oval in both clips; the incised wing markings from the spec are not visible at 480p. The scarab sheet was a four-panel reveal sequence, not one object (see below), so the model had a weak reference for it.</li>
+</ul>
+<h3>The three calls</h3>
+<ul>
+<li class="ok">The API enforces the presence table. Clip 1's prompt mentioned @gallery ("remains hidden") while gallery was not in clip 1's column; Magic Hour refused the call with "No reference was provided for @gallery" before charging. The runner now demotes any @id outside the clip's column to its plain name. Clip 2's prompt must contain @last_frame when that reference is sent; it refused that too until the prompt kept it.</li>
+<li class="bad">A PNG frame cut straight from the clip (864×496) was refused as a reference with a generic invalid_input error after the job was created (refunded). The same frame as a 1280×720 JPEG was accepted. Reference images need ordinary dimensions and formats.</li>
+<li class="bad">Sheet specs that describe a state draw the state: the scarab spec said "begins completely buried", so its sheet is a four-panel sequence of it emerging from sand. The bakery notes found the same with the loaf. A sheet spec must be the thing alone, at rest.</li>
+<li class="bad">The style line "cinema camera" put a film camera on a tripod into the chamber plate. Style words that name objects become objects on a plate.</li>
+<li class="warn">The chamber plate's "open roof" became a modern steel-framed skylight; both clips kept it.</li>
+</ul>
+<p>Against the adventure chain (last frame only, no sheets): identity now survives a hand-off in which the hero is small and turned away, because every call carries his sheet. The remaining failure is the one the grids had: a long ordered action list in one 8 s call gets re-staged with extra cuts, and the hand-off frame is whatever the model chose to end on. Next: (1) one or two beats per clip and more clips, so each prompt is short; (2) state the end framing as a must ("last frame: medium shot, hero gripping the arch, facing camera"); (3) fix the sheet rules (thing at rest, no camera words) and add the sheet check from the asset bank.</p>
+<p class="mut">Costs: 7 sheets at 200, 2 clips at 768 (seedance-2.0, 480p, 8 s), 2936 credits. Render time 557 s and 359 s. Three refused or failed clip calls cost nothing.</p>
+</section>

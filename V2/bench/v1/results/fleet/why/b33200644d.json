@@ -1,0 +1,52 @@
+{
+ "id": "b33200644d",
+ "key": "must:D18b:Same person across clip",
+ "symptom": "Same person across clip",
+ "item": "D18b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Same person across clip' not met in both chats?",
+    "because": "Mid-clip, the generated video changes her expression and her face proportions. The closed-mouth neutral look turns into a broad smile, with teeth and apparent talking in the new chat. The face also gets wider or fuller and the head scales and shifts, so the late frames do not match the source.",
+    "evidence": "s3.old.dumper.D18b/grade.json: 'broader smile at 0.5s, different smile and a wider, fuller face at 2s; resemblance drifts'. s3.new.stupid.D18b/grade.json: 'she talks, smiles broadly and shows teeth… features look slightly different between frames'. Both chats also fail the morph check and the fixed-camera check for scale and shift."
+   },
+   {
+    "why": "Why did the clip change her face when the assistant asked for no change?",
+    "because": "The video model did not follow the instruction to keep her identity. Both prompts said this clearly and asked only for a blink and gentle breathing. The model still added a large expression change, speech-like mouth motion and a zoom-like scale change.",
+    "evidence": "calls.jsonl, old: prompt 'Her face, features, hair and identity stay exactly the same throughout, no morphing, no drifting… Static locked-off camera, no zoom'. calls.jsonl, new: 'Her face, hair and sweater stay unchanged. Static camera, no zoom, no pan.' The arguments were correct: end_seconds 5, audio false, the original image_file_path."
+   },
+   {
+    "why": "Why did the same failure happen in both builds and with both personas?",
+    "because": "Both chats sent the same request to the same generator: ltx-2.5 at 480p on the free plan, with the user's own photo as the start frame. The build and the persona changed only the conversation before the call. The new build's plan_request asked clarifying questions, and the old build created the video at once. The generation step was the same in both builds.",
+    "evidence": "calls.jsonl, old: create_video_from_image with model 'ltx-2.5', resolution '480p', 120 credits. calls.jsonl, new: the same model, resolution and credits. Both outputs are 640x640 at 24 fps (wait_for_video_project result)."
+   },
+   {
+    "why": "Why ltx-2.5 and not another model?",
+    "because": "The free plan offers only two video models. In the old chat, the server rejected 'default' and listed ltx-2.5 and minimax-h3. Both assistants picked ltx-2.5, and none of the evidence I read says that minimax-h3 would keep her identity better. The new tool list says only that minimax-h3 takes a picture reference in production plans. That does not apply here, because both chats used the photo as the start image.",
+    "evidence": "calls.jsonl, old, line 2: 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. tools-new.json, plan_video_production beat.model: 'Only minimax-h3 takes a picture reference.'"
+   },
+   {
+    "why": "Why did nothing catch the drift before it reached the user?",
+    "because": "Neither assistant looked at the output. Each one told the user it had not watched the clip and asked them to check it, so no second try was made. Both prompts also used the word 'smile' ('same calm, slight smile' and 'same calm soft smile') to describe a closed-mouth, almost neutral face. That may have pushed the model toward a bigger smile, but the evidence cannot show this. The main cause is still the model's weak identity control.",
+    "evidence": "calls.jsonl say events: old 'I haven't watched the clip, so please check that her face stays true to the photo'; new 'I haven't watched it, so check that the motion looks right'. attachments/portrait-woman.jpg shows a closed mouth with a faint smile. The new grader lists 'never verified the result' as a fault."
+   },
+   {
+    "why": "Why can the prompt not force the face to stay the same?",
+    "because": "AXIOM: Free-plan image-to-video (ltx-2.5, 480p) has weak identity control. A text instruction to keep the face does not stop it from changing the expression, adding mouth motion or rescaling the subject over 5 seconds.",
+    "evidence": "In two chats, with different builds, personas and prompt wording, the prompts explicitly said no morphing and a static camera. Both outputs still drifted the same way (grade.json in both chats)."
+   }
+  ],
+  "axiom": "Free-plan image-to-video (ltx-2.5, 480p) has weak identity control. A text instruction to keep the face does not stop it from changing her expression (smiling or talking), changing her face proportions or rescaling her over 5 seconds.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "None: inherent to the free-plan model. A possible mitigation: the create_video_from_image description could tell the assistant to use only motion words in the prompt, to not name an expression such as 'smile', and to offer minimax-h3 as a second try when the face must stay the same."
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 0.457574
+}

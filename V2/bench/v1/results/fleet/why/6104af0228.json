@@ -1,0 +1,47 @@
+{
+ "id": "6104af0228",
+ "key": "must:B08b:The papers and empty takeaway cup are absent.",
+ "symptom": "The papers and empty takeaway cup are absent.",
+ "item": "B08b",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'The papers and empty takeaway cup are absent' not met?",
+    "because": "The two failing chats have different causes. In new.happy, the front sheets and the cup are gone, but the papers or folder behind the laptop stay in the output. In old.stupid, the papers are still on the desk as one neat stack.",
+    "evidence": "s1.new.happy.B08b/grade.json: 'Front papers and cup are gone, but the papers/folder behind the laptop remain'. The output frame assets/01-wait_for_image_project.png shows the white sheets behind the laptop next to the monitor arm. s1.old.stupid.B08b/grade.json: 'the papers are still there as one neat stack at right'."
+   },
+   {
+    "why": "(new) Why did the papers behind the laptop stay when the assistant sent the request correctly?",
+    "because": "The assistant's prompt asked for exactly the right edit: it named both the front sheets and the papers behind the laptop. The qwen-edit model removed the large sheets in the foreground, the cup and the napkin, but did not remove the smaller papers that the laptop partly hides. The tool returned 'complete' and gave no sign that part of the edit was missing.",
+    "evidence": "s1.new.happy.B08b/calls.jsonl, edit_image args: model 'qwen-edit', prompt 'Remove all the papers and documents from the desk (the printed sheets in the front and the papers behind the laptop)...'. The wait_for_image_project status is 'complete'. Compare attachments/desk-clutter.jpg with the output: the papers behind the laptop look the same."
+   },
+   {
+    "why": "(new) Why was the partial result delivered and not fixed?",
+    "because": "The assistant looked at the output and saw that the papers were still there. It then ended the turn and only offered a second pass, so it gave the choice back to the user. The test expects zero questions ('asks: never'), and the second pass would have cost 10 credits more.",
+    "evidence": "s1.new.happy.B08b/calls.jsonl, 'say' event: 'One thing didn't work: the papers on a clipboard or folder behind the laptop are still there. If you want those gone too, I can run a second pass'. The turn ends with turn_end 'delivered'. B08b.json has expect.asks 'never'."
+   },
+   {
+    "why": "(old) Why were the papers stacked and not removed?",
+    "because": "The stupid persona sent only 'can you tidy up this pic'. It did not say what to remove. The assistant guessed without asking: it removed the cables and stacked the papers, which goes against the hidden brief (remove the papers, keep the cables).",
+    "evidence": "s1.old.stupid.B08b/chat.json messages[0].text = 'can you tidy up this pic'. The bank says 'Objects to remove: The papers and the empty takeaway cup only'. calls.jsonl, edit_image prompt: 'remove the tangled cables ... neatly stack the loose papers into one tidy pile'. grade.json says the must-haves 'contradict the actual request'."
+   },
+   {
+    "why": "Why does the main failure (the one quoted in the symptom, new.happy) not go deeper into the tool descriptions?",
+    "because": "The edit instruction was complete and correct, and the model chose qwen-edit. The leftover papers come from the edit model: it removes objects only partly when they are small and partly hidden behind another object. The old.stupid failure comes from the persona, which hides the target objects behind 'tidy up' while the item says asks 'never'. That is an ambiguity in the brief for that persona, not a tool defect.",
+    "evidence": "The prompt in new.happy calls.jsonl names the occluded papers explicitly. The output still has them. The old.stupid user message has no object list, and the expected answer depends on the bank facts that the user never said."
+   }
+  ],
+  "axiom": "The generation model limit is the axiom. The free-plan image editor (qwen-edit) removes objects only partly when they are small and partly hidden behind another object, even if the prompt names them explicitly. Here it left the papers behind the laptop. A secondary failure in old.stupid comes from the brief: 'tidy up this pic' does not say which objects to remove.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "In the edit_image / wait_for_image_project tool descriptions, tell the assistant this: if its own check of the output shows that some named object is still there, run one more targeted edit on the output image ('remove the papers behind the laptop only'). Do this before delivery, and do not offer it as an optional second pass. For vague requests like 'tidy up', ask the user one plain question: which items to remove and which to keep."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.1708522
+}

@@ -1,0 +1,49 @@
+{
+  "id": "G36b",
+  "best_tools": "no",
+  "explanation": "The plan correctly cropped the text-free background before adding wording, so it did not actually wire a finished square ad into a landscape crop. Its main mistake was treating text-overlay as a design-layout tool: a plain text band cannot reliably provide independent typography or the requested two-column landscape composition. The catalogue's misleading warning about image-model text encouraged this choice, and the clipped landscape was delivered without verification.",
+  "better_chain": "image (qwen-image-2.1: design the complete square ad with all five exact strings, clear hierarchy, leafy imagery and green-and-cream styling) → image-edit (use the square as reference to recompose a complete 9:16 ad, preserving readable copy rather than shrinking it) → image-edit (use the square as reference to recompose a complete 16:9 ad with a landscape-specific layout) → check (verify each variant's aspect, exact copy, address readability, contrast and margins) → image-edit (repair any failed variant and recheck)",
+  "inputs": "sound",
+  "chain_logic": "sound",
+  "also": [],
+  "cause": "tool-fit",
+  "steps": [
+    {
+      "n": 1,
+      "issue": "Suitable tool and prompt for a shared, text-free botanical background.",
+      "verdict": "ok",
+      "tool": "image"
+    },
+    {
+      "n": 2,
+      "issue": "Correctly crops the unlettered background to portrait before text is added; no copy can be lost here.",
+      "verdict": "ok",
+      "tool": "crop"
+    },
+    {
+      "n": 3,
+      "issue": "Correctly crops the unlettered background to landscape before lettering; this is not a crop of the finished square ad.",
+      "verdict": "ok",
+      "tool": "crop"
+    },
+    {
+      "n": 4,
+      "issue": "Exact text is an appropriate overlay use, but the requested designed hierarchy and typography exceed this tool's plain, single-font band capability.",
+      "verdict": "wrong-tool",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 5,
+      "issue": "The portrait input and copy are correct, but independent line sizing and designed typography are not supported by the simple overlay tool.",
+      "verdict": "wrong-tool",
+      "tool": "text-overlay"
+    },
+    {
+      "n": 6,
+      "issue": "The correct landscape background and complete copy are supplied, but a single text band cannot implement the requested two separately arranged text groups. The resulting stacked block overflows the short canvas.",
+      "verdict": "wrong-tool",
+      "tool": "text-overlay"
+    }
+  ],
+  "missing": "A final check of all three delivered images for complete copy, readable address and safe text bounds, followed by repair of failures."
+}

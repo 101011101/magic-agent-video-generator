@@ -1,0 +1,219 @@
+{
+  "id": "D22a",
+  "item": {
+    "id": "D22a",
+    "case": 22,
+    "case_name": "Picture, then animate it",
+    "group": "D",
+    "group_name": "Short video from a picture or text",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Make a Cat Then Animate",
+    "sub": "a",
+    "spec": {
+      "exact_text": [],
+      "aspect": "1:1",
+      "kind": "video",
+      "seconds": 5,
+      "outputs": 2,
+      "audio": "none"
+    },
+    "turns": [
+      {
+        "materials": [],
+        "text": "Make a square illustration of an orange cat wearing a blue scarf on a sunny windowsill, then animate that picture for 5 seconds: the cat blinks and gently swishes its tail. Send me both the picture and the silent video."
+      }
+    ],
+    "tests": "Tests completing picture creation and animation from one message, delivering both assets with matching subjects.",
+    "answer_sheet": {
+      "Subject and setting": "An orange cat wearing a blue scarf on a sunny windowsill.",
+      "Style": "Illustration; the specific illustration style is your call.",
+      "Format and length": "Square picture and square 5-second video.",
+      "Motion": "The cat blinks and gently swishes its tail.",
+      "Audio and text": "Silent, with no added text.",
+      "Deliverables": "Both the original picture and its animation."
+    },
+    "must_haves": [
+      "Both a standalone still picture and a playable 5-second video are delivered.",
+      "Both outputs are square and show an orange cat wearing a blue scarf on a sunny windowsill.",
+      "The animation visibly matches the delivered illustration's cat, scarf and setting.",
+      "The cat visibly blinks and its tail gently moves; the video is not merely a still image with a camera zoom.",
+      "The video has no audible sound."
+    ]
+  },
+  "session": "b1-D22a",
+  "simulated": true,
+  "turns": [
+    {
+      "text": "Make a square illustration of an orange cat wearing a blue scarf on a sunny windowsill, then animate that picture for 5 seconds: the cat blinks and gently swishes its tail. Send me both the picture and the silent video.",
+      "materials": [],
+      "dialog": [],
+      "agent": "I'll create the square cat illustration, then animate that same picture with gentle blinking and tail movement, without sound. I'll deliver both the illustration and the animation.",
+      "firstQuestions": [],
+      "turnIndex": 0,
+      "sheet": {
+        "fields": [
+          {
+            "value": "short",
+            "field": "kind",
+            "quote": "animate that picture for 5 seconds",
+            "source": "inferred",
+            "confidence": 0.99
+          },
+          {
+            "value": "1:1",
+            "field": "platform",
+            "quote": "square",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "5",
+            "field": "length_s",
+            "quote": "for 5 seconds",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "general",
+            "field": "audience",
+            "quote": "an orange cat wearing a blue scarf on a sunny windowsill",
+            "source": "inferred",
+            "confidence": 0.95
+          },
+          {
+            "value": "stated",
+            "field": "direction",
+            "quote": "Make a square illustration",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "message",
+            "quote": "",
+            "source": "unknown",
+            "confidence": 0
+          },
+          {
+            "value": "",
+            "field": "tone",
+            "quote": "",
+            "source": "unknown",
+            "confidence": 0
+          },
+          {
+            "value": "An orange cat wearing a blue scarf on a sunny windowsill.",
+            "field": "subject",
+            "quote": "an orange cat wearing a blue scarf on a sunny windowsill",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "Create and deliver both the square illustration and a silent 5-second animation of that picture, with the cat blinking and gently swishing its tail.",
+            "field": "must_include",
+            "quote": "Make a square illustration of an orange cat wearing a blue scarf on a sunny windowsill, then animate that picture for 5 seconds: the cat blinks and gently swishes its tail. Send me both the picture and the silent video.",
+            "source": "stated",
+            "confidence": 1
+          },
+          {
+            "value": "",
+            "field": "materials",
+            "quote": "",
+            "source": "not_applicable",
+            "confidence": 1
+          }
+        ],
+        "goal": {
+          "value": "video",
+          "quote": "then animate that picture for 5 seconds",
+          "source": "stated",
+          "why": "The request requires creating an illustration and then a complete animated video from it, delivering both outputs. No existing asset is supplied.",
+          "confidence": 1
+        },
+        "refers_to": "",
+        "about_focus": false,
+        "questions": []
+      },
+      "plan": {
+        "shape": "tree",
+        "say": "I'll create the square cat illustration, then animate that same picture with gentle blinking and tail movement, without sound. I'll deliver both the illustration and the animation.",
+        "refuse": "",
+        "tier_move": null,
+        "estimate": 125,
+        "guarantees": null,
+        "cannot": null,
+        "steps": [
+          {
+            "tool": "image",
+            "model": "flux-2-klein",
+            "resolution": "640px",
+            "inputs": [],
+            "produces": "cat_illustration.png",
+            "params": {
+              "extra": "model: flux-2-klein",
+              "seconds": 0,
+              "aspect": "1:1",
+              "prompt_or_change": "A warm, charming illustration of an orange cat wearing a blue scarf, sitting on a sunny windowsill, with its tail clearly visible and golden sunlight illuminating the cozy scene.",
+              "resolution": ""
+            },
+            "credits": 5,
+            "why": "Create the illustration that is both a deliverable and the animation's starting picture."
+          },
+          {
+            "tool": "image-to-video",
+            "model": "minimax-h3",
+            "resolution": "480p",
+            "inputs": [
+              "cat_illustration.png"
+            ],
+            "produces": "cat_animation.mp4",
+            "params": {
+              "extra": "model: minimax-h3; silent, no audio",
+              "seconds": 5,
+              "aspect": "1:1",
+              "prompt_or_change": "The orange cat blinks naturally and gently swishes its tail on the sunny windowsill; preserve the blue scarf, illustration style, lighting, and composition, with a fixed camera.",
+              "resolution": ""
+            },
+            "credits": 120,
+            "why": "Animate the delivered illustration while preserving its composition and appearance."
+          }
+        ]
+      },
+      "ran": [
+        {
+          "tool": "image",
+          "state": "done",
+          "output": "assets/tree-1/cat_illustration.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        },
+        {
+          "tool": "image-to-video",
+          "state": "done",
+          "output": "assets/tree-1/cat_animation.svg",
+          "credits": null,
+          "cached": false,
+          "simulated": true,
+          "note": null,
+          "error": null,
+          "seconds": null
+        }
+      ],
+      "spent": 0,
+      "seconds": 0
+    }
+  ],
+  "started": "2026-11-01T05:38:59.775Z",
+  "spent": 0,
+  "seconds": 22,
+  "sessionDir": "sessions/b1-D22a"
+}

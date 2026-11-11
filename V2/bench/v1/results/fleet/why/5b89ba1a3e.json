@@ -1,0 +1,52 @@
+{
+ "id": "5b89ba1a3e",
+ "key": "must:E24b:The output retains the complete original 10-second kitchen-table footage.",
+ "symptom": "The output retains the complete original 10-second kitchen-table footage.",
+ "item": "E24b",
+ "n": 2,
+ "builds": {
+  "new": 1,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the 10-second footage not retained in the output?",
+    "because": "No output file was produced in either chat. The assistant called no create or edit tool and gave only Spanish caption text in chat (.srt in old, two plain lines in new).",
+    "evidence": "Both grade.json files: check 'something was made' pass=false, got 'no file'. old calls.jsonl: only get_workflow_guide was called. new calls.jsonl: only plan_request was called. Both final turns have called=false."
+   },
+   {
+    "why": "Why did the assistant not call add_subtitles_to_video, or any other video tool?",
+    "because": "It decided that no tool can give 'English voice + Spanish subtitles'. The subtitle tool makes captions only in the spoken language (English), and translate_video replaces the voice with a Spanish dub, which the user did not want. It offered only English subtitles or stopping.",
+    "evidence": "old calls.jsonl line 5: 'The subtitle tool ... has no setting for a translation language ... The translation tool ... would replace her English voice'. new calls.jsonl line 5: 'Magic Hour's subtitle tool has no language setting ... I can't tell it to translate.'"
+   },
+   {
+    "why": "Why did the user's answer not open a path to a video?",
+    "because": "The dumper user said no to English subtitles and accepted the text-only fallback. In new, the user said explicitly 'I'll stop here and try another app'. So the assistant ended with a text draft. This is correct, given the tool gap.",
+    "evidence": "old calls.jsonl line 6: 'English-only subtitles wouldn't help ... you're welcome to translate it into neutral Spanish' (for a .srt). new calls.jsonl line 6: 'I'll stop here and try another app.'"
+   },
+   {
+    "why": "Why is the assistant's claim about the tools true?",
+    "because": "add_subtitles_to_video only 'Adds automatically generated subtitles'. Its schema has only name, start/end_seconds, assets.video_file_path and style (template/custom_config font, colours, position). It has no language, translation or caption-text field. No other tool burns text that the caller supplies onto an existing video. edit_video is a generative prompt re-render, and translate_video changes the speech.",
+    "evidence": "tools-new.json lines 2028-2142 (add_subtitles_to_video schema); lines 1505-1588 translate_video: 'Translates speech ... into a supported target language'; lines 1413-1470 edit_video: prompt-based generative edit. The old-build assistant read the same limit from tools-old.json (old chat line 5)."
+   },
+   {
+    "why": "Why does the test still expect a Spanish-subtitled video?",
+    "because": "E24b says the job can be done on the free plan with no questions (expect.asks='never', beyond_free='no'), and its must_haves require visible Spanish subtitles on the retained 10-second footage. The Magic Hour subtitle API has no feature to translate or burn in custom text, so neither build can meet the item.",
+    "evidence": "items/E24b.json: expect {asks:'never', beyond_free:'no'}, spec.kind='video', must_haves[0] 'retains the complete original 10-second ... footage', answer_sheet 'Put readable Spanish subtitles on the video.'"
+   },
+   {
+    "why": "Did the new build's planner make this worse or better?",
+    "because": "Neither. new plan_request accepted language='Spanish' for add_subtitles_to_video and returned ready=true, which suggested the tool could do it. The assistant still looked at the schema and saw the gap. So the result is the same as in old.",
+    "evidence": "new calls.jsonl line 2: plan_request output {\"tool\":\"add_subtitles_to_video\",\"ready\":true,\"params\":[{\"name\":\"language\",\"value\":\"Spanish\"}]}"
+   }
+  ],
+  "axiom": "The Magic Hour auto-subtitle endpoint (add_subtitles_to_video) only writes captions in the spoken language. It has no target-language or caller-supplied caption-text input. No other tool puts supplied text onto an existing video while the footage and audio stay unchanged. The task in E24b is therefore impossible with this toolset, in both builds. The test incorrectly marks it as doable on the free plan.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In the new build, add a way to burn in subtitle text that the caller supplies. For example, give add_subtitles_to_video a `language`/`translate_to` option or an `srt`/`captions` text input, or add a local ffmpeg burn-in step that takes the assistant's timed Spanish SRT and the user's video unchanged. Also make plan_request return ready=false for language='Spanish' on add_subtitles_to_video until this exists. If the API cannot be changed, change E24b to beyond capability (expect a clear explanation, not a video)."
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 0.452167
+}

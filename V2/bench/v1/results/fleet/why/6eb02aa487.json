@@ -1,0 +1,46 @@
+{
+ "id": "6eb02aa487",
+ "key": "must:D20b:One vertical reel ~10s with all five photos in order",
+ "symptom": "One vertical reel ~10s with all five photos in order",
+ "item": "D20b",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'One vertical reel ~10s with all five photos in order' not met in either old-build chat?",
+    "because": "Neither chat delivered a vertical 9:16 reel made of the five photos in order. Stupid: one AI-redrawn 858x480 (16:9) clip in a changed order. Happy: no video at all, only 5 separate stills and a 15 s WAV.",
+    "evidence": "s3.old.stupid.D20b/grade.json: check 'aspect 9:16' failed, got 858x480; the summary says landscape and AI-generated. s3.old.happy.D20b/grade.json: 'a video was made' failed (.png x5 + .wav); 'about 10 s' got 15 s; the reason says 'No reel was made, only 5 separate stills'."
+   },
+   {
+    "why": "Why did the happy chat deliver stills and not a reel?",
+    "because": "The assistant found that no old-build tool can join several user photos into one video in a set order with captions and music, so it offered a 'you assemble it in CapCut' workaround. The user accepted that option.",
+    "evidence": "s3.old.happy.D20b/calls.jsonl line 4: 'none of my Magic Hour tools can join several photos into one video in a set order, put your exact captions on them, and add a music track. Each video tool starts from a single photo or a text prompt.' Then 5 edit_image calls and 1 generate_music(duration 15) call. tools-old.json lists only single-input create tools plus wait/fetch helpers, and no compose or slideshow tool."
+   },
+   {
+    "why": "Why did the stupid chat produce a 16:9 clip in the wrong order?",
+    "because": "The stupid user's message omitted 'vertical', the order and the captions ('make a café video with this pic...'). The assistant asked nothing and called create_video_from_text with aspect_ratio '16:9' (its own default). It also wrote its own shot order storefront→interior→barista→latte→pastries, not the attachment order storefront→latte→pastries→barista→interior.",
+    "evidence": "s3.old.stupid.D20b/chat.json messages[0].text; the bank holds 'One vertical 9:16 reel', which the persona gives only when asked. calls.jsonl line 2: args aspect_ratio '16:9', with the prompt order and references listed storefront, interior, barista, latte, pastries. No 'question' say event before the call."
+   },
+   {
+    "why": "Why did the old-build assistant guess the shape and not ask?",
+    "because": "The old tool surface has no step that stops a create call when shape, length or on-screen words are missing. The new build adds plan_request, which tells the assistant 'do not guess shape, length, sound or on-screen words' and returns questions to ask. That explains why only the old build fails.",
+    "evidence": "tools-old.json: the tools go from get_workflow_guide/upload_* to wait/fetch/create, with no planning or gating tool. tools-new.json line 40: plan_request description '...A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words.'"
+   },
+   {
+    "why": "Why would asking still not give a finished reel on the old build?",
+    "because": "Even with full details (as in the happy chat), the old build cannot sequence real photos into one captioned video with music. The text/image-to-video model redraws scenes from references and does not keep the photos or their order (the grader saw an invented interior and an extra hand). This is a limit of the tool surface and the generation model.",
+    "evidence": "s3.old.stupid.D20b/grade.json faults: 'The AI regenerated the scenes rather than using the photos. The interior was invented...'. happy calls.jsonl line 4, option 2: 'The AI redraws the scenes... It may not keep your order.' Side note: both grader reasons claim 'only 3 images' were supplied, but chat.json shows 5 attachments. This is a grader-input defect, but it does not change the verdict: the output is not vertical and is not a reel."
+   }
+  ],
+  "axiom": "The old Magic Hour MCP has no tool that turns several user photos into one video with a fixed order, caption overlays and a music bed. Its video tools take one image or a text prompt and redraw the scenes. The old build also has no gate that stops the assistant guessing the shape when the user is vague, so the stupid chat defaulted to 16:9. The happy chat could only return parts for the user to assemble.",
+  "category": "generator_limit",
+  "builds": "old",
+  "fix": "Add a slideshow/compose tool. It takes an ordered list of image file_paths, a caption for each image, seconds per image, aspect_ratio and an optional audio file_path, and renders one MP4. Also keep the new build's plan_request gate so the assistant asks 'tall or wide?' and does not default to 16:9 when the user gives no shape."
+ },
+ "error": null,
+ "seconds": 45,
+ "usd": 0.39895439999999993
+}

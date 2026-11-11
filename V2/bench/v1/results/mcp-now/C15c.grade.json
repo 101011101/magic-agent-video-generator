@@ -1,0 +1,110 @@
+{
+  "id": "C15c",
+  "group": "C",
+  "case": 15,
+  "case_name": "Face swap on a video",
+  "title": "Two Coworkers Two Replacement Faces",
+  "tests": "Tests explicit multi-face mapping and stable identity tracking across a two-person video without changing the original scene or sound.",
+  "pass": false,
+  "score": 3,
+  "tags": [
+    "kept-asking",
+    "wrong-kind",
+    "no-audio",
+    "must-have-missed",
+    "major-fault",
+    "not-usable"
+  ],
+  "checks": [
+    {
+      "name": "something was made",
+      "pass": true,
+      "got": [
+        "detect_faces:done",
+        "detect_faces:done",
+        "detect_faces:done"
+      ]
+    },
+    {
+      "name": "a video was made",
+      "pass": false,
+      "got": [
+        ".png",
+        ".png",
+        ".png"
+      ]
+    },
+    {
+      "name": "sound present and audible",
+      "pass": false,
+      "got": "no audio track"
+    },
+    {
+      "name": "must-haves met",
+      "pass": false,
+      "got": "0/3"
+    },
+    {
+      "name": "stops asking within 3 rounds",
+      "pass": false,
+      "got": [
+        "I’m pausing the swap until I can view the faces reliably. You don’t need to choose the mappings yourself—just upload a screenshot of the office clip, and I’ll handle the matching."
+      ]
+    }
+  ],
+  "judge": {
+    "usable_as_is": false,
+    "exact_text": [],
+    "faults": [
+      {
+        "severity": "major",
+        "what": "No face-swapped video was generated or delivered; the agent explicitly left the clip unchanged. The only tool outputs shown are detection crops of the original faces."
+      }
+    ],
+    "score": 1,
+    "summary": "The agent stopped at face detection and delivered no edited video, leaving the requested two-face swap unfulfilled.",
+    "must_haves": [
+      {
+        "item": "The output contains the full 10-second office exchange from talk-two.mp4.",
+        "met": "no",
+        "why": "No output video was delivered; detection crops do not contain the office exchange."
+      },
+      {
+        "item": "The male coworker's face recognizably matches portrait-man.jpg and the female coworker's face recognizably matches portrait-woman.jpg.",
+        "met": "no",
+        "why": "The visible detection crops retain the original identities, and the agent states that no swap was generated."
+      },
+      {
+        "item": "The two replacement identities never switch between coworkers or collapse into the same face.",
+        "met": "no",
+        "why": "Neither replacement identity was applied, so the required consistent two-identity replacement was not delivered."
+      },
+      {
+        "item": "Both faces stay aligned through head turns and speaking, without conspicuous flickering or original-face reappearance.",
+        "met": "cannot_tell",
+        "why": "There is no edited moving footage to assess alignment or temporal stability."
+      },
+      {
+        "item": "The original office, camera movement and shot timing remain; the two people's hair and clothing may follow their portraits so they are recognisable.",
+        "met": "cannot_tell",
+        "why": "The source frame and detection crops show the office, but no delivered video allows verification of preserved camera movement and timing."
+      },
+      {
+        "item": "Both original voices remain audible and synchronized, with no added music or narration.",
+        "met": "cannot_tell",
+        "why": "No playable output with audio is provided."
+      }
+    ]
+  },
+  "reply": null,
+  "spent": 0,
+  "seconds": 90,
+  "outputs": [
+    "sessions/mcp-m1-C15c/assets/01-detect_faces.png",
+    "sessions/mcp-m1-C15c/assets/02-detect_faces.png",
+    "sessions/mcp-m1-C15c/assets/03-detect_faces.png"
+  ],
+  "tools": [
+    "detect_faces→detect_faces→detect_faces"
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "id": "E29b",
+  "item": {
+    "id": "E29b",
+    "case": 29,
+    "case_name": "Add a logo or text overlay",
+    "group": "E",
+    "group_name": "Editing the user's video",
+    "expect": {
+      "asks": "never",
+      "asks_about": "",
+      "beyond_free": "no",
+      "refuse": false
+    },
+    "title": "Append a Clean End Card",
+    "sub": "b",
+    "spec": {
+      "exact_text": [
+        "Ready for takeoff?",
+        "@flightschool"
+      ],
+      "aspect": "any",
+      "kind": "video",
+      "seconds": 7,
+      "outputs": 1,
+      "audio": "required"
+    },
+    "turns": [
+      {
+        "materials": [
+          "radio-lines.mp4"
+        ],
+        "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent."
+      }
+    ],
+    "tests": "Tests appending an accurately timed end card with exact text while preserving the complete source clip and its audio.",
+    "answer_sheet": {
+      "End-card wording": "Ready for takeoff? on the first line and @flightschool underneath, without quotation marks.",
+      "End-card appearance": "Solid black background, white text, both lines centered. Font choice is your call.",
+      "Timing and transition": "Preserve the complete 7-second source, then show the end card for 2 seconds, making a 9-second video. A direct cut is fine.",
+      "Framing and audio": "Match the source aspect ratio. Preserve its original sound for the first 7 seconds; the end card is silent."
+    },
+    "must_haves": [
+      "The entire original cockpit clip plays before the end card, without being replaced or shortened.",
+      "A solid black end card occupies only the final 2 seconds of the 7-second output.",
+      "The end card reads exactly 'Ready for takeoff?' with '@flightschool' on the line below.",
+      "Both lines are white, centered, fully visible, and comfortably readable.",
+      "Original cockpit audio is preserved during the source footage, followed by silence during the end card.",
+      "After the follow-up, the final result is about 7 seconds long (the user asked for 2 seconds less); everything else is as before."
+    ],
+    "changed_by": {
+      "field": "seconds",
+      "from": 9,
+      "to": 7,
+      "say": "actually, make it 2 seconds shorter, for 7 seconds total, and keep everything else the same."
+    }
+  },
+  "session": "mcp-p1-dry-o-changer-E29b",
+  "sessionDir": "sessions/mcp-p1-dry-o-changer-E29b",
+  "baseline": "mcp",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "simulated": false,
+  "turns": [
+    {
+      "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent.",
+      "materials": [
+        "radio-lines.mp4"
+      ],
+      "dialog": [
+        {
+          "agent": "The connected Magic Hour tools don’t support appending a precise end card while preserving the original clip and sound unchanged, so I can’t make this edit directly here.\n\nYou can create it with FFmpeg using this command. It keeps all 7 seconds, adds a silent 2-second black card, and centers both white text lines:\n\n```bash\nffmpeg -i radio-lines.mp4 \\\n-filter_complex \\\n\"[0:v]tpad=stop_mode=add:stop_duration=2:color=black,\ndrawtext=text='Ready for takeoff?':fontcolor=white:fontsize=40:x=(w-tw)/2:y=h/2-50:enable='gte(t,7)',\ndrawtext=text='@flightschool':fontcolor=white:fontsize=30:x=(w-tw)/2:y=h/2+15:enable='gte(t,7)'[v];\n[0:a]apad=pad_dur=2[a]\" \\\n-map \"[v]\" -map \"[a]\" -t 9 \\\n-c:v libx264 -crf 18 -c:a aac -movflags +faststart \\\nradio-lines-final.mp4\n```\n\nThe output will be **`radio-lines-final.mp4`**.",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Please go ahead with the free settings anyway.",
+          "calls_before": 0,
+          "nudge": true
+        }
+      ],
+      "agent": "The blocker isn’t the plan: the connected tools can’t append an exact end card. Free video editing would regenerate the footage and could change the original visuals or sound, so it wouldn’t meet your requirements.\n\nI haven’t started a generation or spent credits. The FFmpeg command above will make the requested 9-second edit locally, with the original audio followed by a silent end card.",
+      "calls": [],
+      "approvals": [],
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "The blocker isn’t the plan: the connected tools can’t append an exact end card. Free video editing would regenerate the footage and could change the original visuals or sound, so it wouldn’t meet your requirements.\n\nI haven’t started a generation or spent credits. The FFmpeg command above will make the requested 9-second edit locally, with the original audio followed by a silent end card.",
+        "refuse": "",
+        "tier_move": "The blocker isn’t the plan: the connected tools can’t append an exact end card. Free video editing would regenerate the footage and could change the original visuals or sound, so it wouldn’t meet your requirements.\n\nI haven’t started a generation or spent credits. The FFmpeg command above will make the requested 9-second edit locally, with the original audio followed by a silent end card.",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 50
+    },
+    {
+      "text": "actually, make it 2 seconds shorter, for 7 seconds total, and keep everything else the same.",
+      "materials": [],
+      "dialog": [
+        {
+          "agent": "Got it: **5 seconds of the original clip, followed by the same 2-second end card**, for **7 seconds total**. The original sound stops when the silent card begins.\n\nI still can’t perform this exact timeline edit with the connected tools, but here’s the updated FFmpeg command:\n\n```bash\nffmpeg -t 5 -i radio-lines.mp4 \\\n-filter_complex \\\n\"[0:v]tpad=stop_mode=add:stop_duration=2:color=black,\ndrawtext=text='Ready for takeoff?':fontcolor=white:fontsize=40:x=(w-tw)/2:y=h/2-50:enable='gte(t,5)',\ndrawtext=text='@flightschool':fontcolor=white:fontsize=30:x=(w-tw)/2:y=h/2+15:enable='gte(t,5)'[v];\n[0:a]apad=pad_dur=2[a]\" \\\n-map \"[v]\" -map \"[a]\" -t 7 \\\n-c:v libx264 -crf 18 -c:a aac -movflags +faststart \\\nradio-lines-final.mp4\n```",
+          "asked": [
+            "cannot"
+          ],
+          "user": "Please go ahead with the free settings anyway.",
+          "calls_before": 0,
+          "nudge": true
+        }
+      ],
+      "agent": "I can use free settings, but they don’t provide the timeline-editing capability this needs. The available AI editor could alter your footage or audio rather than simply trim and append a card.\n\nI can’t produce the exact **5-second clip + 2-second silent end card** here. No generation has been started or credits spent; the command above is ready to make that edit with FFmpeg.",
+      "calls": [],
+      "approvals": [],
+      "follow_up": true,
+      "firstQuestions": [],
+      "kind": "cannot",
+      "denied": [],
+      "plan": {
+        "shape": "mcp",
+        "say": "I can use free settings, but they don’t provide the timeline-editing capability this needs. The available AI editor could alter your footage or audio rather than simply trim and append a card.\n\nI can’t produce the exact **5-second clip + 2-second silent end card** here. No generation has been started or credits spent; the command above is ready to make that edit with FFmpeg.",
+        "refuse": "",
+        "tier_move": "I can use free settings, but they don’t provide the timeline-editing capability this needs. The available AI editor could alter your footage or audio rather than simply trim and append a card.\n\nI can’t produce the exact **5-second clip + 2-second silent end card** here. No generation has been started or credits spent; the command above is ready to make that edit with FFmpeg.",
+        "estimate": null,
+        "steps": []
+      },
+      "spent": 0,
+      "seconds": 25
+    }
+  ],
+  "started": "2026-11-09T06:14:14.747Z",
+  "persona": "changer",
+  "opening": {
+    "id": "E29b",
+    "persona": "changer",
+    "text": "Keep this whole 7-second clip, then add a 2-second black end card with white text: 'Ready for takeoff?' and '@flightschool' underneath. Center both lines. Keep the original sound, but make the end card silent.",
+    "as_written": true,
+    "change": {
+      "field": "seconds",
+      "from": 9,
+      "to": 7,
+      "say": "actually, make it 2 seconds shorter, for 7 seconds total, and keep everything else the same."
+    }
+  },
+  "dry": true,
+  "change": {
+    "field": "seconds",
+    "from": 9,
+    "to": 7,
+    "say": "actually, make it 2 seconds shorter, for 7 seconds total, and keep everything else the same.",
+    "sent": true
+  },
+  "spent": 0,
+  "seconds": 75
+}

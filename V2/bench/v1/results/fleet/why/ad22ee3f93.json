@@ -1,0 +1,47 @@
+{
+ "id": "ad22ee3f93",
+ "key": "must:I45c:Both faces clearly visible in every shot",
+ "symptom": "Both faces clearly visible in every shot",
+ "item": "I45c",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Both faces clearly visible in every shot' not met in 4 chats?",
+    "because": "The 4 failures split into two groups. In the 2 'stupid' chats (old and new), the video shows strangers in a wide park or sidewalk scene. The assistant never asked for visible faces. In the 2 informed chats (old happy, old dumper), the assistant asked for visible faces in the prompt, but the model still made rear views, a bent-over man and small, distant figures.",
+    "evidence": "s5.new.stupid grade.json: 'Frame 1 is distant and frame 2 is partly turned away'. s5.old.stupid grade.json: 'profile or partly hidden in the hug'. s5.old.happy grade.json: 'At 6 s her face is not visible at all, only the back of her head'. s5.old.dumper grade.json: 'Shot 2 is a rear view of her and he is bent over with his face hidden'."
+   },
+   {
+    "why": "Why did the assistant in the stupid chats never ask for visible faces?",
+    "because": "The requirement never reached it. The stupid persona's opening message is only 'make a video of a woman and a man having a friendly encounter'. The faces, the scarf, the three shots and the characters' looks are all missing from it.",
+    "evidence": "s5.old.stupid and s5.new.stupid chat.json: messages[0].text = 'make a video of a woman and a man having a friendly encounter'. The full request and the 'Face visibility' item are only in the persona's hidden bank."
+   },
+   {
+    "why": "Why did the requirement not come out later in the conversation?",
+    "because": "The persona gives a fact only when a plain question asks for it. Neither build's assistant has a reason to ask about framing or faces. The old build delivered with no questions. In the new build, plan_request asked only about seconds, aspect and sound. The persona answered 'like 15 sec, wide one, no sound', and the assistant prompted a 'Wide shot' park scene.",
+    "evidence": "chat.json persona.reply: 'Never invent a fact that is not in the bank... answer it from your knowledge bank' only when asked. s5.new.stupid calls.jsonl: plan_request questions = seconds/aspect/sound. The create_video_from_text prompt starts with 'Wide shot, a sunny city park path'. s5.old.stupid calls.jsonl: a single create_video_from_text with no questions."
+   },
+   {
+    "why": "Why is this chat still graded against the face requirement?",
+    "because": "The test sets expect.asks='never', so it assumes the assistant gets the full brief. The grader still scores every chat against all of the item's must_haves, including the stupid chats where the persona held the brief back. No tool description can make the assistant ask about face framing it has never heard of.",
+    "evidence": "items/I45c.json: expect.asks = 'never'. must_haves[3] = 'Both faces are clearly visible in every shot...'. Both stupid grade.json files mark it 'no', together with the pixie cut, glasses and scarf items, which were also never given."
+   },
+   {
+    "why": "Why did the informed chats fail too, even though the prompts asked for visible faces?",
+    "because": "The assistant put all three shots into one 15 s minimax-h3 clip. It also gave staging that hides faces: the man walks 'a few steps behind' (small and distant), he 'bends down' to pick up the scarf, and she is 'in the background still walking away'. The model followed the actions and the blocking, not the 'both faces clearly visible' line. This is a limit of single-clip generation and of how the model follows prompts. The assistant also could not watch the output to check it.",
+    "evidence": "s5.old.happy and s5.old.dumper calls.jsonl, create_video_from_text style.prompt (the staging quoted above). In both delivery messages the assistant says 'I haven't been able to watch the video myself' / 'I can't watch the video from here'. No new-build happy or dumper chat failed this item."
+   }
+  ],
+  "axiom": "The harness gives the stupid persona a vague opening message ('a woman and a man having a friendly encounter') and keeps the face requirement in a hidden bank. The persona shares a fact only when a plain question asks for it, but the test (expect.asks='never') still grades the chat against the full brief. This explains 2 of the 4 failures, including the only new-build one. The other 2 (old happy, old dumper) come from a generation-model limit: one 15 s minimax-h3 clip does not keep both faces visible through the drop, bend-down and walk-away actions, even when the prompt asks for it.",
+  "category": "harness_artifact",
+  "builds": "both",
+  "fix": "Make the harness consistent for items with expect.asks='never'. Either make the stupid persona's opening message include the key brief constraints (the two looks, the scarf story, three shots, both faces visible), or grade stupid-persona chats only against the facts the user actually gave. For the informed chats, change the create_video_from_text / story-pipeline guidance: generate each shot as its own reference-locked clip, with front-facing staging for both people (no 'walking away' or 'bends down' blocking)."
+ },
+ "error": null,
+ "seconds": 51,
+ "usd": 0.41918200000000005
+}

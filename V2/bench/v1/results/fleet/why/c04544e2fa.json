@@ -1,0 +1,46 @@
+{
+ "id": "c04544e2fa",
+ "key": "must:J52a:Reel has visible background animation with readable details throughout",
+ "symptom": "Reel has visible background animation with readable details throughout",
+ "item": "J52a",
+ "n": 2,
+ "builds": {
+  "old": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was the item 'Reel has visible background animation with readable details throughout' not met?",
+    "because": "Neither chat produced any file. No reel existed for the grader to check.",
+    "evidence": "s2r.old.dumper.J52a/grade.json: check 'something was made' pass=false, got 'no file'. The must-have says 'No reel was made.' The summary says the agent made nothing because the account had 0 credits."
+   },
+   {
+    "why": "Why was no reel made?",
+    "because": "The assistant's first step, the poster, was refused. The plan was to animate that poster into the reel, so the reel call never happened.",
+    "evidence": "Both calls.jsonl files have one call only: generate_image (qwen-image-2.1, 9:16, 640px) with approve=false. After that the chat ends with kind 'cannot'. Neither chat has a video call."
+   },
+   {
+    "why": "Why was the poster call refused?",
+    "because": "The account had 0 credits, and the call needed about 10.",
+    "evidence": "Both calls.jsonl files show the result reason 'insufficient credits: this call needs about 10 credits and 0 remain on the account'."
+   },
+   {
+    "why": "Was the assistant at fault, for example by picking a costly model or doing the wrong steps?",
+    "because": "No. It picked the cheapest free-plan model and settings. It explained the block correctly and gave a plan (poster first, then a silent 8s 9:16 reel at 480p with ltx-2.5). With 0 credits, no choice of arguments could have worked.",
+    "evidence": "In both chats the args were model qwen-image-2.1 at resolution 640px. The assistant 'say' text lists the free-plan reel plan and says nothing was charged."
+   },
+   {
+    "why": "Why did the account have 0 credits at the start of the chat?",
+    "because": "The fleet runs every chat on the same free-plan account. Earlier chats had already used all its credits, and the harness did not check or refill the balance before these chats. Both failing chats ran within about 1 minute of each other (t≈1794364524k and 1794364560k), and both failed on their first call. This points to a balance that was already empty, not to anything in the chat. The evidence does not show which earlier chats used the credits.",
+    "evidence": "In both chat.json files the mode is 'live' with the old url https://mcp.magichour.ai/. The calls.jsonl timestamps are close together. The '0 remain' result arrived before any spend in these chats."
+   }
+  ],
+  "axiom": "The test harness started these live chats on a shared free-plan account that had no credits left. The failure comes from the harness's credit budget, not from the MCP tools, the assistant or the brief.",
+  "category": "harness_artifact",
+  "builds": "old",
+  "fix": "Before each chat, the harness should check the account's credit balance. It should top up the account or move to a fresh account when the balance is below the cost of the item (here at least about 10 credits for the image plus the video cost). If a chat still fails on its first call with 'insufficient credits' and 0 remaining, the harness should mark the chat as invalid and run it again, and not grade it."
+ },
+ "error": null,
+ "seconds": 22,
+ "usd": 0.0837362
+}

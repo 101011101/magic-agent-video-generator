@@ -1,0 +1,47 @@
+{
+ "id": "1995c36af7",
+ "key": "must:H40c:Captions legible and visible long enough",
+ "symptom": "Captions legible and visible long enough",
+ "item": "H40c",
+ "n": 4,
+ "builds": {
+  "old": 3,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Captions legible and visible long enough' not met?",
+    "because": "Two kinds of failure. In some chats the video has no captions. In others the captions are there but garbled and low-contrast.",
+    "evidence": "s4.old.dumper grade.json and s4.new.stupid grade.json: 'No captions present', and every exact_text entry is 'missing'. s4.old.happy grade.json: 'White text on white shoes has low contrast. The first caption is garbled (\"Meet your evydday pair\")'."
+   },
+   {
+    "why": "Why were the captions missing or garbled?",
+    "because": "The only way to put the captions on screen was to ask the video model to draw them as part of the picture. When the assistant did ask (happy), the model misspelled the text, put white text over a white shoe and got the timing wrong. When the assistant did not ask (dumper, stupid), the prompt said 'no text, no words on screen'.",
+    "evidence": "s4.old.happy calls.jsonl: the create_video_from_text prompt asks for each caption 'exactly'. The output misspells it, and the first caption is still on screen at 6s. s4.old.dumper calls.jsonl: the create_video_from_image prompt says 'no text, no words on screen'. s4.new.stupid calls.jsonl: the create_video_from_text prompt says 'No text, no logos, no words on screen'."
+   },
+   {
+    "why": "Why did the dumper assistant leave out the captions on purpose?",
+    "because": "No tool can place the user's own text on a video at fixed positions. The subtitle tool only writes captions from speech it hears, and this video is silent. The assistant judged that text drawn by the model could not keep the 15%/20% margins, so it delivered clean footage and told the user to add captions in an editor.",
+    "evidence": "s4.old.dumper calls.jsonl, final reply: 'None of my tools can place your own text on a video at fixed positions. The subtitle tool only writes captions from speech it hears, and this video is silent... It could not reliably keep your 15% side and 20% top/bottom margins, so I left the footage clean.'"
+   },
+   {
+    "why": "Why did the new-build stupid chat give no captions at all, not even a try?",
+    "because": "The vague user only said 'make a sneaker video ad'. plan_request marked exact_words as missing but asked only about seconds, aspect and sound (it returns at most 3 questions). On the next call it returned ready:true with exact_words still missing. The assistant then chose 'no text', which goes against the description's rule 'do not guess ... on-screen words'.",
+    "evidence": "s4.new.stupid calls.jsonl: the first plan_request returns 3 questions (seconds, aspect, sound) and none for exact_words. The second returns ready:true with exact_words value null and source missing. The bank in chat.json holds the caption wording, so the user would have given it if asked. tools-new.json plan_request: 'up to 3 questions... do not guess shape, length, sound or on-screen words'."
+   },
+   {
+    "why": "Why does missing text overlay make captions fail even when the assistant knows the exact words?",
+    "because": "In both builds the only paths to on-screen text are the generation models (ltx-2.5 at 480p on the free plan). These models render text badly: misspellings, warped letters, no control of position or timing.",
+    "evidence": "s4.old.happy grade.json faults: 'First caption is misspelled ... letters are warped', 'first caption is still on screen at 6s'. The assistants' own warnings say the same: happy says 'Video models often misspell words, warp letters or put text in the wrong place'; dumper says 'it often misspells text and puts it wherever it likes'."
+   }
+  ],
+  "axiom": "The Magic Hour toolset has no deterministic text-overlay or caption-burn tool. The only subtitle tool works from speech. So exact on-screen captions with exact placement can only come from the video model drawing them, and the free-plan model (ltx-2.5, 480p) cannot render legible, correctly spelled, correctly timed text. In the new-build stupid chat, plan_request's 3-question cap adds to this: it returned ready:true with exact_words still missing, so no one asked for the captions.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a text-overlay tool that burns given strings into a finished video at a given time range, position box, font size and contrast style (for example white text with a dark box). Point the video-tool descriptions to it for exact captions. In the new build, also make plan_request treat exact_words as a required question for ads and never return ready:true while exact_words is still missing."
+ },
+ "error": null,
+ "seconds": 42,
+ "usd": 0.282009
+}

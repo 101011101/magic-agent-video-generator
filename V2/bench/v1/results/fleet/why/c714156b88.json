@@ -1,0 +1,47 @@
+{
+ "id": "c714156b88",
+ "key": "must:A06a:A recognizable, simple green sprout sits above the name.",
+ "symptom": "A recognizable, simple green sprout sits above the name.",
+ "item": "A06a",
+ "n": 2,
+ "builds": {
+  "old": 1,
+  "new": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'A recognizable, simple green sprout sits above the name' marked not met?",
+    "because": "A green sprout mark was there in both images, but no name was under it. The grader failed the item for the missing name, not for the sprout. This item and the 'name reads Little Sprout' item both fail for the same missing text.",
+    "evidence": "s1.new.stupid.A06a/grade.json: must[1] says 'A green sprout in a pot is present, but there is no name beneath it'; must[0] says 'No text in the image'; exact_text 'Little Sprout' seen: missing. In both builds the assistant's delivery message says the logo has no text."
+   },
+   {
+    "why": "Why did the image have no name?",
+    "because": "In both builds the assistant put 'no text' in the generation prompt on purpose, because it did not know the shop name.",
+    "evidence": "calls.jsonl generate_image prompts: old has '...white background, no text'; new has '...No text, no letters, no words.' Both replies say: 'I didn't know your shop's name, so the logo has no text' or 'you didn't give me a shop name'."
+   },
+   {
+    "why": "Why did the assistant not know the name?",
+    "because": "The stupid persona's opening message dropped the name. The name 'Little Sprout' was only in the persona's knowledge bank, and the persona gives a fact only when someone asks for it in plain words.",
+    "evidence": "s1.old.stupid.A06a/chat.json: messages[0] = 'make a logo for my plant shop'; bank 'Business name and wording' = 'Little Sprout; no other text.'; persona reply rules: 'answer it from your knowledge bank' only when a plain-words question is asked."
+   },
+   {
+    "why": "Why was the name never asked for?",
+    "because": "Old build: the assistant generated right away and asked nothing. New build: the assistant called plan_request with exact_words marked 'missing'. The server asked only about aspect. After the user answered, the server returned ready:true while exact_words was still null and the questions list was empty. So nobody asked the plain question 'what is the shop name?', which the persona would have answered.",
+    "evidence": "old calls.jsonl: generate_image is the first call, and there is no question turn. new calls.jsonl line 2: plan_request output questions = [aspect only]. Line 7: ready:true, exact_words value null source missing, questions []."
+   },
+   {
+    "why": "Why did a missing exact_words for a logo not block generation or trigger a question?",
+    "because": "plan_request treats exact_words as optional. Its description tells the assistant 'do not guess ... on-screen words'. So when the value is missing, the assistant leaves the text out and does not ask. A logo for a named business needs its name, but the tool has no rule for that. The old build has no planning check at all, and the assistant took the same 'no text' default.",
+    "evidence": "tools-new.json plan_request description: 'A value the user did not give comes back missing: do not guess shape, length, sound or on-screen words... If ready is true, create with the returned values.' The server returned ready:true with exact_words missing (new calls.jsonl line 7)."
+   }
+  ],
+  "axiom": "The vague user left out the business name, and neither build asked for it. In the new build, plan_request returned ready:true with exact_words still missing for a logo request, so it never asked 'what name should the logo show?'. In the old build, the assistant generated without asking anything. Both assistants chose 'no text', so the name was missing and the 'sprout above the name' item failed with it. This item also counts the same missing name a second time; the sprout itself was present.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "In plan_request, when the subject is a logo, sign, label or another named-brand asset and exact_words is missing (not []), return ready:false with the question 'What name or words should the logo show?'. Add the same rule to the generate_image / ai-logo-generator description so the old flow also asks for the business name before it generates."
+ },
+ "error": null,
+ "seconds": 35,
+ "usd": 0.15440140000000002
+}

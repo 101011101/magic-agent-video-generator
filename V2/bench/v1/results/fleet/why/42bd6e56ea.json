@@ -1,0 +1,47 @@
+{
+ "id": "42bd6e56ea",
+ "key": "must:D18b:Natural blink and subtle breathing visible",
+ "symptom": "Natural blink and subtle breathing visible",
+ "item": "D18b",
+ "n": 3,
+ "builds": {
+  "new": 2,
+  "old": 1
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Natural blink and subtle breathing visible' not met in the 3 chats?",
+    "because": "In each clip the model made large motion instead of a subtle blink and breathing. The head moved or turned, the posture changed, and the mouth opened. The blinks were unclear: eyes half-closed for a long time, or closed in several sampled frames.",
+    "evidence": "s3.old.happy.D18b/grade.json: '0.5 s frame has eyes half-closed… head turn and big posture change are far beyond subtle breathing'. s3.new.happy.D18b/grade.json: 'Eyes closed at 0.5s and 2s… head and shoulders shift and the mouth opens'. The same grade files also fail 'face does not morph', because the face shifts and the mouth opens."
+   },
+   {
+    "why": "Why did the clips have large motion? Did the assistant ask for it?",
+    "because": "No. In all 3 chats the assistant sent a careful, restrained prompt: one natural blink, gentle breathing, locked-off camera, no zoom or pan, face exactly the same, background barely moving. The prompts closely follow the brief.",
+    "evidence": "calls.jsonl, create_video_from_image style.prompt. Old happy: 'Static locked-off camera… blinks once naturally and breathes gently… no morphing'. New happy: 'stays still… blinks once naturally… Static locked-off camera'. New dumper: 'Locked-off static camera… shoulders rising very slightly… nothing else happens'."
+   },
+   {
+    "why": "Why did a restrained prompt still produce large motion?",
+    "because": "All 3 runs used the same generator settings: model ltx-2.5 at 480p, a 5 s image-to-video job, 120 credits. That model did not follow 'stay still / subtle only' prompts on a portrait. It added head turns, talking-like mouth motion and changes to the face. The result is the same on both builds, with different wording and different users. This points to the model, not to the prompt or the server version.",
+    "evidence": "calls.jsonl in all 3 chats: args model 'ltx-2.5', resolution '480p', end_seconds 5. Each wait_for_video_project result shows 640x640, 24 fps, complete. Both builds sent the same image_file_path."
+   },
+   {
+    "why": "Why was ltx-2.5 used and not a stronger or steadier model?",
+    "because": "The free plan allows only ltx-2.5 and minimax-h3 for video. The server rejected the old-build assistant's first call with model 'default'. The new-build assistants picked ltx-2.5 directly. No tool description says which free model is better for subtle portrait motion. minimax-h3 was never tried, so there is no evidence that it would do better.",
+    "evidence": "s3.old.happy.D18b/calls.jsonl line 2: rejected, reason 'model \"default\" is not available on the free plan; the free plan's video models are ltx-2.5 and minimax-h3'. In the new build, the plan_request result passes 'motion' through and gives no model advice."
+   },
+   {
+    "why": "Why did nobody catch the bad output before delivery?",
+    "because": "The assistant cannot watch the video. In all 3 chats it delivered with a note that it had not checked the clip frame by frame and offered to redo it. The happy and dumper users did not ask for a second try inside the test. So the first output from the generator became the graded result.",
+    "evidence": "calls.jsonl 'say' text. New happy: 'I haven't watched it frame by frame'. Old happy: 'I can't play videos here… or try the other free model, MiniMax H3'. New dumper: 'I can't play the video myself'."
+   }
+  ],
+  "axiom": "On the free plan, the ltx-2.5 image-to-video model (480p, 5 s) cannot hold a portrait almost still. Even with an explicit, restrained prompt, it adds head turns, posture shifts, mouth movement and face drift. This is a limit of the generation model. The assistant's prompts and the tool descriptions are not the cause.",
+  "category": "generator_limit",
+  "builds": "both",
+  "fix": "None for ltx-2.5 itself: this is inherent to the model. One thing could help: run D18b with minimax-h3, the other free video model. If it holds subtle motion better, the create_video_from_image description, or the plan_request result for 'motion' requests that ask for near-stillness, should recommend minimax-h3 for subtle portrait animation."
+ },
+ "error": null,
+ "seconds": 43,
+ "usd": 0.321713
+}

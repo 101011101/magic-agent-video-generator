@@ -1,0 +1,47 @@
+{
+ "id": "fd73c509d5",
+ "key": "must:E29a:Original speech audible and synced",
+ "symptom": "Original speech audible and synced",
+ "item": "E29a",
+ "n": 4,
+ "builds": {
+  "old": 2,
+  "new": 2
+ },
+ "result": {
+  "whys": [
+   {
+    "why": "Why was 'Original speech audible and synced' not met in all 4 chats?",
+    "because": "No video was delivered, so there was no audio track to judge. The only output file was a PNG.",
+    "evidence": "s3.new.dumper.E29a/grade.json: check 'a video was made' failed with got [\".png\"]; 'sound present and audible' failed with 'no audio track'; must-item reason 'No video delivered.'"
+   },
+   {
+    "why": "Why was only a PNG delivered?",
+    "because": "In every chat the assistant made one tool call that produces something (remove_image_background on mascot-fox.png), waited for it, and then stopped. It never called any tool that takes talk-one.mp4 as input.",
+    "evidence": "calls.jsonl of all 4 chats (old/new × happy/dumper): remove_image_background → wait_for_image_project → final 'say'. new.dumper also called plan_request with tool=remove_image_background, which returned ready:true and did not mention the video step."
+   },
+   {
+    "why": "Why did the assistant not add the logo to the video?",
+    "because": "It decided that no Magic Hour tool can place an image on top of an existing video and leave the frames and audio untouched. The only option that edits a video, the AI video editor, redraws every frame. That breaks 'keep the video and sound unchanged'. So it refused that part and gave the user steps for CapCut and ffmpeg.",
+    "evidence": "Final replies in old.happy, new.happy, old.dumper and new.dumper calls.jsonl: 'Magic Hour has no tool that places an image on top of a video as an overlay'; 'None of my Magic Hour tools can lay a picture over a video'."
+   },
+   {
+    "why": "Was that decision correct for the tool set it had?",
+    "because": "Yes. The new build has code-side ffmpeg-style tools (join_videos, join_production_clips, get_last_frame, trim_video, add_subtitles_to_video), and plan_video_production can hold a logo only on a separate card. None of them composites an image over a source video for its full length. plan_request's tool enum also has no overlay tool. The old hosted build has only the generative editor for video edits.",
+    "evidence": "tools-new.json: plan_request tool enum (generate_image … trim_video) has no overlay; join_videos only joins clips end to end; the plan_video_production beat 'picture' field is 'On a card: a picture to hold unchanged for the card's seconds' and is not an overlay. The assistant's replies say the same thing about the old build."
+   },
+   {
+    "why": "Why does that count as a failure and not as a correct refusal?",
+    "because": "The test expects the task to work on the free plan (refuse:false, beyond_free:no) and grades the composite video. But neither build has a deterministic image-over-video compositing tool. This capability gap in the MCP server is the axiom.",
+    "evidence": "items/E29a.json: expect {refuse:false, beyond_free:'no'}, spec kind 'video', audio 'required'; must_haves need the fox top-right on every frame with the original speech kept."
+   }
+  ],
+  "axiom": "Neither the old nor the new Magic Hour MCP build has a tool that composites a still image (logo) over an existing video and keeps its frames and audio. The assistant correctly refused to use the generative editor, which would redraw the frames. So no video and no original speech reached the output.",
+  "category": "mcp_tool_behavior",
+  "builds": "both",
+  "fix": "Add a code-side, zero-credit tool to the new build, built like join_videos: overlay_image_on_video(video, image, position=top-right, width_pct, margin_pct, start/end). It should run ffmpeg overlay with -c:a copy so the source audio is kept. Also add it to plan_request's tool enum, and say in the remove_image_background description that its output can be passed to this tool."
+ },
+ "error": null,
+ "seconds": 33,
+ "usd": 0.252385
+}
